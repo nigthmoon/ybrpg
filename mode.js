@@ -2871,7 +2871,7 @@ function getEventForDifficulty(chapterKey, eventId, difficulty) {
  * 返回包含 treasures 字段的单位数组
  */
 function buildPlayerTeamForBattle() {
-    return (window.currentTeam || []).filter(Boolean).map(instanceId => {
+    return (window.currentTeam || []).map(instanceId => {
         const instData = window.charBagData && window.charBagData[instanceId];
         if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
 
