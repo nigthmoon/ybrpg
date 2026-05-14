@@ -2867,12 +2867,29 @@ function getEventForDifficulty(chapterKey, eventId, difficulty) {
 }
 
 /**
- * 构建我方队伍数据（已适配 instanceId 宝物系统）
- * 返回包含 treasures 字段的单位数组
+ * 构建玩家战斗队伍数据
+ * 
+ * 该函数根据当前选中的队伍实例ID列表，从角色背包数据和基础角色配置中提取信息，
+ * 组装成适用于战斗系统的标准化角色对象数组。
+ * 
+ * @returns {Array<Object>} 返回包含战斗所需角色信息的对象数组。
+ *                          每个对象包含以下属性：
+ *                          - id: 角色基础ID (charId)
+ *                          - instanceId: 角色实例ID
+ *                          - name: 角色名称
+ *                          - hp: 生命值
+ *                          - atk: 攻击力
+ *                          - def: 防御力
+ *                          - spe: 速度
+ *                          - skills: 技能列表
+ *                          - buff: 增益状态列表
+ *                          - treasures: 装备的宝物列表
  */
 function buildPlayerTeamForBattle() {
     return (window.currentTeam || []).map(instanceId => {
         const instData = window.charBagData && window.charBagData[instanceId];
+        
+        // 如果找不到实例数据，返回默认的空角色对象以防止后续逻辑出错
         if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
 
         const charId = instData.charId || instanceId;
@@ -3100,6 +3117,7 @@ function renderChapterEventList(container, chapterKey) {
                         spe: e.spe || 0,
                         skills: base.skills || [],
                         buff: e.buff || [],
+                        treasures: e.treasures || [],
                     };
                 });
 
