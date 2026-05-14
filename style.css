@@ -221,7 +221,7 @@ body {
     grid-template-rows: repeat(2, 1fr);
     gap: 10px;
     width: 100%;
-    max-width: 317px;
+    max-width: 300px;
     padding: 10px;
     box-sizing: border-box;
 }
@@ -293,7 +293,7 @@ body {
 /* 布阵信息区 */
 .team-info-area {
     width: 100%;
-    max-width: 317px;
+    max-width: 300px;
     display: flex;
     gap: 10px;
     padding: 10px 5px;
@@ -433,7 +433,7 @@ body {
     display: flex;
     gap: 10px;
     width: 100%;
-    max-width: 317px;
+    max-width: 300px;
     justify-content: center;
     padding: 0 10px;
     box-sizing: border-box;
@@ -475,7 +475,7 @@ body {
     gap: 6px;
     margin-bottom: 8px;
     width: 100%;
-    max-width: 317px;
+    max-width: 300px;
     flex-shrink: 0;
 }
 
@@ -507,9 +507,11 @@ body {
 .bag-body {
     flex: 1;
     width: 100%;
-    max-width: 317px;
+    max-width: 300px;
     overflow-y: auto;
     padding: 5px;
+    padding-right: 17px;
+
 }
 
 .bag-char-scroll {
@@ -521,7 +523,7 @@ body {
 /* 背包下方详情横框 */
 .bag-detail-bar {
     width: 100%;
-    max-width: 317px;
+    max-width: 300px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -694,7 +696,7 @@ body {
 
 .battle-field {
     width: 100%;
-    max-width: 317px;
+    max-width: 300px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -1932,6 +1934,7 @@ h1, h2 {
 
 /* 角色网格 */
 .gallery-grid {
+    width: 100%;
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
@@ -2006,7 +2009,7 @@ h1, h2 {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-width: 340px;
+    max-width: 300px;
     width: 92%;
     animation: dialogIn 0.2s ease;
 }
@@ -2223,7 +2226,7 @@ h1, h2 {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-width: 340px;
+    max-width: 300px;
     width: 92%;
     max-height: 70vh;
     animation: dialogIn 0.2s ease;
@@ -2410,7 +2413,7 @@ h1, h2 {
     border: 1px solid #444;
     border-radius: 10px;
     padding: 16px;
-    max-width: 380px;
+    max-width: 300px;
     width: 90%;
     max-height: 80vh;
     display: flex;
@@ -2574,4 +2577,29 @@ h1, h2 {
     right: 2px;
     font-size: 10px;
     z-index: 5;
+}
+/* 假设 btnRow 的类名是 .char-detail-btn-row */
+.char-detail-btn-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* 按钮之间的间距 */
+    margin-top: 15px;
+}
+
+.ybrpg-btn {
+    /* 确保按钮有最小宽度，避免文字过多时挤压 */
+    min-width: 80px;
+    /* padding: 8px 16px; */
+}
+.ybrpg-confirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

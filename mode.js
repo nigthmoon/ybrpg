@@ -211,16 +211,17 @@ function renderTeamSlot(slotEl, index) {
     if (instanceId && window.charBagData && window.charBagData[instanceId]) {
         const instanceData = window.charBagData[instanceId];
         const charId = instanceData.charId || instanceId; // 兼容旧数据
-        const char = characterList[charId];
+        // const char = characterList[charId];
+        const char = instanceData;
         
         if (!char) {
             slotEl.style.borderColor = '#f00';
             slotEl.textContent = 'Err';
             return;
         }
-
+        var rank=window.charBagData[instanceId].rank||char.rank;
         const RANK_BORDER_COLORS = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-        const borderColor = RANK_BORDER_COLORS[char.rank] || '#888';
+        const borderColor = RANK_BORDER_COLORS[rank] || '#888';
 
         const img = document.createElement('img');
         img.src = `./image/character/${charId}.jpg`;
@@ -383,7 +384,8 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 
     // 修改：从 instanceData 获取存档数据
     const instanceData = window.charBagData[instanceId];
-    const char = characterList[charId];
+    // const char = characterList[charId];
+    const char = instanceData;
     
     if (!char || !instanceData) return;
 
@@ -1025,7 +1027,7 @@ function showCharDetailPopup(charId) {
     nameDiv.className = 'gallery-detail-name';
     nameDiv.textContent = baseChar.name;
     // 根据品质设置颜色
-    const rankColors = { legend: '#ff4444', epic: '#ff8d8d', rare: '#44aaff', common: '#88cc88', junk: '#888888', epicfake: '#ffaa44' };
+    const rankColors = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d', rare: '#44aaff', common: '#88cc88', junk: '#888888', epicfake: '#ffaa44' };
     nameDiv.style.color = rankColors[baseChar.rank] || '#fff';
     dialog.appendChild(nameDiv);
 
@@ -1238,7 +1240,7 @@ function showCharSelectPopup(slotIndex) {
         return {
             instanceId: instId,
             charId: charId,
-            ...baseData,
+            ...instData,
             level: instData.level,
             hp: instData.hp,
             atk: instData.atk,
@@ -1730,6 +1732,7 @@ function updateBagEquipDetailBar(tid, tDef, bagItem) {
 function renderBagCharContent(container) {
     const RANK_ORDER = { kami:0,legend: 1, epic: 2, epicfake:3,rare: 4, common: 5, junk: 6 };
     const RANK_BORDER_COLORS = {
+        kami:'#ffff00',
         legend: '#ff4444',
         epic: '#ff8d8d',
         epicfake:'#ff8800',
@@ -1751,14 +1754,15 @@ function renderBagCharContent(container) {
         const charId = instData.charId || instId;
         const baseData = characterList[charId];
         if (!baseData) return null;
-        return {
+        var info = {
             instanceId: instId,
             charId: charId,
-            ...baseData,
+            ...instData,
             level: instData.level
         };
+        return info
     }).filter(Boolean);
-    
+    console.log('ownedInstances', ownedInstances);
     ownedInstances.sort((a, b) => (RANK_ORDER[a.rank] || 99) - (RANK_ORDER[b.rank] || 99));
 
     for (const charInst of ownedInstances) {
@@ -1833,6 +1837,7 @@ function renderBagCharContent(container) {
 function updateBagCharDetailBar(charInst) {
     const detailBar = document.getElementById('bag-detail-bar');
     if (!detailBar) return;
+    // console.log('updateBagCharDetailBar', charInst);
 
     // charInst 现在包含 instanceId, charId, level 等
     const saveData = window.charBagData[charInst.instanceId];
@@ -2147,6 +2152,7 @@ function renderGalleryView(container) {
         junk: '废材'
     };
     const RANK_BORDER_COLORS = {
+        kami:'#ffff00',
         legend: '#ff4444',
         epic: '#ff8d8d',
         epicfake:'#ff8800',
@@ -3282,7 +3288,10 @@ function renderChapterEventList(container, chapterKey) {
                     goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
                     onWin: () => {
                         if (!window.playerProgress) window.playerProgress = {};
-                        window.playerProgress[checkEventId] = true;
+                        if(!window.playerProgress[checkEventId]){
+                            window.playerProgress[checkEventId] = true;
+                            levelUpMainCharacter();
+                        }
                         // 战斗胜利金币奖励
                         const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
                         const isBoss = event.type === 'boss';
@@ -4753,11 +4762,15 @@ function showBagCharDetail(charInfo) {
  * @param {string} charId - 角色基础ID
  */
 function showBagCharDetailPopup(instanceId, charId) {
-    const char = characterList[charId];
-    if (!char) return;
     const instData = window.charBagData && window.charBagData[instanceId];
     if (!instData) return;
-
+    const char = characterList[charId];
+    if (!char) return;
+    const charT = instData;
+    // 遮罩层
+    // const overlay = document.createElement('div');
+    // overlay.className = 'ybrpg-confirm-overlay'; // 保持原有类名
+    // overlay.id = 'bag-char-detail-overlay';      // <--- 新增：添加ID以便刷新时移除
     const saveData = instData;
     const RANK_LABELS = { kami:'神品',legend: '传说', epic: '史诗', epicfake:'伪史诗',rare: '精品', common: '普通', junk: '废材' };
     const RANK_COLORS = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
@@ -4765,15 +4778,16 @@ function showBagCharDetailPopup(instanceId, charId) {
 
     const overlay = document.createElement('div');
     overlay.className = 'ybrpg-confirm-overlay';
+    // overlay.id = 'bag-char-detail-overlay';      // <--- 新增：添加ID以便刷新时移除
 
     const dialog = document.createElement('div');
     dialog.className = 'gallery-detail-dialog';
-    dialog.style.maxWidth = '380px';
+    dialog.style.maxWidth = '300px';
 
     // 角色名
     const nameDiv = document.createElement('div');
     nameDiv.className = 'gallery-detail-name';
-    nameDiv.textContent = char.name;
+    nameDiv.textContent = charT.name;
     dialog.appendChild(nameDiv);
 
     // 上半部分：图片 + 属性
@@ -4788,7 +4802,7 @@ function showBagCharDetailPopup(instanceId, charId) {
     const img = document.createElement('img');
     img.className = 'gallery-detail-img';
     img.src = `./image/character/${charId}.jpg`;
-    img.alt = char.name;
+    img.alt = charT.name;
     img.onerror = function() {
         this.onerror = function() {
             this.style.display = 'none';
@@ -4797,7 +4811,7 @@ function showBagCharDetailPopup(instanceId, charId) {
             p.style.width = '120px';
             p.style.height = '150px';
             p.style.fontSize = '36px';
-            p.textContent = char.name.charAt(0);
+            p.textContent = charT.name.charAt(0);
             this.parentNode.appendChild(p);
         };
         this.src = `./image/character/${charId}.webp`;
@@ -4812,16 +4826,16 @@ function showBagCharDetailPopup(instanceId, charId) {
 
     const rankDiv = document.createElement('div');
     rankDiv.className = 'gallery-detail-rank';
-    const rankText = RANK_LABELS[char.rank] || char.rank;
+    const rankText = RANK_LABELS[charT.rank] || charT.rank;
     const levelText = `Lv.${saveData.level}`;
-    rankDiv.innerHTML = `<span style="color:${RANK_COLORS[char.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">${levelText}</span>`;
+    rankDiv.innerHTML = `<span style="color:${RANK_COLORS[charT.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">${levelText}</span>`;
     attrDiv.appendChild(rankDiv);
 
     const tipDiv = document.createElement('div');
     tipDiv.style.fontSize = '12px';
     tipDiv.style.color = '#aaa';
     tipDiv.style.marginBottom = '4px';
-    tipDiv.textContent = TIP_LABELS[char.template]|| '';
+    tipDiv.textContent = TIP_LABELS[charT.template]|| '';
     attrDiv.appendChild(tipDiv);
 
     const attrs = [
@@ -4878,8 +4892,8 @@ function showBagCharDetailPopup(instanceId, charId) {
             if (rankEl) {
                 const rankColors = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
                 const rankLabels = { kami:'神品',legend: '传说', epic: '史诗', epicfake:'伪史诗',rare: '精品', common: '普通', junk: '废材' };
-                const rankText = rankLabels[char.rank] || char.rank;
-                rankEl.innerHTML = `<span style="color:${rankColors[char.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${newLevel}</span>`;
+                const rankText = rankLabels[instanceId.rank] || instanceId.rank;
+                rankEl.innerHTML = `<span style="color:${rankColors[instanceId.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${newLevel}</span>`;
             }
             // 更新四维属性
             const attrRows = dialog.querySelectorAll('.gallery-detail-attr-row .attr-value');
@@ -4903,7 +4917,118 @@ function showBagCharDetailPopup(instanceId, charId) {
     closeBtn.textContent = '关闭';
     closeBtn.onclick = () => overlay.remove();
     btnRow.appendChild(closeBtn);
+        // --- 👇 在此处插入突破按钮逻辑 (带二次确认) 👇 ---
+    if (instanceId) {
+        // 1. 获取突破信息以判断状态
+        const currentTupo = instData.tupolevel || 0;
+        const breakInfo = getBreakthroughInfo(char, currentTupo);
+        
+        // 2. 创建突破按钮
+        const breakthroughBtn = document.createElement('button');
+        breakthroughBtn.className = 'ybrpg-btn';
+        
+        // 样式：橙色主题，与升级按钮区分
+        // breakthroughBtn.style.background = '#ff8800'; 
+        // breakthroughBtn.style.marginLeft = '10px'; // 与升级按钮保持间距
+        
+        // 文本：根据状态显示不同文字
+        if (breakInfo.maxed) {
+            breakthroughBtn.textContent = '已突破至极限';
+            breakthroughBtn.disabled = true;
+            breakthroughBtn.style.opacity = '0.6';
+            breakthroughBtn.style.cursor = 'not-allowed';
+        } else {
+            breakthroughBtn.textContent = `突破 (当前${currentTupo}阶)`;
+            
+            // 3. 点击事件：弹出二次确认
+            breakthroughBtn.onclick = () => {
+                const cost = breakInfo.cost;
+                const nextRankLabel = breakInfo.nextRank ? getRankLabel(breakInfo.nextRank) : '无变化';
+                
+                // --- 1. 计算可用的同名角色数量 (排除自身) ---
+                const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
+                    // 排除自身实例
+                    if (id === instanceId) return false;
+                    
+                    const inst = window.charBagData[id];
+                    // 确保是同名角色 (兼容 charId 匹配)
+                    return inst && (inst.charId === charT.charId || id === charT.charId);
+                });
+                
+                const availableCount = availableFodderIds.length;
+                
+                // --- 2. 计算突破后的剩余量 ---
+                const remainingCount = availableCount - cost;
+                
+                // --- 3. 确定显示颜色和状态文本 ---
+                let countColor, countStatus;
+                if (remainingCount < 0) {
+                    countColor = '#ff4444'; // 红色：材料不足
+                    countStatus = `还差 ${Math.abs(remainingCount)} 个`;
+                } else if (remainingCount === 0) {
+                    countColor = '#ffaa00'; // 橙色：刚好用完
+                    countStatus = `0 个 (即将耗尽)`;
+                } else {
+                    countColor = '#88cc88'; // 绿色：充足
+                    countStatus = `${remainingCount} 个`;
+                }
 
+                const needPromotionText = breakInfo.needPromotion ? `<br><span style="color:#ff4444">⚠ 即将升阶至: ${nextRankLabel}</span>` : '';
+                
+                // --- 4. 构建确认消息 ---
+                const confirmMsg = `
+                    <div style="text-align:left; line-height: 1.6;">
+                        <p>确定要突破 <strong>${charT.name}</strong> 吗？</p>
+                        <p>当前阶数: <span style="color:#aaa">${currentTupo}</span> ➔ <span style="color:#44aaff">${currentTupo + 1}</span></p>
+                        <p>消耗材料: <span style="color:#ff8800">${cost} 个同名角色</span></p>
+                        <p>当前可用存货: <span style="color:#88cc88">${availableCount} 个</span> (不含自身)</p>
+                        <p>突破后剩余: <span style="color:${countColor}">${countStatus}</span></p>
+                        ${needPromotionText}
+                    </div>
+                `;
+
+                // --- 5. 材料不足校验 ---
+                if (availableCount < cost) {
+                    toast(`材料不足！需要 ${cost} 个同名角色作为材料，当前可用: ${availableCount} 个`, 'error');
+                    return;
+                }
+
+                // --- 6. 调用确认弹窗 ---
+                confirmDialog(confirmMsg, () => {
+                    // 【确认回调】执行突破
+                    const result = breakthroughCharacterInstance(instanceId);
+                    
+                    if (result.success) {
+                        toast(result.message, 'success');
+                        
+                        // 刷新弹窗
+                        const currentOverlay = document.getElementById('bag-char-detail-overlay');
+                        if (currentOverlay) {
+                            currentOverlay.remove();
+                        }
+                        showBagCharDetailPopup(instanceId, charId);
+                        
+                        // 刷新背包视图背景
+                        if (typeof renderBagView === 'function') {
+                            const bagView = document.getElementById('bag-view');
+                            if (bagView) renderBagView(bagView);
+                        }
+                    } else {
+                        toast(result.message, 'error');
+                    }
+                }, () => {
+                    // 【取消回调】
+                    console.log('用户取消了突破');
+                });
+            };
+        }
+        
+        // 将突破按钮添加到按钮行
+        if (btnRow) {
+            btnRow.appendChild(breakthroughBtn);
+        }
+    }
+    // --- 👆 插入结束 👆 ---
     dialog.appendChild(btnRow);
 
     overlay.appendChild(dialog);
@@ -5058,7 +5183,7 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 
     const popup = document.createElement('div');
     popup.className = 'char-select-popup';
-    popup.style.maxWidth = '380px';
+    popup.style.maxWidth = '300px';
 
     const title = document.createElement('div');
     title.className = 'char-select-title';
@@ -5478,4 +5603,253 @@ function mergeNoOverwrite(a, b) {
         }
     }
     return a;
+}
+
+
+/**
+ * 提升主角等级（每通过一个主线章节调用一次）
+ */
+function levelUpMainCharacter() {
+    const mainCharId = 'zhujue'; // 确保这里与 initNewGame 中的 ID 一致
+    if (!window.charBagData) return;
+
+    // 1. 找到主角的 Instance ID
+    const mainInstId = Object.keys(window.charBagData).find(id => 
+        window.charBagData[id].charId === mainCharId
+    );
+
+    if (!mainInstId) {
+        console.warn('未找到主角实例，无法升级');
+        return;
+    }
+
+    const instData = window.charBagData[mainInstId];
+    const baseChar = characterList[mainCharId];
+    
+    if (!baseChar || !instData) return;
+
+    // 2. 提升等级
+    const oldLevel = instData.level || 1;
+    instData.level = oldLevel + 1;
+
+    // 3. 重新计算属性
+    // 优先使用 updateCharacterSP (如果它存在且能处理 level)
+    if (typeof updateCharacterSP === 'function') {
+        // 确保基础字段存在
+        instData.rank = instData.rank || baseChar.rank;
+        instData.template = instData.template || baseChar.template;
+        
+        const updatedStats = updateCharacterSP(instData);
+        if (updatedStats) {
+            instData.hp = updatedStats.hp;
+            instData.atk = updatedStats.atk;
+            instData.def = updatedStats.def;
+            instData.spe = updatedStats.spe;
+            instData.maxHp = updatedStats.hp;
+            instData.currentHp = updatedStats.hp; // 升级回满血
+        }
+    } else {
+        // 备用方案：简单线性成长
+        const growthRate = 0.1; 
+        instData.hp = Math.floor((instData.hp || baseChar.hp) * (1 + growthRate));
+        instData.atk = Math.floor((instData.atk || baseChar.atk) * (1 + growthRate));
+        instData.def = Math.floor((instData.def || baseChar.def) * (1 + growthRate));
+        instData.spe = Math.floor((instData.spe || baseChar.spe) * (1 + growthRate));
+        instData.maxHp = instData.hp;
+        instData.currentHp = instData.hp;
+    }
+
+    console.log(`主角升级！当前等级: ${instData.level}`);
+    toast(`主角升至 Lv.${instData.level}！`, 'success');
+    
+    // 4. 刷新界面
+    refreshAllTeamSlots();
+    
+    // 5. 自动保存
+    SaveManager.autoSave();
+}
+
+/**
+ * 提升指定角色实例的等级并更新属性
+ * @param {string} instanceId - 角色实例ID (window.charBagData 的键)
+ * @param {number} levelsToAdd - 要提升的等级数量，默认为 1
+ * @returns {boolean} - 是否升级成功
+ */
+function upgradeCharacterInstance(instanceId, levelsToAdd = 1) {
+    // 1. 基础校验
+    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+        console.warn(`[升级失败] 无效的实例ID: ${instanceId}`);
+        return false;
+    }
+
+    const instData = window.charBagData[instanceId];
+    const charId = instData.charId || instanceId;
+    const baseChar = characterList[charId];
+
+    if (!baseChar) {
+        console.warn(`[升级失败] 未找到基础角色数据: ${charId}`);
+        return false;
+    }
+
+    // 2. 提升等级
+    const oldLevel = instData.level || 1;
+    const newLevel = oldLevel + levelsToAdd;
+    
+    // 可选：设置等级上限，例如 100 级
+    const MAX_LEVEL = 100;
+    if (newLevel > MAX_LEVEL) {
+        toast(`角色已达到最高等级 ${MAX_LEVEL}`, 'warning');
+        return false;
+    }
+
+    instData.level = newLevel;
+
+    // 3. 重新计算属性
+    // updateCharacterSP 会根据 instData 中的 level, rank, template 等字段重新计算 hp, atk, def, spe
+    if (typeof updateCharacterSP === 'function') {
+        updateCharacterSP(instData);
+    } else {
+        console.error('[升级警告] updateCharacterSP 函数未定义，属性未更新');
+        // 如果 updateCharacterSP 不存在，可能需要手动计算或报错
+        return false;
+    }
+
+    // 4. 处理当前血量 (可选策略)
+    // 策略 A: 升级后回满血
+    // instData.currentHp = instData.hp;
+    
+    // 策略 B: 保持血量百分比 (推荐)
+    if (instData.maxHp && instData.maxHp > 0 && instData.hp > 0) {
+        // 注意：updateCharacterSP 通常会更新 instData.hp 作为 maxHp
+        // 假设 updateCharacterSP 更新的是 instData.hp (即最大血量)
+        // 我们需要根据旧的最大血量比例来设置新的当前血量
+        // 但由于 updateCharacterSP 直接修改了 instData.hp，我们需要在调用前保存旧的最大血量，或者假设 currentHp 不应超过新的 maxHp
+        
+        // 简单处理：如果当前血量超过了新的最大血量，则修正为最大血量
+        // 如果希望保持比例，需要在调用 updateCharacterSP 之前记录 oldMaxHp
+        if (instData.currentHp > instData.hp) {
+            instData.currentHp = instData.hp;
+        }
+    } else {
+        // 如果没有 currentHp 字段，初始化它
+        if (instData.currentHp === undefined) {
+            instData.currentHp = instData.hp;
+        }
+    }
+    
+    // 5. 同步 maxHp 字段 (如果游戏逻辑依赖 maxHp)
+    instData.maxHp = instData.hp;
+
+    console.log(`[升级成功] 实例 ${instanceId} (${baseChar.name}) 等级: ${oldLevel} -> ${newLevel}`);
+    return true;
+}
+
+/**
+ * 角色实例突破函数
+ * @param {string} targetInstId - 要突破的目标角色实例ID
+ * @returns {Object} { success: boolean, message: string }
+ */
+function breakthroughCharacterInstance(targetInstId) {
+    // 1. 基础校验
+    if (!targetInstId || !window.charBagData || !window.charBagData[targetInstId]) {
+        return { success: false, message: '无效的目标实例' };
+    }
+
+    const targetInst = window.charBagData[targetInstId];
+    const charId = targetInst.charId || targetInstId;
+    const baseChar = characterList[charId];
+
+    if (!baseChar) {
+        return { success: false, message: '未找到角色基础数据' };
+    }
+
+    // 获取当前突破阶数，默认为 0
+    const currentTupoLevel = targetInst.tupolevel || 0;
+
+    // 2. 获取突破规则
+    // 注意：getBreakthroughInfo 需要传入 baseChar 和当前阶数
+    const breakInfo = getBreakthroughInfo(baseChar, currentTupoLevel);
+
+    // 检查是否已满级
+    if (breakInfo.maxed) {
+        return { success: false, message: '角色已达到最大突破阶数' };
+    }
+
+    const cost = breakInfo.cost; // 需要的本体数量
+    const needPromotion = breakInfo.needPromotion; // 是否需要升阶
+    const nextRank = breakInfo.nextRank; // 升阶后的品质
+
+    // 3. 资源校验：检查是否有足够的本体
+    // 获取所有可用的同角色实例（排除自身，排除正在队伍中的可选逻辑，这里简单排除自身）
+    const allInstIds = Object.keys(window.charBagData);
+    const fodderCandidates = allInstIds.filter(id => {
+        if (id === targetInstId) return false; // 不能消耗自己
+        const inst = window.charBagData[id];
+        return inst && (inst.charId === charId || id === charId); // 必须是同角色
+    });
+
+    if (fodderCandidates.length < cost) {
+        return { 
+            success: false, 
+            message: `突破需要 ${cost} 个同名角色作为材料，当前可用: ${fodderCandidates.length}` 
+        };
+    }
+
+    // 4. (可选) 升阶材料校验
+    // 假设升阶需要消耗 "突破石"，存储在 window.gameItems 或类似位置
+    // if (needPromotion) {
+    //     const stoneCost = 1; // 假设每次升阶消耗1个
+    //     if ((window.gameItems?.['breakthrough_stone'] || 0) < stoneCost) {
+    //         return { success: false, message: '缺少突破石，无法升阶' };
+    //     }
+    // }
+
+    // 5. 执行消耗：移除作为材料的实例
+    // 随机选择或按顺序选择前 cost 个实例进行删除
+    for (let i = 0; i < cost; i++) {
+        const fodderId = fodderCandidates[i];
+        // 如果该实例在队伍中，可能需要先移除队伍引用，防止报错
+        if (window.currentTeam && window.currentTeam.includes(fodderId)) {
+            window.currentTeam = window.currentTeam.filter(id => id !== fodderId);
+            toast(`因突破消耗，角色已从队伍中移除`, 'warning');
+        }
+        delete window.charBagData[fodderId];
+        
+        // 如果有宝物系统，也需要清理该实例的宝物数据
+        if (window.treasureEquipData && window.treasureEquipData[fodderId]) {
+            delete window.treasureEquipData[fodderId];
+        }
+    }
+
+    // 6. 执行升阶逻辑（如果需要）
+    if (needPromotion && nextRank) {
+        targetInst.rank = nextRank;
+        // 如果升阶消耗了特殊道具，在此处扣除
+        // if (window.gameItems?.['breakthrough_stone']) {
+        //     window.gameItems['breakthrough_stone'] -= 1;
+        // }
+    }
+
+    // 7. 提升突破阶数
+    targetInst.tupolevel = currentTupoLevel + 1;
+
+    // 8. 重新计算属性
+    // updateCharacterSP 会根据新的 tupolevel 和 rank 重新计算 hp, atk, def, spe
+    if (typeof updateCharacterSP === 'function') {
+        updateCharacterSP(targetInst);
+    } else {
+        console.warn('updateCharacterSP 未定义，属性未更新');
+    }
+
+    // 9. 同步 maxHp 和 currentHp
+    targetInst.maxHp = targetInst.hp;
+    // 策略：突破后回满血
+    targetInst.currentHp = targetInst.hp;
+
+    console.log(`[突破成功] 实例 ${targetInstId} 突破至第 ${targetInst.tupolevel} 阶, 品质: ${targetInst.rank}`);
+    
+    return { 
+        success: true, 
+        message: `突破成功！当前阶数: ${targetInst.tupolevel}, 品质: ${getRankLabel(targetInst.rank)}` 
+    };
 }
