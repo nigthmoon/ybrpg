@@ -26,6 +26,27 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
         // 空位或无id的角色不创建战斗单位
         if (!data || !data.id) return null;
         
+        // 【核心修复】如果 data 中缺少 rank/template，从 characterList 补全
+        let rank = data.rank;
+        let template = data.template;
+
+        if (!rank || !template) {
+            const baseDef = characterList[data.id];
+            if (baseDef) {
+                rank = rank || baseDef.rank || 'common';
+                template = template || baseDef.template || 'balanced';
+            } else {
+                rank = rank || 'common';
+                template = template || 'balanced';
+            }
+        }
+
+        // 【修复】防御性编程：确保数值类型正确
+        const hp = Number(data.hp) || 100;
+        const atk = Number(data.atk) || 10;
+        const def = Number(data.def) || 0;
+        const spe = Number(data.spe) || 0;
+
         let activeTreasures = [];
         // 优先使用传入的 treasures 数据（我方队伍已由 mode.js 预处理）
         if (data.treasures && Array.isArray(data.treasures)) {
@@ -42,25 +63,29 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 
         return {
             id: data.id,
-            instanceId: data.instanceId || data.id, // 保存 instanceId 供后续可能的调试或扩展使用
-            name: data.name,
-            side,               // 'player' | 'enemy'
-            slotIndex,          // 格子序号 0-5
-            maxHp: data.hp,
-            hp: data.hp,
-            atk: data.atk,
-            def: data.def,
-            spe: data.spe,
+            instanceId: data.instanceId || data.id,
+            name: data.name || '未知单位',
+            side,
+            slotIndex,
+            
+            rank: rank,
+            template: template,
+
+            maxHp: hp,
+            hp: hp,
+            atk: atk,
+            def: def,
+            spe: spe,
             energy: 0,
-            buff: data.buff ? [...data.buff] : [],
-            skills: data.skills || [],  // [普攻ID, 技能ID, 必杀ID]
+            buff: Array.isArray(data.buff) ? [...data.buff] : [],
+            skills: Array.isArray(data.skills) ? [...data.skills] : ['attack1', null, null],
             alive: true,
-            treasures: activeTreasures,  // 角色装备的宝物ID列表
-            sealed: false,               // 封印状态：禁止发动技能和必杀
-            sealTurns: 0,                // 封印剩余轮数（从施加者回合算起）
-            sealOwner: null,             // 封印施加者的side，用于轮数计算
-            permanentlySealed: false,    // 永久封印（断肠效果）
-            extraTurn: false,            // 连破标记：本回合击杀后可再行动
+            treasures: activeTreasures,
+            sealed: false,
+            sealTurns: 0,
+            sealOwner: null,
+            permanentlySealed: false,
+            extraTurn: false,
         };
     };
 
@@ -124,9 +149,17 @@ function resetActedSlots() {
     bs.actedSlots = { player: new Set(), enemy: new Set() };
 }
 
+/**
+ * 根据阵营和槽位索引获取存活的单位对象
+ * @param {string} side - 阵营标识，'player' 表示玩家方，其他值表示敌方
+ * @param {number} slotIndex - 单位在数组中的槽位索引
+ * @returns {Object|null} 如果对应位置存在且存活的单位则返回该单位对象，否则返回 null
+ */
 function getUnit(side, slotIndex) {
+    // 根据阵营选择对应的单位数组
     const units = side === 'player' ? battleState.playerUnits : battleState.enemyUnits;
     const unit = units[slotIndex];
+    // 仅当单位存在且处于存活状态时返回，否则返回 null
     return (unit && unit.alive) ? unit : null;
 }
 
@@ -139,12 +172,24 @@ function isSideDefeated(side) {
     return getAliveUnits(side).length === 0;
 }
 
+/**
+ * 推进战斗流程至下一个行动回合。
+ * 
+ * 该函数负责处理战斗的核心循环逻辑，包括：
+ * 1. 检查战斗是否结束或某一方是否被击败。
+ * 2. 确定当前轮次的先手和后手方。
+ * 3. 寻找双方可行动的角色。
+ * 4. 若双方均无可用角色，则结束当前轮次，进入下一轮并重置状态。
+ * 5. 若有可行动角色，则根据先手优先原则执行行动，触发回合开始效果，并切换至相应的玩家操作或AI执行阶段。
+ * 
+ * @returns {void}
+ */
 // ====== 战斗流程控制 ======
 function nextTurn() {
     const bs = battleState;
     if (bs.phase === 'ended') return;
 
-    // 检查胜负
+    // 检查胜负条件，若某一方被击败则结束战斗
     if (isSideDefeated('player')) {
         endBattle('enemy');
         return;
@@ -178,6 +223,7 @@ function nextTurn() {
         bs.actedSlots[bs.firstSide].add(firstActor.slotIndex);
         bs.currentTurnSide = bs.firstSide;
         bs.currentTurnIndex = firstActor.slotIndex;
+        updateBattleUI()
         // 回合开始时触发宝物（涉猎、洛神），动画结束后继续
         triggerOnTurnStart(firstActor, () => {
             updateBattleUI();
@@ -197,6 +243,7 @@ function nextTurn() {
         bs.actedSlots[secondSide].add(secondActor.slotIndex);
         bs.currentTurnSide = secondSide;
         bs.currentTurnIndex = secondActor.slotIndex;
+        updateBattleUI()
         // 回合开始时触发宝物，动画结束后继续
         triggerOnTurnStart(secondActor, () => {
             updateBattleUI();
@@ -212,12 +259,22 @@ function nextTurn() {
     }
 }
 
-/** 一次行动完成后，继续处理本回合剩余行动（后手方），然后进入下一回合 */
+/**
+ * 处理一次行动完成后的逻辑流程。
+ * 
+ * 主要职责包括：
+ * 1. 检查战斗是否结束（胜负判定）。
+ * 2. 处理当前单位因【连破】获得的额外行动回合。
+ * 3. 若为先手方行动结束，切换至后手方进行行动；若后手方无可用单位，则直接进入下一回合。
+ * 4. 若为后手方行动结束，或先手行动后后手方空过，则进入下一回合。
+ * 
+ * @returns {void}
+ */
 function afterAction() {
     const bs = battleState;
     if (bs.phase === 'ended') return;
 
-    // 检查胜负
+    // 检查胜负条件，若任意一方被击败则结束战斗
     if (isSideDefeated('player')) {
         endBattle('enemy');
         return;
@@ -227,7 +284,7 @@ function afterAction() {
         return;
     }
 
-    // 检查当前行动者是否触发了连破（额外行动）
+    // 检查当前行动者是否触发【连破】机制以获得额外行动机会
     const currentUnit = bs.currentTurnSide === 'player'
         ? bs.playerUnits[bs.currentTurnIndex]
         : bs.enemyUnits[bs.currentTurnIndex];
@@ -248,14 +305,15 @@ function afterAction() {
 
     const secondSide = bs.firstSide === 'player' ? 'enemy' : 'player';
 
-    // 如果先手方刚刚行动完，检查后手方是否有可行动角色
+    // 若当前为先手方行动完毕，尝试寻找后手方可行动单位并切换回合顺序
     if (bs.currentTurnSide === bs.firstSide) {
         const secondActor = findNextActor(secondSide);
         if (secondActor) {
             bs.actedSlots[secondSide].add(secondActor.slotIndex);
             bs.currentTurnSide = secondSide;
             bs.currentTurnIndex = secondActor.slotIndex;
-            // 回合开始时触发宝物，动画结束后继续
+            // 触发回合开始时的宝物效果，待动画结束后继续执行行动逻辑
+            updateBattleUI()
             triggerOnTurnStart(secondActor, () => {
                 updateBattleUI();
                 if (secondSide === 'player') {
@@ -271,7 +329,7 @@ function afterAction() {
         // 后手方无人可行动，进入下一回合
     }
 
-    // 后手方行动完，或先手方行动后后手方空过 → 下一回合
+    // 后手方行动完毕，或先手行动后后手方无可用单位，推进至下一回合
     nextTurn();
 }
 function calcDamage(attacker, defValue, coefficient, extraEnergy = 0) {
@@ -287,18 +345,28 @@ function calcDamage(attacker, defValue, coefficient, extraEnergy = 0) {
 // ====== 技能执行 ======
 function executeSkill(actor, skillType, skillId, targets, energyCost, callback) {
     const bs = battleState;
-    const sData = contentList[skillType] && contentList[skillType][skillId];
+    if (!bs) { if(callback) callback(); return; }
+
+    // 【修复】确保 contentList 存在
+    if (!window.contentList || !window.contentList[skillType]) {
+        addBattleLog(`${actor.name} 技能数据缺失，行动失败`);
+        if (callback) callback();
+        return;
+    }
+
+    const sData = window.contentList[skillType][skillId];
     if (!sData) {
-        addBattleLog(`${actor.name} 尝试使用未知技能，行动失败`);
+        addBattleLog(`${actor.name} 尝试使用未知技能(${skillId})，行动失败`);
         if (callback) callback();
         return;
     }
 
     // 消耗能量
     actor.energy -= energyCost;
+    if (actor.energy < 0) actor.energy = 0; // 防止负数
 
     addBattleLog(`${actor.name} 使用了【${sData.name}】`);
-
+    
     // 根据技能类型获取系数
     let coefficient = 0;
     let isRecover = false;
@@ -368,13 +436,33 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
 
 function executePugong(actor, targets, callback) {
     const bs = battleState;
-    // 普攻：消耗0能量，下达普攻指令时立即+1能量
+    if (!bs) { if(callback) callback(); return; }
+
     const skillId = actor.skills[0] || 'attack1';
-    const sData = contentList.pugong && contentList.pugong[skillId];
-    if (!sData) {
-        if (callback) callback();
-        return;
+    
+    // 【修复】确保 contentList 存在
+    // if (!window.contentList || !window.contentList.pugong) {
+    //     if (callback) callback();
+    //     return;
+    // }
+    let sData = null;
+    if (window.contentList && window.contentList.pugong) {
+        sData = window.contentList.pugong[skillId];
     }
+    // 如果找不到技能数据，使用默认普攻数据
+    if (!sData) {
+        console.warn(`[Battle] Pugong skill '${skillId}' not found in contentList. Using default.`);
+        sData = {
+            name: '普攻',
+            content: 'player.atk * 1.0', // 默认系数 1.0
+            target: ['one', 'first']     // 默认单体
+        };
+    }
+    // const sData = window.contentList.pugong[skillId];
+    // if (!sData) {
+    //     if (callback) callback();
+    //     return;
+    // }
 
     // 普攻指令下达，立即回复1能量
     actor.energy = Math.min(8, actor.energy + 1);
@@ -383,7 +471,7 @@ function executePugong(actor, targets, callback) {
     addBattleLog(`${actor.name} 使用了【${sData.name}】`);
 
     // 解析系数
-    let coefficient = 1.25;
+    let coefficient = 1.0;
     const src = sData.content ? sData.content.toString() : '';
     const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
     if (match) coefficient = parseFloat(match[1]);
@@ -406,7 +494,7 @@ function executePugong(actor, targets, callback) {
         }
 
         const t = targets[targetIndex++];
-        if (!t.alive) {
+        if (!t || !t.alive) {
             processNextTarget();
             return;
         }
@@ -563,132 +651,150 @@ function aiChooseAction(actor) {
  * @param {Array} friendlySide - 友方单位数组
  * @returns {Array} 选中的目标单位数组，若无有效目标则返回空数组
  */
+// function aiSelectTargets(actor, skillData, enemySide, friendlySide) {
+    
+//     // 获取当前角色的序号 (0-5)
+//     const slotIndex = actor.slotIndex;
+    
+//     // 可选：根据序号进行特定逻辑判断或日志记录
+//     // addBattleLog(`${actor.name} (位置:${slotIndex}) 开始行动`);
+
+//     const targetMode = skillData.target ? skillData.target[0] : 'one';
+//     const aiPref = skillData.target ? skillData.target[1] : 'first';
+
+//     // 判断技能是否为恢复类技能，以确定目标阵营
+//     const isRecover = skillData.content ? skillData.content.toString().includes('rpg_recover') : false;
+//     const targetSide = isRecover ? friendlySide : enemySide;
+//     const aliveTargets = getAliveUnits(targetSide);
+
+//     if (aliveTargets.length === 0) return [];
+
+//     /**
+//      * [5][4][3]
+//      * [2][1][0]
+//      * ↑敌方
+//      *     我方↓
+//      * [0][1][2]
+//      * [3][4][5]
+//      * 
+//      * 根据角色位置和偏好生成目标优先级列表
+//      * @param {number} num - 角色槽位索引 (0-5)
+//      * @param {boolean} first - true: 优先前排/特定列序, false: 优先后排/反向列序
+//      * @returns {number[]} 排序后的槽位索引数组
+//      */
+//     function getTargetForSelf(num, first) {
+//         const col = num % 3;         // 0: Left, 1: Mid, 2: Right
+        
+//         // 定义列的优先级顺序 (基于原switch逻辑归纳)
+//         // Left(0) prefers Right(2)>Mid(1)>Left(0)
+//         // Mid(1) prefers Mid(1)>Left(0)>Right(2)
+//         // Right(2) prefers Left(0)>Mid(1)>Right(2)
+//         const colOrders = [
+//             [2, 1, 0], // Col 0
+//             [1, 0, 2], // Col 1
+//             [0, 1, 2]  // Col 2
+//         ];
+//         const preferredCols = colOrders[col];
+        
+//         // 确定行的优先级顺序
+//         // 原逻辑中 first=true 总是优先前排(0,1,2)，first=false 总是优先后排(3,4,5)
+//         const frontIndices = [0, 1, 2];
+//         const backIndices = [3, 4, 5];
+        
+//         const primaryGroup = first ? frontIndices : backIndices;
+//         const secondaryGroup = first ? backIndices : frontIndices;
+
+//         // 辅助函数：根据列偏好对一组索引排序
+//         const sortByColPref = (indices) => {
+//             return indices.slice().sort((a, b) => {
+//                 const colA = a % 3;
+//                 const colB = b % 3;
+//                 return preferredCols.indexOf(colA) - preferredCols.indexOf(colB);
+//             });
+//         };
+
+//         return [...sortByColPref(primaryGroup), ...sortByColPref(secondaryGroup)];
+//     }
+
+//     switch (targetMode) {
+//         case 'one': {
+//             // 单个目标模式：根据AI偏好选择最低血量、随机或首个存活单位
+//             if (aiPref === 'lowest') {
+//                 return [aliveTargets.reduce((a, b) => a.hp < b.hp ? a : b)];
+//             }
+//             if (aiPref === 'random') {
+//                 return [aliveTargets[Math.floor(Math.random() * aliveTargets.length)]];
+//             }
+//             // first: 使用新的数学方法判定目标
+//             // 获取基于 actor 位置的优先级列表
+//             const priorityList = getTargetForSelf(slotIndex, true);
+            
+//             // 在优先级列表中查找第一个存在的存活敌人
+//             for (const idx of priorityList) {
+//                 const target = aliveTargets.find(u => u.slotIndex === idx);
+//                 if (target) return [target];
+//             }
+//             // 如果优先级列表中没有找到（理论上不会发生，除非 aliveTargets 为空）， fallback 到第一个
+//             return [aliveTargets[0]];
+//         }
+//         case 'all':
+//             // 全体目标模式：返回所有存活单位
+//             return [...aliveTargets];
+//         case 'row': {
+//             // 行目标模式：根据位置索引区分前排和后排，依据偏好选择对应排位的存活单位
+//             const front = aliveTargets.filter(u => u.slotIndex < 3);
+//             const back = aliveTargets.filter(u => u.slotIndex >= 3);
+//             if (aiPref === 'last') {
+//                 return back.length > 0 ? back : front;
+//             }
+//             return front.length > 0 ? front : back;
+//         }
+//         case 'column': {
+//             // 列目标模式：按slotIndex模3分组为三列，优先选择存活单位最多的列
+//             const columns = [[], [], []];
+//             aliveTargets.forEach(u => {
+//                 const col = u.slotIndex % 3;
+//                 columns[col].push(u);
+//             });
+//             // 选非空列中目标最多的列
+//             const validCols = columns.filter(c => c.length > 0);
+//             if (validCols.length === 0) return [];
+//             // 按AI倾向选择：first取最左列，random取随机列
+//             let chosenCol;
+//             if (aiPref === 'random') {
+//                 chosenCol = validCols[Math.floor(Math.random() * validCols.length)];
+//             } else {
+//                 const priorityList = getTargetForSelf(slotIndex, true);
+            
+//                 // 在优先级列表中查找第一个存在的存活敌人
+//                 for (const idx of priorityList) {
+//                     const target = aliveTargets.find(u => u.slotIndex === idx);
+//                     if (target) return [target];
+//                 }
+//                 // // first: 取最左列
+//                 // for (let c = 0; c < 3; c++) {
+//                 //     if (columns[c].length > 0) { chosenCol = columns[c]; break; }
+//                 // }
+//             }
+//             return chosenCol || aliveTargets;
+//         }
+//         default:
+//             // 默认情况：返回首个存活单位
+//             return [aliveTargets[0]];
+//     }
+// }
+/**
+ * AI选择技能目标 (重构版)
+ */
 function aiSelectTargets(actor, skillData, enemySide, friendlySide) {
-    
-    // 获取当前角色的序号 (0-5)
-    const slotIndex = actor.slotIndex;
-    
-    // 可选：根据序号进行特定逻辑判断或日志记录
-    // addBattleLog(`${actor.name} (位置:${slotIndex}) 开始行动`);
-
-    const targetMode = skillData.target ? skillData.target[0] : 'one';
-    const aiPref = skillData.target ? skillData.target[1] : 'first';
-
-    // 判断技能是否为恢复类技能，以确定目标阵营
+    // 1. 确定目标阵营
     const isRecover = skillData.content ? skillData.content.toString().includes('rpg_recover') : false;
     const targetSide = isRecover ? friendlySide : enemySide;
-    const aliveTargets = getAliveUnits(targetSide);
 
-    if (aliveTargets.length === 0) return [];
-
-    /**
-     * [5][4][3]
-     * [2][1][0]
-     * ↑敌方
-     *     我方↓
-     * [0][1][2]
-     * [3][4][5]
-     * 
-     * 根据角色位置和偏好生成目标优先级列表
-     * @param {number} num - 角色槽位索引 (0-5)
-     * @param {boolean} first - true: 优先前排/特定列序, false: 优先后排/反向列序
-     * @returns {number[]} 排序后的槽位索引数组
-     */
-    function getTargetForSelf(num, first) {
-        const col = num % 3;         // 0: Left, 1: Mid, 2: Right
-        
-        // 定义列的优先级顺序 (基于原switch逻辑归纳)
-        // Left(0) prefers Right(2)>Mid(1)>Left(0)
-        // Mid(1) prefers Mid(1)>Left(0)>Right(2)
-        // Right(2) prefers Left(0)>Mid(1)>Right(2)
-        const colOrders = [
-            [2, 1, 0], // Col 0
-            [1, 0, 2], // Col 1
-            [0, 1, 2]  // Col 2
-        ];
-        const preferredCols = colOrders[col];
-        
-        // 确定行的优先级顺序
-        // 原逻辑中 first=true 总是优先前排(0,1,2)，first=false 总是优先后排(3,4,5)
-        const frontIndices = [0, 1, 2];
-        const backIndices = [3, 4, 5];
-        
-        const primaryGroup = first ? frontIndices : backIndices;
-        const secondaryGroup = first ? backIndices : frontIndices;
-
-        // 辅助函数：根据列偏好对一组索引排序
-        const sortByColPref = (indices) => {
-            return indices.slice().sort((a, b) => {
-                const colA = a % 3;
-                const colB = b % 3;
-                return preferredCols.indexOf(colA) - preferredCols.indexOf(colB);
-            });
-        };
-
-        return [...sortByColPref(primaryGroup), ...sortByColPref(secondaryGroup)];
-    }
-
-    switch (targetMode) {
-        case 'one': {
-            // 单个目标模式：根据AI偏好选择最低血量、随机或首个存活单位
-            if (aiPref === 'lowest') {
-                return [aliveTargets.reduce((a, b) => a.hp < b.hp ? a : b)];
-            }
-            if (aiPref === 'random') {
-                return [aliveTargets[Math.floor(Math.random() * aliveTargets.length)]];
-            }
-            // first: 使用新的数学方法判定目标
-            // 获取基于 actor 位置的优先级列表
-            const priorityList = getTargetForSelf(slotIndex, true);
-            
-            // 在优先级列表中查找第一个存在的存活敌人
-            for (const idx of priorityList) {
-                const target = aliveTargets.find(u => u.slotIndex === idx);
-                if (target) return [target];
-            }
-            // 如果优先级列表中没有找到（理论上不会发生，除非 aliveTargets 为空）， fallback 到第一个
-            return [aliveTargets[0]];
-        }
-        case 'all':
-            // 全体目标模式：返回所有存活单位
-            return [...aliveTargets];
-        case 'row': {
-            // 行目标模式：根据位置索引区分前排和后排，依据偏好选择对应排位的存活单位
-            const front = aliveTargets.filter(u => u.slotIndex < 3);
-            const back = aliveTargets.filter(u => u.slotIndex >= 3);
-            if (aiPref === 'last') {
-                return back.length > 0 ? back : front;
-            }
-            return front.length > 0 ? front : back;
-        }
-        case 'column': {
-            // 列目标模式：按slotIndex模3分组为三列，优先选择存活单位最多的列
-            const columns = [[], [], []];
-            aliveTargets.forEach(u => {
-                const col = u.slotIndex % 3;
-                columns[col].push(u);
-            });
-            // 选非空列中目标最多的列
-            const validCols = columns.filter(c => c.length > 0);
-            if (validCols.length === 0) return [];
-            // 按AI倾向选择：first取最左列，random取随机列
-            let chosenCol;
-            if (aiPref === 'random') {
-                chosenCol = validCols[Math.floor(Math.random() * validCols.length)];
-            } else {
-                // first: 取最左列
-                for (let c = 0; c < 3; c++) {
-                    if (columns[c].length > 0) { chosenCol = columns[c]; break; }
-                }
-            }
-            return chosenCol || aliveTargets;
-        }
-        default:
-            // 默认情况：返回首个存活单位
-            return [aliveTargets[0]];
-    }
+    // 2. 调用通用解析器
+    // 注意：resolveSkillTargets 需要知道 actor 以便处理 exclude_self 或列偏好
+    return resolveSkillTargets(skillData, actor, targetSide);
 }
-
 // ====== executeAITurn & executePlayerTurn ======
 /**
  * 执行AI角色的回合行动
@@ -710,6 +816,142 @@ function executeAITurn(actor) {
         setTimeout(() => afterAction(), 400);
     });
 }
+/**
+ * 通用目标解析器
+ * 根据技能配置、施法者和战场状态，计算出合法的目标列表
+ * @param {Object} skillData - 技能数据 (包含 target: [mode, pref, count?, exclude?])
+ * @param {Object} actor - 施法者
+ * @param {string} intendedSide - 'player' | 'enemy' (由技能是否治疗决定)
+ * @returns {Array} 目标单位数组
+ */
+function resolveSkillTargets(skillData, actor, intendedSide) {
+    if (!skillData || !skillData.target) return [];
+    
+    const mode = skillData.target[0];      // e.g., 'one', 'random_multi', 'exclude_self'
+    const pref = skillData.target[1] || 'first'; // e.g., 'lowest_hp', 'highest_atk', 'random'
+    const count = skillData.target[2] || 1; // 可选：指定数量
+    const extraParam = skillData.target[3]; // 可选：额外参数
+
+    let candidates = getAliveUnits(intendedSide);
+    if (candidates.length === 0) return [];
+
+    // 1. 预处理：过滤无效目标 (如排除自身)
+    if (mode === 'exclude_self') {
+        candidates = candidates.filter(u => u.slotIndex !== actor.slotIndex || u.side !== actor.side);
+    }
+    
+    // 如果过滤后无目标，返回空
+    if (candidates.length === 0) return [];
+
+    // 2. 根据模式选择目标
+    switch (mode) {
+        case 'all':
+            return candidates;
+        
+        case 'one':
+        case 'exclude_self': // 排除自身后选一个
+            return selectSingleTarget(candidates, pref, actor);
+
+        case 'random_multi':
+            // 随机选择 N 个不同目标
+            return shuffleArray([...candidates]).slice(0, Math.min(count, candidates.length));
+
+        case 'row':
+            return selectRowTargets(candidates, pref, actor);
+
+        case 'column':
+            return selectColumnTargets(candidates, pref, actor);
+            
+        case 'lowest_hp_multi':
+            // 选择血量最低的 N 个
+            return [...candidates].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, count);
+
+        default:
+            // 默认 fallback 到第一个
+            return [candidates[0]];
+    }
+}
+/**
+ * AI/自动战斗专用的单体目标选择逻辑（带权重）
+ */
+function selectSingleTarget(candidates, pref, actor) {
+    if (candidates.length === 0) return [];
+    
+    // 如果是随机，直接返回
+    if (pref === 'random') {
+        return [candidates[Math.floor(Math.random() * candidates.length)]];
+    }
+
+    // 评分系统：分数越高越优先
+    let bestTarget = candidates[0];
+    let maxScore = -Infinity;
+
+    candidates.forEach(target => {
+        let score = 0;
+        
+        // 基础偏好评分
+        if (pref === 'lowest') {
+            // 血量百分比越低分越高
+            score += (1 - target.hp / target.maxHp) * 100;
+        } else if (pref === 'highest') {
+             // 血量百分比越高分越高 (用于驱散等)
+             score += (target.hp / target.maxHp) * 100;
+        } else if (pref === 'first') {
+            // 优先前排/左侧 (简化逻辑：slotIndex 越小分越高)
+            score += (10 - target.slotIndex); 
+        }
+
+        // 额外权重：如果目标是当前行动者的直接对面 (同列)，加分
+        if (Math.abs(target.slotIndex - actor.slotIndex) % 3 === 0 && Math.floor(target.slotIndex/3) !== Math.floor(actor.slotIndex/3)) {
+             score += 5; // 轻微偏好对位
+        }
+
+        if (score > maxScore) {
+            maxScore = score;
+            bestTarget = target;
+        }
+    });
+
+    return [bestTarget];
+}
+
+// 辅助：洗牌算法
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// 辅助：行选择逻辑复用
+function selectRowTargets(candidates, pref, actor) {
+    // 简单实现：如果 pref 是 last，优先后排，否则优先前排
+    // 这里可以结合 actor 的位置优化，暂时保持原逻辑
+    const front = candidates.filter(u => u.slotIndex < 3);
+    const back = candidates.filter(u => u.slotIndex >= 3);
+    
+    if (pref === 'last') return back.length > 0 ? back : front;
+    return front.length > 0 ? front : back;
+}
+
+// 辅助：列选择逻辑复用
+function selectColumnTargets(candidates, pref, actor) {
+    // 优先选择 actor 所在列，如果没有则随机列
+    const actorCol = actor.slotIndex % 3;
+    const colTargets = candidates.filter(u => u.slotIndex % 3 === actorCol);
+    
+    if (colTargets.length > 0) return colTargets;
+    
+    // 如果本列没人，随机选其他列
+    const cols = [[], [], []];
+    candidates.forEach(u => cols[u.slotIndex % 3].push(u));
+    const validCols = cols.filter(c => c.length > 0);
+    if (validCols.length > 0) {
+        return validCols[Math.floor(Math.random() * validCols.length)];
+    }
+    return [];
+}
 
 function executePlayerTurn(actor, action) {
     battleState.phase = 'animating';
@@ -721,9 +963,12 @@ function executePlayerTurn(actor, action) {
 }
 
 function bs_animateAction(actor, action, callback) {
+    const bs = battleState; // 【修复】定义 bs 变量
+    if (!bs) return;
+
     const skillType = action.type === 'pugong' ? 'pugong' : action.skillType;
 
-    // 先在行动者身上播放光晕（保留，表示谁在行动）
+    // 先在行动者身上播放光晕
     const slotEl = document.querySelector(`.battle-unit[data-side="${actor.side}"][data-slot="${actor.slotIndex}"]`);
     if (slotEl) {
         const glowClass = skillType === 'spskill' ? 'spskill-glow'
@@ -732,7 +977,9 @@ function bs_animateAction(actor, action, callback) {
         const glow = document.createElement('div');
         glow.className = `action-glow ${glowClass}`;
         slotEl.appendChild(glow);
-        setTimeout(() => glow.remove(), 600);
+        setTimeout(() => {
+            if (glow.parentNode) glow.remove();
+        }, 600);
     }
 
     // 确定技能Emoji特效
@@ -741,25 +988,25 @@ function bs_animateAction(actor, action, callback) {
     // 延迟200ms后，在目标身上播放Emoji特效
     setTimeout(() => {
         const targets = action.targets;
+        if (!targets || targets.length === 0) {
+            if (callback) callback();
+            return;
+        }
+        
         if (effectInfo.effectClass === 'sword-effect' || effectInfo.effectClass === 'moon-effect') {
-            // 行攻击：在每个目标槽位上播放横穿特效
             showSkillEffectOnTargets(targets, effectInfo);
         } else if (effectInfo.effectClass === 'bolt-effect') {
-            // 列攻击：在每个目标槽位上播放贯穿特效
             showSkillEffectOnTargets(targets, effectInfo);
         } else {
-            // 单体攻击/治疗：在每个目标上播放
             targets.forEach(t => showSkillEffect(t, effectInfo));
         }
     }, 200);
 
     // 600ms后结算伤害
     setTimeout(() => {
-        // 定义行动完成后的处理
         function onActionComplete() {
             updateBattleUI();
 
-            // 伤害结算后立即检查胜负
             if (isSideDefeated('player') || isSideDefeated('enemy')) {
                 setTimeout(() => {
                     if (isSideDefeated('player')) endBattle('enemy');
@@ -768,8 +1015,7 @@ function bs_animateAction(actor, action, callback) {
                 return;
             }
 
-            // 动画延迟后回调
-            setTimeout(callback, 500);
+            if (callback) setTimeout(callback, 500);
         }
 
         if (action.type === 'pugong') {
@@ -1063,36 +1309,44 @@ function createUnitSlot(unit, side, slotIndex) {
     return slot;
 }
 
+/**
+ * 更新战斗界面的用户界面显示。
+ * 
+ * 该函数根据当前的 battleState 状态，同步更新所有玩家和敌方单位槽位的视觉表现，
+ * 包括生死状态、封印状态、当前行动高亮、血条进度与颜色、血量数值以及能量点显示。
+ * 
+ * @returns {void}
+ */
 function updateBattleUI() {
     const bs = battleState;
     if (!bs) return;
 
-    // 更新所有单位槽的显示
+    // 遍历所有存在的单位，同步其对应的 DOM 槽位状态
     const allUnits = [...bs.playerUnits, ...bs.enemyUnits].filter(u => u);
     allUnits.forEach(unit => {
         const slot = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
         if (!slot) return;
 
-        // 死亡状态
+        // 处理单位的死亡状态样式
         if (!unit.alive) {
             slot.classList.add('dead');
         }
 
-        // 封印状态
+        // 处理单位的封印状态样式
         if (unit.sealed || unit.permanentlySealed) {
             slot.classList.add('sealed');
         } else {
             slot.classList.remove('sealed');
         }
 
-        // 当前行动高亮
+        // 标记当前回合正在行动的单位
         if (bs.currentTurnSide === unit.side && bs.currentTurnIndex === unit.slotIndex && unit.alive) {
             slot.classList.add('active-turn');
         } else {
             slot.classList.remove('active-turn');
         }
 
-        // 血条
+        // 更新血条宽度及根据血量百分比改变颜色
         const hpFill = slot.querySelector('.battle-hp-fill');
         if (hpFill) {
             const pct = Math.max(0, unit.hp / unit.maxHp * 100);
@@ -1103,11 +1357,11 @@ function updateBattleUI() {
             else hpFill.style.background = '#cc3333';
         }
 
-        // 血量文字
+        // 更新血量文本显示
         const hpText = slot.querySelector('.battle-hp-text');
         if (hpText) hpText.textContent = `${unit.hp}/${unit.maxHp}`;
 
-        // 能量
+        // 更新能量点填充状态及技能就绪指示
         const pips = slot.querySelectorAll('.energy-pip');
         pips.forEach((pip, i) => {
             pip.classList.toggle('filled', i < unit.energy);
@@ -1136,7 +1390,20 @@ function getSkillEmoji(skillType, skillId) {
     }
 }
 
+/**
+ * 显示玩家操作UI面板，或根据自动战斗状态执行AI行动
+ * 
+ * @param {Object} actor - 当前行动的角色对象
+ * @param {boolean} [actor.alive] - 角色是否存活
+ * @param {string} [actor.side] - 角色所属阵营
+ * @param {number} [actor.slotIndex] - 角色在战场上的插槽索引
+ * @param {Array<string>} [actor.skills] - 角色技能ID列表，索引0为普攻，1为技能，2为必杀
+ * @param {number} [actor.energy] - 角色当前能量值
+ * @param {boolean} [actor.sealed] - 角色是否被暂时封印
+ * @param {boolean} [actor.permanentlySealed] - 角色是否被永久封印
+ */
 function showPlayerActionUI(actor) {
+    // 处理自动战斗逻辑：若开启自动战斗且角色存活，则执行AI选择动作并播放动画
     if (window.autoBattle && actor && actor.alive) {
         const action = aiChooseAction(actor);
         if (action && action.targets.length > 0) {
@@ -1147,16 +1414,20 @@ function showPlayerActionUI(actor) {
             return;
         }
     }
+    
+    // 隐藏旧的操作UI
     hidePlayerActionUI();
 
+    // 获取角色对应的DOM插槽元素，若不存在则终止
     const slot = document.querySelector(`.battle-unit[data-side="${actor.side}"][data-slot="${actor.slotIndex}"]`);
     if (!slot) return;
 
+    // 创建操作面板容器
     const panel = document.createElement('div');
     panel.className = 'battle-action-overlay';
     panel.id = 'battle-action-panel';
 
-    // 普攻按钮
+    // 创建普攻按钮
     const pugongId = actor.skills[0] || 'attack1';
     const pugongBtn = document.createElement('button');
     pugongBtn.className = 'action-btn pugong-btn';
@@ -1167,7 +1438,7 @@ function showPlayerActionUI(actor) {
     };
     panel.appendChild(pugongBtn);
 
-    // 技能按钮
+    // 创建技能按钮（若存在技能ID）
     const skillId = actor.skills[1];
     if (skillId) {
         const isSealed = actor.sealed || actor.permanentlySealed;
@@ -1190,7 +1461,7 @@ function showPlayerActionUI(actor) {
         panel.appendChild(skillBtn);
     }
 
-    // 必杀按钮
+    // 创建必杀按钮（若存在必杀ID）
     const spId = actor.skills[2];
     if (spId) {
         const isSealed = actor.sealed || actor.permanentlySealed;
@@ -1213,6 +1484,7 @@ function showPlayerActionUI(actor) {
         panel.appendChild(spBtn);
     }
 
+    // 将操作面板添加到角色插槽中
     slot.appendChild(panel);
 }
 
@@ -1221,57 +1493,179 @@ function hidePlayerActionUI() {
     if (panel) panel.remove();
     clearTargetHighlights();
 }
-
+// 【新增】在这里插入 clearTargetHighlights 定义
+function clearTargetHighlights() {
+    document.querySelectorAll('.battle-unit.selectable').forEach(el => {
+        el.classList.remove('selectable', 'target-selected');
+        el.onclick = null;
+    });
+}
 // ====== 目标选择 ======
 let targetSelection = null;
+
+// function enterTargetSelection(actor, skillType, skillId, energyCost) {
+//     const sData = contentList[skillType] && contentList[skillType][skillId];
+//     if (!sData) return;
+
+//     const isRecover = sData.content ? sData.content.toString().includes('rpg_recover') : false;
+//     const targetMode = sData.target ? sData.target[0] : 'one';
+
+//     targetSelection = { actor, skillType, skillId, energyCost, targetMode, isRecover, selectedTargets: [] };
+
+//     // 如果是全体/行/列自动选目标
+//     if (targetMode === 'all') {
+//         const side = isRecover ? 'player' : 'enemy';
+//         const targets = getAliveUnits(side);
+//         if (targets.length === 0) {
+//             toast('没有可选目标', 'warning');
+//             targetSelection = null;
+//             return;
+//         }
+//         // 直接执行
+//         const action = { type: skillType === 'pugong' ? 'pugong' : 'skill', skillType, skillId, targets, energyCost };
+//         executePlayerTurn(actor, action);
+//         targetSelection = null;
+//         return;
+//     }
+
+//     // 需要手动选择目标
+//     highlightSelectableTargets(targetMode, isRecover);
+//     addBattleLog('请选择目标');
+// }
+
+// function highlightSelectableTargets(targetMode, isRecover) {
+//     const side = isRecover ? 'player' : 'enemy';
+//     const aliveUnits = getAliveUnits(side);
+
+//     aliveUnits.forEach(u => {
+//         const el = document.querySelector(`.battle-unit[data-side="${u.side}"][data-slot="${u.slotIndex}"]`);
+//         if (el) {
+//             el.classList.add('selectable');
+//             el.onclick = () => onTargetClicked(u);
+//         }
+//     });
+// }
+
+
+// function clearTargetHighlights() {
+//     document.querySelectorAll('.battle-unit.selectable').forEach(el => {
+//         el.classList.remove('selectable', 'target-selected');
+//         el.onclick = null;
+//     });
+// }
+
+// function onTargetClicked(target) {
+//     if (!targetSelection) return;
+//     const ts = targetSelection;
+//     const side = ts.isRecover ? 'player' : 'enemy';
+
+//     if (ts.targetMode === 'one') {
+//         // 单体目标，直接确认
+//         const action = {
+//             type: ts.skillType === 'pugong' ? 'pugong' : 'skill',
+//             skillType: ts.skillType,
+//             skillId: ts.skillId,
+//             targets: [target],
+//             energyCost: ts.energyCost,
+//         };
+//         targetSelection = null;
+//         executePlayerTurn(ts.actor, action);
+//     } else if (ts.targetMode === 'row') {
+//         // 行攻击，选中目标的所在行
+//         const rowStart = target.slotIndex < 3 ? 0 : 3;
+//         const targets = getAliveUnits(side).filter(u => u.slotIndex >= rowStart && u.slotIndex < rowStart + 3);
+//         const action = {
+//             type: ts.skillType === 'pugong' ? 'pugong' : 'skill',
+//             skillType: ts.skillType,
+//             skillId: ts.skillId,
+//             targets,
+//             energyCost: ts.energyCost,
+//         };
+//         targetSelection = null;
+//         executePlayerTurn(ts.actor, action);
+//     } else if (ts.targetMode === 'column') {
+//         // 列攻击，选中目标所在列
+//         const col = target.slotIndex % 3;
+//         const targets = getAliveUnits(side).filter(u => u.slotIndex % 3 === col);
+//         const action = {
+//             type: ts.skillType === 'pugong' ? 'pugong' : 'skill',
+//             skillType: ts.skillType,
+//             skillId: ts.skillId,
+//             targets,
+//             energyCost: ts.energyCost,
+//         };
+//         targetSelection = null;
+//         executePlayerTurn(ts.actor, action);
+//     }
+// }
+
 
 function enterTargetSelection(actor, skillType, skillId, energyCost) {
     const sData = contentList[skillType] && contentList[skillType][skillId];
     if (!sData) return;
 
     const isRecover = sData.content ? sData.content.toString().includes('rpg_recover') : false;
-    const targetMode = sData.target ? sData.target[0] : 'one';
+    const targetConfig = sData.target || ['one', 'first'];
+    const mode = targetConfig[0];
+    const count = targetConfig[2] || 1;
 
-    targetSelection = { actor, skillType, skillId, energyCost, targetMode, isRecover, selectedTargets: [] };
+    targetSelection = { 
+        actor, 
+        skillType, 
+        skillId, 
+        energyCost, 
+        targetMode: mode, 
+        targetCount: count,
+        isRecover, 
+        selectedTargets: [] // 用于存储手动多选的目标
+    };
 
-    // 如果是全体/行/列自动选目标
-    if (targetMode === 'all') {
-        const side = isRecover ? 'player' : 'enemy';
-        const targets = getAliveUnits(side);
-        if (targets.length === 0) {
-            toast('没有可选目标', 'warning');
-            targetSelection = null;
-            return;
-        }
-        // 直接执行
-        const action = { type: skillType === 'pugong' ? 'pugong' : 'skill', skillType, skillId, targets, energyCost };
-        executePlayerTurn(actor, action);
-        targetSelection = null;
+    // --- 自动释放的情况 (无需玩家逐个点选) ---
+    if (['all', 'row', 'column', 'random_multi', 'lowest_hp_multi'].includes(mode)) {
+        addBattleLog(`请选择触发目标 (技能将自动判定范围)`);
+        highlightSelectableTargets(mode, isRecover);
         return;
     }
 
-    // 需要手动选择目标
-    highlightSelectableTargets(targetMode, isRecover);
-    addBattleLog('请选择目标');
+    // --- 手动选择情况 ---
+    if (mode === 'one' || mode === 'exclude_self') {
+        addBattleLog('请点击选择目标');
+        highlightSelectableTargets('one', isRecover);
+    } 
+    else if (mode === 'manual_multi') {
+        // 新增：手动多选模式
+        addBattleLog(`请依次选择 ${count} 个目标 (已选: 0/${count})`);
+        highlightSelectableTargets('manual_multi', isRecover);
+    }
 }
 
-function highlightSelectableTargets(targetMode, isRecover) {
+
+
+function highlightSelectableTargets(mode, isRecover) {
     const side = isRecover ? 'player' : 'enemy';
     const aliveUnits = getAliveUnits(side);
 
     aliveUnits.forEach(u => {
+        // 排除自身逻辑 (如果需要)
+        if (mode === 'exclude_self' && u.side === targetSelection.actor.side && u.slotIndex === targetSelection.actor.slotIndex) {
+            return; 
+        }
+
         const el = document.querySelector(`.battle-unit[data-side="${u.side}"][data-slot="${u.slotIndex}"]`);
         if (el) {
             el.classList.add('selectable');
+            
+            // 如果是手动多选，检查是否已被选中，给予不同样式
+            if (mode === 'manual_multi') {
+                const isSelected = targetSelection.selectedTargets.some(t => t.slotIndex === u.slotIndex && t.side === u.side);
+                if (isSelected) {
+                    el.classList.add('target-selected');
+                }
+            }
+
+            // 绑定点击事件
             el.onclick = () => onTargetClicked(u);
         }
-    });
-}
-
-function clearTargetHighlights() {
-    document.querySelectorAll('.battle-unit.selectable').forEach(el => {
-        el.classList.remove('selectable', 'target-selected');
-        el.onclick = null;
     });
 }
 
@@ -1279,48 +1673,121 @@ function onTargetClicked(target) {
     if (!targetSelection) return;
     const ts = targetSelection;
     const side = ts.isRecover ? 'player' : 'enemy';
+    
+    let finalTargets = [];
 
-    if (ts.targetMode === 'one') {
-        // 单体目标，直接确认
-        const action = {
-            type: ts.skillType === 'pugong' ? 'pugong' : 'skill',
-            skillType: ts.skillType,
-            skillId: ts.skillId,
-            targets: [target],
-            energyCost: ts.energyCost,
-        };
-        targetSelection = null;
-        executePlayerTurn(ts.actor, action);
-    } else if (ts.targetMode === 'row') {
-        // 行攻击，选中目标的所在行
-        const rowStart = target.slotIndex < 3 ? 0 : 3;
-        const targets = getAliveUnits(side).filter(u => u.slotIndex >= rowStart && u.slotIndex < rowStart + 3);
-        const action = {
-            type: ts.skillType === 'pugong' ? 'pugong' : 'skill',
-            skillType: ts.skillType,
-            skillId: ts.skillId,
-            targets,
-            energyCost: ts.energyCost,
-        };
-        targetSelection = null;
-        executePlayerTurn(ts.actor, action);
-    } else if (ts.targetMode === 'column') {
-        // 列攻击，选中目标所在列
-        const col = target.slotIndex % 3;
-        const targets = getAliveUnits(side).filter(u => u.slotIndex % 3 === col);
-        const action = {
-            type: ts.skillType === 'pugong' ? 'pugong' : 'skill',
-            skillType: ts.skillType,
-            skillId: ts.skillId,
-            targets,
-            energyCost: ts.energyCost,
-        };
-        targetSelection = null;
-        executePlayerTurn(ts.actor, action);
+    // --- 处理手动多选模式 (Manual Multi) ---
+    if (ts.targetMode === 'manual_multi') {
+        // 检查是否已经选过这个目标
+        const existingIndex = ts.selectedTargets.findIndex(t => t.slotIndex === target.slotIndex && t.side === target.side);
+        
+        if (existingIndex !== -1) {
+            // 【修改点1】如果点击已选中的目标，取消选择
+            ts.selectedTargets.splice(existingIndex, 1);
+            addBattleLog(`取消选择: ${target.name} (已选: ${ts.selectedTargets.length}/${ts.targetCount})`);
+            
+            // 刷新高亮
+            clearTargetHighlights();
+            highlightSelectableTargets('manual_multi', ts.isRecover);
+            return; // 取消选择后不释放，等待继续选择
+        } else {
+            // 如果未选，且未达到上限，则加入
+            if (ts.selectedTargets.length < ts.targetCount) {
+                ts.selectedTargets.push(target);
+                addBattleLog(`选中: ${target.name} (已选: ${ts.selectedTargets.length}/${ts.targetCount})`);
+            } else {
+                // 【修改点2】已达到上限，提示
+                toast('已达到最大目标数量', 'warning');
+                return; 
+            }
+        }
+
+        // 刷新高亮状态
+        clearTargetHighlights();
+        highlightSelectableTargets('manual_multi', ts.isRecover);
+
+        // 【核心修复】判断是否应该释放技能
+        // 条件A: 选满了
+        // 条件B: 场上所有存活且合法的目标都已经选中了（即使没满，也没得选了）
+        const allValidTargets = getAliveUnits(side).filter(u => {
+             // 排除自身逻辑如果需要
+             if (ts.targetMode === 'exclude_self' && u.side === ts.actor.side && u.slotIndex === ts.actor.slotIndex) return false;
+             return true;
+        });
+        
+        const isAllSelected = ts.selectedTargets.length >= allValidTargets.length;
+        const isFull = ts.selectedTargets.length === ts.targetCount;
+
+        if (isFull || isAllSelected) {
+            finalTargets = [...ts.selectedTargets];
+            // 执行技能
+        } else {
+            // 还没选满，且还有可选目标，等待下一次点击
+            return; 
+        }
     }
+    
+    // --- 处理其他原有模式 (保持不变) ---
+    else if (ts.targetMode === 'one' || ts.targetMode === 'exclude_self') {
+        finalTargets = [target];
+    } 
+    else if (ts.targetMode === 'row') {
+        const rowStart = target.slotIndex < 3 ? 0 : 3;
+        finalTargets = getAliveUnits(side).filter(u => u.slotIndex >= rowStart && u.slotIndex < rowStart + 3);
+    } 
+    else if (ts.targetMode === 'column') {
+        const col = target.slotIndex % 3;
+        finalTargets = getAliveUnits(side).filter(u => u.slotIndex % 3 === col);
+    }
+    else if (ts.targetMode === 'random_multi') {
+        let candidates = getAliveUnits(side);
+        if (ts.targetMode === 'exclude_self') {
+             candidates = candidates.filter(u => !(u.side === ts.actor.side && u.slotIndex === ts.actor.slotIndex));
+        }
+        finalTargets = shuffleArray([...candidates]).slice(0, ts.targetCount);
+        addBattleLog(`随机选中了: ${finalTargets.map(t=>t.name).join(', ')}`);
+    }
+    else if (ts.targetMode === 'all') {
+        finalTargets = getAliveUnits(side);
+    }
+    else if (ts.targetMode === 'lowest_hp_multi') {
+         let candidates = getAliveUnits(side);
+         finalTargets = [...candidates].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, ts.targetCount);
+         addBattleLog(`选中血量最低: ${finalTargets.map(t=>t.name).join(', ')}`);
+    }
+
+    if (finalTargets.length === 0) {
+        if (ts.targetMode !== 'manual_multi') {
+            toast('没有有效目标', 'warning');
+        }
+        return;
+    }
+
+    const action = {
+        type: ts.skillType === 'pugong' ? 'pugong' : 'skill',
+        skillType: ts.skillType,
+        skillId: ts.skillId,
+        targets: finalTargets,
+        energyCost: ts.energyCost,
+    };
+
+    // 执行前清空选择状态
+    targetSelection = null;
+    clearTargetHighlights();
+    executePlayerTurn(ts.actor, action);
 }
 
+
 // ====== 战斗开场/结果 ======
+
+/**
+ * 显示战斗介绍并处理战斗开始时的逻辑。
+ * 
+ * 该函数负责初始化战斗状态，触发所有单位的战斗开始被动效果，
+ * 并在完成后进入下一个回合。如果战斗已经开始，则直接延迟进入下一回合。
+ * 
+ * @returns {void}
+ */
 function showBattleIntro() {
     const bs = battleState;
     resetActedSlots();
@@ -1331,6 +1798,10 @@ function showBattleIntro() {
         const allUnits = [...bs.playerUnits, ...bs.enemyUnits].filter(u => u);
         let index = 0;
 
+        /**
+         * 递归触发下一个单位的战斗开始被动效果。
+         * 当所有单位处理完毕后，更新UI并延迟进入下一回合。
+         */
         function triggerNext() {
             if (index >= allUnits.length) {
                 updateBattleUI();
@@ -1353,6 +1824,7 @@ function showBattleIntro() {
         return;
     }
 
+    // 战斗已启动，直接延迟进入下一回合
     setTimeout(() => {
         nextTurn();
     }, 500);

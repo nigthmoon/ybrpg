@@ -1,3 +1,21 @@
+/**
+ * 获取主角在当前队伍中的槽位索引 (0-5)
+ * @returns {number} 主角的槽位索引，如果不在队伍中返回 -1
+ */
+function getMainCharacterSlotIndex() {
+    if (!window.currentTeam || !window.charBagData) return -1;
+    
+    for (let i = 0; i < window.currentTeam.length; i++) {
+        const instId = window.currentTeam[i];
+        if (instId && window.charBagData[instId]) {
+            // 假设主角的基础ID是 'zhujue'，请根据实际情况修改
+            if (window.charBagData[instId].charId === 'zhujue') {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
 
 /**
  * 飘字提示函数 - 替代原生 alert
@@ -182,6 +200,11 @@ function renderTeamView(container) {
  */
 function renderTeamSlot(slotEl, index) {
     slotEl.innerHTML = '';
+    
+    // 【修改】动态判断当前渲染的格子是否是主角
+    const mainCharIndex = getMainCharacterSlotIndex();
+    const isMainCharacterSlot = (index === mainCharIndex); 
+
     // 修改：currentTeam 现在存储的是 instanceId
     const instanceId = window.currentTeam[index];
     
@@ -191,13 +214,12 @@ function renderTeamSlot(slotEl, index) {
         const char = characterList[charId];
         
         if (!char) {
-            // 如果基础角色定义丢失，显示错误
             slotEl.style.borderColor = '#f00';
             slotEl.textContent = 'Err';
             return;
         }
 
-        const RANK_BORDER_COLORS = { legend: '#ff4444', epic: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+        const RANK_BORDER_COLORS = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
         const borderColor = RANK_BORDER_COLORS[char.rank] || '#888';
 
         const img = document.createElement('img');
@@ -205,7 +227,6 @@ function renderTeamSlot(slotEl, index) {
         img.alt = char.name;
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px;pointer-events:none;';
         
-        // 图片加载失败处理：尝试加载webp格式，若再次失败则显示角色名称
         img.onerror = function() {
             this.onerror = function() {
                 this.style.display = 'none';
@@ -226,13 +247,39 @@ function renderTeamSlot(slotEl, index) {
         nameTag.className = 'team-slot-name';
         nameTag.textContent = char.name;
         slotEl.appendChild(nameTag);
+
+        // // 【新增】如果是主角，添加“主”字标记
+        // if (isMainCharacterSlot) {
+        //     const mainTag = document.createElement('div');
+        //     mainTag.style.cssText = 'position:absolute;top:2px;left:2px;background:rgba(255,215,0,0.8);color:#000;font-size:10px;padding:1px 4px;border-radius:2px;font-weight:bold;z-index:2;';
+        //     mainTag.textContent = '主';
+        //     slotEl.appendChild(mainTag);
+            
+        //     // 【关键】主角不可拖拽
+        //     slotEl.draggable = false;
+        //     slotEl.style.cursor = 'default';
+        // } else {
+        //     slotEl.draggable = true;
+        // }
+
     } else {
         // 渲染空位状态
         slotEl.style.borderColor = '#444';
+        
+        // // 【新增】如果主角位为空（理论上不应发生，但做防御处理），显示固定提示
+        // if (isMainCharacterSlot) {
+        //      const emptyText = document.createElement('span');
+        //      emptyText.style.cssText = 'color:#ffd700;font-size:12px;pointer-events:none;';
+        //      emptyText.textContent = '主角';
+        //      slotEl.appendChild(emptyText);
+        //      slotEl.draggable = false;
+        // } else {
         const emptyText = document.createElement('span');
         emptyText.style.cssText = 'color:#555;font-size:12px;pointer-events:none;';
         emptyText.textContent = '空位';
         slotEl.appendChild(emptyText);
+        //     slotEl.draggable = true;
+        // }
     }
 }
 
@@ -258,6 +305,20 @@ function refreshAllTeamSlots() {
 
 // 点击方格
 function onTeamSlotClick(index) {
+    // // 【新增】如果点击的是主角槽位，直接提示，不执行后续逻辑
+    // if (index === 0) {
+    //     toast('主角位置固定，敬请期待更多互动功能', 'info');
+    //     // 依然可以显示详情，但不允许更换
+    //     window._selectedSlotIndex = index;
+    //     const instanceId = window.currentTeam[index];
+    //     if (instanceId && window.charBagData && window.charBagData[instanceId]) {
+    //         const instanceData = window.charBagData[instanceId];
+    //         const charId = instanceData.charId || instanceId;
+    //         showTeamCharInfo(index, instanceId, charId);
+    //     }
+    //     return;
+    // }
+
     window._selectedSlotIndex = index;
     // 修改：获取 instanceId
     const instanceId = window.currentTeam[index];
@@ -278,6 +339,12 @@ function onTeamNavChange() {
     const idx = window._selectedSlotIndex;
     if (idx === null || idx === undefined) {
         toast('请先选择一个方格', 'warning');
+        return;
+    }
+    // 【修改】动态获取主角位置，禁止更换主角
+    const mainCharIndex = getMainCharacterSlotIndex();
+    if (idx === mainCharIndex) {
+        toast('主角无法更换，敬请期待', 'warning');
         return;
     }
     showCharSelectPopup(idx);
@@ -321,9 +388,10 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
     if (!char || !instanceData) return;
 
     const saveData = instanceData; // 直接使用实例数据
-    const RANK_LABELS = { legend: '传说', epic: '史诗', rare: '精品', common: '普通', junk: '废材' };
-    const RANK_COLORS = { legend: '#ff4444', epic: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-    const TIP_LABELS = { damage: '偏攻', recover: '偏防', balance: '均衡' };
+    const RANK_LABELS = { kami:'神品',legend: '传说', epic: '史诗', epicfake:'伪史诗',rare: '精品', common: '普通', junk: '废材' };
+    const RANK_COLORS = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    const TIP_LABELS = { damger: '偏攻', recover: '治疗', balanced: '均衡',defense:'偏防' };
+    // const TIP_LABELS = { damage: '偏攻', recover: '治疗', balance: '均衡' };
 
     // 左侧：武将图片 + 宝物格阵
     const leftDiv = document.createElement('div');
@@ -421,7 +489,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
     // 类型
     const tipEl = document.createElement('div');
     tipEl.className = 'team-info-tip';
-    tipEl.textContent = TIP_LABELS[char.tip] || char.tip || '';
+    tipEl.textContent = TIP_LABELS[char.template]||'';
     attrDiv.appendChild(tipEl);
 
     // 四维属性
@@ -915,139 +983,214 @@ function onSlotTouchEnd(e) {
 // 展示选将浮窗
 /**
  * 弹出角色属性详情面板（可在任意场景调用）
+ * @param {string} charId - 角色基础ID (如 'ybsl_017xiaohong')
  */
 function showCharDetailPopup(charId) {
-    const char = characterList[charId];
-    if (!char) return;
-
-    const saveData = getCharSaveData(charId);
-    const RANK_LABELS = { legend: '传说', epic: '史诗', rare: '精品', common: '普通', junk: '废材' };
-    const RANK_COLORS = { legend: '#ff4444', epic: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-    const TIP_LABELS = { damage: '偏攻', recover: '偏防', balance: '均衡' };
-
-    const overlay = document.createElement('div');
-    overlay.className = 'gallery-fullimg-overlay';
-    overlay.style.zIndex = '10002';
-
-    const dialog = document.createElement('div');
-    dialog.className = 'char-detail-popup';
-    dialog.onclick = (e) => e.stopPropagation();
-
-    // 关闭按钮
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'char-select-close-btn';
-    closeBtn.style.position = 'absolute';
-    closeBtn.style.top = '8px';
-    closeBtn.style.right = '8px';
-    closeBtn.textContent = '✕';
-    closeBtn.onclick = () => overlay.remove();
-
-    // 上方：图片+基本信息
-    const topDiv = document.createElement('div');
-    topDiv.className = 'char-detail-top';
-
-    const imgDiv = document.createElement('div');
-    imgDiv.className = 'team-info-img-container';
-    imgDiv.style.cursor = 'pointer';
-    const img = document.createElement('img');
-    img.className = 'team-info-img';
-    img.src = `./image/character/${charId}.jpg`;
-    img.alt = char.name;
-    img.onerror = function() {
-        this.onerror = function() {
-            this.style.display = 'none';
-            const p = document.createElement('div');
-            p.className = 'gallery-char-placeholder';
-            p.style.width = '120px';
-            p.style.height = '150px';
-            p.style.fontSize = '36px';
-            p.textContent = char.name.charAt(0);
-            this.parentNode.appendChild(p);
-        };
-        this.src = `./image/character/${charId}.webp`;
-    };
-    imgDiv.appendChild(img);
-    imgDiv.onclick = () => showFullImage(charId, char.name);
-    topDiv.appendChild(imgDiv);
-
-    // 右侧属性
-    const attrDiv = document.createElement('div');
-    attrDiv.className = 'team-info-attr';
-
-    const nameEl = document.createElement('div');
-    nameEl.className = 'team-info-name';
-    nameEl.textContent = char.name;
-    attrDiv.appendChild(nameEl);
-
-    const rankEl = document.createElement('div');
-    rankEl.className = 'team-info-rank';
-    const rankText = RANK_LABELS[char.rank] || char.rank;
-    const levelText = saveData ? `Lv.${saveData.level}` : 'Lv.1';
-    rankEl.innerHTML = `<span style="color:${RANK_COLORS[char.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:12px;margin-left:6px">${levelText}</span>`;
-    attrDiv.appendChild(rankEl);
-
-    const tipEl = document.createElement('div');
-    tipEl.className = 'team-info-tip';
-    tipEl.textContent = TIP_LABELS[char.tip] || char.tip || '';
-    attrDiv.appendChild(tipEl);
-
-    const attrs = [
-        { label: '生命', value: saveData ? saveData.hp : char.hp, icon: '❤' },
-        { label: '攻击', value: saveData ? saveData.atk : char.atk, icon: '⚔' },
-        { label: '防御', value: saveData ? saveData.def : char.def, icon: '🛡' },
-        { label: '速度', value: saveData ? saveData.spe : char.spe, icon: '💨' },
-    ];
-    attrs.forEach(a => {
-        const row = document.createElement('div');
-        row.className = 'team-info-attr-row';
-        row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${a.value}</span>`;
-        attrDiv.appendChild(row);
-    });
-
-    topDiv.appendChild(attrDiv);
-    dialog.appendChild(topDiv);
-
-    // 下方：技能详情
-    const skillIds = char.skills || [];
-    const skillSections = [
-        { key: 0, type: 'pugong', label: '普攻', color: '#5ba8ff' },
-        { key: 1, type: 'skill', label: '技能', color: '#ff8c00' },
-        { key: 2, type: 'spskill', label: '必杀', color: '#ffd700' },
-    ];
-    for (const sec of skillSections) {
-        const sId = skillIds[sec.key];
-        const sData = sId && contentList[sec.type] && contentList[sec.type][sId];
-        if (!sData) continue;
-
-        const sectionDiv = document.createElement('div');
-        sectionDiv.className = 'team-info-skill-section';
-
-        const headerRow = document.createElement('div');
-        headerRow.className = 'team-info-skill-row';
-        headerRow.innerHTML = `<span class="skill-label" style="color:${sec.color}">${sec.label}</span><span class="skill-name">${sData.name}</span>`;
-        sectionDiv.appendChild(headerRow);
-
-        if (sData.intro) {
-            const introEl = document.createElement('div');
-            introEl.className = 'team-info-skill-desc';
-            introEl.textContent = sData.intro;
-            sectionDiv.appendChild(introEl);
-        }
-        if (sData.ai_intro) {
-            const aiEl = document.createElement('div');
-            aiEl.className = 'team-info-skill-desc';
-            aiEl.style.color = '#aaa';
-            aiEl.textContent = sData.ai_intro;
-            sectionDiv.appendChild(aiEl);
-        }
-
-        dialog.appendChild(sectionDiv);
+    // 1. 获取基础数据
+    const baseChar = characterList[charId];
+    if (!baseChar) {
+        toast('角色数据不存在', 'error');
+        return;
     }
 
-    dialog.appendChild(closeBtn);
+    // 2. 【核心】编译属性数值
+    // 使用 compileCharacterStats 根据 template 和 rank 获取正确的 hp/at/def/spe
+    const stats = compileCharacterStats(baseChar);
+    
+    // 获取实例数据（如果有），用于显示等级
+    // 注意：这里尝试查找该 charId 的第一个实例，如果是图鉴模式可能没有实例
+    let instanceId = null;
+    let level = 1;
+    if (window.charBagData) {
+        // 查找第一个匹配 charId 的实例
+        instanceId = Object.keys(window.charBagData).find(id => window.charBagData[id].charId === charId);
+        if (instanceId) {
+            level = window.charBagData[instanceId].level || 1;
+        }
+    }
+
+    // 3. 创建遮罩层
+    const overlay = document.createElement('div');
+    overlay.className = 'ybrpg-confirm-overlay';
+    overlay.id = 'char-detail-popup-overlay';
+
+    // 4. 创建对话框
+    const dialog = document.createElement('div');
+    dialog.className = 'gallery-detail-dialog';
+    dialog.style.maxHeight = '80vh'; // 限制最大高度
+    dialog.style.overflowY = 'auto'; // 允许滚动
+
+    // --- 标题 ---
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'gallery-detail-name';
+    nameDiv.textContent = baseChar.name;
+    // 根据品质设置颜色
+    const rankColors = { legend: '#ff4444', epic: '#ff8d8d', rare: '#44aaff', common: '#88cc88', junk: '#888888', epicfake: '#ffaa44' };
+    nameDiv.style.color = rankColors[baseChar.rank] || '#fff';
+    dialog.appendChild(nameDiv);
+
+    // --- 上半区：头像 + 基础属性 ---
+    const topDiv = document.createElement('div');
+    topDiv.className = 'gallery-detail-top';
+    topDiv.style.display = 'flex';
+    topDiv.style.gap = '15px';
+    topDiv.style.alignItems = 'center';
+    topDiv.style.marginBottom = '10px';
+
+    // 左侧：头像
+    const imgDiv = document.createElement('div');
+    imgDiv.style.width = '80px';
+    imgDiv.style.height = '80px';
+    imgDiv.style.borderRadius = '8px';
+    imgDiv.style.overflow = 'hidden';
+    imgDiv.style.border = '2px solid #444';
+    imgDiv.style.flexShrink = '0';
+    
+    const img = document.createElement('img');
+    img.src = `./image/character/${charId}.webp`;
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
+    img.onerror = function() {
+        this.style.display = 'none';
+        const placeholder = document.createElement('div');
+        placeholder.style.width = '100%';
+        placeholder.style.height = '100%';
+        placeholder.style.background = '#333';
+        placeholder.style.display = 'flex';
+        placeholder.style.alignItems = 'center';
+        placeholder.style.justifyContent = 'center';
+        placeholder.style.color = '#888';
+        placeholder.style.fontSize = '24px';
+        placeholder.textContent = baseChar.name.charAt(0);
+        this.parentNode.appendChild(placeholder);
+    };
+    imgDiv.appendChild(img);
+    topDiv.appendChild(imgDiv);
+
+    // 右侧：属性列表
+    const attrContainer = document.createElement('div');
+    attrContainer.style.flex = '1';
+    attrContainer.style.display = 'flex';
+    attrContainer.style.flexDirection = 'column';
+    attrContainer.style.gap = '4px';
+    attrContainer.style.fontSize = '14px';
+    attrContainer.style.color = '#ddd';
+
+    const RANK_LABELS = { kami:'神品',legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' };
+    const TIP_LABELS = { damage: '伤害系', recover: '治疗系' };
+    const TEMPLATE_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
+
+    const createAttrRow = (label, value, color = '#fff') => {
+        const row = document.createElement('div');
+        row.innerHTML = `<span style="color:#888;">${label}:</span> <span style="color:${color}; font-weight:bold;">${value}</span>`;
+        return row;
+    };
+
+    attrContainer.appendChild(createAttrRow('品质', RANK_LABELS[baseChar.rank] || baseChar.rank, rankColors[baseChar.rank]));
+    attrContainer.appendChild(createAttrRow('定位', TEMPLATE_LABELS[baseChar.template] || baseChar.template));
+    if (baseChar.tip) {
+        attrContainer.appendChild(createAttrRow('类型', TIP_LABELS[baseChar.tip] || baseChar.tip));
+    }
+    attrContainer.appendChild(createAttrRow('等级', level));
+    
+    // 分隔线
+    const divider = document.createElement('div');
+    divider.style.height = '1px';
+    divider.style.background = '#444';
+    divider.style.margin = '4px 0';
+    attrContainer.appendChild(divider);
+
+    attrContainer.appendChild(createAttrRow('血量', stats.hp, '#44aaff'));
+    attrContainer.appendChild(createAttrRow('攻击', stats.atk, '#ff4444'));
+    attrContainer.appendChild(createAttrRow('防御', stats.def, '#88cc88'));
+    attrContainer.appendChild(createAttrRow('速度', stats.spe, '#ffff44'));
+
+    topDiv.appendChild(attrContainer);
+    dialog.appendChild(topDiv);
+
+    // --- 下半区：技能详情 ---
+    const skillsDiv = document.createElement('div');
+    skillsDiv.style.marginTop = '10px';
+    skillsDiv.style.borderTop = '1px solid #444';
+    skillsDiv.style.paddingTop = '10px';
+
+    const skillTitle = document.createElement('div');
+    skillTitle.textContent = '技能配置';
+    skillTitle.style.color = '#aaa';
+    skillTitle.style.fontSize = '12px';
+    skillTitle.style.marginBottom = '5px';
+    skillsDiv.appendChild(skillTitle);
+
+    if (baseChar.skills && Array.isArray(baseChar.skills)) {
+        baseChar.skills.forEach((skillId, index) => {
+            const skillData = getSkillData(skillId);
+            const section = document.createElement('div');
+            section.style.marginBottom = '8px';
+            section.style.padding = '8px';
+            section.style.background = 'rgba(255,255,255,0.05)';
+            section.style.borderRadius = '4px';
+
+            const skillName = skillData ? skillData.name : skillId;
+            const skillIntro = skillData ? skillData.intro : '暂无描述';
+            const skillAi = skillData ? skillData.ai_intro : '';
+            
+            // 技能类型标签
+            let typeTag = '';
+            if (index === 0) typeTag = '<span style="color:#88cc88; font-size:10px; border:1px solid #88cc88; padding:1px 3px; border-radius:2px; margin-right:5px;">普攻</span>';
+            else if (index === 1) typeTag = '<span style="color:#ffaa44; font-size:10px; border:1px solid #ffaa44; padding:1px 3px; border-radius:2px; margin-right:5px;">主动</span>';
+            else typeTag = '<span style="color:#ff4444; font-size:10px; border:1px solid #ff4444; padding:1px 3px; border-radius:2px; margin-right:5px;">必杀</span>';
+
+            section.innerHTML = `
+                <div style="font-weight:bold; color:#fff; margin-bottom:2px;">${typeTag}${skillName}</div>
+                <div style="font-size:12px; color:#ccc;">${skillIntro}</div>
+                ${skillAi ? `<div style="font-size:11px; color:#888; margin-top:2px;">AI: ${skillAi}</div>` : ''}
+            `;
+            skillsDiv.appendChild(section);
+        });
+    } else {
+        skillsDiv.innerHTML += '<div style="color:#666; font-size:12px;">无技能数据</div>';
+    }
+    dialog.appendChild(skillsDiv);
+
+    // --- 底部按钮 ---
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex; gap:10px; justify-content:center; margin-top:15px;';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'ybrpg-btn';
+    closeBtn.textContent = '关闭';
+    closeBtn.onclick = () => overlay.remove();
+    btnRow.appendChild(closeBtn);
+
+    // 如果是在背包/队伍中查看，且有实例ID，显示“升级”按钮
+    if (instanceId) {
+        const upgradeBtn = document.createElement('button');
+        upgradeBtn.className = 'ybrpg-btn';
+        upgradeBtn.style.background = '#44aaff';
+        upgradeBtn.textContent = '培养/升级';
+        upgradeBtn.onclick = () => {
+            // 调用现有的升级面板逻辑
+            // 注意：需要确保 showUpgradePanel 已定义且可访问
+            if (typeof showUpgradePanel === 'function') {
+                showUpgradePanel(instanceId, charId, level, (newLevel, newHp, newAtk, newDef, newSpe) => {
+                    // 升级回调：刷新弹窗
+                    overlay.remove();
+                    showCharDetailPopup(charId);
+                    toast('升级成功！', 'success');
+                });
+            } else {
+                toast('升级功能暂未实装', 'warning');
+            }
+        };
+        btnRow.appendChild(upgradeBtn);
+    }
+
+    dialog.appendChild(btnRow);
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
 
+    // 点击遮罩关闭
     overlay.onclick = (e) => {
         if (e.target === overlay) overlay.remove();
     };
@@ -1059,9 +1202,9 @@ function showCharSelectPopup(slotIndex) {
     if (existing) existing.remove();
 
     const RANK_ORDER = { legend: 0, epic: 1, rare: 2, common: 3, junk: 4 };
-    const RANK_BORDER_COLORS = { legend: '#ff4444', epic: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-    const RANK_LABELS = { legend: '传说', epic: '史诗', rare: '精品', common: '普通', junk: '废材' };
-    const TIP_LABELS = { damage: '偏攻', recover: '偏防', balance: '均衡' };
+    const RANK_BORDER_COLORS = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    const RANK_LABELS = { kami:'神品',legend: '传说', epic: '史诗', epicfake:'伪史诗',rare: '精品', common: '普通', junk: '废材' };
+    const TIP_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
     // 遮罩
     const overlay = document.createElement('div');
@@ -1152,14 +1295,15 @@ function showCharSelectPopup(slotIndex) {
         const nameEl = document.createElement('div');
         nameEl.className = 'char-select-name';
         nameEl.textContent = charInst.name;
-        if (charInst.rank === 'legend') nameEl.style.color = '#ff6666';
-        else if (charInst.rank === 'epic') nameEl.style.color = '#ffaa44';
+        if(RANK_BORDER_COLORS[charInst.rank])nameEl.style.color = RANK_BORDER_COLORS[charInst.rank];
+        // if (charInst.rank === 'legend') nameEl.style.color = '#ff6666';
+        // else if (charInst.rank === 'epic') nameEl.style.color = '#ffaa44';
         infoDiv.appendChild(nameEl);
 
         const detailEl = document.createElement('div');
         detailEl.className = 'char-select-detail';
         const lvText = `Lv.${charInst.level || 1}`;
-        const tipText = TIP_LABELS[charInst.tip] || charInst.tip || '';
+        const tipText = TIP_LABELS[charInst.template]|| '';
         detailEl.textContent = `${lvText}  ${tipText}`;
         infoDiv.appendChild(detailEl);
 
@@ -1584,10 +1728,11 @@ function updateBagEquipDetailBar(tid, tDef, bagItem) {
 
 // 渲染武将背包内容
 function renderBagCharContent(container) {
-    const RANK_ORDER = { legend: 0, epic: 1, rare: 2, common: 3, junk: 4 };
+    const RANK_ORDER = { kami:0,legend: 1, epic: 2, epicfake:3,rare: 4, common: 5, junk: 6 };
     const RANK_BORDER_COLORS = {
         legend: '#ff4444',
-        epic: '#ff8800',
+        epic: '#ff8d8d',
+        epicfake:'#ff8800',
         rare: '#44aaff',
         common: '#88cc88',
         junk: '#888888'
@@ -1691,11 +1836,11 @@ function updateBagCharDetailBar(charInst) {
 
     // charInst 现在包含 instanceId, charId, level 等
     const saveData = window.charBagData[charInst.instanceId];
-    const rankLabels = { legend: '传说', epic: '史诗', rare: '精品', common: '普通', junk: '废材' };
-    const tipLabels = { damage: '偏攻', recover: '偏防', balance: '均衡' };
+    const rankLabels = { kami:'神品',legend: '传说', epic: '史诗', epicfake:'伪史诗',rare: '精品', common: '普通', junk: '废材' };
+    const tipLabels = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
     const level = saveData ? saveData.level : 1;
     const rankText = rankLabels[charInst.rank] || charInst.rank;
-    const tipText = tipLabels[charInst.tip] || charInst.tip || '';
+    const tipText = tipLabels[charInst.template]|| '';
 
     // 保存当前选中的武将 InstanceID
     detailBar.dataset.instanceId = charInst.instanceId;
@@ -1724,7 +1869,7 @@ function updateBagCharDetailBar(charInst) {
 
     // 更新名称
     const nameEl = document.getElementById('bag-detail-char-name');
-    const rankColors = { legend: '#ff4444', epic: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    const rankColors = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
     if (nameEl) {
         nameEl.textContent = charInst.name;
         nameEl.style.color = rankColors[charInst.rank] || '#eee';
@@ -1784,7 +1929,7 @@ function showBagTreasureDetail(tid) {
         img.className = 'gallery-detail-img';
         img.src = tDef.icon;
         img.alt = tDef.name;
-        img.style.objectFit = 'contain';
+        // img.style.objectFit = 'contain';
         img.onerror = function() {
             this.style.display = 'none';
             const p = document.createElement('div');
@@ -1991,17 +2136,20 @@ function renderGalleryView(container) {
     container.appendChild(tabsDiv);
 
     // 按品质排序：传说 → 史诗（后续扩展：精品 → 普通 → 废材）
-    const RANK_ORDER = ['legend', 'epic', 'rare', 'common', 'junk'];
+    const RANK_ORDER = ['kami','legend', 'epic','epicfake', 'rare', 'common', 'junk'];
     const RANK_LABELS = {
+        kami:'神品',
         legend: '传说',
         epic: '史诗',
+        epicfake:'伪史诗',
         rare: '精品',
         common: '普通',
         junk: '废材'
     };
     const RANK_BORDER_COLORS = {
         legend: '#ff4444',
-        epic: '#ff8800',
+        epic: '#ff8d8d',
+        epicfake:'#ff8800',
         rare: '#44aaff',
         common: '#88cc88',
         junk: '#888888'
@@ -2162,9 +2310,9 @@ function showCharDetail(_parentContainer, charData) {
     const attrDiv = document.createElement('div');
     attrDiv.className = 'gallery-detail-attr';
 
-    const rankLabels = { legend: '传说', epic: '史诗', rare: '精品', common: '普通', junk: '废材' };
-    const rankColors = { legend: '#ff4444', epic: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-    const tipLabels = { damage: '偏攻', recover: '偏防', balance: '均衡' };
+    const rankLabels = { kami:'神品',legend: '传说', epic: '史诗', epicfake:'伪史诗',rare: '精品', common: '普通', junk: '废材' };
+    const rankColors = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    const tipLabels = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
     // 品质 + 等级（图鉴中显示基础等级 Lv.1）
     const rankDiv = document.createElement('div');
@@ -2178,16 +2326,27 @@ function showCharDetail(_parentContainer, charData) {
     tipDiv.style.fontSize = '12px';
     tipDiv.style.color = '#aaa';
     tipDiv.style.marginBottom = '4px';
-    tipDiv.textContent = tipLabels[charData.tip] || charData.tip || '';
+    tipDiv.textContent = tipLabels[charData.template]|| '';
     attrDiv.appendChild(tipDiv);
+    //  null;
+    
+    // 尝试从 characterTemplate获取数值
+    let info =characterTemplate[charData.template][charData.rank]
+
+    // 如果没找到 template 数据， fallback 到 charData 自身的基础数值（防止显示 undefined）
+    const finalHp = info ? info.hp : (charData.hp || 0);
+    const finalAtk = info ? info.atk : (charData.atk || 0);
+    const finalDef = info ? info.def : (charData.def || 0);
+    const finalSpe = info ? info.spe : (charData.spe || 0);
 
     // 四维属性（图鉴显示基础值）
     const attrs = [
-        { label: '生命', value: charData.hp },
-        { label: '攻击', value: charData.atk },
-        { label: '防御', value: charData.def },
-        { label: '速度', value: charData.spe },
+        { label: '生命', value: finalHp },
+        { label: '攻击', value: finalAtk },
+        { label: '防御', value: finalDef },
+        { label: '速度', value: finalSpe },
     ];
+    
     attrs.forEach(a => {
         const row = document.createElement('div');
         row.className = 'gallery-detail-attr-row';
@@ -2368,7 +2527,7 @@ const TREASURE_TYPE_LABELS = {
  * 宝物品质颜色映射（按价格区间）
  */
 function getTreasureRankInfo(price) {
-    if (price >= 350) return { label: '珍稀', color: '#ff8800' };
+    if (price >= 350) return { label: '珍稀', color: '#ff8d8d' };
     if (price >= 250) return { label: '上品', color: '#44aaff' };
     if (price >= 180) return { label: '良品', color: '#88cc88' };
     return { label: '普通', color: '#888' };
@@ -2452,7 +2611,7 @@ function renderTreasureGalleryView(container) {
                 img.className = 'gallery-char-img';
                 img.src = t.icon;
                 img.alt = t.name;
-                img.style.objectFit = 'contain';
+                // img.style.objectFit = 'contain';
                 img.onerror = function() {
                     this.style.display = 'none';
                     const placeholder = document.createElement('div');
@@ -2850,11 +3009,10 @@ function renderDungeonView(container, selectedChapterKey = null) {
 
 // 新增: 难度缩放配置
 const DIFFICULTY_SCALE = {
-    normal: { hp: 1.0, atk: 1.0, def: 1.0, gold: 1.0, name: '普通' },
-    nightmare: { hp: 1.5, atk: 1.3, def: 1.3, gold: 1.5, name: '噩梦' },
-    hell: { hp: 2.0, atk: 1.6, def: 1.6, gold: 2.0, name: '地狱' }
+    normal: { hp: 1.0, atk: 1.0, def: 1.0, gold: 1.0, name: '普通', buffs: [], treasures: [], },
+    nightmare: { hp: 1.5, atk: 1.3, def: 1.3, gold: 1.5, name: '噩梦', buffs: [], treasures: ['luoshen'], },
+    hell: { hp: 2.0, atk: 1.6, def: 1.6, gold: 2.0, name: '地狱', buffs: [], treasures: ['luoshen','shelie'], }
 };
-
 // 根据难度获取事件数据（支持噩梦和地狱难度）
 function getEventForDifficulty(chapterKey, eventId, difficulty) {
     if (difficulty === 'normal') {
@@ -2867,29 +3025,12 @@ function getEventForDifficulty(chapterKey, eventId, difficulty) {
 }
 
 /**
- * 构建玩家战斗队伍数据
- * 
- * 该函数根据当前选中的队伍实例ID列表，从角色背包数据和基础角色配置中提取信息，
- * 组装成适用于战斗系统的标准化角色对象数组。
- * 
- * @returns {Array<Object>} 返回包含战斗所需角色信息的对象数组。
- *                          每个对象包含以下属性：
- *                          - id: 角色基础ID (charId)
- *                          - instanceId: 角色实例ID
- *                          - name: 角色名称
- *                          - hp: 生命值
- *                          - atk: 攻击力
- *                          - def: 防御力
- *                          - spe: 速度
- *                          - skills: 技能列表
- *                          - buff: 增益状态列表
- *                          - treasures: 装备的宝物列表
+ * 构建我方队伍数据（已适配 instanceId 宝物系统）
+ * 返回包含 treasures 字段的单位数组
  */
 function buildPlayerTeamForBattle() {
     return (window.currentTeam || []).map(instanceId => {
         const instData = window.charBagData && window.charBagData[instanceId];
-        
-        // 如果找不到实例数据，返回默认的空角色对象以防止后续逻辑出错
         if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
 
         const charId = instData.charId || instanceId;
@@ -3098,15 +3239,14 @@ function renderChapterEventList(container, chapterKey) {
 
                 // 修改：使用新的辅助函数构建队伍数据
                 const playerTeam = buildPlayerTeamForBattle();
-
+                console.log(playerTeam)
                 // 补齐6个位置
                 while (playerTeam.length < 6) {
                     playerTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
                 }
 
-                // 构建敌方数据（普通难度时event.enemy为原始数据，其他难度已在上游缩放）
                 const enemyTeam = (event.enemy || []).map(e => {
-                    if (!e || !e.id) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] };
+                    if (!e || !e.id) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: []};
                     const base = characterList[e.id] || {};
                     return {
                         id: e.id,
@@ -3124,6 +3264,13 @@ function renderChapterEventList(container, chapterKey) {
                 // 补齐6个位置
                 while (enemyTeam.length < 6) {
                     enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
+                }
+                for(var i in enemyTeam){
+                    if(DIFFICULTY_SCALE[currentDifficulty]?.treasures?.length>0){
+                        for(var j in DIFFICULTY_SCALE[currentDifficulty].treasures){
+                            enemyTeam[i].treasures.push(DIFFICULTY_SCALE[currentDifficulty].treasures[j]);
+                        }
+                    }
                 }
 
                 // 启动战斗
@@ -3192,14 +3339,14 @@ function getCharPrice(rank) {
  * 获取角色品质颜色
  */
 function getRankColor(rank) {
-    return { legend: '#ff4444', epic: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' }[rank] || '#888';
+    return { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' }[rank] || '#888';
 }
 
 /**
  * 获取角色品质中文名
  */
 function getRankName(rank) {
-    return { legend: '传说', epic: '史诗', rare: '精品', common: '普通', junk: '废材' }[rank] || '普通';
+    return { legend: '传说', epic: '史诗', epicfake:'伪史诗',rare: '精品', common: '普通', junk: '废材' }[rank] || '普通';
 }
 
 /**
@@ -3229,7 +3376,7 @@ function refreshShopItems() {
     }
 
     // 修改：随机生成8个角色（允许重复，不再排除已拥有）
-    const allCharIds = Object.keys(characterList || {});
+    const allCharIds = Object.keys(characterList || {}).filter(cid => cid!='zhujue');
     // 不再过滤 unownedChars，直接从 allCharIds 中随机
     const shuffledChars = [...allCharIds].sort(() => Math.random() - 0.5);
     for (let i = 0; i < Math.min(8, shuffledChars.length); i++) {
@@ -3366,7 +3513,8 @@ function showItemDetail(item) {
 function getRankColor(rank) {
     const colors = {
         'legend': '#ff4444',
-        'epic': '#ff8800',
+        'epic': '#ff8d8d',
+        'epicfake':'#ff8800',
         'rare': '#44aaff',
         'common': '#88cc88',
         'junk': '#888888'
@@ -3377,11 +3525,13 @@ function getRankColor(rank) {
 // 获取品质文本
 function getRankText(rank) {
     const texts = {
+        'junk':'废柴',
         'common': '普通',
         'rare': '稀有',
+        'epicfake': '伪史诗',
         'epic': '史诗',
         'legend': '传说',
-        'myth': '神话'
+        'kami': '神品',
     };
     return texts[rank] || rank || '普通';
 }
@@ -3466,7 +3616,24 @@ function renderShopView(container) {
                 if (item.type === 'character') {
                     const cData = characterList[item.id];
                     if (cData) {
-                        showCharDetail(null, { id: item.id, ...cData });
+                        // 【关键修改】不要直接传 cData，而是构建一个包含编译后属性的对象
+                        const stats = compileCharacterStats(cData);
+                        const displayData = {
+                            id: item.id,
+                            name: cData.name,
+                            rank: cData.rank,
+                            template: cData.template,
+                            tip: cData.tip,
+                            skills: cData.skills,
+                            group: cData.group,
+                            ...cData,
+                            hp: stats.hp,
+                            atk: stats.atk,
+                            def: stats.def,
+                            spe: stats.spe,
+                            level: 1 // 商店购买的通常是1级
+                        };
+                        showCharDetail(null, displayData);
                     }
                 } else {
                     showItemDetail(item);
@@ -3498,54 +3665,104 @@ function renderShopView(container) {
 
         infoDiv.appendChild(headerDiv);
 
-        // 右侧下半部分：购买按钮（显示价格）
-        const buyBtn = document.createElement('button');
-        buyBtn.className = 'shop-buy-btn';
-        if (!item || item.sold) {
-            buyBtn.textContent = item ? '已售' : '—';
-            if (item) buyBtn.disabled = true;
-        } else {
-            buyBtn.textContent = `${item.price}金`;
-            buyBtn.onclick = () => {
-                if ((window.gameGold || 0) < item.price) {
-                    toast('金币不足！', 'error');
-                    return;
-                }
-                // 扣费
-                window.gameGold = (window.gameGold || 0) - item.price;
-                if (item.type === 'treasure') {
-                    gameData.addTreasure(item.id, 1);
-                    syncTreasureEquipData();
-                    toast(`购买了宝物【${item.name}】`, 'success');
-                } else if (item.type === 'character') {
-                    if (!window.charBagData) window.charBagData = {};
-                    const cData = characterList[item.id];
-                    if (cData) {
-                        // 修改：生成唯一 instanceId
-                        const instanceId = generateInstanceId(item.id);
-                        window.charBagData[instanceId] = {
-                            charId: item.id, // 存储基础ID
-                            level: 1,
-                            hp: cData.hp,
-                            atk: cData.atk,
-                            def: cData.def,
-                            spe: cData.spe,
-                            buff: [],
-                        };
-                        // 注意：gameData.addToHandbook 可能仍基于 charId，这是正确的（图鉴只需记录拥有过该角色）
-                        gameData.addToHandbook(item.id);
+                // 购买按钮逻辑
+                const buyBtn = document.createElement('button');
+                buyBtn.className = 'shop-item-buy-btn';
+                buyBtn.textContent = item.price+'金';
+                
+                // 【关键修复】防止重复点击或逻辑混乱
+                buyBtn.onclick = (e) => {
+                    e.stopPropagation(); // 阻止事件冒泡
+        
+                    // 1. 检查是否已售出
+                    if (item.sold) {
+                        toast('该商品已售出', 'warning');
+                        return;
                     }
-                    toast(`招募了角色【${item.name}】`, 'success');
-                }
-                item.sold = true;
-                // 更新金币显示
-                const goldDisplay = document.getElementById('shop-gold-display');
-                if (goldDisplay) goldDisplay.textContent = window.gameGold;
-                renderShopView(container);
-            };
-        }
-        infoDiv.appendChild(buyBtn);
-
+        
+                    // 2. 检查金币
+                    if ((window.gameGold || 0) < item.price) {
+                        toast('金币不足！', 'error');
+                        return;
+                    }
+        
+                    // 3. 执行购买逻辑
+                    if (item.type === 'character') {
+                        const baseChar = characterList[item.id];
+                        if (!baseChar) {
+                            toast('角色数据错误', 'error');
+                            return;
+                        }
+        
+                        // A. 生成唯一实例ID
+                        const instanceId = generateInstanceId(item.id);
+        
+                        // B. 【核心】编译属性并创建背包数据
+                        const stats = compileCharacterStats(baseChar);
+                        
+                        window.charBagData[instanceId] = {
+                            charId: item.id,
+                            level: 1,
+                            // rank: baseChar.rank,
+                            // template: baseChar.template,
+                            // tip: baseChar.tip,
+                            // tip: baseChar.tip,
+                            // ties: baseChar.ties,
+                            // tupoList: baseChar.tupoList,
+                            
+                            hp: stats.hp,
+                            atk: stats.atk,
+                            def: stats.def,
+                            spe: stats.spe,
+                            currentHp: stats.hp,
+                            maxHp: stats.hp
+                        };
+                        mergeNoOverwrite(window.charBagData[instanceId], baseChar)
+        
+                        // C. 添加到图鉴 (如果 gameData 支持)
+                        if (typeof gameData.addToHandbook === 'function') {
+                            gameData.addToHandbook(item.id);
+                        }
+        
+                        toast(`成功招募【${baseChar.name}】！`, 'success');
+                    }
+                    else if (item.type === 'treasure') {
+                        // 宝物购买逻辑
+                        if (typeof gameData.addTreasure === 'function') {
+                            gameData.addTreasure(item.id, 1);
+                            syncTreasureEquipData();
+                            toast(`购买了宝物【${item.name}】`, 'success');
+                        } else {
+                            // 如果没有 gameData 接口，暂时仅提示
+                            toast('宝物系统暂未实装', 'info');
+                        }
+                    }
+        
+                    // 4. 扣除金币 (只扣一次)
+                    window.gameGold -= item.price;
+        
+                    // 5. 标记为已售出
+                    item.sold = true;
+        
+                    // 6. 【关键】立即刷新商店界面和金币显示
+                    // 先更新金币数字
+                    const goldDisplay = document.getElementById('shop-gold-display');
+                    if (goldDisplay) {
+                        goldDisplay.textContent = window.gameGold;
+                    }
+                    
+                    // 重新渲染整个商店视图，以反映 "sold" 状态
+                    // 注意：这里直接调用 renderShopView，传入当前容器
+                    // 假设 container 是 renderShopView 的参数
+                    renderShopView(container); 
+                    
+                    // 7. 自动存档
+                    if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+                        SaveManager.autoSave();
+                    }
+                };
+                
+                infoDiv.appendChild(buyBtn);
         itemDiv.appendChild(infoDiv);
 
         gridDiv.appendChild(itemDiv);
@@ -3840,20 +4057,37 @@ function initNewGame() {
     // 开局福利：随机获得1名武将
     const allCharIds = Object.keys(characterList);
     const shuffledAll = [...allCharIds].sort(() => Math.random() - 0.5);
-    const pickedAll = shuffledAll.slice(0, 1);
+    // const pickedAll = shuffledAll.slice(0, 1);
+    const pickedAll = ['zhujue'];
     pickedAll.forEach(id => {
         const base = characterList[id];
         // 修改：生成 instanceId
         const instanceId = generateInstanceId(id);
+        // 1. 先编译基础属性
+        const stats = compileCharacterStats(base);
+
         window.charBagData[instanceId] = {
             charId: id,
             level: 1,
-            hp: base.hp,
-            atk: base.atk,
-            def: base.def,
-            spe: base.spe,
-            buff: [],
+            // 2. 使用编译后的属性
+            // rank: base.rank || 'common',      
+            // template: base.template || 'balanced',
+            // rank: base.rank||'rare',
+            // template: base.template||'balanced',
+            // tip: base.tip,
+            // tip: baseChar.tip,
+            // ties: baseChar.ties,
+            // tupoList: baseChar.tupoList,
+
+            hp: stats.hp,
+            atk: stats.atk,
+            def: stats.def,
+            spe: stats.spe,
+            // 其他字段...
+            currentHp: stats.hp, // 记得初始化当前血量
+            maxHp: stats.hp
         };
+        mergeNoOverwrite(window.charBagData[instanceId], base)
     });
     syncTreasureEquipData();
 
@@ -3867,6 +4101,44 @@ function initNewGame() {
     }
     
     console.log('新游戏已初始化，初始角色:', pickedAll);
+    // 假设主角的 charId 是 'ybsl_zhujue' (请替换为你实际的主角ID)
+    const mainCharId = 'zhujue';
+    // 如果背包里没有主角，先创建一个
+    if (!window.charBagData || !Object.values(window.charBagData).some(inst => inst.charId === mainCharId)) {
+        const mainInstId = generateInstanceId(mainCharId);
+        const baseChar = characterList[mainCharId];
+        if (baseChar) {
+             // 编译属性
+            const stats = compileCharacterStats(baseChar);
+            window.charBagData[mainInstId] = {
+                charId: mainCharId,
+                level: 1,
+                rank: baseChar.rank,
+                template: baseChar.template,
+                hp: stats.hp,
+                atk: stats.atk,
+                def: stats.def,
+                spe: stats.spe,
+                currentHp: stats.hp,
+                maxHp: stats.hp
+            };
+            mergeNoOverwrite(window.charBagData[mainInstId], baseChar)
+            // 【关键】将主角强制放在队伍第一位
+            window.currentTeam[0] = mainInstId;
+        }
+    } else {
+        // 如果已有主角实例，找到它并放在第一位
+        const mainInst = Object.values(window.charBagData).find(inst => inst.charId === mainCharId||inst==='zhujue');
+        if (mainInst) {
+            // 从队伍其他位置移除（如果存在）
+            var tmain = Object.keys(window.charBagData).filter(id => window.charBagData[id].charId === mainCharId)[0];
+            window.currentTeam[0]=tmain;
+        }
+        refreshAllTeamSlots();
+
+    }
+    // ... 保存存档等后续操作 ...
+    // SaveManager.autoSave();
 }
 
 // 显示存档界面
@@ -4487,9 +4759,9 @@ function showBagCharDetailPopup(instanceId, charId) {
     if (!instData) return;
 
     const saveData = instData;
-    const RANK_LABELS = { legend: '传说', epic: '史诗', rare: '精品', common: '普通', junk: '废材' };
-    const RANK_COLORS = { legend: '#ff4444', epic: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-    const TIP_LABELS = { damage: '偏攻', recover: '偏防', balance: '均衡' };
+    const RANK_LABELS = { kami:'神品',legend: '传说', epic: '史诗', epicfake:'伪史诗',rare: '精品', common: '普通', junk: '废材' };
+    const RANK_COLORS = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    const TIP_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
     const overlay = document.createElement('div');
     overlay.className = 'ybrpg-confirm-overlay';
@@ -4549,7 +4821,7 @@ function showBagCharDetailPopup(instanceId, charId) {
     tipDiv.style.fontSize = '12px';
     tipDiv.style.color = '#aaa';
     tipDiv.style.marginBottom = '4px';
-    tipDiv.textContent = TIP_LABELS[char.tip] || char.tip || '';
+    tipDiv.textContent = TIP_LABELS[char.template]|| '';
     attrDiv.appendChild(tipDiv);
 
     const attrs = [
@@ -4604,8 +4876,8 @@ function showBagCharDetailPopup(instanceId, charId) {
             // 更新等级显示
             const rankEl = dialog.querySelector('.gallery-detail-rank');
             if (rankEl) {
-                const rankColors = { legend: '#ff4444', epic: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-                const rankLabels = { legend: '传说', epic: '史诗', rare: '精品', common: '普通', junk: '废材' };
+                const rankColors = { kami:'#ffff00',legend: '#ff4444', epic: '#ff8d8d',epicfake:'#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+                const rankLabels = { kami:'神品',legend: '传说', epic: '史诗', epicfake:'伪史诗',rare: '精品', common: '普通', junk: '废材' };
                 const rankText = rankLabels[char.rank] || char.rank;
                 rankEl.innerHTML = `<span style="color:${rankColors[char.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${newLevel}</span>`;
             }
@@ -4666,7 +4938,81 @@ function buildSkillSection(label, sData, color) {
     return section;
 }
 
+// function updateCharacterSP(current,target){
+//     var rank = current.rank;
+//     var temp = current.template;
+//     var level = current.level;
+//     var tupolevel = current.tupolevel;
+//     var id = current.id||current;
+//     // var base ={};
+//     if(characterTemplate[temp]?.[rank]){
+//         const info = {
+//             hp: characterTemplate[temp][rank].hp,
+//             atk: characterTemplate[temp][rank].atk,
+//             def: characterTemplate[temp][rank].def,
+//             spe: characterTemplate[temp][rank].spe,
+//         }
+//         // target.tupoList=characterList[id].tupoList.slice(0,tupolevel);
+//         var mag = (100 + 10 * (level - 1)) / 100
+//         target.hp = info.hp*mag;
+//         target.atk = info.atk*mag;
+//         target.def = info.def*mag;
+//         target.spe = info.spe*mag;
+//     }
+//     // return base;
+// }
+/**
+ * 更新角色实例属性（基于模板和等级）
+ * @param {Object} current - 角色实例对象 (必须包含 charId, rank, template, level)
+ */
+function updateCharacterSP(current) {
+    if (!current) return;
+    console.log('current',current)
+    // 1. 安全获取基础信息，提供默认值防止 undefined
+    const rank = current.rank || 'common';
+    const temp = current.template || 'balanced';
+    const level = Number(current.level) || 1; // 确保 level 是数字，默认 1
+    const tupolevel = current.tupolevel || 0;
 
+    // 2. 查找模板数据
+    // 确保 characterTemplate 已定义，且路径存在
+    const templateData = window.characterTemplate || characterTemplate;
+    const rankData = templateData?.[temp]?.[rank];
+
+    if (!rankData) {
+        console.warn(`[属性更新] 未找到模板数据: template=${temp}, rank=${rank}`);
+        // 可选：设置一个保底的基础数值，防止 NaN
+        // current.hp = 500; current.atk = 50; ...
+        return; 
+    }
+    console.log('rankData',rankData)
+
+    // 3. 提取基础属性，使用 || 0 防止模板中缺少某项属性导致 NaN
+    const baseHp = Number(rankData.hp) || 0;
+    const baseAtk = Number(rankData.atk) || 0;
+    const baseDef = Number(rankData.def) || 0;
+    const baseSpe = Number(rankData.spe) || 0;
+    console.log('4属性',[baseHp, baseAtk, baseDef, baseSpe])
+
+    // 4. 计算成长系数
+    // 公式: (100 + 10 * (等级 - 1)) / 100
+    // Lv1 -> 1.0, Lv2 -> 1.1, Lv10 -> 1.9
+    const mag = (100 + 10 * (level - 1)) / 100;
+    console.log('mag',mag)
+    var newcurrent={...current}
+    // 5. 应用属性 (向下取整，避免小数血量)
+    newcurrent.hp = Math.floor(baseHp * mag);
+    newcurrent.atk = Math.floor(baseAtk * mag);
+    newcurrent.def = Math.floor(baseDef * mag);
+    newcurrent.spe = Math.floor(baseSpe * mag);
+    console.log('newcurrent',newcurrent)
+    
+    // 6. 如果有突破等级逻辑，可以在这里处理
+    if (tupolevel > 0 && current.tupoList) { 
+        newcurrent.tupoList = current.tupoList.slice(0,tupolevel);
+     }
+    return newcurrent;
+}
 /**
  * 升级选择面板（仅消耗同品质武将）
  * @param {string} targetInstId - 要升级的角色实例ID
@@ -4770,13 +5116,10 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
         targetData.level = newLevel;
         const ratio = (100 + 10 * (newLevel - 1)) / 100; // 提升比例
 
-        const base = characterList[targetCharId];
-        if (base) {
-            targetData.hp = Math.round(base.hp * ratio);
-            targetData.atk = Math.round(base.atk * ratio);
-            targetData.def = Math.round(base.def * ratio);
-            targetData.spe = Math.round(base.spe * ratio);
-        }
+        var base = characterList[targetCharId];
+        // if (base) {
+        // }
+        var newcurrent = updateCharacterSP(targetData)
 
         // overlay.remove();
         // toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！`, 'success');
@@ -4801,10 +5144,10 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
         //     }
         // }
         // syncTreasureEquipData();
-        const newHp = Math.round(base.hp * ratio);
-        const newAtk = Math.round(base.atk * ratio);
-        const newDef = Math.round(base.def * ratio);
-        const newSpe = Math.round(base.spe * ratio);
+        const newHp = newcurrent.hp;
+        const newAtk = newcurrent.atk;
+        const newDef = newcurrent.def;
+        const newSpe = newcurrent.spe;
         if (typeof onUpgrade === 'function') {
             onUpgrade(newLevel, newHp, newAtk, newDef, newSpe);
         }
@@ -4927,4 +5270,212 @@ function showBagCharDetail(charInfo) {
     } else {
         toast('无法找到该角色实例', 'error');
     }
+}
+
+
+/**
+ * 获取角色当前品质的标签
+ * @param {string} rank - 内部品质标识
+ */
+function getRankLabel(rank) {
+    const map = {
+        'junk': '废材',
+        'common': '普通',
+        'rare': '精品(紫)',
+        'epicfake': '伪史诗(橙)',
+        'epic': '真史诗(橙)', // 注意：您描述中橙色分伪史诗和真史诗，这里需区分颜色或名称
+        'legend': '传说(红)',
+        'kami': '神品(金)'
+    };
+    return map[rank] || rank;
+}
+
+/**
+ * 计算突破所需的本体数量和检查升阶门槛
+ * @param {Object} character - 角色对象
+ * @param {number} currentBreakthrough - 当前突破阶数 (0-20)
+ * @returns {Object} { cost: number, needPromotion: boolean, nextRank: string|null }
+ */
+function getBreakthroughInfo(character, currentBreakthrough) {
+    if (currentBreakthrough >= 20) return { cost: 0, needPromotion: false, nextRank: null };
+
+    let cost = 0;
+    let needPromotion = false;
+    let nextRank = null;
+    
+    // 当前品质推导 (基于初始品质和已完成的升阶)
+    // 简化逻辑：根据突破阶数判断当前处于哪个大阶段
+    // 0-4: 精品阶段 (若初始为rare)
+    // 5-8: 伪史诗阶段
+    // 9-12: 真史诗阶段
+    // 13-16: 传说阶段
+    // 17-20: 神品阶段
+
+    // 确定当前“大境界”
+    let currentStage = Math.floor(currentBreakthrough / 5); // 0, 1, 2, 3, 4
+    
+    // 消耗规则
+    if (currentBreakthrough < 5) cost = 1;       // 1-4阶
+    else if (currentBreakthrough < 10) cost = 2;  // 5-8阶 (注意：5阶是升阶点还是突破点？根据您的描述：突破1-4消耗1，然后升阶。突破5-8消耗2)
+    else if (currentBreakthrough < 15) cost = 3;  // 9-12阶
+    else if (currentBreakthrough < 20) cost = 4;  // 13-16阶
+    else cost = 5;                                // 17-20阶
+
+    // 修正消耗逻辑以匹配您的描述：
+    // 突破1-4阶：消耗1本体。 (Current: 0->1, 1->2, 2->3, 3->4)
+    // 门槛：4阶升5阶 (紫->橙伪)
+    // 突破5-8阶：消耗2本体。
+    // 门槛：8阶升9阶 (橙伪->橙真)
+    // 突破9-12阶：消耗3本体。
+    // 门槛：12阶升13阶 (橙真->红传)
+    // 突破13-16阶：消耗4本体。
+    // 门槛：16阶升17阶 (红传->金神)
+    // 突破17-20阶：消耗5本体。
+
+    if (currentBreakthrough >= 0 && currentBreakthrough < 4) cost = 1;
+    else if (currentBreakthrough >= 5 && currentBreakthrough < 8) cost = 2; // 注意：5阶突破到6阶消耗2？还是5阶本身是升阶结果？
+    // 通常设计：突破操作是从 N 到 N+1
+    // 0->1 (cost 1)
+    // 1->2 (cost 1)
+    // 2->3 (cost 1)
+    // 3->4 (cost 1)
+    // [门槛: 4->5 需要升阶材料]
+    // 5->6 (cost 2)
+    // 6->7 (cost 2)
+    // 7->8 (cost 2)
+    // 8->9 (cost 2? 或者是 8->9 是升阶？)
+    
+    // 让我们严格按照您的文字：
+    // "突破1-4阶为第一阶段，消耗1本体" -> 指达到1,2,3,4阶的过程，或者在1,2,3,4阶时突破下一阶？
+    // 假设：当前阶数为 K，突破到 K+1 的消耗。
+    
+    if (currentBreakthrough < 4) {
+        cost = 1;
+    } else if (currentBreakthrough === 4) {
+        // 门槛：紫色精品 -> 橙色伪史诗
+        needPromotion = true;
+        nextRank = 'epicfake'; 
+        // 升阶通常需要额外物品，这里仅标记
+    } else if (currentBreakthrough >= 5 && currentBreakthrough < 8) {
+        cost = 2;
+    } else if (currentBreakthrough === 8) {
+        // 门槛：橙色伪史诗 -> 真史诗 (如果初始不是真史诗)
+        // 注意：您说“原本在紫色以上品质的角色无门槛”，这意味着如果初始是 epicfake，可能直接视为通过了第一个门槛？
+        // 这里假设“升阶”是改变内部 rank 属性的操作
+        needPromotion = true;
+        nextRank = 'epic';
+    } else if (currentBreakthrough >= 9 && currentBreakthrough < 12) {
+        cost = 3;
+    } else if (currentBreakthrough === 12) {
+        needPromotion = true;
+        nextRank = 'legend';
+    } else if (currentBreakthrough >= 13 && currentBreakthrough < 16) {
+        cost = 4;
+    } else if (currentBreakthrough === 16) {
+        needPromotion = true;
+        nextRank = 'kami';
+    } else if (currentBreakthrough >= 17 && currentBreakthrough < 20) {
+        cost = 5;
+    } else if (currentBreakthrough === 20) {
+        return { cost: 0, needPromotion: false, nextRank: null, maxed: true };
+    }
+
+    // 特殊处理：如果角色初始品质较高，跳过对应的升阶门槛
+    // 例如：初始 legend，当突破到 12 阶时，不需要升阶操作，直接继续突破
+    if (needPromotion) {
+        if (character.initialRank === 'legend' && nextRank === 'legend') needPromotion = false;
+        if (character.initialRank === 'epic' && (nextRank === 'epic' || nextRank === 'legend')) needPromotion = false;
+        // 需根据实际初始品质细化判断
+    }
+
+    return { cost, needPromotion, nextRank };
+}
+
+/**
+ * 获取角色当前四维属性
+ * 根据：初始品质 + 突破阶数带来的成长 + 当前品质系数
+ */
+function getCharacterStats(character, breakthroughLevel) {
+    // 1. 确定当前有效品质 (Effective Rank)
+    let effectiveRank = character.initialRank;
+    if (breakthroughLevel >= 17) effectiveRank = 'kami';
+    else if (breakthroughLevel >= 13) effectiveRank = 'legend';
+    else if (breakthroughLevel >= 9) effectiveRank = 'epic'; // 真史诗
+    else if (breakthroughLevel >= 5) effectiveRank = 'epicfake'; // 伪史诗
+    // 否则保持 initialRank (如果是 rare 或更低)
+
+    // 2. 获取基础模板
+    const baseStats = characterTemplate[character.template][effectiveRank];
+    
+    if (!baseStats) {
+        console.error(`Missing template for ${character.template} - ${effectiveRank}`);
+        return { hp: 100, atk: 10, def: 10, spe: 10 };
+    }
+
+    // 3. 计算成长 (简单线性成长示例，可根据公式调整)
+    // 每突破一阶，属性提升一定百分比，或者固定值
+    const growthFactor = 1 + (breakthroughLevel * 0.05); // 每阶提升5%
+
+    return {
+        hp: Math.floor(baseStats.hp * growthFactor),
+        atk: Math.floor(baseStats.atk * growthFactor),
+        def: Math.floor(baseStats.def * growthFactor),
+        spe: Math.floor(baseStats.spe * growthFactor) // 速度通常成长较低或固定
+    };
+}
+
+/**
+ * 【核心编译函数】根据模板和品质初始化角色属性
+ * @param {Object} charObj - characterList 中的角色原始数据对象
+ * @returns {Object} 包含 hp, atk, def, spe 的对象
+ */
+function compileCharacterStats(charObj) {
+    if (!charObj) return { hp: 100, atk: 10, def: 10, spe: 10 };
+
+    // 1. 确定模板类型 (damger, defense, balanced)，默认为 balanced
+    const templateType = charObj.template || 'balanced';
+    
+    // 2. 确定品质 (legend, epic, epicfake, rare...)，默认为 common
+    const rank = charObj.rank || 'common';
+
+    // 3. 从 characterTemplate 中查找数值
+    // 注意：确保 characterTemplate 在当前作用域可见，如果是在另一个文件，可能需要 window.characterTemplate
+    const templateData = window.characterTemplate || characterTemplate; 
+    
+    if (templateData && templateData[templateType] && templateData[templateType][rank]) {
+        return { ...templateData[templateType][rank] };
+    } else {
+        console.warn(`[角色编译] 未找到模板: ${templateType}, 品质: ${rank}。使用默认值。`, charObj.name);
+        // 返回一个安全的默认值，防止游戏崩溃
+        return { hp: 500, atk: 50, def: 50, spe: 50 };
+    }
+}
+
+/**
+ * 【辅助函数】获取技能详细数据
+ * @param {string} skillId - 技能ID (如 'attack1', 'recover_skill2')
+ * @returns {Object|null} 技能数据对象
+ */
+function getSkillData(skillId) {
+    if (!skillId) return null;
+    
+    // 依次在 pugong, skill, spskill 中查找
+    const content = window.contentList || contentList;
+    if (!content) return null;
+
+    if (content.pugong[skillId]) return { ...content.pugong[skillId], type: 'pugong' };
+    if (content.skill[skillId]) return { ...content.skill[skillId], type: 'skill' };
+    if (content.spskill[skillId]) return { ...content.spskill[skillId], type: 'spskill' };
+
+    console.warn(`[技能编译] 未找到技能ID: ${skillId}`);
+    return null;
+}
+
+function mergeNoOverwrite(a, b) {
+    for (const key of Object.keys(b)) {
+        if (!(key in a)) {    // 仅在 a 中没有此键时添加
+            a[key] = b[key];
+        }
+    }
+    return a;
 }
