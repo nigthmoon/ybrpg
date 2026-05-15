@@ -5325,7 +5325,7 @@ function showBagCharDetailPopup(instanceId, charId) {
                 }
                 else if(needUpgrade(saveData)){
                     const targetRankLabel = getRankLabel(needUpgrade(saveData));
-                    return `确定要将【${char.name}】升阶至【${targetRankLabel}】吗`;
+                    return `确定要将【${char.name}】升阶至【${targetRankLabel}】吗\n将消耗 ${cost} 个同名角色作为材料`;
                 }
                 else{
                     const cost = breakInfo.cost;
@@ -5445,6 +5445,8 @@ function needUpgrade(breakInfo) {
     //     // default:break;
     // }
     if (breakInfo.tupolevel) {
+        if (breakInfo.tupolevel == 1) needRank = 'common'
+        if (breakInfo.tupolevel == 2) needRank = 'rare'
         if (breakInfo.tupolevel == 4) needRank = 'epicfake'
         if (breakInfo.tupolevel == 8) needRank = 'epic'
         if (breakInfo.tupolevel == 12) needRank = 'legend'
@@ -5894,7 +5896,7 @@ function getBreakthroughInfo(character, currentBreakthrough) {
         if (currentRankIndex < targetIndex) {
             // needPromotion = true;
             nextRank = targetRank;
-            cost = 0; // 升阶操作本身可能不消耗本体，或者消耗特殊材料，这里暂设0，由UI决定显示
+            cost = 2; // 升阶操作本身可能不消耗本体，或者消耗特殊材料，这里暂设0，由UI决定显示
         } else {
             // 品质已足够，直接进行下一次突破 (4->5)
             // needPromotion = false;
@@ -5915,7 +5917,7 @@ function getBreakthroughInfo(character, currentBreakthrough) {
         if (currentRankIndex < targetIndex) {
             // needPromotion = true;
             nextRank = targetRank;
-            cost = 0;
+            cost = 3;
         } else {
             // needPromotion = false;
             cost = 3; // 8->9 消耗 2
@@ -5935,7 +5937,7 @@ function getBreakthroughInfo(character, currentBreakthrough) {
         if (currentRankIndex < targetIndex) {
             // needPromotion = true;
             nextRank = targetRank;
-            cost = 0;
+            cost = 4;
         } else {
             // needPromotion = false;
             cost = 4; // 12->13 消耗 3
@@ -5955,7 +5957,7 @@ function getBreakthroughInfo(character, currentBreakthrough) {
         if (currentRankIndex < targetIndex) {
             // needPromotion = true;
             nextRank = targetRank;
-            cost = 0;
+            cost = 5;
         } else {
             // needPromotion = false;
             cost = 5; // 16->17 消耗 4
