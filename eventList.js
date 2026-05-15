@@ -15,423 +15,476 @@ const eventList = {//事件列表
     // 注意: 普通难度敌人使用初始值(无skills)，困难/地狱难度数值递增
 
     // ========== 第一章：初入梦境 ==========
-    chapter1:{
-        name:'第一章：初入梦境',
-        difficulty:'normal',
-        procedure:[
-            'c1-1','c1-2','c1-3','c1-4','c1-5',
-            'c1-6','c1-7','c1-8','c1-9','c1-10'
+    chapter1: {
+        name: '第一章：初入梦境',
+        difficulty: 'normal',
+        procedure: [
+            'c1-1', 'c1-2', 'c1-3', 'c1-4', 'c1-5',
+            'c1-6', 'c1-7', 'c1-8', 'c1-9', 'c1-10'
         ],
-        eventPack:{
-            // 关卡1：初遇陈爱琳
-            'c1-1':{
-                name:'初遇陈爱琳',
-                id:'c1-1',
-                type:'battle',
-                text:'在记忆的深处，你遇见了她...',
+        eventPack: {
+            // --- 1~3关: 1名稀有敌人 ---
+            'c1-1': {
+                name: '初遇陈爱琳',
+                id: 'c1-1',
+                type: 'battle',
+                text: '在记忆的深处，你遇见了她...',
                 prev: null,
-                enemy:[
-                    {name:'陈爱琳',id:'ybsl_002chenailin',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    {}, {}, {}, {}, {}
                 ],
             },
-            // 关卡2：挑战张玉洁
-            'c1-2':{
-                name:'挑战张玉洁',
-                id:'c1-2',
-                type:'battle',
-                text:'她的剑术凌厉无比...',
+            'c1-2': {
+                name: '挑战张玉洁',
+                id: 'c1-2',
+                type: 'battle',
+                text: '她的剑术凌厉无比...',
                 prev: 'c1-1',
-                enemy:[
-                    {name:'张玉洁',id:'ybsl_004zhangyujie',hp:896,atk:200,def:42,spe:160,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    {}, {}, {}, {}, {}
                 ],
             },
-            // 关卡3：双敌 - 王若冰 + 吴格格
-            'c1-3':{
-                name:'双敌来袭',
-                id:'c1-3',
-                type:'battle',
-                text:'两名敌人同时出现！',
+            'c1-3': {
+                name: '双敌来袭', // 原文本是双敌，但按要求1-3关只有一名敌人，这里修正为单敌，或者你可以保留双敌但降低数值。根据要求“1~3小关只有一名敌人”，此处改为单敌。
+                id: 'c1-3',
+                type: 'battle',
+                text: '一名强敌拦在前方...',
                 prev: 'c1-2',
-                enemy:[
-                    {name:'王若冰',id:'ybsl_005wangruobing',hp:1400,atk:128,def:66,spe:160,buff:[]},
-                    {name:'吴格格',id:'ybsl_007wugege',hp:840,atk:187,def:40,spe:150,buff:[]},
-                    {},{},{},{}
+                enemy: [
+                    { name: '王若冰', id: 'ybsl_005wangruobing', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    {}, {}, {}, {}, {}
                 ],
             },
-            // 关卡4：涂山小红
-            'c1-4':{
-                name:'涂山小红',
-                id:'c1-4',
-                type:'battle',
-                text:'来自涂山的少女...',
+            
+            // --- 4~6关: 2名稀有敌人 ---
+            'c1-4': {
+                name: '涂山小红',
+                id: 'c1-4',
+                type: 'battle',
+                text: '来自涂山的少女...',
                 prev: 'c1-3',
-                enemy:[
-                    {name:'涂山小红',id:'ybsl_017xiaohong',hp:896,atk:200,def:42,spe:160,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '涂山小红', id: 'ybsl_017xiaohong', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '吴格格', id: 'ybsl_007wugege', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    {}, {}, {}, {}
                 ],
             },
-            // 关卡5：双敌 - 李玉珊 + 周玥
-            'c1-5':{
-                name:'记忆交错',
-                id:'c1-5',
-                type:'battle',
-                text:'两名故人拦在前方...',
+            'c1-5': {
+                name: '记忆交错',
+                id: 'c1-5',
+                type: 'battle',
+                text: '两名故人拦在前方...',
                 prev: 'c1-4',
-                enemy:[
-                    {name:'李玉珊',id:'ybsl_009liyushan',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {name:'周玥',id:'ybsl_010zhouyue',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {},{},{},{}
+                enemy: [
+                    { name: '李玉珊', id: 'ybsl_009liyushan', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '周玥', id: 'ybsl_010zhouyue', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    {}, {}, {}, {}
                 ],
             },
-            // 关卡6：高宇航
-            'c1-6':{
-                name:'高宇航',
-                id:'c1-6',
-                type:'battle',
-                text:'她的攻击迅猛无比...',
+            'c1-6': {
+                name: '高宇航',
+                id: 'c1-6',
+                type: 'battle',
+                text: '她的攻击迅猛无比...',
                 prev: 'c1-5',
-                enemy:[
-                    {name:'高宇航',id:'ybsl_011gaoyuhang',hp:896,atk:200,def:42,spe:160,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '高宇航', id: 'ybsl_011gaoyuhang', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '郑佳怡', id: 'ybsl_012zhengjiayi', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    {}, {}, {}, {}
                 ],
             },
-            // 关卡7：双敌 - 郑佳怡 + 尹超跃
-            'c1-7':{
-                name:'双重考验',
-                id:'c1-7',
-                type:'battle',
-                text:'考验你的实力！',
+
+            // --- 7~9关: 3名稀有敌人 ---
+            'c1-7': {
+                name: '双重考验',
+                id: 'c1-7',
+                type: 'battle',
+                text: '考验你的实力！',
                 prev: 'c1-6',
-                enemy:[
-                    {name:'郑佳怡',id:'ybsl_012zhengjiayi',hp:1400,atk:128,def:66,spe:160,buff:[]},
-                    {name:'尹超跃',id:'ybsl_013yinji',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {},{},{},{}
+                enemy: [
+                    { name: '尹超跃', id: 'ybsl_013yinji', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '贾雨桐', id: 'ybsl_020jiayutong', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '王汉桢', id: 'ybsl_006wanghanzhen', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    {}, {}, {}
                 ],
             },
-            // 关卡8：满城柒
-            'c1-8':{
-                name:'满城柒',
-                id:'c1-8',
-                type:'battle',
-                text:'传说级角色登场...',
+            'c1-8': {
+                name: '满城柒',
+                id: 'c1-8',
+                type: 'battle',
+                text: '传说级角色登场...',
                 prev: 'c1-7',
-                enemy:[
-                    {name:'满城柒',id:'ybsl_016manchengqi',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '满城柒', id: 'ybsl_016manchengqi', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '闫爽', id: 'ybsl_003yanshuang', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '张晴', id: 'ybsl_018zhangqing', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    {}, {}, {}
                 ],
             },
-            // 关卡9：双敌 - 贾雨桐 + 王汉桢
-            'c1-9':{
-                name:'双子拦路',
-                id:'c1-9',
-                type:'battle',
-                text:'她们不会让你轻易通过...',
+            'c1-9': {
+                name: '双子拦路',
+                id: 'c1-9',
+                type: 'battle',
+                text: '她们不会让你轻易通过...',
                 prev: 'c1-8',
-                enemy:[
-                    {name:'贾雨桐',id:'ybsl_020jiayutong',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {name:'王汉桢',id:'ybsl_006wanghanzhen',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {},{},{},{}
+                enemy: [
+                    { name: '岳瞳', id: 'ybsl_024yuetong', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '王贺', id: 'ybsl_025wanghe', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '史庆宇', id: 'ybsl_025shiqingyu', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    {}, {}, {}
                 ],
             },
-            // 关卡10：BOSS - 吴雨欣 + 秋儿
-            'c1-10':{
-                name:'第一章BOSS',
-                id:'c1-10',
-                type:'boss',
-                text:'第一章最终BOSS战！',
+
+            // --- Boss关: 1伪史诗 + 3稀有 ---
+            'c1-10': {
+                name: '第一章BOSS',
+                id: 'c1-10',
+                type: 'boss',
+                text: '第一章最终BOSS战！',
                 prev: 'c1-9',
-                enemy:[
-                    {name:'吴雨欣',id:'ybsl_008wuyuxin',hp:1312,atk:120,def:62,spe:150,buff:[]},
-                    {name:'秋儿',id:'ybsl_053qiuer',hp:1312,atk:120,def:62,spe:150,buff:[]},
-                    {},{},{},{}
+                enemy: [
+                    // 伪史诗 Boss
+                    { name: '吴雨欣', id: 'ybsl_008wuyuxin', hp: 1500, atk: 220, def: 80, spe: 160, buff: [] },
+                    // 3个稀有小弟
+                    { name: '秋儿', id: 'ybsl_053qiuer', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '孙丽松', id: 'ybsl_001sunlisong', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '王海茹', id: 'ybsl_015wanghairu', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
+                    {}, {}
                 ],
             },
         }
     },
 
     // ========== 第二章：记忆觉醒 ==========
-    chapter2:{
-        name:'第二章：记忆觉醒',
-        difficulty:'normal',
-        procedure:[
-            'c2-1','c2-2','c2-3','c2-4','c2-5',
-            'c2-6','c2-7','c2-8','c2-9','c2-10'
+    // 系数: HP*1.15, ATK*1.1, DEF*1.08, SPE*1.02
+    // 稀有基准: HP:1150, ATK:165, DEF:54, SPE:153
+    // 伪史诗基准: HP:1725, ATK:242, DEF:86, SPE:163
+    chapter2: {
+        name: '第二章：记忆觉醒',
+        difficulty: 'normal',
+        procedure: [
+            'c2-1', 'c2-2', 'c2-3', 'c2-4', 'c2-5',
+            'c2-6', 'c2-7', 'c2-8', 'c2-9', 'c2-10'
         ],
-        eventPack:{
-            // 关卡1：双敌 - 闫爽 + 张晴
-            'c2-1':{
-                name:'记忆碎片',
-                id:'c2-1',
-                type:'battle',
-                text:'新的记忆正在苏醒...',
+        eventPack: {
+            // --- 1~9关: 4名稀有敌人 ---
+            'c2-1': {
+                name: '记忆碎片',
+                id: 'c2-1',
+                type: 'battle',
+                text: '新的记忆正在苏醒...',
                 prev: null,
-                enemy:[
-                    {name:'闫爽',id:'ybsl_003yanshuang',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {name:'张晴',id:'ybsl_018zhangqing',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {},{},{},{}
+                enemy: [
+                    { name: '闫爽', id: 'ybsl_003yanshuang', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '张晴', id: 'ybsl_018zhangqing', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '岳瞳', id: 'ybsl_024yuetong', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '王贺', id: 'ybsl_025wanghe', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    {}, {}
                 ],
             },
-            // 关卡2：岳瞳
-            'c2-2':{
-                name:'岳瞳',
-                id:'c2-2',
-                type:'battle',
-                text:'她的眼神中藏着秘密...',
+            'c2-2': {
+                name: '岳瞳',
+                id: 'c2-2',
+                type: 'battle',
+                text: '她的眼神中藏着秘密...',
                 prev: 'c2-1',
-                enemy:[
-                    {name:'岳瞳',id:'ybsl_024yuetong',hp:840,atk:187,def:40,spe:150,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '史庆宇', id: 'ybsl_025shiqingyu', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '蘋姉', id: 'ybsl_042pingzi', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '盛妍', id: 'ybsl_019shengyan', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '王婉儿', id: 'ybsl_049waner', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    {}, {}
                 ],
             },
-            // 关卡3：双敌 - 王贺 + 史庆宇
-            'c2-3':{
-                name:'双重身影',
-                id:'c2-3',
-                type:'battle',
-                text:'她们的身影重叠在一起...',
+            'c2-3': {
+                name: '双重身影',
+                id: 'c2-3',
+                type: 'battle',
+                text: '她们的身影重叠在一起...',
                 prev: 'c2-2',
-                enemy:[
-                    {name:'王贺',id:'ybsl_025wanghe',hp:1312,atk:120,def:62,spe:150,buff:[]},
-                    {name:'史庆宇',id:'ybsl_025shiqingyu',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {},{},{},{}
+                enemy: [
+                    { name: '悦儿', id: 'ybsl_054yueer', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '郑琰', id: 'ybsl_055zhengyan', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '房佳谕', id: 'ybsl_043fangjiayu', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '高聪', id: 'ybsl_045gaocong', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    {}, {}
                 ],
             },
-            // 关卡4：蘋姉
-            'c2-4':{
-                name:'蘋姉',
-                id:'c2-4',
-                type:'battle',
-                text:'神秘的角色出现了...',
+            'c2-4': {
+                name: '蘋姉',
+                id: 'c2-4',
+                type: 'battle',
+                text: '神秘的角色出现了...',
                 prev: 'c2-3',
-                enemy:[
-                    {name:'蘋姉',id:'ybsl_042pingzi',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '鞠熒', id: 'ybsl_059starsFall1', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '宋橤', id: 'ybsl_059starsFall2', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '周靈', id: 'ybsl_059starsFall3', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '李曉', id: 'ybsl_059starsFall4', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    {}, {}
                 ],
             },
-            // 关卡5：三敌 - 盛妍 + 王婉儿 + 悦儿
-            'c2-5':{
-                name:'三人同行',
-                id:'c2-5',
-                type:'battle',
-                text:'三位记忆中的伙伴...',
+            'c2-5': {
+                name: '三人同行',
+                id: 'c2-5',
+                type: 'battle',
+                text: '三位记忆中的伙伴...',
                 prev: 'c2-4',
-                enemy:[
-                    {name:'盛妍',id:'ybsl_019shengyan',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {name:'王婉儿',id:'ybsl_049waner',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {name:'悦儿',id:'ybsl_054yueer',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {},{},{}
+                enemy: [
+                    { name: '清月姑娘', id: 'ybsl_068qingyue', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '吕艳秋', id: 'ybsl_070lvyanqiu', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '小慧', id: 'ybsl_033xiaohui', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '蛇妃', id: 'db_ybsl_067snake', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    {}, {}
                 ],
             },
-            // 关卡6：郑琰
-            'c2-6':{
-                name:'郑琰',
-                id:'c2-6',
-                type:'battle',
-                text:'她的攻击令人防不胜防...',
+            'c2-6': {
+                name: '郑琰',
+                id: 'c2-6',
+                type: 'battle',
+                text: '她的攻击令人防不胜防...',
                 prev: 'c2-5',
-                enemy:[
-                    {name:'郑琰',id:'ybsl_055zhengyan',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '幻晴', id: 'ybsl_018huanqing', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '江雪舞', id: 'ybsl_046jiangxuewu', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '蚕', id: 'ybsl_026can', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '雨', id: 'ybsl_027rain', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    {}, {}
                 ],
             },
-            // 关卡7：双敌 - 房佳谕 + 高聪
-            'c2-7':{
-                name:'记忆漩涡',
-                id:'c2-7',
-                type:'battle',
-                text:'记忆的漩涡将你卷入...',
+            'c2-7': {
+                name: '记忆漩涡',
+                id: 'c2-7',
+                type: 'battle',
+                text: '记忆的漩涡将你卷入...',
                 prev: 'c2-6',
-                enemy:[
-                    {name:'房佳谕',id:'ybsl_043fangjiayu',hp:896,atk:200,def:42,spe:160,buff:[]},
-                    {name:'高聪',id:'ybsl_045gaocong',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {},{},{},{}
+                enemy: [
+                    { name: '彡', id: 'ybsl_047shan', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '玉蝶心', id: 'ybsl_092handan', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '黎', id: 'ybsl_029dawn', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '熙', id: 'ybsl_036bright', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    {}, {}
                 ],
             },
-            // 关卡8：闫爽
-            'c2-8':{
-                name:'闫爽',
-                id:'c2-8',
-                type:'battle',
-                text:'她再次出现在你面前...',
+            'c2-8': {
+                name: '闫爽',
+                id: 'c2-8',
+                type: 'battle',
+                text: '她再次出现在你面前...',
                 prev: 'c2-7',
-                enemy:[
-                    {name:'闫爽',id:'ybsl_003yanshuang',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '方块公主', id: 'ybsl_037diamondqueen', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '卞秋雯', id: 'ybsl_038bianqiuwen', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '胡瑞航', id: 'ybsl_044huruihang', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '张汨', id: 'ybsl_047zhangmi', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    {}, {}
                 ],
             },
-            // 关卡9：三敌 - 鞠熒 + 宋橤 + 周靈
-            'c2-9':{
-                name:'星辰汇聚',
-                id:'c2-9',
-                type:'battle',
-                text:'星辰之力在此汇聚...',
+            'c2-9': {
+                name: '星辰汇聚',
+                id: 'c2-9',
+                type: 'battle',
+                text: '星辰之力在此汇聚...',
                 prev: 'c2-8',
-                enemy:[
-                    {name:'鞠熒',id:'ybsl_059starsFall1',hp:896,atk:200,def:42,spe:160,buff:[]},
-                    {name:'宋橤',id:'ybsl_059starsFall2',hp:1400,atk:128,def:66,spe:160,buff:[]},
-                    {name:'周靈',id:'ybsl_059starsFall3',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {},{},{}
+                enemy: [
+                    { name: '吴爽', id: 'ybsl_048wushuang', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '王冰雨', id: 'ybsl_122wangbingyu', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '涂静', id: 'ybsl_121tujing', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '雪琅', id: 'ybsl_123xuelang', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    {}, {}
                 ],
             },
-            // 关卡10：BOSS - 李曉 + 清月姑娘
-            'c2-10':{
-                name:'第二章BOSS',
-                id:'c2-10',
-                type:'boss',
-                text:'第二章最终BOSS战！',
+
+            // --- Boss关: 1伪史诗 + 5稀有 ---
+            'c2-10': {
+                name: '第二章BOSS',
+                id: 'c2-10',
+                type: 'boss',
+                text: '第二章最终BOSS战！',
                 prev: 'c2-9',
-                enemy:[
-                    {name:'李曉',id:'ybsl_059starsFall4',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {name:'清月姑娘',id:'ybsl_068qingyue',hp:840,atk:187,def:40,spe:150,buff:[]},
-                    {},{},{},{}
+                enemy: [
+                    // 伪史诗 Boss
+                    { name: '香紫姑娘', id: 'ybsl_069xiangzi', hp: 1725, atk: 242, def: 86, spe: 163, buff: [] },
+                    // 5个稀有
+                    { name: '朱焌', id: 'ybsl_076zhujun', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '涂山水璃', id: 'ybsl_107tushanshuili', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    { name: '王若冰', id: 'ybsl_005wangruobing', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
+                    {}
                 ],
             },
         }
     },
 
     // ========== 第三章：梦境交错 ==========
-    chapter3:{
-        name:'第三章：梦境交错',
-        difficulty:'normal',
-        procedure:[
-            'c3-1','c3-2','c3-3','c3-4','c3-5',
-            'c3-6','c3-7','c3-8','c3-9','c3-10'
+    // 系数: HP*1.32 (1.15^2), ATK*1.21, DEF*1.17, SPE*1.04
+    // 稀有基准: HP:1320, ATK:181, DEF:58, SPE:156
+    // 伪史诗基准: HP:1980, ATK:266, DEF:94, SPE:166
+    chapter3: {
+        name: '第三章：梦境交错',
+        difficulty: 'normal',
+        procedure: [
+            'c3-1', 'c3-2', 'c3-3', 'c3-4', 'c3-5',
+            'c3-6', 'c3-7', 'c3-8', 'c3-9', 'c3-10'
         ],
-        eventPack:{
-            // 关卡1：吕艳秋
-            'c3-1':{
-                name:'吕艳秋',
-                id:'c3-1',
-                type:'battle',
-                text:'秋日的记忆如此清晰...',
+        eventPack: {
+            // --- 1~9关: 6名稀有敌人 (塞满) ---
+            'c3-1': {
+                name: '吕艳秋',
+                id: 'c3-1',
+                type: 'battle',
+                text: '秋日的记忆如此清晰...',
                 prev: null,
-                enemy:[
-                    {name:'吕艳秋',id:'ybsl_070lvyanqiu',hp:1312,atk:120,def:62,spe:150,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '王若冰', id: 'ybsl_005wangruobing', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '满城柒', id: 'ybsl_016manchengqi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '涂山小红', id: 'ybsl_017xiaohong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '贾雨桐', id: 'ybsl_020jiayutong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
                 ],
             },
-            // 关卡2：三敌 - 小慧 + 幻晴 + 江雪舞
-            'c3-2':{
-                name:'三人幻影',
-                id:'c3-2',
-                type:'battle',
-                text:'幻影中浮现三个身影...',
+            'c3-2': {
+                name: '三人幻影',
+                id: 'c3-2',
+                type: 'battle',
+                text: '幻影中浮现三个身影...',
                 prev: 'c3-1',
-                enemy:[
-                    {name:'小慧',id:'ybsl_033xiaohui',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {name:'幻晴',id:'ybsl_018huanqing',hp:1400,atk:128,def:66,spe:160,buff:[]},
-                    {name:'江雪舞',id:'ybsl_046jiangxuewu',hp:1400,atk:128,def:66,spe:160,buff:[]},
-                    {},{},{}
+                enemy: [
+                    { name: '李玉珊', id: 'ybsl_009liyushan', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '周玥', id: 'ybsl_010zhouyue', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '高宇航', id: 'ybsl_011gaoyuhang', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '郑佳怡', id: 'ybsl_012zhengjiayi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '尹超跃', id: 'ybsl_013yinji', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '吴格格', id: 'ybsl_007wugege', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
                 ],
             },
-            // 关卡3：蛇妃
-            'c3-3':{
-                name:'蛇妃',
-                id:'c3-3',
-                type:'battle',
-                text:'危险的气息弥漫开来...',
+            'c3-3': {
+                name: '蛇妃',
+                id: 'c3-3',
+                type: 'battle',
+                text: '危险的气息弥漫开来...',
                 prev: 'c3-2',
-                enemy:[
-                    {name:'蛇妃',id:'db_ybsl_067snake',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '闫爽', id: 'ybsl_003yanshuang', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '张晴', id: 'ybsl_018zhangqing', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '岳瞳', id: 'ybsl_024yuetong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '王贺', id: 'ybsl_025wanghe', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '史庆宇', id: 'ybsl_025shiqingyu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '蘋姉', id: 'ybsl_042pingzi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
                 ],
             },
-            // 关卡4：四敌 - 蚕 + 雨 + 彡 + 玉蝶心
-            'c3-4':{
-                name:'梦境四重奏',
-                id:'c3-4',
-                type:'battle',
-                text:'四个身影在梦境中起舞...',
+            'c3-4': {
+                name: '梦境四重奏',
+                id: 'c3-4',
+                type: 'battle',
+                text: '四个身影在梦境中起舞...',
                 prev: 'c3-3',
-                enemy:[
-                    {name:'蚕',id:'ybsl_026can',hp:840,atk:187,def:40,spe:150,buff:[]},
-                    {name:'雨',id:'ybsl_027rain',hp:1312,atk:120,def:62,spe:150,buff:[]},
-                    {name:'彡',id:'ybsl_047shan',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {name:'玉蝶心',id:'ybsl_092handan',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {},{}
+                enemy: [
+                    { name: '盛妍', id: 'ybsl_019shengyan', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '王婉儿', id: 'ybsl_049waner', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '悦儿', id: 'ybsl_054yueer', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '郑琰', id: 'ybsl_055zhengyan', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '房佳谕', id: 'ybsl_043fangjiayu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '高聪', id: 'ybsl_045gaocong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
                 ],
             },
-            // 关卡5：黎
-            'c3-5':{
-                name:'黎明的使者',
-                id:'c3-5',
-                type:'battle',
-                text:'黎明前的黑暗最为深沉...',
+            'c3-5': {
+                name: '黎明的使者',
+                id: 'c3-5',
+                type: 'battle',
+                text: '黎明前的黑暗最为深沉...',
                 prev: 'c3-4',
-                enemy:[
-                    {name:'黎',id:'ybsl_029dawn',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '鞠熒', id: 'ybsl_059starsFall1', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '宋橤', id: 'ybsl_059starsFall2', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '周靈', id: 'ybsl_059starsFall3', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '李曉', id: 'ybsl_059starsFall4', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '清月姑娘', id: 'ybsl_068qingyue', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '吕艳秋', id: 'ybsl_070lvyanqiu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
                 ],
             },
-            // 关卡6：五敌 - 熙 + 方块公主 + 王冰雨 + 涂静 + 雪琅
-            'c3-6':{
-                name:'五重梦境',
-                id:'c3-6',
-                type:'battle',
-                text:'五道身影将你包围...',
+            'c3-6': {
+                name: '五重梦境',
+                id: 'c3-6',
+                type: 'battle',
+                text: '五道身影将你包围...',
                 prev: 'c3-5',
-                enemy:[
-                    {name:'熙',id:'ybsl_036bright',hp:896,atk:200,def:42,spe:160,buff:[]},
-                    {name:'方块公主',id:'ybsl_037diamondqueen',hp:1400,atk:128,def:66,spe:160,buff:[]},
-                    {name:'王冰雨',id:'ybsl_122wangbingyu',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {name:'涂静',id:'ybsl_121tujing',hp:1312,atk:120,def:62,spe:150,buff:[]},
-                    {name:'雪琅',id:'ybsl_123xuelang',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {}
+                enemy: [
+                    { name: '小慧', id: 'ybsl_033xiaohui', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '蛇妃', id: 'db_ybsl_067snake', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '幻晴', id: 'ybsl_018huanqing', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '江雪舞', id: 'ybsl_046jiangxuewu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '蚕', id: 'ybsl_026can', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '雨', id: 'ybsl_027rain', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
                 ],
             },
-            // 关卡7：香紫姑娘
-            'c3-7':{
-                name:'香紫姑娘',
-                id:'c3-7',
-                type:'battle',
-                text:'紫色的香气令人沉醉...',
+            'c3-7': {
+                name: '香紫姑娘',
+                id: 'c3-7',
+                type: 'battle',
+                text: '紫色的香气令人沉醉...',
                 prev: 'c3-6',
-                enemy:[
-                    {name:'香紫姑娘',id:'ybsl_069xiangzi',hp:896,atk:200,def:42,spe:160,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '彡', id: 'ybsl_047shan', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '玉蝶心', id: 'ybsl_092handan', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '黎', id: 'ybsl_029dawn', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '熙', id: 'ybsl_036bright', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '方块公主', id: 'ybsl_037diamondqueen', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '卞秋雯', id: 'ybsl_038bianqiuwen', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
                 ],
             },
-            // 关卡8：四敌 - 卞秋雯 + 胡瑞航 + 张汨 + 吴爽
-            'c3-8':{
-                name:'四方围攻',
-                id:'c3-8',
-                type:'battle',
-                text:'四面的敌人同时袭来...',
+            'c3-8': {
+                name: '四方围攻',
+                id: 'c3-8',
+                type: 'battle',
+                text: '四面的敌人同时袭来...',
                 prev: 'c3-7',
-                enemy:[
-                    {name:'卞秋雯',id:'ybsl_038bianqiuwen',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {name:'胡瑞航',id:'ybsl_044huruihang',hp:840,atk:187,def:40,spe:150,buff:[]},
-                    {name:'张汨',id:'ybsl_047zhangmi',hp:1312,atk:120,def:62,spe:150,buff:[]},
-                    {name:'吴爽',id:'ybsl_048wushuang',hp:1050,atk:150,def:50,spe:150,buff:[]},
-                    {},{}
+                enemy: [
+                    { name: '胡瑞航', id: 'ybsl_044huruihang', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '张汨', id: 'ybsl_047zhangmi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '吴爽', id: 'ybsl_048wushuang', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '王冰雨', id: 'ybsl_122wangbingyu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '涂静', id: 'ybsl_121tujing', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '雪琅', id: 'ybsl_123xuelang', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
                 ],
             },
-            // 关卡9：朱焌
-            'c3-9':{
-                name:'朱焌',
-                id:'c3-9',
-                type:'battle',
-                text:'朱红的身影闪烁着危险的光芒...',
+            'c3-9': {
+                name: '朱焌',
+                id: 'c3-9',
+                type: 'battle',
+                text: '朱红的身影闪烁着危险的光芒...',
                 prev: 'c3-8',
-                enemy:[
-                    {name:'朱焌',id:'ybsl_076zhujun',hp:1400,atk:128,def:66,spe:160,buff:[]},
-                    {},{},{},{},{}
+                enemy: [
+                    { name: '香紫姑娘', id: 'ybsl_069xiangzi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '朱焌', id: 'ybsl_076zhujun', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '涂山水璃', id: 'ybsl_107tushanshuili', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '王海茹', id: 'ybsl_015wanghairu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '孙丽松', id: 'ybsl_001sunlisong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '吴雨欣', id: 'ybsl_008wuyuxin', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
                 ],
             },
-            // 关卡10：BOSS - 涂山水璃 + 王海茹 + 孙丽松
-            'c3-10':{
-                name:'第三章BOSS',
-                id:'c3-10',
-                type:'boss',
-                text:'第三章最终BOSS战！',
+
+            // --- Boss关: 1伪史诗 + 5稀有 ---
+            'c3-10': {
+                name: '第三章BOSS',
+                id: 'c3-10',
+                type: 'boss',
+                text: '第三章最终BOSS战！',
                 prev: 'c3-9',
-                enemy:[
-                    {name:'涂山水璃',id:'ybsl_107tushanshuili',hp:840,atk:187,def:40,spe:150,buff:[]},
-                    {name:'王海茹',id:'ybsl_015wanghairu',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {name:'孙丽松',id:'ybsl_001sunlisong',hp:1120,atk:160,def:53,spe:160,buff:[]},
-                    {},{},{}
+                enemy: [
+                    // 伪史诗 Boss
+                    { name: '王汉桢', id: 'ybsl_006wanghanzhen', hp: 1980, atk: 266, def: 94, spe: 166, buff: [] },
+                    // 5个稀有
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '王若冰', id: 'ybsl_005wangruobing', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '满城柒', id: 'ybsl_016manchengqi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    { name: '涂山小红', id: 'ybsl_017xiaohong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
+                    {}
                 ],
             },
         }

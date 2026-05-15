@@ -421,12 +421,16 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
             dmg = applyTreasureDamageModifier(actor, dmg);
             addBattleLog(`${t.name} 受到了 ${dmg} 点伤害`);
             // 延迟触发on_hit，等技能宝物效果后再触发
+                        // 延迟触发on_hit，等技能宝物效果后再触发
             applyDamage(t, dmg, actor, false, false, () => {
-                // 记录需要触发on_hit的目标（仅存活且未被记录的）
-                if (t.alive) {
-                    pendingOnHitTargets.push(t);
-                }
-                processNextTarget();
+                // 【修复】触发造成伤害后的宝物效果（如狂骨）
+                triggerOnDamageDealt(actor, t, () => {
+                    // 记录需要触发on_hit的目标（仅存活且未被记录的）
+                    if (t.alive) {
+                        pendingOnHitTargets.push(t);
+                    }
+                    processNextTarget();
+                });
             }, true);
         }
     }
@@ -538,11 +542,15 @@ function executePugong(actor, targets, callback) {
             dmg = applyTreasureDamageModifier(actor, dmg);
             addBattleLog(`${t.name} 受到了 ${dmg} 点伤害`);
             // 延迟触发on_hit，等普攻特效播完后再触发
+                        // 延迟触发on_hit，等普攻特效播完后再触发
             applyDamage(t, dmg, actor, false, false, () => {
-                if (t.alive) {
-                    pendingOnHitTargets.push(t);
-                }
-                processNextTarget();
+                // 【修复】触发造成伤害后的宝物效果（如狂骨）
+                triggerOnDamageDealt(actor, t, () => {
+                    if (t.alive) {
+                        pendingOnHitTargets.push(t);
+                    }
+                    processNextTarget();
+                });
             }, true);
         }
     }
@@ -827,7 +835,7 @@ function executeAITurn(actor) {
 function resolveSkillTargets(skillData, actor, intendedSide) {
     if (!skillData || !skillData.target) return [];
     
-    const mode = skillData.target[0];      // e.g., 'one', 'random_multi', 'exclude_self'
+    const mode = skillData.target[0];      // e.g., 'one', 'manual_multi', 'exclude_self'
     const pref = skillData.target[1] || 'first'; // e.g., 'lowest_hp', 'highest_atk', 'random'
     const count = skillData.target[2] || 1; // 可选：指定数量
     const extraParam = skillData.target[3]; // 可选：额外参数
@@ -852,7 +860,7 @@ function resolveSkillTargets(skillData, actor, intendedSide) {
         case 'exclude_self': // 排除自身后选一个
             return selectSingleTarget(candidates, pref, actor);
 
-        case 'random_multi':
+        case 'manual_multi':
             // 随机选择 N 个不同目标
             return shuffleArray([...candidates]).slice(0, Math.min(count, candidates.length));
 
@@ -1599,16 +1607,27 @@ let targetSelection = null;
 //     }
 // }
 
-
+/**
+ * 进入技能目标选择状态
+ * 
+ * @param {Object} actor - 释放技能的行动者对象
+ * @param {string} skillType - 技能类型，用于从 contentList 中索引
+ * @param {string|number} skillId - 技能ID，用于从 contentList 中索引具体技能数据
+ * @param {number} energyCost - 技能消耗的能量值
+ * @returns {void}
+ */
 function enterTargetSelection(actor, skillType, skillId, energyCost) {
     const sData = contentList[skillType] && contentList[skillType][skillId];
     if (!sData) return;
 
+    // 判断技能是否为恢复类技能
     const isRecover = sData.content ? sData.content.toString().includes('rpg_recover') : false;
+    // 解析目标配置：模式、数量等
     const targetConfig = sData.target || ['one', 'first'];
     const mode = targetConfig[0];
     const count = targetConfig[2] || 1;
 
+    // 初始化全局目标选择状态对象
     targetSelection = { 
         actor, 
         skillType, 
@@ -1621,7 +1640,7 @@ function enterTargetSelection(actor, skillType, skillId, energyCost) {
     };
 
     // --- 自动释放的情况 (无需玩家逐个点选) ---
-    if (['all', 'row', 'column', 'random_multi', 'lowest_hp_multi'].includes(mode)) {
+    if (['all', 'row', 'column', 'manual_multi', 'lowest_hp_multi'].includes(mode)) {
         addBattleLog(`请选择触发目标 (技能将自动判定范围)`);
         highlightSelectableTargets(mode, isRecover);
         return;
@@ -1638,7 +1657,6 @@ function enterTargetSelection(actor, skillType, skillId, energyCost) {
         highlightSelectableTargets('manual_multi', isRecover);
     }
 }
-
 
 
 function highlightSelectableTargets(mode, isRecover) {
@@ -1739,7 +1757,7 @@ function onTargetClicked(target) {
         const col = target.slotIndex % 3;
         finalTargets = getAliveUnits(side).filter(u => u.slotIndex % 3 === col);
     }
-    else if (ts.targetMode === 'random_multi') {
+    else if (ts.targetMode === 'manual_multi') {
         let candidates = getAliveUnits(side);
         if (ts.targetMode === 'exclude_self') {
              candidates = candidates.filter(u => !(u.side === ts.actor.side && u.slotIndex === ts.actor.slotIndex));

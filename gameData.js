@@ -382,8 +382,8 @@ class GameData {
     /**
      * 获取商店物品
      */
-    getShopItems() {
-        return this.data.shop.items || [];
+    getShopItems(type) {
+        return (type=='normal')?this.data.shop.items:this.data.shop.spitems || [];
     }
 
     /**
