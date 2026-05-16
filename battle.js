@@ -1043,10 +1043,21 @@ function resolveSkillTargets(skillData, actor, intendedSide) {
  *   => myCol == enemyCol
  * 
  *   通常“对位”指视觉正对面。我们将采用 **视觉同列优先**。
+ * 从候选目标列表中选择最佳的单一目标。
+ *
+ * 智能单体目标选择 (加权评分 - 增强版)
+ * 
+ * @param {Array} candidates - 候选目标列表
+ * @param {string} pref - 偏好配置 (e.g., 'lowest_hp', 'first', 'random')
+ * @param {Object} actor - 施法者
+ * @param {Object} options - 额外选项 { isRecover: boolean }
+ * @returns {Object|null} 最佳目标
  */
-function selectBestSingleTarget(candidates, pref, actor) {
+function selectBestSingleTarget(candidates, pref, actor, options = {}) {
     if (candidates.length === 0) return null;
     if (candidates.length === 1) return candidates[0];
+
+    const { isRecover = false } = options;
 
     // 如果是随机，直接返回
     if (pref === 'random') {
@@ -1064,43 +1075,71 @@ function selectBestSingleTarget(candidates, pref, actor) {
     candidates.forEach(target => {
         let score = 0;
         
-        // 目标的视觉列 (注意敌方布局索引0是右，2是左，所以要反转)
-        // 敌方: 0(R), 1(M), 2(L). Visual Col = 2 - (index % 3)
-        // 我方: 0(L), 1(M), 2(R). Visual Col = index % 3
-        // 为了统一比较，我们计算“视觉列”
+        // 目标的视觉列
         const targetVisualCol = target.side === 'enemy' 
             ? (2 - (target.slotIndex % 3)) 
             : (target.slotIndex % 3);
             
         const targetRow = target.slotIndex < 3 ? 0 : 1;
 
-        // --- 基础偏好评分 ---
-        if (pref === 'lowest' || pref === 'lowest_hp') {
-            score += (1 - target.hp / target.maxHp) * 100;
-        } else if (pref === 'highest' || pref === 'highest_hp') {
-             score += (target.hp / target.maxHp) * 100;
-        } else if (pref === 'front') {
-            if (targetRow === 0) score += 50;
-        } else if (pref === 'back') {
-            if (targetRow === 1) score += 50;
-        } else if (pref === 'first') {
-            // 传统逻辑：优先左侧/前排
-            score += (10 - target.slotIndex); 
-        }
-
-        // --- 位置对位评分 (核心修复：视觉镜像对位) ---
-        // 优先攻击视觉上是“正对面”的敌人 (同视觉列)
-        if (targetVisualCol === actorVisualCol) {
-            score += 30; // 高权重：正对面
-            
-            // 如果同行（前对前，后对后），再加一点分，因为距离更近
-            if (targetRow === actorRow) {
-                score += 10;
+        // --- 核心逻辑分支：治疗 vs 伤害 ---
+        
+        if (isRecover) {
+            // 【治疗逻辑】
+            // 1. 优先选择血量百分比最低的（急救原则）
+            if (pref === 'lowest' || pref === 'lowest_hp' || pref === 'first') {
+                // 对于治疗，'first' 也通常意味着优先救最危险的或前排受伤的
+                score += (1 - target.hp / target.maxHp) * 200; // 提高权重
+            } else if (pref === 'highest') {
+                // 如果偏好是 highest，可能是为了刷buff或防止溢出，但通常较少见
+                score += (target.hp / target.maxHp) * 50;
             }
-        } 
-        // 次选：相邻列
-        else if (Math.abs(targetVisualCol - actorVisualCol) === 1) {
-            score += 5;
+            
+            // 2. 位置偏好：治疗通常优先前排（承受伤害多）或特定对位
+            else if (pref === 'front') {
+                if (targetRow === 0) score += 50;
+            } else if (pref === 'back') {
+                if (targetRow === 1) score += 50;
+            }
+            
+            // 3. 对位加分：优先治疗正对面的队友（如果存在对位逻辑）
+            if (targetVisualCol === actorVisualCol) {
+                score += 20; 
+            }
+
+        } else {
+            // 【伤害逻辑】
+            // 1. 基础偏好
+            if (pref === 'lowest' || pref === 'lowest_hp') {
+                // 收割逻辑：优先打残血
+                score += (1 - target.hp / target.maxHp) * 100;
+            } else if (pref === 'highest' || pref === 'highest_hp') {
+                // 破防/压血线逻辑：优先打满血
+                score += (target.hp / target.maxHp) * 100;
+            } else if (pref === 'front') {
+                if (targetRow === 0) score += 50;
+            } else if (pref === 'back') {
+                if (targetRow === 1) score += 50;
+            } else if (pref === 'first') {
+                // 传统逻辑：优先左侧/前排
+                score += (10 - target.slotIndex); 
+            }
+
+            // 2. 位置对位评分 (核心修复：视觉镜像对位)
+            // 优先攻击视觉上是“正对面”的敌人
+            if (targetVisualCol === actorVisualCol) {
+                score += 30; // 高权重：正对面
+                if(pref !== 'last' && targetRow === 0) {
+                    score += 120; // 优先打前排对位
+                }
+            } 
+            // 次选：相邻列
+            else if (Math.abs(targetVisualCol - actorVisualCol) === 1) {
+                score += 5;
+                if(pref !== 'last' && targetRow === 0) {
+                    score += 120;
+                }
+            }
         }
 
         if (score > maxScore) {

@@ -8,7 +8,7 @@ const characterList = {
 		skills: ['attack1', 'attack_skill38'], 
 		isFixed: true, 
 		template: 'balanced',
-		rank: "junk",
+		rank: "common",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
 		tupoList:[],//预留接口，一并粘贴
