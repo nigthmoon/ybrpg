@@ -8,12 +8,44 @@ const characterList = {
 		skills: ['attack1', 'attack_skill38'], 
 		isFixed: true, 
 		template: 'balanced',
-		rank: "rare",
+		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
 		tupoList:[],//预留接口，一并粘贴
 	},
-
+	ybsl_leimoying: {
+		name: "雷魔鹰",
+		group: "zhujue",
+		sex: "female",
+		tupolevel: 0,
+		skills: ['attack999', 'attack_skill999'], // 攻击普攻1, 攻击技能1
+		template: 'balanced', // 均衡
+		rank: "junk",
+		tip: 'damage',
+		ties:[],//预留接口，一并粘贴
+	},
+	ybsl_fengmolang: {
+		name: "风魔狼",
+		group: "zhujue",
+		sex: "female",
+		tupolevel: 0,
+		skills: ['attack998', 'attack_skill998'], // 攻击普攻1, 攻击技能1
+		template: 'balanced', // 均衡
+		rank: "junk",
+		tip: 'damage',
+		ties:[],//预留接口，一并粘贴
+	},
+	ybsl_yanmohua: {
+		name: "魇魔花",
+		group: "zhujue",
+		sex: "female",
+		tupolevel: 0,
+		skills: ['attack997', 'attack_skill997'], // 攻击普攻1, 攻击技能1
+		template: 'balanced', // 均衡
+		rank: "junk",
+		tip: 'damage',
+		ties:[],//预留接口，一并粘贴
+	},
 	// --- 传说级 (Legend) ---
 	ybsl_017xiaohong: {
 		name: "涂山小红",

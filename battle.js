@@ -342,6 +342,16 @@ function calcDamage(attacker, defValue, coefficient, extraEnergy = 0) {
     return Math.max(1, finalDmg);
 }
 
+/**
+ * 执行角色技能逻辑
+ * 
+ * @param {Object} actor - 发动技能的角色对象
+ * @param {string} skillType - 技能类型标识（对应 contentList 中的键）
+ * @param {string} skillId - 具体技能ID
+ * @param {Array} targets - 技能作用的目标角色数组
+ * @param {number} energyCost - 技能消耗的能量值
+ * @param {Function} callback - 技能执行完毕后的回调函数
+ */
 // ====== 技能执行 ======
 function executeSkill(actor, skillType, skillId, targets, energyCost, callback) {
     const bs = battleState;
@@ -368,18 +378,30 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
     addBattleLog(`${actor.name} 使用了【${sData.name}】`);
     
     // 根据技能类型获取系数
+        // 初始化系数和恢复状态标志
     let coefficient = 0;
     let isRecover = false;
+    
+    // 在指定技能类型的内容列表中查找匹配的技能ID键
     const skillKey = Object.keys(contentList[skillType]).find(k => k === skillId);
-    if (skillKey && contentList[skillType][skillKey].content) {
-        const src = contentList[skillType][skillKey].content.toString();
-        const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
-        if (match) coefficient = parseFloat(match[1]);
+    
+    // 如果找到对应的技能键且存在内容，则解析攻击系数
+    // if (skillKey && contentList[skillType][skillKey].content) {
+    //     const src = contentList[skillType][skillKey].content.toString();
+    //     const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
+    //     if (match) coefficient = parseFloat(match[1]);
+    // }
+    if(skillKey&&contentList[skillType][skillKey].coefficient){
+        coefficient = contentList[skillType][skillKey].coefficient-0;
     }
-
-    if (skillKey && contentList[skillType][skillKey].content) {
-        const src = contentList[skillType][skillKey].content.toString();
-        isRecover = src.includes('rpg_recover');
+    
+    // 如果找到对应的技能键且存在内容，则检查是否包含恢复标识
+    // if (skillKey && contentList[skillType][skillKey].content) {
+    //     const src = contentList[skillType][skillKey].content.toString();
+    //     isRecover = src.includes('rpg_recover');
+    // }
+    if(skillKey&&contentList[skillType][skillKey].isRecover){
+        isRecover = contentList[skillType][skillKey].isRecover
     }
 
     const extraEnergy = Math.max(0, energyCost - 4);
@@ -438,6 +460,13 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
     processNextTarget();
 }
 
+/**
+ * 执行角色普通攻击逻辑
+ * 
+ * @param {Object} actor - 发动普攻的角色对象
+ * @param {Array} targets - 普攻作用的目标角色数组
+ * @param {Function} callback - 普攻执行完毕后的回调函数
+ */
 function executePugong(actor, targets, callback) {
     const bs = battleState;
     if (!bs) { if(callback) callback(); return; }
@@ -474,13 +503,33 @@ function executePugong(actor, targets, callback) {
 
     addBattleLog(`${actor.name} 使用了【${sData.name}】`);
 
+    const skillKey = Object.keys(contentList.pugong).find(k => k === skillId);
     // 解析系数
+    const skillType = 'pugong'
     let coefficient = 1.0;
-    const src = sData.content ? sData.content.toString() : '';
-    const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
-    if (match) coefficient = parseFloat(match[1]);
+    // const src = sData.content ? sData.content.toString() : '';
+    // const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
+    // if (match) coefficient = parseFloat(match[1]);
 
-    const isRecover = src.includes('rpg_recover');
+    const isRecover = contentList[skillType][skillKey].isRecover
+    // 如果找到对应的技能键且存在内容，则解析攻击系数
+    // if (skillKey && contentList[skillType][skillKey].content) {
+    //     const src = contentList[skillType][skillKey].content.toString();
+    //     const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
+    //     if (match) coefficient = parseFloat(match[1]);
+    // }
+    if(skillKey&&contentList[skillType][skillKey].coefficient){
+        coefficient = contentList[skillType][skillKey].coefficient-0;
+    }
+    
+    // 如果找到对应的技能键且存在内容，则检查是否包含恢复标识
+    // if (skillKey && contentList[skillType][skillKey].content) {
+    //     const src = contentList[skillType][skillKey].content.toString();
+    //     isRecover = src.includes('rpg_recover');
+    // }
+    // if(skillKey&&contentList[skillType][skillKey].type){
+    //     isRecover = contentList[skillType][skillKey].type==='recover';
+    // }
 
     // 检查是否拥有绝情宝物（普攻改为真实伤害）
     const hasJueqing = hasTreasure(actor, 'jueqing');
@@ -794,13 +843,26 @@ function aiChooseAction(actor) {
 /**
  * AI选择技能目标 (重构版)
  */
+/**
+ * AI选择技能目标 (最终修复版)
+ */
 function aiSelectTargets(actor, skillData, enemySide, friendlySide) {
-    // 1. 确定目标阵营
-    const isRecover = skillData.content ? skillData.content.toString().includes('rpg_recover') : false;
-    const targetSide = isRecover ? friendlySide : enemySide;
+    // 1. 严格确定目标阵营
+    let isRecover = false;
+    if (skillData.isRecover === true) {
+        isRecover = true;
+    } else if (skillData.content && skillData.content.toString().includes('rpg_recover')) {
+        isRecover = true;
+    }
+    
+    // 【核心修复】动态决定 targetSide
+    const targetSide = isRecover ? actor.side : (actor.side === 'player' ? 'enemy' : 'player');
 
-    // 2. 调用通用解析器
-    // 注意：resolveSkillTargets 需要知道 actor 以便处理 exclude_self 或列偏好
+    // 2. 获取该阵营的存活单位
+    let candidates = getAliveUnits(targetSide);
+    if (candidates.length === 0) return [];
+
+    // 3. 调用通用解析器
     return resolveSkillTargets(skillData, actor, targetSide);
 }
 // ====== executeAITurn & executePlayerTurn ======
@@ -825,7 +887,7 @@ function executeAITurn(actor) {
     });
 }
 /**
- * 通用目标解析器
+ * 通用目标解析器 (重构版)
  * 根据技能配置、施法者和战场状态，计算出合法的目标列表
  * @param {Object} skillData - 技能数据 (包含 target: [mode, pref, count?, exclude?])
  * @param {Object} actor - 施法者
@@ -835,17 +897,16 @@ function executeAITurn(actor) {
 function resolveSkillTargets(skillData, actor, intendedSide) {
     if (!skillData || !skillData.target) return [];
     
-    const mode = skillData.target[0];      // e.g., 'one', 'manual_multi', 'exclude_self'
-    const pref = skillData.target[1] || 'first'; // e.g., 'lowest_hp', 'highest_atk', 'random'
+    const mode = skillData.target[0];      // e.g., 'one', 'manual_multi', 'exclude_self', 'row', 'column'
+    const pref = skillData.target[1] || 'first'; // e.g., 'lowest_hp', 'highest_atk', 'random', 'front', 'back', 'mirror'
     const count = skillData.target[2] || 1; // 可选：指定数量
-    const extraParam = skillData.target[3]; // 可选：额外参数
-
+    
     let candidates = getAliveUnits(intendedSide);
     if (candidates.length === 0) return [];
 
     // 1. 预处理：过滤无效目标 (如排除自身)
     if (mode === 'exclude_self') {
-        candidates = candidates.filter(u => u.slotIndex !== actor.slotIndex || u.side !== actor.side);
+        candidates = candidates.filter(u => !(u.side === actor.side && u.slotIndex === actor.slotIndex));
     }
     
     // 如果过滤后无目标，返回空
@@ -857,61 +918,189 @@ function resolveSkillTargets(skillData, actor, intendedSide) {
             return candidates;
         
         case 'one':
-        case 'exclude_self': // 排除自身后选一个
-            return selectSingleTarget(candidates, pref, actor);
+        case 'exclude_self':
+            // 单体选择：使用加权评分系统
+            return [selectBestSingleTarget(candidates, pref, actor)];
 
         case 'manual_multi':
             // 随机选择 N 个不同目标
             return shuffleArray([...candidates]).slice(0, Math.min(count, candidates.length));
 
         case 'row':
-            return selectRowTargets(candidates, pref, actor);
+            // 行攻击：需要根据偏好和施法者位置确定具体哪一行
+            return selectRowTargetsSmart(candidates, pref, actor);
 
         case 'column':
-            return selectColumnTargets(candidates, pref, actor);
+            // 列攻击：优先选择施法者所在列，若无则按偏好
+            return selectColumnTargetsSmart(candidates, pref, actor);
             
         case 'lowest_hp_multi':
-            // 选择血量最低的 N 个
-            return [...candidates].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp).slice(0, count);
+            // 选择血量百分比最低的 N 个
+            return [...candidates].sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp)).slice(0, count);
 
         default:
             // 默认 fallback 到第一个
             return [candidates[0]];
     }
 }
+
 /**
- * AI/自动战斗专用的单体目标选择逻辑（带权重）
+ * 智能单体目标选择 (加权评分 - 修正对位逻辑)
+ * 
+ * 阵型参考：
+ * 敌方: [5][4][3] (后)
+ *       [2][1][0] (前)
+ * 我方: [0][1][2] (前)
+ *       [3][4][5] (后)
+ * 
+ * 对位逻辑：
+ * - 同列 (Column Match): slotIndex % 3 相同。例如我方0(左前)对敌方0(左前)，我方3(左后)对敌方3(左后-虽然后排索引不同，但列相同)。
+ *   注意：在你提供的敌方布局中，左列是0和3? 不，看图：
+ *   敌方左列是 index 0(前) 和 index ? 
+ *   让我们重新映射列：
+ *   敌方 Col 0 (左): Index 0 (前), Index 3 (后)? 
+ *   看布局: 
+ *   [5] [4] [3]
+ *   [2] [1] [0]
+ *   左列: 2(前), 5(后) -> %3 = 2? 不，2%3=2, 5%3=2. 
+ *   中列: 1(前), 4(后) -> %3 = 1.
+ *   右列: 0(前), 3(后) -> %3 = 0.
+ *   
+ *   我方:
+ *   [0] [1] [2]
+ *   [3] [4] [5]
+ *   左列: 0(前), 3(后) -> %3 = 0.
+ *   中列: 1(前), 4(后) -> %3 = 1.
+ *   右列: 2(前), 5(后) -> %3 = 2.
+ * 
+ *   **关键发现**：
+ *   我方左列 (%3==0) 对应 敌方右列 (%3==0, indices 0,3)。
+ *   我方中列 (%3==1) 对应 敌方中列 (%3==1, indices 1,4)。
+ *   我方右列 (%3==2) 对应 敌方左列 (%3==2, indices 2,5)。
+ * 
+ *   如果“镜像对位”是指视觉上的正对面（左对左，右对右）：
+ *   我方左 (0,3) 应该打 敌方左 (2,5)。
+ *   这意味着 **列索引之和为 2** (0+2=2, 1+1=2, 2+0=2) 或者 **绝对值差最大**?
+ *   
+ *   通常简单做法：
+ *   如果希望“左打左”，则需要转换列索引。
+ *   我方 col = slotIndex % 3.
+ *   敌方对应镜像列 = 2 - (slotIndex % 3).
+ *   
+ *   如果希望“左打右”（交叉/旋转），则 col 相同。
+ * 
+ *   根据你的描述“索引相同是旋转对称位”，暗示索引相同不是正对面。
+ *   正对面（镜像）通常是左右翻转。
+ *   我方 index 0 (左前) 的镜像对面是 敌方 index 2 (右前) 或 5 (右后)?
+ *   看布局：
+ *   我: 0(左) 1(中) 2(右)
+ *   敌: 2(左) 1(中) 0(右)  <-- 注意敌方数组索引0在右边！
+ *   
+ *   所以：
+ *   我方 Col 0 (Left) <-> 敌方 Col 2 (Left in visual, but index 2 is Right in array? No.)
+ *   让我们看敌方数组索引对应的视觉位置：
+ *   Index 0: 右前
+ *   Index 1: 中前
+ *   Index 2: 左前
+ *   Index 3: 右后
+ *   Index 4: 中后
+ *   Index 5: 左后
+ * 
+ *   我方数组索引对应的视觉位置：
+ *   Index 0: 左前
+ *   Index 1: 中前
+ *   Index 2: 右前
+ *   Index 3: 左后
+ *   Index 4: 中后
+ *   Index 5: 右后
+ * 
+ *   **镜像对位 (Visual Mirror)**:
+ *   我左前 (0) vs 敌左前 (2)
+ *   我中前 (1) vs 敌中前 (1)
+ *   我右前 (2) vs 敌右前 (0)
+ *   我左后 (3) vs 敌左后 (5)
+ *   我中后 (4) vs 敌中后 (4)
+ *   我右后 (5) vs 敌右后 (3)
+ * 
+ *   规律：
+ *   如果 row 相同 (都是前或都是后):
+ *   我 index i, 敌 index j.
+ *   前: 0<->2, 1<->1, 2<->0.  (j = 2 - i)
+ *   后: 3<->5, 4<->4, 5<->3.  (j = 8 - i ? 3+5=8, 4+4=8. Yes, j = 8 - i for back row)
+ *   
+ *   简化逻辑：
+ *   计算视觉列 (Visual Col):
+ *   我: vCol = slotIndex % 3. (0=Left, 1=Mid, 2=Right)
+ *   敌: vCol = 2 - (slotIndex % 3). (因为敌方索引0是右，2是左)
+ *   
+ *   所以，如果要打“正对面”（同视觉列）：
+ *   我 vCol == 敌 vCol
+ *   => myCol == 2 - enemyCol
+ *   => myCol + enemyCol == 2
+ * 
+ *   如果要打“旋转/交叉”（同数组索引列，即左打右）：
+ *   我 vCol == 敌 vCol (Array Col)
+ *   => myCol == enemyCol
+ * 
+ *   通常“对位”指视觉正对面。我们将采用 **视觉同列优先**。
  */
-function selectSingleTarget(candidates, pref, actor) {
-    if (candidates.length === 0) return [];
-    
+function selectBestSingleTarget(candidates, pref, actor) {
+    if (candidates.length === 0) return null;
+    if (candidates.length === 1) return candidates[0];
+
     // 如果是随机，直接返回
     if (pref === 'random') {
-        return [candidates[Math.floor(Math.random() * candidates.length)]];
+        return candidates[Math.floor(Math.random() * candidates.length)];
     }
 
-    // 评分系统：分数越高越优先
     let bestTarget = candidates[0];
     let maxScore = -Infinity;
+
+    // 施法者的视觉列 (0:左, 1:中, 2:右)
+    const actorVisualCol = actor.slotIndex % 3;
+    // 施法者的行 (0:前, 1:后)
+    const actorRow = actor.slotIndex < 3 ? 0 : 1;
 
     candidates.forEach(target => {
         let score = 0;
         
-        // 基础偏好评分
-        if (pref === 'lowest') {
-            // 血量百分比越低分越高
+        // 目标的视觉列 (注意敌方布局索引0是右，2是左，所以要反转)
+        // 敌方: 0(R), 1(M), 2(L). Visual Col = 2 - (index % 3)
+        // 我方: 0(L), 1(M), 2(R). Visual Col = index % 3
+        // 为了统一比较，我们计算“视觉列”
+        const targetVisualCol = target.side === 'enemy' 
+            ? (2 - (target.slotIndex % 3)) 
+            : (target.slotIndex % 3);
+            
+        const targetRow = target.slotIndex < 3 ? 0 : 1;
+
+        // --- 基础偏好评分 ---
+        if (pref === 'lowest' || pref === 'lowest_hp') {
             score += (1 - target.hp / target.maxHp) * 100;
-        } else if (pref === 'highest') {
-             // 血量百分比越高分越高 (用于驱散等)
+        } else if (pref === 'highest' || pref === 'highest_hp') {
              score += (target.hp / target.maxHp) * 100;
+        } else if (pref === 'front') {
+            if (targetRow === 0) score += 50;
+        } else if (pref === 'back') {
+            if (targetRow === 1) score += 50;
         } else if (pref === 'first') {
-            // 优先前排/左侧 (简化逻辑：slotIndex 越小分越高)
+            // 传统逻辑：优先左侧/前排
             score += (10 - target.slotIndex); 
         }
 
-        // 额外权重：如果目标是当前行动者的直接对面 (同列)，加分
-        if (Math.abs(target.slotIndex - actor.slotIndex) % 3 === 0 && Math.floor(target.slotIndex/3) !== Math.floor(actor.slotIndex/3)) {
-             score += 5; // 轻微偏好对位
+        // --- 位置对位评分 (核心修复：视觉镜像对位) ---
+        // 优先攻击视觉上是“正对面”的敌人 (同视觉列)
+        if (targetVisualCol === actorVisualCol) {
+            score += 30; // 高权重：正对面
+            
+            // 如果同行（前对前，后对后），再加一点分，因为距离更近
+            if (targetRow === actorRow) {
+                score += 10;
+            }
+        } 
+        // 次选：相邻列
+        else if (Math.abs(targetVisualCol - actorVisualCol) === 1) {
+            score += 5;
         }
 
         if (score > maxScore) {
@@ -920,45 +1109,79 @@ function selectSingleTarget(candidates, pref, actor) {
         }
     });
 
-    return [bestTarget];
+    return bestTarget;
 }
 
-// 辅助：洗牌算法
+/**
+ * 智能行目标选择
+ */
+function selectRowTargetsSmart(candidates, pref, actor) {
+    const front = candidates.filter(u => u.slotIndex < 3);
+    const back = candidates.filter(u => u.slotIndex >= 3);
+
+    if (front.length === 0) return back;
+    if (back.length === 0) return front;
+
+    if (pref === 'back' || pref === 'last') {
+        return back;
+    }
+    
+    // 默认优先前排
+    return front;
+}
+
+/**
+ * 智能列目标选择 (视觉列)
+ */
+function selectColumnTargetsSmart(candidates, pref, actor) {
+    // 计算演员的视觉列
+    const actorVisualCol = actor.side === 'enemy' 
+        ? (2 - (actor.slotIndex % 3)) 
+        : (actor.slotIndex % 3);
+
+    // 筛选出与演员视觉列相同的目标
+    // 注意：candidates 已经是同一阵营的（通常是敌方），所以我们需要用敌方的视觉列计算方式
+    const colTargets = candidates.filter(u => {
+        const uVisualCol = 2 - (u.slotIndex % 3); // 敌方视觉列
+        return uVisualCol === actorVisualCol;
+    });
+    
+    if (colTargets.length > 0) return colTargets;
+    
+    // 如果该列没人， fallback 到所有存活单位，或按偏好
+    const cols = [[], [], []]; // 视觉列 0, 1, 2
+    candidates.forEach(u => {
+        const vCol = 2 - (u.slotIndex % 3);
+        cols[vCol].push(u);
+    });
+    
+    const validCols = cols.filter(c => c.length > 0);
+    if (validCols.length === 0) return [];
+
+    if (pref === 'random') {
+        const randomCol = validCols[Math.floor(Math.random() * validCols.length)];
+        return randomCol;
+    }
+
+    // 默认：返回最左边（视觉左，即敌方索引2,5所在列）有人的列
+    // 视觉左是 index 0 in cols array? 
+    // cols[0] is Visual Left (Enemy indices 2,5)
+    // cols[1] is Visual Mid (Enemy indices 1,4)
+    // cols[2] is Visual Right (Enemy indices 0,3)
+    for (let c = 0; c < 3; c++) {
+        if (cols[c].length > 0) return cols[c];
+    }
+    
+    return candidates;
+}
+
+// 辅助：洗牌算法 (保持不变)
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
     }
     return array;
-}
-
-// 辅助：行选择逻辑复用
-function selectRowTargets(candidates, pref, actor) {
-    // 简单实现：如果 pref 是 last，优先后排，否则优先前排
-    // 这里可以结合 actor 的位置优化，暂时保持原逻辑
-    const front = candidates.filter(u => u.slotIndex < 3);
-    const back = candidates.filter(u => u.slotIndex >= 3);
-    
-    if (pref === 'last') return back.length > 0 ? back : front;
-    return front.length > 0 ? front : back;
-}
-
-// 辅助：列选择逻辑复用
-function selectColumnTargets(candidates, pref, actor) {
-    // 优先选择 actor 所在列，如果没有则随机列
-    const actorCol = actor.slotIndex % 3;
-    const colTargets = candidates.filter(u => u.slotIndex % 3 === actorCol);
-    
-    if (colTargets.length > 0) return colTargets;
-    
-    // 如果本列没人，随机选其他列
-    const cols = [[], [], []];
-    candidates.forEach(u => cols[u.slotIndex % 3].push(u));
-    const validCols = cols.filter(c => c.length > 0);
-    if (validCols.length > 0) {
-        return validCols[Math.floor(Math.random() * validCols.length)];
-    }
-    return [];
 }
 
 function executePlayerTurn(actor, action) {
@@ -1060,7 +1283,7 @@ function addBattleLog(msg) {
 
 // ====== 技能Emoji特效 ======
 /**
- * 根据技能的target模式确定特效类型
+ * 根据技能的target模式确定特效类型 (修复版 - 支持 isRecover 字段)
  * @returns {{ emoji: string, effectClass: string, targets: Array }}
  */
 function getSkillEffectInfo(action) {
@@ -1075,7 +1298,12 @@ function getSkillEffectInfo(action) {
 
     const targetMode = sData.target[0];
     const aiPref = sData.target[1];
-    const isRecover = sData.content ? sData.content.toString().includes('rpg_recover') : false;
+    
+    // 【核心修复】优先使用 isRecover 字段，其次检查 content 字符串
+    let isRecover = false;
+    if (sData.isRecover === true) {
+        isRecover = true;
+    }
 
     if (isRecover) {
         if (targetMode === 'one' || targetMode === 'all') {
@@ -1379,16 +1607,21 @@ function updateBattleUI() {
 }
 
 // ====== 玩家操作面板（浮在角色图片上的半透明遮罩） ======
-/** 根据技能类型和ID获取对应的特效emoji */
+/** 根据技能类型和ID获取对应的特效emoji (修复版) */
 function getSkillEmoji(skillType, skillId) {
     const sData = contentList[skillType] && contentList[skillType][skillId];
     if (!sData || !sData.target) return '🔥';
 
-    const targetMode = sData.target[0];
-    const aiPref = sData.target[1];
-    const isRecover = sData.content ? sData.content.toString().includes('rpg_recover') : false;
+    // 【核心修复】优先使用 isRecover 字段
+    let isRecover = false;
+    if (sData.isRecover === true) {
+        isRecover = true;
+    }
 
     if (isRecover) return '🧪';
+
+    const targetMode = sData.target[0];
+    const aiPref = sData.target[1];
 
     switch (targetMode) {
         case 'row': return aiPref === 'last' ? '🌙' : '⚔️';
@@ -1616,13 +1849,24 @@ let targetSelection = null;
  * @param {number} energyCost - 技能消耗的能量值
  * @returns {void}
  */
+
 function enterTargetSelection(actor, skillType, skillId, energyCost) {
     const sData = contentList[skillType] && contentList[skillType][skillId];
     if (!sData) return;
 
-    // 判断技能是否为恢复类技能
-    const isRecover = sData.content ? sData.content.toString().includes('rpg_recover') : false;
-    // 解析目标配置：模式、数量等
+    // 1. 严格判断是否为治疗
+    let isRecover = false;
+    if (sData.isRecover === true) {
+        isRecover = true;
+    } else if (sData.content && sData.content.toString().includes('rpg_recover')) {
+        isRecover = true;
+    }
+
+    // 2. 【核心修复】动态计算目标阵营
+    // 治疗 -> 友方 (actor.side)
+    // 攻击 -> 敌方 (actor.side === 'player' ? 'enemy' : 'player')
+    const targetSide = isRecover ? actor.side : (actor.side === 'player' ? 'enemy' : 'player');
+
     const targetConfig = sData.target || ['one', 'first'];
     const mode = targetConfig[0];
     const count = targetConfig[2] || 1;
@@ -1636,35 +1880,49 @@ function enterTargetSelection(actor, skillType, skillId, energyCost) {
         targetMode: mode, 
         targetCount: count,
         isRecover, 
-        selectedTargets: [] // 用于存储手动多选的目标
+        targetSide, // 【新增】存储正确的目标阵营
+        selectedTargets: [] 
     };
 
     // --- 自动释放的情况 (无需玩家逐个点选) ---
     if (['all', 'row', 'column', 'manual_multi', 'lowest_hp_multi'].includes(mode)) {
-        addBattleLog(`请选择触发目标 (技能将自动判定范围)`);
-        highlightSelectableTargets(mode, isRecover);
-        return;
+        // 对于自动模式，直接解析目标并执行，不进入手动高亮流程
+        const targets = resolveSkillTargets(sData, actor, targetSide);
+        
+        if (targets.length > 0) {
+            const action = {
+                type: skillType === 'pugong' ? 'pugong' : 'skill',
+                skillType: skillType,
+                skillId: skillId,
+                targets: targets,
+                energyCost: energyCost
+            };
+            executePlayerTurn(actor, action);
+        } else {
+            toast('没有有效目标', 'warning');
+        }
+        return; 
     }
 
     // --- 手动选择情况 ---
     if (mode === 'one' || mode === 'exclude_self') {
         addBattleLog('请点击选择目标');
-        highlightSelectableTargets('one', isRecover);
+        highlightSelectableTargets('one', isRecover, targetSide); // 传入 targetSide
     } 
     else if (mode === 'manual_multi') {
-        // 新增：手动多选模式
         addBattleLog(`请依次选择 ${count} 个目标 (已选: 0/${count})`);
-        highlightSelectableTargets('manual_multi', isRecover);
+        highlightSelectableTargets('manual_multi', isRecover, targetSide); // 传入 targetSide
     }
 }
 
 
-function highlightSelectableTargets(mode, isRecover) {
-    const side = isRecover ? 'player' : 'enemy';
-    const aliveUnits = getAliveUnits(side);
+
+function highlightSelectableTargets(mode, isRecover, targetSide) {
+    // 【核心修复】使用传入的 targetSide，而不是根据 isRecover 硬编码
+    const aliveUnits = getAliveUnits(targetSide);
 
     aliveUnits.forEach(u => {
-        // 排除自身逻辑 (如果需要)
+        // 排除自身逻辑 (如果需要，例如 exclude_self 模式)
         if (mode === 'exclude_self' && u.side === targetSelection.actor.side && u.slotIndex === targetSelection.actor.slotIndex) {
             return; 
         }
@@ -1848,18 +2106,25 @@ function showBattleIntro() {
     }, 500);
 }
 
+/**
+ * 显示战斗结果界面，包括胜负标题、存活统计及奖励信息，并提供返回按钮以清理状态和跳转视图。
+ * 
+ * @param {string} winner - 战斗胜利方标识，'player' 表示玩家胜利，其他值表示失败。
+ */
 function showBattleResult(winner) {
     const bs = battleState;
     hidePlayerActionUI();
 
     const container = document.getElementById('battle-view');
 
+    // 创建并配置战斗结果遮罩层及对话框容器
     const overlay = document.createElement('div');
     overlay.className = 'battle-result-overlay';
 
     const dialog = document.createElement('div');
     dialog.className = 'battle-result-dialog';
 
+    // 设置胜负标题及颜色
     const title = document.createElement('div');
     title.className = 'battle-result-title';
     title.textContent = winner === 'player' ? '战斗胜利' : '战斗失败';
@@ -1889,6 +2154,7 @@ function showBattleResult(winner) {
         dialog.appendChild(rewardDiv);
     }
 
+    // 创建返回按钮，处理状态清理、UI恢复及后续流程回调
     const btn = document.createElement('button');
     btn.className = 'ybrpg-btn';
     btn.textContent = '返回';

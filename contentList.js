@@ -13,12 +13,8 @@ const contentList = {
             ai_intro:'对前排单体造成伤害，伤害系数为125%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['one','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.25);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.25,
+            isRecover:false,
         },
         attack2:{
             name:'攻击',
@@ -26,12 +22,8 @@ const contentList = {
             ai_intro:'对敌方前排造成伤害，伤害系数为65%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['row','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.65);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.65,
+            isRecover:false,
         },
         attack3:{
             name:'攻击',
@@ -39,12 +31,8 @@ const contentList = {
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为75%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['column','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.75);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.75,
+            isRecover:false,
         },
         attack4:{
             name:'攻击',
@@ -52,12 +40,8 @@ const contentList = {
             ai_intro:'对敌方后排造成伤害，伤害系数为55%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['row','last'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.55);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.55,
+            isRecover:false,
         },
 
         attack5:{
@@ -66,12 +50,8 @@ const contentList = {
             ai_intro:'对前排单体造成伤害，伤害系数为115%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['one','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.15);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.15,
+            isRecover:false,
         },
         attack6:{
             name:'攻击',
@@ -79,12 +59,8 @@ const contentList = {
             ai_intro:'对敌方前排造成伤害，伤害系数为60%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['row','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.6);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.6,
+            isRecover:false,
         },
         attack7:{
             name:'攻击',
@@ -92,12 +68,8 @@ const contentList = {
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为70%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['column','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.7);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.7,
+            isRecover:false,
         },
         attack8:{
             name:'攻击',
@@ -105,12 +77,8 @@ const contentList = {
             ai_intro:'对敌方后排造成伤害，伤害系数为50%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['row','last'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.5);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.5,
+            isRecover:false,
         },
         attack9:{
             name:'攻击',
@@ -118,12 +86,8 @@ const contentList = {
             ai_intro:'对后排单体造成伤害，伤害系数为105%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['one','last'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.05);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.05,
+            isRecover:false,
         },
 
         
@@ -133,12 +97,8 @@ const contentList = {
             ai_intro:'对前排单体造成伤害，伤害系数为105%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['one','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.05);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.05,
+            isRecover:false,
         },
         attack11:{
             name:'攻击',
@@ -146,12 +106,9 @@ const contentList = {
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为65%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['column','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.65);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.65,
+            isRecover:false,
+
         },
 
 
@@ -161,12 +118,8 @@ const contentList = {
             ai_intro:'对前排单体造成伤害，伤害系数为95%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['one','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.95);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.95,
+            isRecover:false,
         },
         attack13:{
             name:'攻击',
@@ -174,12 +127,8 @@ const contentList = {
             ai_intro:'对后排单体造成伤害，伤害系数为85%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['one','last'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.85);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.85,
+            isRecover:false,
         },
 
         attack14:{
@@ -188,12 +137,9 @@ const contentList = {
             ai_intro:'对前排单体造成伤害，伤害系数为90%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['one','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.9);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.9,
+            isRecover:false,
+            
         },
         attack15:{
             name:'攻击',
@@ -201,25 +147,47 @@ const contentList = {
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为55%',//代表ai的倾向
             //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
             target:['column','first'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.55);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.55,
+            isRecover:false,
         },
+
+        attack999:{
+            name:'攻击',
+            intro:'对全体敌人造成伤害，伤害系数为100%',//常规描述
+            ai_intro:'对全体敌人造成伤害，伤害系数为100%',//代表ai的倾向
+            //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
+            target:['all','all'],//第一个元素代表选目标模式，第二个元素ai倾向
+            coefficient:1,
+            isRecover:false,
+        },
+        attack998:{
+            name:'攻击',
+            intro:'对全体敌人造成伤害，伤害系数为100%',//常规描述
+            ai_intro:'对全体敌人造成伤害，伤害系数为100%',//代表ai的倾向
+            //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
+            target:['all','all'],//第一个元素代表选目标模式，第二个元素ai倾向
+            coefficient:1,
+            isRecover:false,
+        },
+        attack997:{
+            name:'攻击',
+            intro:'对全体敌人造成伤害，伤害系数为100%',//常规描述
+            ai_intro:'对全体敌人造成伤害，伤害系数为100%',//代表ai的倾向
+            //名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
+            target:['all','all'],//第一个元素代表选目标模式，第二个元素ai倾向
+            coefficient:1,
+            isRecover:false,
+        },
+
+
 
         recover1:{
             name:'回复',
             intro:'治疗我方单体，系数为1',//常规描述
             ai_intro:'治疗我方体力最低的单体，系数为1',//代表ai的倾向
             target:['one','lowest'],//第一个元素代表选目标模式，第二个元素ai倾向
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk);
-                player.rpg_recover(targets,num);
-                game.log(player, "对目标进行了治疗");
-            }
+            coefficient:1,
+            isRecover:true,
         }
     },
     skill:{
@@ -228,60 +196,40 @@ const contentList = {
             intro:'对单体造成伤害，伤害系数为305%',
             ai_intro:'对血量最少的敌方造成伤害，伤害系数为305%',
             target:['one','lowest'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*3.05);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:3.05,
+            isRecover:false,
         },
         attack_skill2:{
             name:'技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为190%',
             ai_intro:'对敌方前排敌人造成伤害，伤害系数为190%',
             target:['row','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.9);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.9,
+            isRecover:false,
         },
         attack_skill3:{
             name:'技能攻击',
             intro:'对一列敌人造成伤害，伤害系数为225%',
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为225%',
             target:['column','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2.25);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2.25,
+            isRecover:false,
         },
         attack_skill4:{
             name:'技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为170%',
             ai_intro:'对敌方后排敌人造成伤害，伤害系数为170%',
             target:['row','last'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.7);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.7,
+            isRecover:false,
         },
         attack_skill5:{
             name:'技能攻击',
             intro:'对三名敌人造成伤害，伤害系数为180%',
             ai_intro:'对敌方随机三名敌人造成伤害，伤害系数为180%',
             target:['manual_multi','random',3],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.80);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.8,
+            isRecover:false,
         },
 
         attack_skill6:{
@@ -289,60 +237,39 @@ const contentList = {
             intro:'对单体造成伤害，伤害系数为325%',
             ai_intro:'对敌方前排单体造成伤害，伤害系数为325%',
             target:['one','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*3.25);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:3.25,
         },
         attack_skill7:{
             name:'技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为165%',
             ai_intro:'对敌方前排敌人造成伤害，伤害系数为165%',
             target:['row','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.65);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.65,
+            isRecover:false,
         },
         attack_skill8:{
             name:'技能攻击',
             intro:'对一列敌人造成伤害，伤害系数为195%',
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为195%',
             target:['column','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.95);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.95,
+            isRecover:false,
         },
         attack_skill9:{
             name:'技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为155%',
             ai_intro:'对敌方后排敌人造成伤害，伤害系数为155%',
             target:['row','last'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.55);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.55,
+            isRecover:false,
         },
         attack_skill10:{
             name:'技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为175%',
             ai_intro:'对敌方前排敌人造成伤害，伤害系数为175%',
             target:['row','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.75);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.75,
+            isRecover:false,
         },
 
         attack_skill11:{
@@ -350,120 +277,81 @@ const contentList = {
             intro:'对三名敌人造成伤害，伤害系数为130%',
             ai_intro:'对三名敌方能量最高的敌人造成伤害，伤害系数为130%',
             target:['manual_multi','manahighest',3],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.3);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.3,
+            isRecover:false,
         },
         attack_skill12:{
             name:'技能攻击',
             intro:'对单体造成伤害，伤害系数为335%',
             ai_intro:'对敌方血量最高单体造成伤害，伤害系数为335%',
             target:['one','highest'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*3.35);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:3.35,
+            isRecover:false,
         },
         attack_skill13:{
             name:'技能攻击',
             intro:'对单体造成伤害，伤害系数为305%',
             ai_intro:'对敌方前排单体造成伤害，伤害系数为305%',
             target:['one','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*3.05);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:3.05,
+            isRecover:false,
         },
         attack_skill14:{
             name:'技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为150%',
             ai_intro:'对敌方前排敌人造成伤害，伤害系数为150%',
             target:['row','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.5);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.5,
+            isRecover:false,
         },
         attack_skill15:{
             name:'技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为140%',
             ai_intro:'对敌方后排敌人造成伤害，伤害系数为140%',
             target:['row','last'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.40);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.4,
+            isRecover:false,
         },
         attack_skill16:{
             name:'技能攻击',
             intro:'对一列敌人造成伤害，伤害系数为180%',
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为180%',
             target:['column','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.8);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.8,
+            isRecover:false,
         },
         attack_skill17:{
             name:'技能攻击',
             intro:'对一列敌人造成伤害，伤害系数为205%',
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为205%',
             target:['column','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2.05);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2.05,
+            isRecover:false,
         },
         attack_skill18:{
             name:'技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为145%',
             ai_intro:'对敌方后排敌人造成伤害，伤害系数为145%',
             target:['row','last'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.45);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.45,
+            isRecover:false,
+
         },
         attack_skill19:{
             name:'技能攻击',
             intro:'对单体造成伤害，伤害系数为265%',
             ai_intro:'对血量最少的敌方造成伤害，伤害系数为265%',
             target:['one','lowest'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2.65);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2.65,
+            isRecover:false,
         },
         attack_skill20:{
             name:'技能攻击',
             intro:'对全体造成伤害，伤害系数为105%',
             ai_intro:'对全体敌方造成伤害，伤害系数为105%',
             target:['all','all'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.05);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.05,
+            isRecover:false,
         },
 
         attack_skill21:{
@@ -471,36 +359,26 @@ const contentList = {
             intro:'对三名敌人造成伤害，伤害系数为135%',
             ai_intro:'对三名敌方能量最高的敌人造成伤害，伤害系数为135%',
             target:['manual_multi','manahighest',3],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.35);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.35,
+            isRecover:false,
+
         },
         attack_skill22:{
             name:'技能攻击',
             intro:'对三名敌人造成伤害，伤害系数为150%',
             ai_intro:'对敌方随机三名敌人造成伤害，伤害系数为150%',
             target:['manual_multi','random',3],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.50);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.5,
+            isRecover:false,
+
         },
         attack_skill23:{
             name:'技能攻击',
             intro:'对单体造成伤害，伤害系数为285%',
             ai_intro:'对敌方后排单体造成伤害，伤害系数为285%',
             target:['one','last'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2.85);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2.85,
+            isRecover:false,
         },
 
         
@@ -509,108 +387,73 @@ const contentList = {
             intro:'对单体造成伤害，伤害系数为255%',
             ai_intro:'对敌方后排单体造成伤害，伤害系数为255%',
             target:['one','last'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2.55);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2.55,
+            isRecover:false,
+
         },
         attack_skill25:{
             name:'技能攻击',
             intro:'对全体造成伤害，伤害系数为90%',
             ai_intro:'对全体敌方造成伤害，伤害系数为90%',
             target:['all','all'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.9);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.9,
+            isRecover:false,
         },
         attack_skill27:{
             name:'技能攻击',
             intro:'对单体造成伤害，伤害系数为285%',
             ai_intro:'对敌方前排单体造成伤害，伤害系数为285%',
             target:['one','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2.85);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2.85,
+            isRecover:false,
         },
         attack_skill28:{
             name:'技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为140%',
             ai_intro:'对敌方前排敌人造成伤害，伤害系数为140%',
             target:['row','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.40);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.4,
+            isRecover:false,
         },
         attack_skill29:{
             name:'技能攻击',
             intro:'对一列敌人造成伤害，伤害系数为170%',
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为170%',
             target:['column','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.7);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.7,
         },
         attack_skill30:{
             name:'技能攻击',
             intro:'对三名敌人造成伤害，伤害系数为135%',
             ai_intro:'对敌方随机三名敌人造成伤害，伤害系数为135%',
             target:['manual_multi','random',3],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.35);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.35,
+            isRecover:false,
+
         },
         attack_skill31:{
             name:'技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为130%',
             ai_intro:'对敌方后排敌人造成伤害，伤害系数为130%',
             target:['row','last'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.3);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.3,
+            isRecover:false,
         },
         attack_skill32:{
             name:'技能攻击',
             intro:'对单体造成伤害，伤害系数为230%',
             ai_intro:'对血量最少的敌方造成伤害，伤害系数为230%',
             target:['one','lowest'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2.3);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2.3,
+            isRecover:false,
         },
         attack_skill33:{
             name:'技能攻击',
             intro:'对单体造成伤害，伤害系数为310%',
             ai_intro:'对敌方血量最高单体造成伤害，伤害系数为310%',
             target:['one','highest'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*3.1);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:3.1,
+            isRecover:false,
         },
 
         attack_skill34:{
@@ -618,48 +461,32 @@ const contentList = {
             intro:'对单体造成伤害，伤害系数为270%',
             ai_intro:'对敌方前排单体造成伤害，伤害系数为270%',
             target:['one','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2.7);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2.7,
+            isRecover:false,
         },
         attack_skill35:{
             name:'技能攻击',
             intro:'对全体造成伤害，伤害系数为85%',
             ai_intro:'对全体敌方造成伤害，伤害系数为85%',
             target:['all','all'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*0.85);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:0.85,
+            isRecover:false,
         },
         attack_skill36:{
             name:'技能攻击',
             intro:'对一列敌人造成伤害，伤害系数为160%',
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为160%',
             target:['column','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.6);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.6,
+            isRecover:false,
         },
         attack_skill37:{
             name:'技能攻击',
             intro:'对三名敌人造成伤害，伤害系数为130%',
             ai_intro:'对敌方随机三名敌人造成伤害，伤害系数为130%',
             target:['manual_multi','random',3],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.3);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.3,
+            isRecover:false,
         },
 
 
@@ -669,12 +496,9 @@ const contentList = {
             intro:'对三名敌人造成伤害，伤害系数为165%',
             ai_intro:'对敌方随机三名敌人造成伤害，伤害系数为165%',
             target:['manual_multi','random',3],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.65);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.65,
+            isRecover:false,
+
         },
 
 
@@ -699,36 +523,24 @@ const contentList = {
             intro:'治疗全体友方，系数为125%',
             ai_intro:'治疗全体友方，系数为125%',
             target:['all','all'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.25);
-                player.rpg_recover(targets,num);
-                game.log(player, "对目标进行了治疗");
-            }
+            coefficient:1.25,
+            isRecover:true,
         },
         recover_skill2:{
             name:'技能回复',
             intro:'治疗全体友方，系数为115%',
             ai_intro:'治疗全体友方，系数为115%',
             target:['all','all'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.15);
-                player.rpg_recover(targets,num);
-                game.log(player, "对目标进行了治疗");
-            }
+            coefficient:1.15,
+            isRecover:true,
         },
         recover_skill3:{
             name:'技能回复',
             intro:'治疗全体友方，系数为100%',
             ai_intro:'治疗全体友方，系数为100%',
             target:['all','all'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1);
-                player.rpg_recover(targets,num);
-                game.log(player, "对目标进行了治疗");
-            }
+            coefficient:1,
+            isRecover:true,
         },
     },
     spskill:{
@@ -737,72 +549,48 @@ const contentList = {
             intro:'对单体造成伤害，伤害系数为335%',
             ai_intro:'对血量最少的敌方造成伤害，伤害系数为335%',
             target:['one','lowest'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*3.35);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:3.35,
+            isRecover:false,
         },
         attack_spskill2:{
             name:'必杀技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为210%',
             ai_intro:'对敌方前排敌人造成伤害，伤害系数为210%',
             target:['row','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2.1);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2.1,
+            isRecover:false,
         },
         attack_spskill3:{
             name:'必杀技能攻击',
             intro:'对一列敌人造成伤害，伤害系数为250%',
             ai_intro:'对敌方默认前排所在的一列敌人造成伤害，伤害系数为250%',
             target:['column','first'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2.5);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2.5,
+            isRecover:false,
         },
         attack_spskill4:{
             name:'必杀技能攻击',
             intro:'对一行敌人造成伤害，伤害系数为190%',
             ai_intro:'对敌方后排敌人造成伤害，伤害系数为190%',
             target:['row','last'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.9);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:1.9,
+            isRecover:false,
         },
         attack_spskill5:{
             name:'必杀技能攻击',
             intro:'对三名敌人造成伤害，伤害系数为200%',
             ai_intro:'对敌方随机三名敌人造成伤害，伤害系数为200%',
             target:['manual_multi','random',3],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*2);
-                player.rpg_attack(targets,num);
-                game.log(player, "对目标造成了伤害");
-            }
+            coefficient:2,
+            isRecover:true,
         },
         recover_spskill1:{
             name:'必杀技能回复',
             intro:'治疗全体友方，系数为150%',
             ai_intro:'治疗全体友方，系数为150%',
             target:['all','all'],
-            content:function(event,player){
-                var targets=event.targets;
-                var num=Math.floor(player.atk*1.5);
-                player.rpg_recover(targets,num);
-                game.log(player, "对目标进行了治疗");
-            }
+            coefficient:1.5,
+            isRecover:true,
         }
 
     },

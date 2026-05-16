@@ -1,4 +1,79 @@
-
+const SPeventList = {
+    spEvent1:{
+        name: '主角升阶秘境',
+        difficulty:'normal',
+        procedure: [
+            'sp1-1', 'sp1-2', 'sp1-3', 'sp1-4', 'sp1-5',
+            'sp1-6', 'sp1-7', 'sp1-8', 'sp1-9', 'sp1-10',
+            'sp1-11', 'sp1-12', 'sp1-13', 'sp1-14', 'sp1-15',
+            'sp1-16', 'sp1-17', 'sp1-18', 'sp1-19', 'sp1-20',
+        ],
+        eventPack:{
+            'sp1-1': {name: '1阶秘境',
+                id: 'sp1-1',
+                type: 'battle',
+                text: '通过本关会令主角突破至1阶',
+                prev: null,
+                enemy: [
+                    {}, {}, {}, {}, { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [],tupolevel:6,}, {}
+                ],
+            },
+            'sp1-2': {
+                name: '2阶秘境',
+                id: 'sp1-2',
+                type: 'battle',
+                text: '通过本关会令主角突破至2阶',
+                prev: 'sp1-1',
+                enemy: [
+                    {}, {}, {}, {}, { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 125, def: 65, spe: 65, buff: [],tupolevel:6,}, {}
+                ],
+            },
+            'sp1-3': {
+                name: '3阶秘境',
+                id: 'sp1-3',
+                type: 'battle',
+                text: '通过本关会令主角突破至3阶',
+                prev: 'sp1-2',
+                enemy: [
+                    {}, {}, {}, {}, { name: '水魔龙', id: 'ybsl_shuimolong', hp: 1500, atk: 150, def: 50, spe: 50, buff: [],tupolevel:6,}, {}
+                ],
+            },
+            'sp1-4': {},
+            'sp1-5': {},
+            'sp1-6': {},
+            'sp1-7': {},
+            'sp1-8': {},
+            'sp1-9': {},
+            'sp1-10': {},
+            'sp1-11': {},
+            'sp1-12': {},
+            'sp1-13': {},
+            'sp1-14': {},
+            'sp1-15': {},
+            'sp1-16': {},
+            'sp1-17': {},
+            'sp1-18': {},
+            'sp1-19': {},
+            'sp1-20': {},
+        }
+    },
+    spEvent2:{
+        name: '主角突破秘境',
+        difficulty:'hard',
+        procedure: [
+            'sp2-1', 'sp2-2', 'sp2-3', 'sp2-4', 'sp2-5',
+            'sp2-6',
+        ],
+        eventPack:{
+            'sp2-1': {},
+            'sp2-2': {},
+            'sp2-3': {},
+            'sp2-4': {},
+            'sp2-5': {},
+            'sp2-6': {},
+        },
+    },
+}
 const eventList = {//事件列表
     // ===== 敌人位置映射说明 =====
     // 玩家视角敌人阵地布局:

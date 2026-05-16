@@ -2983,7 +2983,8 @@ function renderDungeonView(container, selectedChapterKey = null) {
     const difficulties = [
         { name: '普通', key: 'normal' },
         { name: '噩梦', key: 'nightmare' },
-        { name: '地狱', key: 'hell' }
+        { name: '地狱', key: 'hell' },
+        { name: '秘境', key: 'secret' }
     ];
 
     // 获取当前选中的难度，默认为普通
@@ -2996,9 +2997,16 @@ function renderDungeonView(container, selectedChapterKey = null) {
         return numA - numB;
     });
 
+    // 获取所有章节key并排序（提前声明，供难度解锁检查和章节列表共用）
+    const SPchapterKeys = Object.keys(SPeventList).sort((a, b) => {
+        const numA = parseInt(a.replace(/\D/g, '')) || 0;
+        const numB = parseInt(b.replace(/\D/g, '')) || 0;
+        return numA - numB;
+    });
     // 检查难度解锁状态 - 只要存在任意一章该难度可玩，即视为解锁
     const isDifficultyUnlocked = (diffKey) => {
         if (diffKey === 'normal') return true;
+        if(diffKey === 'secret') return true;
 
         // 遍历所有章节，只要有任意一章满足解锁条件即可
         for (const chKey of chapterKeys) {
@@ -3023,7 +3031,8 @@ function renderDungeonView(container, selectedChapterKey = null) {
     difficulties.forEach(diff => {
         const btn = document.createElement('button');
         btn.className = 'ybrpg-btn';
-        btn.style.width = '80px';
+        btn.style.width = '70px';
+        btn.style.minWidth = '50px';
         btn.style.padding = '5px';
         btn.style.fontSize = '14px';
         btn.textContent = diff.name;
@@ -3048,7 +3057,7 @@ function renderDungeonView(container, selectedChapterKey = null) {
 
         btn.onclick = () => {
             if (!unlocked) return;
-            console.log(`切换难度: ${diff.name}`);
+            // console.log(`切换难度: ${diff.name}`);
             window.currentDifficulty = diff.key;
             renderDungeonView(container, null); // 重新渲染以更新按钮状态
         };
@@ -3070,74 +3079,106 @@ function renderDungeonView(container, selectedChapterKey = null) {
 
     let prevChapterCompleted = true; // 第一章默认前置条件满足
     // currentDifficulty 已在函数开头声明，直接使用
-
-    // 遍历章节
-    for (const chapterKey of chapterKeys) {
-        const chapterData = eventList[chapterKey];
-        if (!chapterData.eventPack) continue;
-
-        // 检查前一章是否完成，如果未完成，则当前章及后续章节隐藏
-        if (!prevChapterCompleted) {
-            break; // 跳出循环，隐藏后续章节
+    if(currentDifficulty === 'secret'){
+        for(const chapterKey of SPchapterKeys){
+            const chapterData = SPeventList[chapterKey];
+            console.log('SPchapterKeys',SPeventList)
+            console.log('chapterKey',chapterKey)
+            console.log('SPchapterKeys[chapterKey]',SPeventList[chapterKey])
+            // 章节标题按钮
+            const chapterBtn = document.createElement('button');
+            chapterBtn.className = 'ybrpg-btn';
+            chapterBtn.style.width = '95%';
+            chapterBtn.style.marginBottom = '5px';
+            // 将 chapter1 转换为更友好的显示名称，如 "章节 1"
+            const chapterName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
+            chapterBtn.textContent = `▶ ${chapterName}`;
+    
+            // 章节按钮点击事件：进入该章节的子页面
+            chapterBtn.onclick = () => {
+                // 保存当前选中的章节，用于难度解锁判断
+                window.selectedChapter = chapterKey;
+                renderDungeonView(container, chapterKey);
+                toast('未开放，敬请期待')
+            };
+    
+            listContainer.appendChild(chapterBtn);
+    
         }
-
-        // 高难度额外解锁条件：当前章低一难度通关
-        const chapterNum = parseInt(chapterKey.replace(/\D/g, '')) || 1;
-        let chapterVisible = true;
-        if (currentDifficulty === 'nightmare') {
-            // 噩梦：需要当前章普通通关
-            const normalLastEvent = `c${chapterNum}-10`;
-            chapterVisible = !!window.playerProgress?.[normalLastEvent];
-        } else if (currentDifficulty === 'hell') {
-            // 地狱：需要当前章噩梦通关
-            const nightmareLastEvent = `c${chapterNum}-10_nightmare`;
-            chapterVisible = !!window.playerProgress?.[nightmareLastEvent];
-        }
-
-        if (!chapterVisible) {
-            // 当前章低一难度未通关，隐藏当前章及后续
-            break;
-        }
-
-        // 章节标题按钮
-        const chapterBtn = document.createElement('button');
-        chapterBtn.className = 'ybrpg-btn';
-        chapterBtn.style.width = '95%';
-        chapterBtn.style.marginBottom = '5px';
-        // 将 chapter1 转换为更友好的显示名称，如 "章节 1"
-        const chapterName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
-        chapterBtn.textContent = `▶ ${chapterName}`;
-
-        // 章节按钮点击事件：进入该章节的子页面
-        chapterBtn.onclick = () => {
-            // 保存当前选中的章节，用于难度解锁判断
-            window.selectedChapter = chapterKey;
-            renderDungeonView(container, chapterKey);
-        };
-
-        listContainer.appendChild(chapterBtn);
-
-        // 检查当前章节是否完成，以决定下一章是否显示
-        // 根据当前难度判断章节完成状态
-        const procedure = chapterData.procedure || [];
-        const eventIds = procedure.length > 0 ? procedure : Object.keys(chapterData.eventPack);
-        let lastEventId = eventIds[eventIds.length - 1];
-
-        // 如果是噩梦/地狱难度，需要使用对应的eventId
-        if (currentDifficulty === 'nightmare') {
-            lastEventId = lastEventId + '_nightmare';
-        } else if (currentDifficulty === 'hell') {
-            lastEventId = lastEventId + '_hell';
-        }
-
-        // 更新 prevChapterCompleted 状态
-        // 如果当前章节没有任何事件，或者最后一个事件已完成，则下一章解锁
-        if (lastEventId) {
-            prevChapterCompleted = !!window.playerProgress?.[lastEventId];
-        } else {
-            prevChapterCompleted = false; // 如果没有事件，默认不解锁下一章
-        }
+        // return
     }
+    else {
+        // 遍历章节
+        for (const chapterKey of chapterKeys) {
+            const chapterData = eventList[chapterKey];
+            if (!chapterData.eventPack) continue;
+    
+            // 检查前一章是否完成，如果未完成，则当前章及后续章节隐藏
+            if (!prevChapterCompleted) {
+                break; // 跳出循环，隐藏后续章节
+            }
+    
+            // 高难度额外解锁条件：当前章低一难度通关
+            const chapterNum = parseInt(chapterKey.replace(/\D/g, '')) || 1;
+            let chapterVisible = true;
+            if (currentDifficulty === 'nightmare') {
+                // 噩梦：需要当前章普通通关
+                const normalLastEvent = `c${chapterNum}-10`;
+                chapterVisible = !!window.playerProgress?.[normalLastEvent];
+            } else if (currentDifficulty === 'hell') {
+                // 地狱：需要当前章噩梦通关
+                const nightmareLastEvent = `c${chapterNum}-10_nightmare`;
+                chapterVisible = !!window.playerProgress?.[nightmareLastEvent];
+            }
+    
+            if (!chapterVisible) {
+                // 当前章低一难度未通关，隐藏当前章及后续
+                break;
+            }
+    
+            // 章节标题按钮
+            const chapterBtn = document.createElement('button');
+            chapterBtn.className = 'ybrpg-btn';
+            chapterBtn.style.width = '95%';
+            chapterBtn.style.marginBottom = '5px';
+            // 将 chapter1 转换为更友好的显示名称，如 "章节 1"
+            const chapterName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
+            chapterBtn.textContent = `▶ ${chapterName}`;
+    
+            // 章节按钮点击事件：进入该章节的子页面
+            chapterBtn.onclick = () => {
+                // 保存当前选中的章节，用于难度解锁判断
+                window.selectedChapter = chapterKey;
+                renderDungeonView(container, chapterKey);
+            };
+    
+            listContainer.appendChild(chapterBtn);
+    
+            // 检查当前章节是否完成，以决定下一章是否显示
+            // 根据当前难度判断章节完成状态
+            const procedure = chapterData.procedure || [];
+            const eventIds = procedure.length > 0 ? procedure : Object.keys(chapterData.eventPack);
+            let lastEventId = eventIds[eventIds.length - 1];
+    
+            // 如果是噩梦/地狱难度，需要使用对应的eventId
+            if (currentDifficulty === 'nightmare') {
+                lastEventId = lastEventId + '_nightmare';
+            } else if (currentDifficulty === 'hell') {
+                lastEventId = lastEventId + '_hell';
+            }
+    
+            // 更新 prevChapterCompleted 状态
+            // 如果当前章节没有任何事件，或者最后一个事件已完成，则下一章解锁
+            if (lastEventId) {
+                prevChapterCompleted = !!window.playerProgress?.[lastEventId];
+            } else {
+                prevChapterCompleted = false; // 如果没有事件，默认不解锁下一章
+            }
+        }
+
+    }
+
+    
 
     container.appendChild(listContainer);
 }
@@ -3496,7 +3537,7 @@ function refreshShopItems(type = 'normal') {
     const spitems = [];
     const allTreasureIds = Object.keys(gameData.getTreasureList());
     const selectedTreasures = allTreasureIds.sort(() => 0.5 - Math.random()).slice(0, 4);
-    const allCharIds = Object.keys(characterList || {}).filter(cid => cid != 'zhujue');
+    const allCharIds = Object.keys(characterList || {}).filter(cid => characterList[cid].group != 'zhujue');
     const selectedChars = allCharIds.sort(() => 0.5 - Math.random()).slice(0, 4);
     const allIteams = selectedTreasures.concat(selectedChars);
     const allProducts = [...allIteams].sort(() => Math.random() - 0.5);
@@ -4367,7 +4408,7 @@ function initNewGame() {
     syncTreasureEquipData();
 
     // 初始化商店数据
-    window.shopData = { items: [], refreshCost: 50 };
+    window.shopData = { items: [],spitems:[], refreshCost: 50 };
 
     // 初始化队伍视图
     const teamView = document.getElementById('team-view');
@@ -4410,6 +4451,8 @@ function initNewGame() {
             window.currentTeam[0] = tmain;
         }
         refreshAllTeamSlots();
+        refreshShopItems('normal');
+        refreshShopItems('advanced');
 
     }
     // ... 保存存档等后续操作 ...
@@ -5445,7 +5488,7 @@ function needUpgrade(breakInfo) {
     //     // default:break;
     // }
     if (breakInfo.tupolevel) {
-        if (breakInfo.tupolevel == 1) needRank = 'common'
+        if (breakInfo.tupolevel == 0) needRank = 'common'
         if (breakInfo.tupolevel == 2) needRank = 'rare'
         if (breakInfo.tupolevel == 4) needRank = 'epicfake'
         if (breakInfo.tupolevel == 8) needRank = 'epic'

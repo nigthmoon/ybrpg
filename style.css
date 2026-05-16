@@ -524,7 +524,7 @@ body {
 
 .bag-char-scroll {
     width: 100%;
-    overflow-y: auto;
+    /* overflow-y: auto; */
     padding: 5px;
 }
 
