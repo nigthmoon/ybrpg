@@ -515,6 +515,30 @@ const contentList = {
 
 
 
+        attack_skill999:{
+            name:'技能攻击',
+            intro:'对全体造成伤害，伤害系数为100%',
+            ai_intro:'对全体敌方造成伤害，伤害系数为100%',
+            target:['all','all'],
+            coefficient:1,
+            isRecover:false,
+        },
+        attack_skill998:{
+            name:'技能攻击',
+            intro:'对全体造成伤害，伤害系数为100%',
+            ai_intro:'对全体敌方造成伤害，伤害系数为100%',
+            target:['all','all'],
+            coefficient:1,
+            isRecover:false,
+        },
+        attack_skill997:{
+            name:'技能攻击',
+            intro:'对全体造成伤害，伤害系数为100%',
+            ai_intro:'对全体敌方造成伤害，伤害系数为100%',
+            target:['all','all'],
+            coefficient:1,
+            isRecover:false,
+        },
 
 
 

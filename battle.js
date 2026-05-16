@@ -1885,8 +1885,10 @@ function enterTargetSelection(actor, skillType, skillId, energyCost) {
     };
 
     // --- 自动释放的情况 (无需玩家逐个点选) ---
-    if (['all', 'row', 'column', 'manual_multi', 'lowest_hp_multi'].includes(mode)) {
-        // 对于自动模式，直接解析目标并执行，不进入手动高亮流程
+    // --- 【修改点1】自动释放的情况 ---
+    // 注意：这里移除了 'column' 和 'row'，让它们进入下面的手动选择逻辑
+    // 如果你希望 'row' 也能自选，也把它从下面这个数组里去掉
+    if (['all', 'manual_multi', 'lowest_hp_multi'].includes(mode)) {
         const targets = resolveSkillTargets(sData, actor, targetSide);
         
         if (targets.length > 0) {
@@ -1905,13 +1907,19 @@ function enterTargetSelection(actor, skillType, skillId, energyCost) {
     }
 
     // --- 手动选择情况 ---
+    // 'one', 'exclude_self', 'row', 'column' 都会走到这里
     if (mode === 'one' || mode === 'exclude_self') {
         addBattleLog('请点击选择目标');
-        highlightSelectableTargets('one', isRecover, targetSide); // 传入 targetSide
+        highlightSelectableTargets(mode, isRecover, targetSide);
     } 
+    // 【修改点2】增加 row 和 column 的手动高亮入口
+    else if (mode === 'row' || mode === 'column') {
+        addBattleLog(`请点击选择${mode === 'row' ? '行' : '列'}中的一个目标`);
+        highlightSelectableTargets(mode, isRecover, targetSide);
+    }
     else if (mode === 'manual_multi') {
         addBattleLog(`请依次选择 ${count} 个目标 (已选: 0/${count})`);
-        highlightSelectableTargets('manual_multi', isRecover, targetSide); // 传入 targetSide
+        highlightSelectableTargets('manual_multi', isRecover, targetSide);
     }
 }
 
@@ -1948,6 +1956,7 @@ function highlightSelectableTargets(mode, isRecover, targetSide) {
 function onTargetClicked(target) {
     if (!targetSelection) return;
     const ts = targetSelection;
+    // console.log('点击了目标:', ts);
     const side = ts.isRecover ? 'player' : 'enemy';
     
     let finalTargets = [];

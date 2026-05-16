@@ -9,13 +9,16 @@ const SPeventList = {
             'sp1-16', 'sp1-17', 'sp1-18', 'sp1-19', 'sp1-20',
         ],
         eventPack:{
-            'sp1-1': {name: '1阶秘境',
+            'sp1-1': {
+                name: '1阶秘境',
                 id: 'sp1-1',
                 type: 'battle',
                 text: '通过本关会令主角突破至1阶',
                 prev: null,
+                gold: 300,
                 enemy: [
-                    {}, {}, {}, {}, { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [],tupolevel:6,}, {}
+                    {}, {}, {}, {}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [],tupolevel:6,}, {}
                 ],
             },
             'sp1-2': {
@@ -24,8 +27,10 @@ const SPeventList = {
                 type: 'battle',
                 text: '通过本关会令主角突破至2阶',
                 prev: 'sp1-1',
+                gold: 500,
                 enemy: [
-                    {}, {}, {}, {}, { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 125, def: 65, spe: 65, buff: [],tupolevel:6,}, {}
+                    {}, {}, {}, {}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 125, def: 65, spe: 65, buff: [],tupolevel:6,}, {}
                 ],
             },
             'sp1-3': {
@@ -33,44 +38,334 @@ const SPeventList = {
                 id: 'sp1-3',
                 type: 'battle',
                 text: '通过本关会令主角突破至3阶',
-                prev: 'sp1-2',
+                prev: 'sp2-2',
+                gold: 700,
                 enemy: [
-                    {}, {}, {}, {}, { name: '水魔龙', id: 'ybsl_shuimolong', hp: 1500, atk: 150, def: 50, spe: 50, buff: [],tupolevel:6,}, {}
+                    {}, {}, {}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1500, atk: 150, def: 80, spe: 80, buff: [],tupolevel:6,}, {}
                 ],
             },
-            'sp1-4': {},
-            'sp1-5': {},
-            'sp1-6': {},
-            'sp1-7': {},
-            'sp1-8': {},
-            'sp1-9': {},
-            'sp1-10': {},
-            'sp1-11': {},
-            'sp1-12': {},
-            'sp1-13': {},
-            'sp1-14': {},
-            'sp1-15': {},
-            'sp1-16': {},
-            'sp1-17': {},
-            'sp1-18': {},
-            'sp1-19': {},
-            'sp1-20': {},
+            'sp1-4': {
+                name: '4阶秘境',
+                id: 'sp1-4',
+                type: 'battle',
+                text: '通过本关会令主角突破至4阶',
+                prev: 'sp1-3',
+                gold: 1000,
+                enemy: [
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 65, def: 65, spe: 65, buff: [], tupolevel: 6, },{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 6, },{}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 6, }, {}
+                ],
+
+            },
+            'sp1-5': {
+                name: '5阶秘境',
+                id: 'sp1-5',
+                type: 'battle',
+                text: '通过本关会令主角突破至5阶',
+                prev: 'sp2-3',
+                gold: 1500,
+                enemy: [
+                    {}, {}, {}, {}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1800, atk: 175, def: 95, spe: 95, buff: [],tupolevel:6,}, {}
+                ],
+            },
+            'sp1-6': {
+                name: '6阶秘境',
+                id: 'sp1-6',
+                type: 'battle',
+                text: '通过本关会令主角突破至6阶',
+                prev: 'sp1-5',
+                gold: 1750,
+                enemy: [
+                    {}, {}, {}, {}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 2000, atk: 200, def: 110, spe: 110, buff: [],tupolevel:6,}, {}
+                ],
+            },
+            'sp1-7': {
+                name: '7阶秘境',
+                id: 'sp1-7',
+                type: 'battle',
+                text: '通过本关会令主角突破至7阶',
+                prev: 'sp1-6',
+                gold: 2000,
+                enemy: [
+                    {}, {}, {}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:6,}, {}
+                ],
+            },
+            'sp1-8': {
+                name: '8阶秘境',
+                id: 'sp1-8',
+                type: 'battle',
+                text: '通过本关会令主角突破至8阶',
+                prev: 'sp1-7',
+                gold: 2200,
+                enemy: [
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 2000, atk: 200, def: 110, spe: 110, buff: [],tupolevel:6,},{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1800, atk: 175, def: 95, spe: 95, buff: [],tupolevel:6,}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:6,}, {}
+                ],
+
+            },
+            'sp1-9': {
+                name: '9阶秘境',
+                id: 'sp1-9',
+                type: 'battle',
+                text: '通过本关会令主角突破至9阶',
+                prev: 'sp2-4',
+                gold: 2800,
+                enemy: [
+                    {}, {}, {}, {}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 3000, atk: 300, def: 180, spe: 150, buff: [],tupolevel:6,}, {}
+                ],
+            },
+            'sp1-10': {
+                name: '10阶秘境',
+                id: 'sp1-10',
+                type: 'battle',
+                text: '通过本关会令主角突破至10阶',
+                prev: 'sp1-9',
+                gold: 3300,
+                enemy: [
+                    {}, {}, {}, {}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 3500, atk: 350, def: 200, spe: 180, buff: [],tupolevel:6,}, {}
+                ],
+            },
+            'sp1-11': {
+                name: '11阶秘境',
+                id: 'sp1-11',
+                type: 'battle',
+                text: '通过本关会令主角突破至11阶',
+                prev: 'sp1-10',
+                gold: 3800,
+                enemy: [
+                    {}, {}, {}, {},
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,},{}, 
+                ]
+            },
+            'sp1-12': {
+                name: '12阶秘境',
+                id: 'sp1-12',
+                type: 'battle',
+                text: '通过本关会令主角突破至12阶',
+                prev: 'sp1-11',
+                gold: 4300,
+                enemy: [
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 3000, atk: 300, def: 180, spe: 150, buff: [],tupolevel:6,},{}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 3500, atk: 350, def: 200, spe: 180, buff: [],tupolevel:6,}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,},{}
+                ]
+            },
+            'sp1-13': {
+                name: '13阶秘境',
+                id: 'sp1-13',
+                type: 'battle',
+                text: '通过本关会令主角突破至13阶',
+                prev: 'sp2-5',
+                gold: 5500,
+                enemy: [
+                    { name: '涂山小红', id: 'ybsl_017xiaohong', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,},{}, 
+                    {}, {}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},{}
+                ]
+            },
+            'sp1-14': {
+                name: '14阶秘境',
+                id: 'sp1-14',
+                type: 'battle',
+                text: '通过本关会令主角突破至14阶',
+                prev: 'sp1-13',
+                gold: 6700,
+                enemy: [
+                    { name: '彡', id: 'ybsl_047shan', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,},{}, 
+                    {}, {}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,},{}, 
+                ]
+            },
+            'sp1-15': {
+                name: '15阶秘境',
+                id: 'sp1-15',
+                type: 'battle',
+                text: '通过本关会令主角突破至15阶',
+                prev: 'sp1-14',
+                gold: 7900,
+                enemy: [
+                    { name: '鞠熒', id: 'ybsl_059starsFall1', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,},{}, 
+                    {}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 10000, atk: 1000, def: 350, spe: 270, buff: [],tupolevel:6,},{}, 
+                ]
+
+            },
+            'sp1-16': {
+                name: '16阶秘境',
+                id: 'sp1-16',
+                type: 'battle',
+                text: '通过本关会令主角突破至16阶',
+                prev: 'sp1-15',
+                gold: 9000,
+                enemy: [
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},
+                    { name: '慕琴', id: 'ybsl_041mmuqin', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,}, 
+                    { name: '王婉儿', id: 'ybsl_049waner', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 10000, atk: 1000, def: 350, spe: 270, buff: [],tupolevel:6,},
+                    { name: '吴爽', id: 'ybsl_048wushuang', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                ]
+            },
+            'sp1-17': {
+                name: '17阶秘境',
+                id: 'sp1-17',
+                type: 'battle',
+                text: '通过本关会令主角突破至17阶',
+                prev: 'sp2-6',
+                gold: 40000,
+                enemy: [
+                    { name: '李曉', id: 'ybsl_059starsFall4', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},
+                    { name: '周靈', id: 'ybsl_059starsFall3', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '宋橤', id: 'ybsl_059starsFall2', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,}, 
+                    { name: '清月姑娘', id: 'ybsl_068qingyue', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '鞠熒', id: 'ybsl_059starsFall1', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:6,},
+                    { name: '香紫姑娘', id: 'ybsl_069xiangzi', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                ]
+            },
+            'sp1-18': {
+                name: '18阶秘境',
+                id: 'sp1-18',
+                type: 'battle',
+                text: '通过本关会令主角突破至18阶',
+                prev: 'sp1-17',
+                gold: 40000,
+                enemy: [
+                    { name: '小慧', id: 'ybsl_033xiaohui', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},
+                    { name: '幻晴', id: 'ybsl_018huanqing', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '张晴', id: 'ybsl_018zhangqing', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,}, 
+                    { name: '涂山小红', id: 'ybsl_017xiaohong', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '王海茹', id: 'ybsl_015wanghairu', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:6,},
+                    { name: '满城柒', id: 'ybsl_016manchengqi', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                ]
+            },
+            'sp1-19': {
+                name: '19阶秘境',
+                id: 'sp1-19',
+                type: 'battle',
+                text: '通过本关会令主角突破至19阶',
+                prev: 'sp1-18',
+                gold: 40000,
+                enemy: [
+                    { name: '高宇航', id: 'ybsl_011gaoyuhang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},
+                    { name: '周玥', id: 'ybsl_010zhouyue', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '王若冰', id: 'ybsl_005wangruobing', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,}, 
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '吴雨欣', id: 'ybsl_008wuyuxin', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:6,},
+                    { name: '郑佳怡', id: 'ybsl_012zhengjiayi', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                ]
+            },
+            'sp1-20': {
+                name: '20阶秘境',
+                id: 'sp1-20',
+                type: 'battle',
+                text: '通过本关会令主角突破至20阶',
+                prev: 'sp1-16',
+                gold: 40000,
+                enemy: [
+                    { name: '尹超跃', id: 'ybsl_013yinji', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},
+                    { name: '玉蝶心', id: 'ybsl_092handan', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,}, 
+                    { name: '吴格格', id: 'ybsl_007wugege', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '王汉桢', id: 'ybsl_006wanghanzhen', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:6,},
+                    { name: '孙丽松', id: 'ybsl_001sunlisong', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                ]
+            },
         }
     },
     spEvent2:{
-        name: '主角突破秘境',
+        name: '主角蜕变秘境',
         difficulty:'hard',
         procedure: [
-            'sp2-1', 'sp2-2', 'sp2-3', 'sp2-4', 'sp2-5',
-            'sp2-6',
+            // 'sp2-1', 
+            'sp2-2', 'sp2-3', 'sp2-4', 'sp2-5','sp2-6'
         ],
         eventPack:{
-            'sp2-1': {},
-            'sp2-2': {},
-            'sp2-3': {},
-            'sp2-4': {},
-            'sp2-5': {},
-            'sp2-6': {},
+            'sp2-1': {
+                name: '平凡试炼',
+                id: 'sp2-1',
+                type: 'battle',
+                text: '通过本关会令主角升品至普通',
+                prev: 'sp1-1',
+                gold : 900,
+                enemy: [
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 6, },{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 6, },{}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 6, }, {}
+                ],
+            },
+            'sp2-2': {
+                name: '精英试炼',
+                id: 'sp2-2',
+                type: 'battle',
+                text: '通过本关会令主角升品至精品',
+                prev: 'sp1-2',
+                gold : 1200,
+                enemy: [
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 125, def: 65, spe: 65, buff: [], tupolevel: 6, },{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1200, atk: 125, def: 65, spe: 65, buff: [], tupolevel: 6, },{}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1200, atk: 125, def: 65, spe: 65, buff: [], tupolevel: 6, }, {}
+                ],
+            },
+            'sp2-3': {
+                name: '史诗试炼',
+                id: 'sp2-3',
+                type: 'battle',
+                text: '通过本关会令主角升品至史诗',
+                prev: 'sp1-4',
+                gold : 2400,
+                enemy: [
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 6, },{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 6, },{}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 6, }, {}
+                ],
+            },
+            'sp2-4': {
+                name: '真史诗试炼',
+                id: 'sp2-4',
+                type: 'battle',
+                text: '通过本关会令主角升品为真史诗',
+                prev: 'sp1-8',
+                gold : 4800,
+                enemy: [
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:6,},{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:6,}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:6,}, {}
+                ]
+            },
+            'sp2-5': {
+                name: '传说试炼',
+                id: 'sp2-5',
+                type: 'battle',
+                text: '通过本关会令主角升品为传说',
+                prev: 'sp1-12',
+                gold : 9600,
+                enemy: [
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 5000, atk: 500, def: 300, spe: 150, buff: [],tupolevel:6,},{}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 5000, atk: 500, def: 300, spe: 150, buff: [],tupolevel:6,}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 5000, atk: 500, def: 300, spe: 150, buff: [],tupolevel:6,},{}
+                ]
+            },
+            'sp2-6': {
+                name: '真神秘境',
+                id: 'sp2-6',
+                type: 'battle',
+                text: '通过本关会令主角升品为神品',
+                prev: 'sp1-16',
+                gold : 19200,
+                enemy: [
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},{}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},{}
+                ]
+            },
         },
     },
 }

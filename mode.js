@@ -2968,6 +2968,10 @@ function renderDungeonView(container, selectedChapterKey = null) {
         renderChapterEventList(container, selectedChapterKey);
         return;
     }
+    if(selectedChapterKey&&SPeventList[selectedChapterKey]){
+        renderChapterEventList(container, selectedChapterKey);
+        return;
+    }
 
     // 否则渲染章节列表（主页面）
 
@@ -3079,33 +3083,57 @@ function renderDungeonView(container, selectedChapterKey = null) {
 
     let prevChapterCompleted = true; // 第一章默认前置条件满足
     // currentDifficulty 已在函数开头声明，直接使用
-    if(currentDifficulty === 'secret'){
-        for(const chapterKey of SPchapterKeys){
+    if (currentDifficulty === 'secret') {
+        for (const chapterKey of SPchapterKeys) {
             const chapterData = SPeventList[chapterKey];
-            console.log('SPchapterKeys',SPeventList)
-            console.log('chapterKey',chapterKey)
-            console.log('SPchapterKeys[chapterKey]',SPeventList[chapterKey])
+            
+            // 调试日志保留
+            console.log('SPchapterKeys', SPeventList);
+            console.log('chapterKey', chapterKey);
+            console.log('chapterData', chapterData);
+
             // 章节标题按钮
             const chapterBtn = document.createElement('button');
             chapterBtn.className = 'ybrpg-btn';
             chapterBtn.style.width = '95%';
             chapterBtn.style.marginBottom = '5px';
+            
             // 将 chapter1 转换为更友好的显示名称，如 "章节 1"
-            const chapterName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
-            chapterBtn.textContent = `▶ ${chapterName}`;
-    
+            // 如果是秘境，可能需要在名字前加标识
+            let displayName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
+            if (chapterData.type === 'secret' || chapterKey.includes('secret')) {
+                displayName = `【秘境】${displayName}`;
+                chapterBtn.style.borderColor = '#ff4444'; // 可选：给秘境按钮加个红色边框区分
+                chapterBtn.style.color = '#ff4444';
+            }
+            chapterBtn.textContent = `▶ ${displayName}`;
+
             // 章节按钮点击事件：进入该章节的子页面
             chapterBtn.onclick = () => {
                 // 保存当前选中的章节，用于难度解锁判断
                 window.selectedChapter = chapterKey;
                 renderDungeonView(container, chapterKey);
-                toast('未开放，敬请期待')
+                // 【修改】判断是否为秘境副本，进行兼容处理
+                const isSecretDungeon = (chapterData.type === 'secret') || (chapterKey.includes('secret'));
+
+                if (isSecretDungeon) {
+                    // 1. 如果有专门的秘境渲染函数，请取消下面这行的注释并替换函数名
+                    // renderSecretDungeonView(container, chapterKey); 
+                    
+                    // 2. 如果暂时复用普通地下城视图，但需要传递秘境标识
+                    // 假设 renderDungeonView 能处理 chapterData 中的 type 字段
+                    renderDungeonView(container, chapterKey);
+                    
+                    // 3. 如果秘境功能确实尚未实装，保留提示
+                    // toast('秘境副本暂未完全开放，正在开发中...', 'warning');
+                } else {
+                    // 普通章节逻辑
+                    renderDungeonView(container, chapterKey);
+                }
             };
-    
+
             listContainer.appendChild(chapterBtn);
-    
         }
-        // return
     }
     else {
         // 遍历章节
@@ -3236,8 +3264,9 @@ function renderChapterEventList(container, chapterKey) {
     // 修复: 清空容器以防重复渲染
     container.innerHTML = '';
 
+    const SPchapterData = SPeventList[chapterKey];
     const chapterData = eventList[chapterKey];
-    if (!chapterData) return;
+    if (!chapterData&&!SPchapterData) return;
 
     // 获取当前难度
     let currentDifficulty = window.currentDifficulty || 'normal';
@@ -3264,9 +3293,15 @@ function renderChapterEventList(container, chapterKey) {
     headerDiv.appendChild(backBtn);
 
     // 右侧显示章节标题和难度
-    const chapterName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
-    const difficultyName = DIFFICULTY_SCALE[currentDifficulty]?.name || '普通';
     const headerTitle = document.createElement('div');
+    if(SPchapterData){
+        var chapterName = SPchapterData.name||'神秘副本';
+        var difficultyName = '秘境';
+    }
+    else {
+        var chapterName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
+        var difficultyName = DIFFICULTY_SCALE[currentDifficulty]?.name || '普通';
+    }
     headerTitle.textContent = `${chapterName} [${difficultyName}]`;
     headerTitle.style.color = '#ffd700';
     headerTitle.style.fontSize = '15px';
@@ -3291,136 +3326,95 @@ function renderChapterEventList(container, chapterKey) {
     // 模拟玩家通关状态
     const playerProgress = window.playerProgress || {};
 
-    // 生成该章节下的所有子剧本按钮
-    const procedure = chapterData.procedure || [];
-    // 如果 procedure 为空，则遍历 eventPack 的所有 key
-    const eventIds = procedure.length > 0 ? procedure : Object.keys(chapterData.eventPack);
-
-    // 获取难度缩放配置
-    const scale = DIFFICULTY_SCALE[currentDifficulty] || DIFFICULTY_SCALE.normal;
-
-    // 解锁条件检查
-    const chapterNum = parseInt(chapterKey.replace(/\D/g, '')) || 1;
-
-    // 高难度解锁条件：上一章通关 + 当前章通关
-    // 普通难度章节1默认解锁
-    // 噩梦章节N解锁：普通章节N-1通关 AND 普通章节N通关
-    // 地狱章节N解锁：噩梦章节N-1通关 AND 噩梦章节N通关
-    let difficultyUnlocked = true; // 普通难度默认解锁
-
-    if (currentDifficulty === 'nightmare') {
-        // 噩梦难度：需要上一章噩梦通关 + 当前章普通通关
-        const normalLastEvent = `c${chapterNum}-10`;
-        const prevNightmareLastEvent = `c${chapterNum - 1}-10_nightmare`;
-        const prevChapterCompleted = chapterNum === 1 || !!window.playerProgress?.[prevNightmareLastEvent];
-        difficultyUnlocked = prevChapterCompleted && !!window.playerProgress?.[normalLastEvent];
-    } else if (currentDifficulty === 'hell') {
-        // 地狱难度：需要上一章地狱通关 + 当前章噩梦通关
-        const nightmareLastEvent = `c${chapterNum}-10_nightmare`;
-        const prevHellLastEvent = `c${chapterNum - 1}-10_hell`;
-        const prevChapterCompleted = chapterNum === 1 || !!window.playerProgress?.[prevHellLastEvent];
-        difficultyUnlocked = prevChapterCompleted && !!window.playerProgress?.[nightmareLastEvent];
-    }
-
-    // 第一个事件是否解锁（难度已解锁时，第一个事件才解锁）
-    let firstEventUnlocked = difficultyUnlocked;
-    let prevEventCompleted = false; // 前一个事件是否完成，初始为false
-
-    eventIds.forEach((eventId, index) => {
-        // 根据难度获取事件数据
-        let event = chapterData.eventPack[eventId];
-
-        // 如果是噩梦/地狱难度，尝试获取对应难度的事件
-        if (currentDifficulty !== 'normal') {
-            const diffEventId = eventId + '_' + currentDifficulty;
-            if (chapterData.eventPack[diffEventId]) {
-                event = chapterData.eventPack[diffEventId];
-            } else {
-                // 如果没有噩梦/地狱难度的事件，则使用普通难度事件但应用缩放
-                // 克隆事件以避免修改原始数据
-                event = JSON.parse(JSON.stringify(chapterData.eventPack[eventId]));
-                // 应用难度缩放
-                event.enemy = event.enemy.map(e => {
-                    if (e && e.id) {
-                        return {
-                            ...e,
-                            hp: Math.floor(e.hp * scale.hp),
-                            atk: Math.floor(e.atk * scale.atk),
-                            def: Math.floor(e.def * scale.def)
-                        };
-                    }
-                    return e;
-                });
+    if (SPchapterData) {
+        // SPchapterData 即为当前的秘境系列数据 (如 spEvent1 或 spEvent2)
+        const procedure = SPchapterData.procedure || [];
+        const eventPack = SPchapterData.eventPack || {};
+        
+        // 如果 procedure 为空，则尝试从 eventPack 获取所有 key 并排序（假设 key 有规律）
+        let eventIds = procedure;
+        if (eventIds.length === 0 && Object.keys(eventPack).length > 0) {
+            eventIds = Object.keys(eventPack).sort();
+        }
+    
+        // 遍历该秘境系列下的所有关卡
+        eventIds.forEach((eventId, index) => {
+            const eventData = eventPack[eventId];
+            if (!eventData) return;
+    
+            // 1. 判断解锁状态
+            // 规则：
+            // a. 如果是第一关 (index === 0) 且 prev 为 null 或不存在，默认解锁（或者检查全局变量）
+            // b. 如果有 prev，检查 prev 对应的关卡是否已通过 (假设有一个函数 isLevelPassed 或检查存档)
+            //    由于上下文未提供 isLevelPassed，这里假设 window.passedLevels 是一个包含已通关ID的数组
+            //    如果没有 passedLevels，暂时默认为解锁，或者根据 prev 是否存在做简单判断
+            
+            let isLocked = false;
+            let lockReason = '';
+    
+            if (eventData.prev) {
+                // 检查前置关卡是否通过
+                // 注意：prev 可能是 'sp1-1' 这样的字符串，需要在整个 SPeventList 中查找其状态
+                // 假设我们有一个辅助函数 checkLevelStatus(prevId) 返回 boolean
+                // 这里模拟逻辑：如果 prev 存在，且不在已通关列表中，则锁定
+                var passed = Object.keys(window.playerProgress);
+                const prevPassed = passed && passed.includes(eventData.prev);
+                
+                // 特殊处理：如果 prev 指向的是另一个系列的关卡，也需要检查那个系列的状态
+                if (!prevPassed) {
+                    isLocked = true;
+                    lockReason = `需先通过【${getEventName(eventData.prev)}】`;
+                }
+            } else if (index > 0) {
+                // 如果没有显式 prev，但也不是第一关，通常隐含前置是上一关
+                const prevId = eventIds[index - 1];
+                const prevPassed =  prevPassed&& prevPassed.includes(prevId);
+                if (!prevPassed) {
+                    isLocked = true;
+                    lockReason = `需先通过上一关`;
+                }
             }
-        }
-
-        if (!event) return;
-
-        // 如果难度未解锁，则隐藏所有事件
-        if (!difficultyUnlocked) {
-            return; // 难度未解锁，隐藏所有事件
-        }
-
-        // 所有难度：事件需要逐个解锁才能显示
-        let canShow = index === 0 || prevEventCompleted;
-
-        if (!canShow) {
-            return; // 跳过当前及后续事件
-        }
-
-        // 高难度解锁逻辑：第一个事件难度解锁即解锁，后续根据当前难度进度
-        let isUnlocked = false;
-
-        if (currentDifficulty === 'normal') {
-            // 普通难度：根据前驱事件判断
-            const prevEventId = event.prev;
-            isUnlocked = !prevEventId || !!playerProgress[prevEventId];
-        } else {
-            // 高难度：第一个事件难度解锁即解锁，后续根据前一个事件完成状态
-            if (index === 0) {
-                isUnlocked = firstEventUnlocked;
+    
+            // 2. 创建按钮
+            const levelBtn = document.createElement('button');
+            levelBtn.className = 'ybrpg-btn';
+            levelBtn.style.width = '95%';
+            levelBtn.style.marginBottom = '5px';
+            
+            // 样式区分：锁定状态
+            if (isLocked) {
+                levelBtn.style.opacity = '0.6';
+                levelBtn.style.cursor = 'not-allowed';
+                levelBtn.textContent = `🔒 ${eventData.name} (${lockReason})`;
             } else {
-                // 检查前一个事件在该难度下是否完成（始终使用带难度后缀的ID）
-                const prevEventId = eventIds[index - 1] + '_' + currentDifficulty;
-                isUnlocked = !!playerProgress[prevEventId];
+                levelBtn.textContent = `▶ ${eventData.name}`;
+                // 可选：如果是Boss关或特殊关，加高亮
+                if (eventData.type === 'boss') {
+                    levelBtn.style.borderColor = '#ff4444';
+                    levelBtn.style.color = '#ff4444';
+                }
             }
-        }
-
-        // 根据难度调整当前事件的完成状态检查
-        // 高难度下始终使用带难度后缀的ID检查进度，避免与普通难度进度混淆
-        let checkEventId = eventId;
-        if (currentDifficulty !== 'normal') {
-            checkEventId = eventId + '_' + currentDifficulty;
-        }
-        const currentEventCompleted = !!playerProgress[checkEventId];
-
-        const levelBtn = document.createElement('button');
-        levelBtn.className = 'ybrpg-btn';
-        levelBtn.style.width = '90%';
-        levelBtn.style.fontSize = '14px';
-        levelBtn.style.padding = '8px';
-        levelBtn.textContent = `${event.name}`;
-
-        if (!isUnlocked) {
-            levelBtn.disabled = true;
-            levelBtn.style.opacity = '0.5';
-            levelBtn.style.cursor = 'not-allowed';
-            levelBtn.textContent += ' [未解锁]';
-        } else {
+    
+            // 3. 点击事件
             levelBtn.onclick = () => {
+                if (isLocked) {
+                    toast(lockReason, 'warning');
+                    return;
+                }
+                let event = SPchapterData.eventPack[eventId];
+                let checkEventId = eventId;
                 console.log(`进入副本: ${event.name}, ID: ${checkEventId}, 难度: ${currentDifficulty}`);
-
-                // 确保宝物装备数据已同步
+                // 保存当前选择的秘境关卡ID
+                window.selectedSecretLevel = eventId;
+                window.currentSecretEvent = eventData; // 缓存当前事件数据
+                
                 syncTreasureEquipData();
-
-                // 修改：使用新的辅助函数构建队伍数据
+                
                 const playerTeam = buildPlayerTeamForBattle();
                 console.log(playerTeam)
-                // 补齐6个位置
                 while (playerTeam.length < 6) {
                     playerTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
                 }
-
                 const enemyTeam = (event.enemy || []).map(e => {
                     if (!e || !e.id) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
                     const base = characterList[e.id] || {};
@@ -3436,20 +3430,18 @@ function renderChapterEventList(container, chapterKey) {
                         treasures: e.treasures || [],
                     };
                 });
-
-                // 补齐6个位置
                 while (enemyTeam.length < 6) {
                     enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
                 }
+                
                 for (var i in enemyTeam) {
-                    if (DIFFICULTY_SCALE[currentDifficulty]?.treasures?.length > 0) {
-                        for (var j in DIFFICULTY_SCALE[currentDifficulty].treasures) {
-                            enemyTeam[i].treasures.push(DIFFICULTY_SCALE[currentDifficulty].treasures[j]);
-                        }
-                    }
+                    // if (DIFFICULTY_SCALE[currentDifficulty]?.treasures?.length > 0) {
+                    //     for (var j in DIFFICULTY_SCALE[currentDifficulty].treasures) {
+                    //         enemyTeam[i].treasures.push(DIFFICULTY_SCALE[currentDifficulty].treasures[j]);
+                    //     }
+                    // }
+                    //////敌人的公式化加强
                 }
-
-                // 启动战斗
                 startBattle(playerTeam, enemyTeam, {
                     difficulty: currentDifficulty,
                     eventId: checkEventId,
@@ -3460,14 +3452,14 @@ function renderChapterEventList(container, chapterKey) {
                         if (!window.playerProgress) window.playerProgress = {};
                         if (!window.playerProgress[checkEventId]) {
                             window.playerProgress[checkEventId] = true;
-                            levelUpMainCharacter();
+                            breakthroughMainCharacter();
                         }
                         // 战斗胜利金币奖励
-                        const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
+                        // const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
                         const isBoss = event.type === 'boss';
-                        const baseGold = 50 + enemyCount * 30;
-                        const goldScale = DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0;
-                        const goldReward = Math.floor((isBoss ? baseGold * 2 : baseGold) * goldScale);
+                        const baseGold = event.glod||300;
+                        const goldScale = baseGold;
+                        const goldReward = Math.floor(goldScale);
                         window.gameGold = (window.gameGold || 0) + goldReward;
                         // 事件完成后自动存档
                         SaveManager.autoSave();
@@ -3490,18 +3482,256 @@ function renderChapterEventList(container, chapterKey) {
                         }
                     }
                 });
+                // // 进入战斗或子页面
+                // // 假设 renderDungeonView 或 startBattle 能处理秘境数据
+                // // 这里调用通用的入口，传入 eventId 和 数据来源标记 'secret'
+                // if (typeof renderDungeonView === 'function') {
+                //      // 如果 renderDungeonView 支持直接传入 eventId 查找数据
+                //      renderDungeonView(container, eventId, 'secret');
+                // } else {
+                //      toast('正在进入秘境...', 'info');
+                //      // TODO: 调用具体的秘境战斗初始化函数
+                //      // startSecretBattle(eventData);
+                // }
             };
+    
+            listContainer.appendChild(levelBtn);
+        });
+        container.appendChild(listContainer);
+    }
+    else{
+        // 生成该章节下的所有子剧本按钮
+        const procedure = chapterData.procedure || [];
+        // 如果 procedure 为空，则遍历 eventPack 的所有 key
+        const eventIds = procedure.length > 0 ? procedure : Object.keys(chapterData.eventPack);
+    
+        // 获取难度缩放配置
+        const scale = DIFFICULTY_SCALE[currentDifficulty] || DIFFICULTY_SCALE.normal;
+    
+        // 解锁条件检查
+        const chapterNum = parseInt(chapterKey.replace(/\D/g, '')) || 1;
+        console.log('chapterNum:', chapterNum);
+        // 高难度解锁条件：上一章通关 + 当前章通关
+        // 普通难度章节1默认解锁
+        // 噩梦章节N解锁：普通章节N-1通关 AND 普通章节N通关
+        // 地狱章节N解锁：噩梦章节N-1通关 AND 噩梦章节N通关
+        let difficultyUnlocked = true; // 普通难度默认解锁
+    
+        if (currentDifficulty === 'nightmare') {
+            // 噩梦难度：需要上一章噩梦通关 + 当前章普通通关
+            const normalLastEvent = `c${chapterNum}-10`;
+            const prevNightmareLastEvent = `c${chapterNum - 1}-10_nightmare`;
+            const prevChapterCompleted = chapterNum === 1 || !!window.playerProgress?.[prevNightmareLastEvent];
+            difficultyUnlocked = prevChapterCompleted && !!window.playerProgress?.[normalLastEvent];
+        } else if (currentDifficulty === 'hell') {
+            // 地狱难度：需要上一章地狱通关 + 当前章噩梦通关
+            const nightmareLastEvent = `c${chapterNum}-10_nightmare`;
+            const prevHellLastEvent = `c${chapterNum - 1}-10_hell`;
+            const prevChapterCompleted = chapterNum === 1 || !!window.playerProgress?.[prevHellLastEvent];
+            difficultyUnlocked = prevChapterCompleted && !!window.playerProgress?.[nightmareLastEvent];
         }
-        listContainer.appendChild(levelBtn);
+    
+        // 第一个事件是否解锁（难度已解锁时，第一个事件才解锁）
+        let firstEventUnlocked = difficultyUnlocked;
+        let prevEventCompleted = false; // 前一个事件是否完成，初始为false
+    
+        eventIds.forEach((eventId, index) => {
+            // 根据难度获取事件数据
+            let event = chapterData.eventPack[eventId];
+    
+            // 如果是噩梦/地狱难度，尝试获取对应难度的事件
+            if (currentDifficulty !== 'normal') {
+                const diffEventId = eventId + '_' + currentDifficulty;
+                if (chapterData.eventPack[diffEventId]) {
+                    event = chapterData.eventPack[diffEventId];
+                } else {
+                    // 如果没有噩梦/地狱难度的事件，则使用普通难度事件但应用缩放
+                    // 克隆事件以避免修改原始数据
+                    event = JSON.parse(JSON.stringify(chapterData.eventPack[eventId]));
+                    // 应用难度缩放
+                    event.enemy = event.enemy.map(e => {
+                        if (e && e.id) {
+                            return {
+                                ...e,
+                                hp: Math.floor(e.hp * scale.hp),
+                                atk: Math.floor(e.atk * scale.atk),
+                                def: Math.floor(e.def * scale.def)
+                            };
+                        }
+                        return e;
+                    });
+                }
+            }
+    
+            if (!event) return;
+    
+            // 如果难度未解锁，则隐藏所有事件
+            if (!difficultyUnlocked) {
+                return; // 难度未解锁，隐藏所有事件
+            }
+    
+            // 所有难度：事件需要逐个解锁才能显示
+            let canShow = index === 0 || prevEventCompleted;
+    
+            if (!canShow) {
+                return; // 跳过当前及后续事件
+            }
+    
+            // 高难度解锁逻辑：第一个事件难度解锁即解锁，后续根据当前难度进度
+            let isUnlocked = false;
+    
+            if (currentDifficulty === 'normal') {
+                // 普通难度：根据前驱事件判断
+                const prevEventId = event.prev;
+                isUnlocked = !prevEventId || !!playerProgress[prevEventId];
+            } else {
+                // 高难度：第一个事件难度解锁即解锁，后续根据前一个事件完成状态
+                if (index === 0) {
+                    isUnlocked = firstEventUnlocked;
+                } else {
+                    // 检查前一个事件在该难度下是否完成（始终使用带难度后缀的ID）
+                    const prevEventId = eventIds[index - 1] + '_' + currentDifficulty;
+                    isUnlocked = !!playerProgress[prevEventId];
+                }
+            }
+    
+            // 根据难度调整当前事件的完成状态检查
+            // 高难度下始终使用带难度后缀的ID检查进度，避免与普通难度进度混淆
+            let checkEventId = eventId;
+            if (currentDifficulty !== 'normal') {
+                checkEventId = eventId + '_' + currentDifficulty;
+            }
+            const currentEventCompleted = !!playerProgress[checkEventId];
+    
+            const levelBtn = document.createElement('button');
+            levelBtn.className = 'ybrpg-btn';
+            levelBtn.style.width = '90%';
+            levelBtn.style.fontSize = '14px';
+            levelBtn.style.padding = '8px';
+            levelBtn.textContent = `${event.name}`;
+    
+            if (!isUnlocked) {
+                levelBtn.disabled = true;
+                levelBtn.style.opacity = '0.5';
+                levelBtn.style.cursor = 'not-allowed';
+                levelBtn.textContent += ' [未解锁]';
+            } else {
+                levelBtn.onclick = () => {
+                    console.log(`进入副本: ${event.name}, ID: ${checkEventId}, 难度: ${currentDifficulty}`);
+    
+                    // 确保宝物装备数据已同步
+                    syncTreasureEquipData();
+    
+                    // 修改：使用新的辅助函数构建队伍数据
+                    const playerTeam = buildPlayerTeamForBattle();
+                    console.log(playerTeam)
+                    // 补齐6个位置
+                    while (playerTeam.length < 6) {
+                        playerTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
+                    }
+    
+                    const enemyTeam = (event.enemy || []).map(e => {
+                        if (!e || !e.id) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
+                        const base = characterList[e.id] || {};
+                        return {
+                            id: e.id,
+                            name: e.name || base.name || e.id,
+                            hp: e.hp || 0,
+                            atk: e.atk || 0,
+                            def: e.def || 0,
+                            spe: e.spe || 0,
+                            skills: base.skills || [],
+                            buff: e.buff || [],
+                            treasures: e.treasures || [],
+                        };
+                    });
+    
+                    // 补齐6个位置
+                    while (enemyTeam.length < 6) {
+                        enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
+                    }
+                    for (var i in enemyTeam) {
+                        if (DIFFICULTY_SCALE[currentDifficulty]?.treasures?.length > 0) {
+                            for (var j in DIFFICULTY_SCALE[currentDifficulty].treasures) {
+                                enemyTeam[i].treasures.push(DIFFICULTY_SCALE[currentDifficulty].treasures[j]);
+                            }
+                        }
+                    }
+    
+                    // 启动战斗
+                    startBattle(playerTeam, enemyTeam, {
+                        difficulty: currentDifficulty,
+                        eventId: checkEventId,
+                        eventType: event.type || 'battle',
+                        chapterKey: chapterKey,
+                        goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
+                        onWin: () => {
+                            if (!window.playerProgress) window.playerProgress = {};
+                            if (!window.playerProgress[checkEventId]) {
+                                window.playerProgress[checkEventId] = true;
+                                levelUpMainCharacter();
+                            }
+                            // 战斗胜利金币奖励
+                            const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
+                            const isBoss = event.type === 'boss';
+                            const baseGold = 50 + enemyCount * 30;
+                            const goldScale = DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0;
+                            const goldReward = Math.floor((isBoss ? baseGold * 2 : baseGold) * goldScale);
+                            window.gameGold = (window.gameGold || 0) + goldReward;
+                            // 事件完成后自动存档
+                            SaveManager.autoSave();
+                            toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
+                            // 重新渲染副本视图
+                            const dungeonView = document.getElementById('dungeon-view');
+                            if (dungeonView) {
+                                hideOtherViews('dungeon-view');
+                                dungeonView.style.display = 'flex';
+                                renderDungeonView(dungeonView, chapterKey);
+                            }
+                        },
+                        onLose: () => {
+                            toast(`挑战失败: ${event.name}`, 'warning');
+                            const dungeonView = document.getElementById('dungeon-view');
+                            if (dungeonView) {
+                                hideOtherViews('dungeon-view');
+                                dungeonView.style.display = 'flex';
+                                renderDungeonView(dungeonView, chapterKey);
+                            }
+                        }
+                    });
+                };
+            }
+            listContainer.appendChild(levelBtn);
+    
+            // 更新 prevEventCompleted 供下一次循环使用
+            // 只有当前事件已完成，下一个事件才会显示
+            prevEventCompleted = currentEventCompleted;
+        });
+    
+        container.appendChild(listContainer);
 
-        // 更新 prevEventCompleted 供下一次循环使用
-        // 只有当前事件已完成，下一个事件才会显示
-        prevEventCompleted = currentEventCompleted;
-    });
-
-    container.appendChild(listContainer);
+    }
 }
-
+// 辅助函数：根据ID获取关卡名称（用于提示）
+function getEventName(id) {
+    // 在 SPeventList 中查找
+    for (const key in SPeventList) {
+        const pack = SPeventList[key].eventPack;
+        if (pack && pack[id]) {
+            return pack[id].name;
+        }
+    }
+    // 如果在主线的 eventList 中查找（如果 prev 跨了主线）
+    if (window.eventList) {
+        for (const key in window.eventList) {
+            const pack = window.eventList[key].eventPack;
+            if (pack && pack[id]) {
+                return pack[id].name;
+            }
+        }
+    }
+    return id;
+}
 
 // 新增: 渲染商店视图
 // 商店数据：存储在 window.shopData 中
@@ -5901,9 +6131,9 @@ function getRankLabel(rank) {
 function getBreakthroughInfo(character, currentBreakthrough) {
     // 1. 定义品质列表 (顺序从低到高)
     const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
-
+    let tupoxxxx = character.tupolevel || currentBreakthrough||0;
     // 如果已满级
-    if (currentBreakthrough >= 20) {
+    if (tupoxxxx >= 20) {
         return { cost: 0, needPromotion: false, nextRank: null, maxed: true, promotionTarget: null };
     }
 
@@ -5923,11 +6153,56 @@ function getBreakthroughInfo(character, currentBreakthrough) {
     // 9-12阶: 目标是进入传说(legend)领域。门槛在12阶满时。
     // 13-16阶: 目标是进入神品(kami)领域。门槛在16阶满时。
     // 17-20阶: 神品内部突破。
-
-    if (currentBreakthrough < 4) {
+    
+    if (tupoxxxx < 4) {
         // 普通突破阶段 1
         cost = 1;
-        // needPromotion = false;
+        if (tupoxxxx === 1) { 
+            const targetRank = 'common';
+            const targetIndex = rankList.indexOf(targetRank);
+            // 门槛 1: 准备进入 5-8 阶段
+            // 目标品质: epicfake (伪史诗)
+            // const targetRank = 'epicfake';
+            // const targetIndex = rankList.indexOf(targetRank);
+    
+            // 如果当前品质低于目标品质，则需要升阶
+            if (currentRankIndex < targetIndex) {
+                // needPromotion = true;
+                nextRank = targetRank;
+                // cost = 1; // 升阶操作本身可能不消耗本体，或者消耗特殊材料，这里暂设0，由UI决定显示
+            }
+        }
+        // 突破等级为2阶时 (即从1阶突破到2阶，或者当前是1阶准备突破)
+        else if (tupoxxxx === 2) {
+            const targetRank = 'rare';
+            const targetIndex = rankList.indexOf(targetRank);
+            // 门槛 1: 准备进入 5-8 阶段
+            // 目标品质: epicfake (伪史诗)
+            // const targetRank = 'epicfake';
+            // const targetIndex = rankList.indexOf(targetRank);
+    
+            // 如果当前品质低于目标品质，则需要升阶
+            if (currentRankIndex < targetIndex) {
+                // needPromotion = true;
+                nextRank = targetRank;
+                // cost = 1; // 升阶操作本身可能不消耗本体，或者消耗特殊材料，这里暂设0，由UI决定显示
+            }
+        }
+        // 【新增】突破时自动提升品质逻辑
+        // 注意：这里假设 currentBreakthrough 是突破前的当前阶数
+        // 如果 currentBreakthrough 代表的是“即将突破到的阶数”，逻辑需要相应调整（通常突破函数传入的是当前状态）
+        
+        // const instData = character;
+        // if (instData) {
+        //     // 突破等级为1阶时 (即从0阶突破到1阶，或者当前是0阶准备突破)
+        //     // 假设 currentBreakthrough 是当前已拥有的突破等级
+            
+        //     // 如果需要更多阶数的品质提升，可以继续添加 else if
+            
+        //     // 【重要】确保存档数据同步更新
+        //     // 如果 gameData 或其他地方有缓存 rank，也需要在那里更新
+        //     // 这里直接修改了 window.charBagData 中的引用对象
+        // }
     }
     else if (currentBreakthrough === 4) {
         // 门槛 1: 准备进入 5-8 阶段
@@ -6116,20 +6391,13 @@ function mergeNoOverwrite(a, b) {
  * 提升主角等级（每通过一个主线章节调用一次）
  */
 function levelUpMainCharacter() {
-    const mainCharId = 'zhujue'; // 确保这里与 initNewGame 中的 ID 一致
-    if (!window.charBagData) return;
-
-    // 1. 找到主角的 Instance ID
-    const mainInstId = Object.keys(window.charBagData).find(id =>
-        window.charBagData[id].charId === mainCharId
-    );
-
-    if (!mainInstId) {
-        console.warn('未找到主角实例，无法升级');
+    const mainChar = getMainCharacterInstance();
+    if (!mainChar) {
+        toast('未找到主角', 'error');
         return;
     }
 
-    const instData = window.charBagData[mainInstId];
+    const instData = mainChar;
     const baseChar = characterList[mainCharId];
 
     if (!baseChar || !instData) return;
@@ -6280,7 +6548,7 @@ function breakthroughCharacterInstance(targetInstId) {
         return { success: false, message: '角色已达到最大突破阶数' };
     }
 
-    const cost = breakInfo.cost;
+    const cost = targetInst.charId=='zhujue'?0:breakInfo.cost;
     const needPromotion = breakInfo.needPromotion;
     const nextRank = breakInfo.nextRank;
 
@@ -6372,5 +6640,128 @@ function breakthroughCharacterInstance(targetInstId) {
         success: true,
         message: `突破成功！当前阶数: ${targetInst.tupolevel}`,
         isPromotion: false
+    };
+}
+
+/**
+ * 主角突破函数
+ */
+function breakthroughMainCharacter() {
+    
+    // const mainChar = getMainCharacterInstance();
+    // if (!mainChar) {
+    //     toast('未找到主角', 'error');
+    //     return;
+    // }
+    // const mainInstId =mainChar;
+    // breakthroughCharacterInstance(mainInstId)
+    // const instData = window.charBagData[mainInstId];
+    // const baseChar = characterList['zhujue'];
+    const mainCharId = 'zhujue'; // 确保这里与 initNewGame 中的 ID 一致
+    if (!window.charBagData) return;
+
+    // 1. 找到主角的 Instance ID
+    const mainInstId = Object.keys(window.charBagData).find(id =>
+        window.charBagData[id].charId === mainCharId
+    );
+
+    if (!mainInstId) {
+        console.warn('未找到主角实例，无法升级');
+        return;
+    }
+    breakthroughCharacterInstance(mainInstId)
+    const instData = window.charBagData[mainInstId];
+    const baseChar = characterList[mainCharId];
+
+    if (!baseChar || !instData) return;
+
+    // 2. 提升等级
+    // const oldLevel = instData.level || 1;
+    // instData.level = oldLevel + 1;
+    // const oldTupoLevel = instData.tupolevel || 0;
+    // instData.tupolevel = oldTupoLevel + 1;
+    // breakthroughCharacterInstance(mainInstId)
+    if (typeof updateCharacterSP === 'function') {
+        // 确保基础字段存在
+        instData.rank = instData.rank || baseChar.rank;
+        instData.template = instData.template || baseChar.template;
+
+        const updatedStats = updateCharacterSP(instData);
+        if (updatedStats) {
+            instData.hp = updatedStats.hp;
+            instData.atk = updatedStats.atk;
+            instData.def = updatedStats.def;
+            instData.spe = updatedStats.spe;
+            instData.maxHp = updatedStats.hp;
+            instData.currentHp = updatedStats.hp; // 升级回满血
+        }
+    } else {
+        // 备用方案：简单线性成长
+        const growthRate = 0.1;
+        instData.hp = Math.floor((instData.hp || baseChar.hp) * (1 + growthRate));
+        instData.atk = Math.floor((instData.atk || baseChar.atk) * (1 + growthRate));
+        instData.def = Math.floor((instData.def || baseChar.def) * (1 + growthRate));
+        instData.spe = Math.floor((instData.spe || baseChar.spe) * (1 + growthRate));
+        instData.maxHp = instData.hp;
+        instData.currentHp = instData.hp;
+    }
+    // 4. 刷新界面
+    refreshAllTeamSlots();
+
+    // 5. 自动保存
+    SaveManager.autoSave();
+}
+/**
+ * 获取主角的完整实例对象
+ * @returns {Object|null} 主角的实例数据对象，如果未找到则返回 null
+ */
+function getMainCharacterInstance() {
+    if (!window.charBagData) return null;
+
+    // 方法1: 如果主角一定在队伍中，可以通过 getMainCharacterSlotIndex 快速定位
+    // 但为了健壮性（防止主角不在队伍中但仍存在于背包），建议直接遍历 charBagData
+    
+    const mainCharId = 'zhujue'; // 确保与 initNewGame 中的定义一致
+    
+    // 查找 charId 为 'zhujue' 的实例 ID
+    const mainInstId = Object.keys(window.charBagData).find(instId => {
+        const inst = window.charBagData[instId];
+        return inst && inst.charId === mainCharId;
+    });
+
+    if (mainInstId && window.charBagData[mainInstId]) {
+        return window.charBagData[mainInstId];
+    }
+
+    return null;
+}
+
+/**
+ * 【便捷函数】获取主角的基础定义数据 (characterList 中的静态数据)
+ * @returns {Object|null} 主角的基础配置对象
+ */
+function getMainCharacterBaseData() {
+    const mainCharId = 'zhujue';
+    if (window.characterList && window.characterList[mainCharId]) {
+        return window.characterList[mainCharId];
+    }
+    return null;
+}
+
+/**
+ * 【便捷函数】获取主角当前的综合数据 (合并基础定义和实例存档)
+ * @returns {Object|null} 合并后的主角数据
+ */
+function getMainCharacterFullData() {
+    const instData = getMainCharacterInstance();
+    const baseData = getMainCharacterBaseData();
+
+    if (!instData || !baseData) return null;
+
+    // 合并数据，实例数据优先（因为包含等级、突破等动态变化）
+    return {
+        ...baseData,
+        ...instData,
+        instanceId: Object.keys(window.charBagData).find(id => window.charBagData[id] === instData) // 附加 instanceId
     };
 }
