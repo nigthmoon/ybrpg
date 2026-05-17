@@ -573,12 +573,20 @@ class GameData {
      * @param {string} toCharId 目标角色ID（换上来的角色）
      */
     transferTreasures(fromCharId, toCharId) {
-        const fromTreasures = this.getCharTreasures(fromCharId);
-        const toTreasures = this.getCharTreasures(toCharId);
-        for (let i = 0; i < fromTreasures.length; i++) {
-            toTreasures[i] = fromTreasures[i];
-            fromTreasures[i] = null;
-        }
+        // const fromTreasures = this.getCharTreasures(fromCharId);
+        // const toTreasures = this.getCharTreasures(toCharId);
+        // for (let i = 0; i < fromTreasures.length; i++) {
+        //     toTreasures[i] = fromTreasures[i];
+        //     fromTreasures[i] = null;
+        // }
+        if(!window.treasureEquipData) window.treasureEquipData = {};
+        var tttt = window.treasureEquipData[toCharId]||[null, null, null, null, null, null]
+        window.treasureEquipData[toCharId]= window.treasureEquipData[fromCharId];
+        window.treasureEquipData[fromCharId]= tttt;
+        // for (let i = 0; i < fromTreasures.length; i++) {
+        //     toTreasures[i] = fromTreasures[i];
+        //     fromTreasures[i] = null;
+        // }
         console.log(`[Treasure] ${fromCharId} 的宝物已转移给 ${toCharId}`);
     }
 

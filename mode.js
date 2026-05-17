@@ -6398,7 +6398,7 @@ function levelUpMainCharacter() {
     }
 
     const instData = mainChar;
-    const baseChar = characterList[mainCharId];
+    const baseChar = characterList['zhujue'];
 
     if (!baseChar || !instData) return;
 

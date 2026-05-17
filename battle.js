@@ -863,7 +863,7 @@ function aiSelectTargets(actor, skillData, enemySide, friendlySide) {
     if (candidates.length === 0) return [];
 
     // 3. 调用通用解析器
-    return resolveSkillTargets(skillData, actor, targetSide);
+    return resolveSkillTargets(skillData, actor, targetSide,{isRecover});
 }
 // ====== executeAITurn & executePlayerTurn ======
 /**
@@ -894,7 +894,7 @@ function executeAITurn(actor) {
  * @param {string} intendedSide - 'player' | 'enemy' (由技能是否治疗决定)
  * @returns {Array} 目标单位数组
  */
-function resolveSkillTargets(skillData, actor, intendedSide) {
+function resolveSkillTargets(skillData, actor, intendedSide,ooo) {
     if (!skillData || !skillData.target) return [];
     
     const mode = skillData.target[0];      // e.g., 'one', 'manual_multi', 'exclude_self', 'row', 'column'
@@ -920,7 +920,7 @@ function resolveSkillTargets(skillData, actor, intendedSide) {
         case 'one':
         case 'exclude_self':
             // 单体选择：使用加权评分系统
-            return [selectBestSingleTarget(candidates, pref, actor)];
+            return [selectBestSingleTarget(candidates, pref, actor,ooo)];
 
         case 'manual_multi':
             // 随机选择 N 个不同目标
@@ -1132,12 +1132,18 @@ function selectBestSingleTarget(candidates, pref, actor, options = {}) {
                 if(pref !== 'last' && targetRow === 0) {
                     score += 120; // 优先打前排对位
                 }
+                else if(targetRow==1){
+                	score+=120
+                }
             } 
             // 次选：相邻列
             else if (Math.abs(targetVisualCol - actorVisualCol) === 1) {
                 score += 5;
                 if(pref !== 'last' && targetRow === 0) {
                     score += 120;
+                }
+                else if(targetRow==1){
+                	score+=120
                 }
             }
         }
