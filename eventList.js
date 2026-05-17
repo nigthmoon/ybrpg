@@ -401,8 +401,12 @@ const eventList = {//事件列表
                 text: '在记忆的深处，你遇见了她...',
                 prev: null,
                 enemy: [
-                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-                    {}, {}, {}, {}, {}
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
                 ],
             },
             'c1-2': {
@@ -412,8 +416,12 @@ const eventList = {//事件列表
                 text: '她的剑术凌厉无比...',
                 prev: 'c1-1',
                 enemy: [
-                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-                    {}, {}, {}, {}, {}
+                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
+                    { name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
                 ],
             },
             'c1-3': {

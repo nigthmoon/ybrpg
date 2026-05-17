@@ -3293,7 +3293,9 @@ function buildPlayerTeamForBattle() {
             spe: instData.spe || (base ? base.spe : 0),
             skills: base ? base.skills : [],
             buff: instData.buff || [],
-            treasures: treasures,                    // 宝物数组，用于战斗内时点触发
+            treasures: treasures,     
+            tupolevel: instData.tupolevel || 0, 
+            tupoList: instData.tupoList || (base ? base.tupoList : []),        // 宝物数组，用于战斗内时点触发
         };
     });
 }
@@ -3503,6 +3505,8 @@ function renderChapterEventList(container, chapterKey) {
                     eventId: checkEventId,
                     eventType: event.type || 'battle',
                     chapterKey: chapterKey,
+                    // 【新增】传递事件配置的金币奖励
+                    goldReward: event.gold || 0, 
                     goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
                     onWin: () => {
                         if (!window.playerProgress) window.playerProgress = {};
@@ -3688,12 +3692,16 @@ function renderChapterEventList(container, chapterKey) {
                             skills: base.skills || [],
                             buff: e.buff || [],
                             treasures: e.treasures || [],
+                            tupolevel: e.tupolevel || 0, 
+                            tupoList: e.tupoList || [],     
                         };
                     });
-    
+                    // for(k of cards.filter(c=>!upe.includes(c))){
+                    //     if(cardTrue(k).num==num-1){}
+                    // }
                     // 补齐6个位置
                     while (enemyTeam.length < 6) {
-                        enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
+                        enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [],tupolevel: 0,tupoList: [], });
                     }
                     for (var i in enemyTeam) {
                         if (DIFFICULTY_SCALE[currentDifficulty]?.treasures?.length > 0) {
@@ -3709,6 +3717,8 @@ function renderChapterEventList(container, chapterKey) {
                         eventId: checkEventId,
                         eventType: event.type || 'battle',
                         chapterKey: chapterKey,
+                        // 【新增】传递事件配置的金币奖励
+                        goldReward: event.gold || 0, 
                         goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
                         onWin: () => {
                             if (!window.playerProgress) window.playerProgress = {};
@@ -6702,3 +6712,188 @@ function getMainCharacterFullData() {
         instanceId: Object.keys(window.charBagData).find(id => window.charBagData[id] === instData) // 附加 instanceId
     };
 }
+
+/**
+ * 同步指定角色实例的突破列表数据
+ * @param {string} instanceId - 角色实例ID
+ * @returns {boolean} - 是否成功同步
+ */
+function syncInstanceTupoList(instanceId) {
+    // 1. 校验输入和全局数据
+    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+        console.warn(`[同步突破] 实例 ${instanceId} 不存在`);
+        return false;
+    }
+
+    const instData = window.charBagData[instanceId];
+    const charId = instData.charId || instanceId;
+
+    // 2. 从角色库获取最新定义
+    const baseChar = characterList[charId];
+    if (!baseChar) {
+        console.warn(`[同步突破] 角色库中找不到基础角色 ${charId}`);
+        return false;
+    }
+
+    // 3. 获取最新的突破列表
+    // 假设突破列表存储在 baseChar.tupoList 中
+    // 如果角色库中没有定义 tupoList，则使用空数组或默认模板
+    const newTupoList = baseChar.tupoList || [];
+
+    // 4. 判断是否需要更新
+    // 如果实例中完全没有 tupoList，或者我们强制每次进入战斗前都刷新（防止角色库修改后存档没变）
+    // 这里建议：只要角色库有定义，就覆盖存档中的旧定义，确保逻辑一致
+    if (newTupoList.length > 0) {
+        // 【关键】深拷贝，防止引用指向同一对象导致意外修改
+        instData.tupoList = JSON.parse(JSON.stringify(newTupoList));
+        
+        // 如果实例中没有记录当前突破等级，初始化为 0
+        if (instData.tupolevel === undefined || instData.tupolevel === null) {
+            instData.tupolevel = 0;
+        }
+        
+        // 确保突破等级不超过列表长度-1
+        if (instData.tupolevel >= newTupoList.length) {
+            instData.tupolevel = newTupoList.length - 1;
+        }
+
+        console.log(`[同步突破] 角色 ${baseChar.name} (${instanceId}) 已同步最新突破列表，共 ${newTupoList.length} 阶`);
+        return true;
+    } else {
+        // 如果新定义也没有突破列表，清空旧的，避免报错
+        instData.tupoList = [];
+        return true;
+    }
+}
+
+/**
+ * 批量同步当前队伍中所有角色的突破列表
+ * 建议在进入战斗前、打开角色详情时调用
+ */
+function syncTeamTupoLists() {
+    if (!window.currentTeam) return;
+    
+    let syncedCount = 0;
+    window.currentTeam.forEach(instId => {
+        if (instId && window.charBagData[instId]) {
+            if (syncInstanceTupoList(instId)) {
+                syncedCount++;
+            }
+        }
+    });
+    
+    if (syncedCount > 0) {
+        console.log(`[同步突破] 共同步了 ${syncedCount} 个队伍角色的突破数据`);
+        // 可选：自动保存
+        // SaveManager.autoSave(); 
+    }
+}
+/**
+ * 
+ * 1  初始化时攻击+100固定数值
+ * 2  初始能量+1
+ * 3  初始化时防御+50固定数值
+ * 4  初始能量+1
+ * 5  初始化时血量+200固定数值
+ * 6  角色专有突破buff---------------------
+ * 7  初始化时获得10%的攻防血加成（百分比加成在固定数值之后，多个生效的百分比加算）
+ * 8  初始能量+1
+ * 9  角色专属buff-------------------------
+ * 10 初始化时全队获得攻击+200固定数值
+ * 11 角色专属buff-------------------------
+ * 12 初始能量+1
+ * 13 初始化时全队获得防御+100固定数值
+ * 14 专属buff-------------------------
+ * 15 初始化时全队获得血量+300固定数值
+ * 16 初始能量+1
+ * 17 专属buff-------------------------
+ * 18 初始化时全队获得10%的攻防血加成（百分比加成在固定数值之后，多个生效的百分比加算）
+ * 19 专属buff-------------------------
+ * 20 初始能量+1
+ * 
+ * 
+ * buff库持续更新
+ * [
+ * （多个增伤或减伤加算）增伤减伤按照最终伤害乘算
+ * 
+ * 获得10%增伤
+ * 获得20%增伤
+ * 获得30%增伤
+ * 获得10%减伤
+ * 获得20%减伤
+ * 获得30%减伤
+ * 普攻后吸血50%
+ * 普攻后吸血75%
+ * 普攻后吸血100%
+ * 亡语，每局游戏限一次，恢复生命值至攻击力*100%
+ * 亡语，令所有敌人降低能量2
+ * 亡语，令所有敌人降低能量全部
+ * 亡语，令所有队友恢复生命为自身攻击力*100%
+ * 亡语，令所有队友恢复2能量
+ * 亡语，对所有敌人造成攻击力*100%真实伤害
+ * 普攻时，无视对方50%防御力（伤害系专属）
+ * 普攻时，无视对方80%防御力（伤害系专属）
+ * 普攻时，无视对方全部防御力（伤害系专属）
+ * 技能时，无视对方50%防御力（伤害系专属）
+ * 技能时，无视对方80%防御力（伤害系专属）
+ * 技能时，无视对方全部防御力（伤害系专属）
+ * 所有伤害无视对方30%防御力（伤害系专属）
+ * 所有伤害无视对方60%防御力（伤害系专属）
+ * 所有伤害无视对方全部防御力（伤害系专属）
+ * （原则上每名角色至多配置一个无视防御力的效果，如果凑巧出现多个，同类型只生效数值最大的，不同类型则加算）
+ * （如，普攻无视50%，所有无视30%，那么就是普攻无视80%）
+ * 使用技能后，30%几率封印目标一回合（伤害系专属）
+ * 使用技能后，60%几率封印目标一回合（伤害系专属）
+ * 使用技能后，100%几率封印目标一回合（伤害系专属）
+ * 使用技能后，20%几率减少目标1能量（伤害系专属）
+ * 使用技能后，50%几率减少目标1能量（伤害系专属）
+ * 使用技能后，80%几率减少目标1能量（伤害系专属）
+ * 使用技能后，20%几率减少目标2能量（伤害系专属）
+ * 使用技能后，50%几率减少目标2能量（伤害系专属）
+ * 普攻时，20%几率令目标降低1能量（伤害系专属）
+ * 普攻时，50%几率令目标降低1能量（伤害系专属）
+ * 普攻时，80%几率令目标降低1能量（伤害系专属）
+ * 普攻时，20%几率令目标眩晕1回合（伤害系专属）
+ * 普攻时，50%几率令目标眩晕1回合（伤害系专属）
+ * 使用技能后，20%几率令目标眩晕1回合（伤害系专属）
+ * 使用技能后，50%几率令目标眩晕1回合（伤害系专属）
+ * 普攻时，20%几率令目标永久中毒，系数为攻击力5%（可叠加）（伤害系专属）
+ * 普攻时，50%几率令目标永久中毒，系数为攻击力5%（可叠加）（伤害系专属）
+ * 普攻时，100%几率令目标永久中毒，系数为攻击力5%（可叠加）（伤害系专属）
+ * 使用技能后，20%几率令目标永久中毒，系数为攻击力10%（可叠加）（伤害系专属）
+ * 使用技能后，50%几率令目标永久中毒，系数为攻击力10%（可叠加）（伤害系专属）
+ * 使用技能后，110%几率令目标永久中毒，系数为攻击力10%（可叠加）（伤害系专属）
+ * （概念解释：中毒，每次行动结束后，失去当前毒素的生命力，因此死亡不触发亡语）
+ * 进入战斗的首次普攻或技能伤害增加50%
+ * 进入战斗的首次受到普攻或技能伤害减少75%
+ * 受到普攻或技能伤害，50%几率令全体队友增加1能量
+ * 受到普攻或技能伤害时，25%几率减少来源1能量
+ * 受到普攻或技能伤害时，50%几率减少来源1能量
+ * 受到普攻或技能伤害时，自身增加1能量
+ * 受到普攻或技能伤害时，10%几率令目标眩晕1回合
+ * 受到普攻或技能伤害时，20%几率令目标眩晕1回合
+ * 受到普攻或技能伤害时，20%几率令来源中毒，系数为攻击力5%（可叠加）
+ * 受到普攻或技能伤害时，50%几率令来源中毒，系数为攻击力5%（可叠加）
+ * 受到普攻或技能伤害时，100%几率令来源中毒，系数为攻击力5%（可叠加）
+ * 普攻时，25%增加全队1能量
+ * 普攻时，令能量最低的一名队友增加1能量
+ * 治疗量增加10%（治疗系专属）
+ * 治疗量增加25%（治疗系专属）
+ * 治疗量增加50%（治疗系专属）
+ * 普攻时，令被治疗目标增加1能量（治疗系专属）
+ * 技能时，令被治疗目标增加1能量（治疗系专属）
+ * 技能时，令被治疗目标增加1能量（治疗系专属）
+ * 技能时，解除被治疗目标的负面效果（包括封印，眩晕，中毒等）（治疗系专属）
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * ]
+ */

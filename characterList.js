@@ -11,7 +11,155 @@ const characterList = {
 		rank: "common",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 (角色专有突破buff - 示例：无视防御)
+			{
+				level: 5,
+				type: 'passive_effect',
+				effectId: 'ignore_def_pugong_50', // 引用上方库
+				desc: '【专属】普攻时，无视对方50%防御力'
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8 (角色专属buff - 示例：增伤)
+			{
+				level: 8,
+				type: 'passive_effect',
+				effectId: 'dmg_up_10',
+				desc: '【专属】获得10%增伤'
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 (角色专属buff - 示例：吸血)
+			{
+				level: 10,
+				type: 'passive_effect',
+				effectId: 'lifesteal_pugong_50',
+				desc: '【专属】普攻后吸血50%'
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 (专属buff - 示例：减伤)
+			{
+				level: 13,
+				type: 'passive_effect',
+				effectId: 'dmg_reduce_10',
+				desc: '【专属】获得10%减伤'
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 (专属buff - 示例：首击特效)
+			{
+				level: 16,
+				type: 'passive_effect',
+				effectId: 'first_hit_dmg_up_50',
+				desc: '【专属】进入战斗的首次普攻或技能伤害增加50%'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时全队获得10%的攻防血加成'
+			},
+			// Level 18 (专属buff - 示例：控制抗性/反击)
+			{
+				level: 18,
+				type: 'passive_effect',
+				effectId: 'on_hit_self_energy_1',
+				desc: '【专属】受到普攻或技能伤害时，自身增加1能量'
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_leimoying: {
 		name: "雷魔鹰",
@@ -23,6 +171,7 @@ const characterList = {
 		rank: "junk",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
+		tupoList:[],//预留接口，一并粘贴
 	},
 	ybsl_fengmolang: {
 		name: "风魔狼",
@@ -34,6 +183,7 @@ const characterList = {
 		rank: "junk",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
+		tupoList:[],//预留接口，一并粘贴
 	},
 	ybsl_yanmohua: {
 		name: "魇魔花",
@@ -45,6 +195,7 @@ const characterList = {
 		rank: "junk",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
+		tupoList:[],//预留接口，一并粘贴
 	},
 	// --- 传说级 (Legend) ---
 	ybsl_017xiaohong: {

@@ -42,10 +42,12 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
         }
 
         // 【修复】防御性编程：确保数值类型正确
-        const hp = Number(data.hp) || 100;
-        const atk = Number(data.atk) || 10;
-        const def = Number(data.def) || 0;
-        const spe = Number(data.spe) || 0;
+        // 注意：这里先获取基础数值，后续会加上突破加成
+        let finalHp = Number(data.hp) || 100;
+        let finalAtk = Number(data.atk) || 10;
+        let finalDef = Number(data.def) || 0;
+        let finalSpe = Number(data.spe) || 0;
+        let finalEnergy = 2; // 基础初始能量
 
         let activeTreasures = [];
         // 优先使用传入的 treasures 数据（我方队伍已由 mode.js 预处理）
@@ -53,30 +55,68 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
             const treasureDefs = gameData.getTreasureList();
             activeTreasures = data.treasures.filter(tid => tid && treasureDefs[tid]);
         } else {
-            // 兼容逻辑：如果没有传入 treasures，尝试从全局数据读取（主要用于敌方或旧代码兼容）
-            // 注意：敌方单位通常不需要读取玩家的 treasureEquipData，此处保留原逻辑但修正 key
+            // 兼容逻辑：如果没有传入 treasures，尝试从全局数据读取
             const lookupKey = data.instanceId || data.id;
             const charTreasures = (window.treasureEquipData && window.treasureEquipData[lookupKey]) || [null, null, null, null, null, null];
             const treasureDefs = gameData.getTreasureList();
             activeTreasures = charTreasures.filter(tid => tid && treasureDefs[tid]);
         }
 
-        return {
+        // 【新增】处理突破 Buff
+        // 使用 data.tupoList 作为该角色的突破能力列表
+        const tupoList = data.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
+        
+        // 获取突破等级，如果没有则默认为 0 (即只应用 level 0 的效果，或者不应用如果tupoList为空)
+        // 假设 data.tupolevel 代表当前解锁的最高突破等级索引
+        const tupolevel = data.tupolevel || 0;
+
+        let bonusAtk = 0, bonusDef = 0, bonusHp = 0, bonusEnergy = 0;
+        let passiveBuffs = [];
+        let teamBuffs = [];     // 暂存全队固定加成
+        let teamPercentBuffs = []; // 暂存全队百分比加成
+
+        // 累加 0 到当前突破等级的所有效果
+        for (let i = 0; i <= tupolevel; i++) {
+            if (!tupoList[i]) continue;
+            const buff = tupoList[i];
+            
+            if (buff.type === 'self_stat_flat') {
+                if (buff.stat === 'atk') bonusAtk += buff.value;
+                if (buff.stat === 'def') bonusDef += buff.value;
+                if (buff.stat === 'hp') bonusHp += buff.value;
+            } else if (buff.type === 'self_energy') {
+                bonusEnergy += buff.value;
+            } else if (buff.type === 'passive_effect') {
+                passiveBuffs.push(buff.effectId);
+            } else if (buff.type === 'team_stat_flat') {
+                teamBuffs.push(buff);
+            } else if (buff.type === 'team_stat_percent') {
+                teamPercentBuffs.push(buff);
+            }
+            // 其他类型如 self_stat_percent 可以在这里扩展
+        }
+
+        // 应用自身的基础数值加成
+        finalAtk += bonusAtk;
+        finalDef += bonusDef;
+        finalHp += bonusHp;
+        finalEnergy += bonusEnergy;
+
+        // 构建返回的单位对象
+        const unit = {
             id: data.id,
             instanceId: data.instanceId || data.id,
             name: data.name || '未知单位',
             side,
             slotIndex,
-            
             rank: rank,
             template: template,
-
-            maxHp: hp,
-            hp: hp,
-            atk: atk,
-            def: def,
-            spe: spe,
-            energy: 0,
+            maxHp: finalHp,
+            hp: finalHp,
+            atk: finalAtk,
+            def: finalDef,
+            spe: finalSpe,
+            energy: Math.min(8, finalEnergy), // 上限8
             buff: Array.isArray(data.buff) ? [...data.buff] : [],
             skills: Array.isArray(data.skills) ? [...data.skills] : ['attack1', null, null],
             alive: true,
@@ -86,11 +126,25 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
             sealOwner: null,
             permanentlySealed: false,
             extraTurn: false,
+            // 暂存全队Buff用于后续统一计算
+            _teamBuffs: teamBuffs, 
+            _teamPercentBuffs: teamPercentBuffs
         };
+
+        // 将被动Buff ID 存入 unit.buff 数组，供战斗逻辑检查
+        if (passiveBuffs.length > 0) {
+            unit.buff.push(...passiveBuffs);
+        }
+
+        return unit;
     };
 
     const playerUnits = playerTeam.map((u, i) => buildUnit(u, 'player', i));
     const enemyUnits = enemyTeam.map((u, i) => buildUnit(u, 'enemy', i));
+
+    // 【关键步骤】处理全队 Buff (固定数值 + 百分比)
+    applyTeamBreakthroughBuffs(playerUnits);
+    applyTeamBreakthroughBuffs(enemyUnits);
 
     // 确定先后手
     const playerSpeSum = playerUnits.filter(u => u).reduce((s, u) => s + u.spe, 0);
@@ -119,6 +173,8 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
         onLose: options.onLose || null,
         log: [],
         battleStarted: false,  // 标记战斗开始宝物是否已触发
+        // 【新增】保存预期的金币奖励，用于结算界面显示
+        expectedGold: options.goldReward || 0, 
     };
 
     // 渲染战斗界面
@@ -126,7 +182,50 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
     // 播放开场
     showBattleIntro();
 }
+function applyTeamBreakthroughBuffs(units) {
+    // 1. 收集所有单位产生的全队固定加成
+    let teamFlatBonus = { atk: 0, def: 0, hp: 0 };
+    let teamPercentBonus = { atk: 0, def: 0, hp: 0 };
 
+    units.forEach(u => {
+        if (!u) return;
+        if (u._teamBuffs) {
+            u._teamBuffs.forEach(b => {
+                if (b.stat === 'atk') teamFlatBonus.atk += b.value;
+                if (b.stat === 'def') teamFlatBonus.def += b.value;
+                if (b.stat === 'hp') teamFlatBonus.hp += b.value;
+            });
+        }
+        if (u._teamPercentBuffs) {
+            u._teamPercentBuffs.forEach(b => {
+                if (b.stats.includes('atk')) teamPercentBonus.atk += b.percent;
+                if (b.stats.includes('def')) teamPercentBonus.def += b.percent;
+                if (b.stats.includes('hp')) teamPercentBonus.hp += b.percent;
+            });
+        }
+        // 清理临时字段
+        delete u._teamBuffs;
+        delete u._teamPercentBuffs;
+    });
+
+    // 2. 应用固定加成
+    units.forEach(u => {
+        if (!u) return;
+        u.atk += teamFlatBonus.atk;
+        u.def += teamFlatBonus.def;
+        u.maxHp += teamFlatBonus.hp;
+        u.hp += teamFlatBonus.hp; // 当前血量也增加
+    });
+
+    // 3. 应用百分比加成 (在固定值之后)
+    units.forEach(u => {
+        if (!u) return;
+        u.atk = Math.floor(u.atk * (1 + teamPercentBonus.atk));
+        u.def = Math.floor(u.def * (1 + teamPercentBonus.def));
+        u.maxHp = Math.floor(u.maxHp * (1 + teamPercentBonus.hp));
+        u.hp = Math.floor(u.hp * (1 + teamPercentBonus.hp));
+    });
+}
 // ====== 战斗顺序 ======
 /**
  * 找到某一方序号最小的存活的未行动角色
@@ -332,13 +431,56 @@ function afterAction() {
     // 后手方行动完毕，或先手行动后后手方无可用单位，推进至下一回合
     nextTurn();
 }
-function calcDamage(attacker, defValue, coefficient, extraEnergy = 0) {
-    let baseDmg = Math.floor(attacker.atk * coefficient);
-    // 超过4能量，每多一点增伤10%
-    if (extraEnergy > 0) {
-        baseDmg = Math.floor(baseDmg * (1 + extraEnergy * 0.1));
+function calcDamage(attacker, defender, coefficient, extraEnergy, skillType) {
+    // 【核心修复】强制转换为数字，防止 undefined/null 导致 NaN
+    const atk = Number(attacker.atk) || 0;
+    const def = Number(defender.def) || 0;
+    const coeff = Number(coefficient) || 1.0;
+    const extraE = Number(extraEnergy) || 0;
+
+    let baseDmg = Math.floor(atk * coeff);
+    
+    // 【新增】计算无视防御比例
+    let ignoreDefPercent = 0;
+    
+    // 检查 attacker 的 Buff/Treasures
+    const buffs = attacker.buff || [];
+    const treasures = attacker.treasures || [];
+    // 注意：treasures 存储的是 ID 字符串，buffs 存储的是 effectId 字符串
+    // 假设 ignore_def_xx 是存储在 buff 数组中的字符串 ID
+    const allEffects = [...buffs, ...treasures]; 
+
+    // 1. 通用无视防御
+    if (allEffects.includes('ignore_def_all')) ignoreDefPercent = 1.0;
+    else if (allEffects.includes('ignore_def_60')) ignoreDefPercent = 0.6;
+    else if (allEffects.includes('ignore_def_30')) ignoreDefPercent = 0.3;
+
+    // 2. 特定技能类型无视防御 (累加)
+    if (skillType === 'pugong') {
+        if (allEffects.includes('ignore_def_pugong_all')) ignoreDefPercent = Math.min(1.0, ignoreDefPercent + 1.0);
+        else if (allEffects.includes('ignore_def_pugong_80')) ignoreDefPercent = Math.min(1.0, ignoreDefPercent + 0.8);
+        else if (allEffects.includes('ignore_def_pugong_50')) ignoreDefPercent = Math.min(1.0, ignoreDefPercent + 0.5);
+    } else if (skillType === 'skill') {
+         // 如果有技能特定的无视防御，可以在这里添加
+         // 例如: if (allEffects.includes('ignore_def_skill_50')) ...
     }
-    let finalDmg = baseDmg - defValue;
+
+    // 计算有效防御
+    const effectiveDef = Math.floor(def * (1 - ignoreDefPercent));
+    
+    // 超过4能量增伤
+    if (extraE > 0) {
+        baseDmg = Math.floor(baseDmg * (1 + extraE * 0.1));
+    }
+
+    let finalDmg = baseDmg - effectiveDef;
+    
+    // 【关键】如果最终伤害计算结果为 NaN，返回 1
+    if (isNaN(finalDmg)) {
+        console.warn(`[CalcDamage] NaN detected. Atk:${atk}, Def:${def}, Coeff:${coeff}`);
+        return 1;
+    }
+    
     return Math.max(1, finalDmg);
 }
 
@@ -352,6 +494,7 @@ function calcDamage(attacker, defValue, coefficient, extraEnergy = 0) {
  * @param {number} energyCost - 技能消耗的能量值
  * @param {Function} callback - 技能执行完毕后的回调函数
  */
+// ====== 技能执行 ======
 // ====== 技能执行 ======
 function executeSkill(actor, skillType, skillId, targets, energyCost, callback) {
     const bs = battleState;
@@ -377,32 +520,42 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
 
     addBattleLog(`${actor.name} 使用了【${sData.name}】`);
     
-    // 根据技能类型获取系数
-        // 初始化系数和恢复状态标志
-    let coefficient = 0;
+    // --- 【核心修复开始】安全获取系数和恢复标识 ---
+    let coefficient = 1.0; // 默认系数设为 1.0，避免乘以 0 导致无伤害，或 undefined 导致 NaN
     let isRecover = false;
     
-    // 在指定技能类型的内容列表中查找匹配的技能ID键
-    const skillKey = Object.keys(contentList[skillType]).find(k => k === skillId);
+    // 尝试从 contentList 中获取最新数据
+    const skillKey = Object.keys(window.contentList[skillType]).find(k => k === skillId);
     
-    // 如果找到对应的技能键且存在内容，则解析攻击系数
-    // if (skillKey && contentList[skillType][skillKey].content) {
-    //     const src = contentList[skillType][skillKey].content.toString();
-    //     const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
-    //     if (match) coefficient = parseFloat(match[1]);
-    // }
-    if(skillKey&&contentList[skillType][skillKey].coefficient){
-        coefficient = contentList[skillType][skillKey].coefficient-0;
+    if (skillKey && window.contentList[skillType][skillKey]) {
+        const currentSkillData = window.contentList[skillType][skillKey];
+        
+        // 1. 获取系数：优先使用 coefficient 字段，如果没有则尝试解析 content 或默认为 1.0
+        if (currentSkillData.coefficient !== undefined && currentSkillData.coefficient !== null) {
+            coefficient = Number(currentSkillData.coefficient);
+        } else if (currentSkillData.content) {
+            // 兼容旧版：尝试从 content 字符串解析系数 (例如 "player.atk * 1.5")
+            const src = currentSkillData.content.toString();
+            const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
+            if (match) {
+                coefficient = parseFloat(match[1]);
+            }
+        }
+        
+        // 确保 coefficient 是有效数字
+        if (isNaN(coefficient)) {
+            console.warn(`[Battle] Skill ${skillId} has invalid coefficient. Defaulting to 1.0`);
+            coefficient = 1.0;
+        }
+
+        // 2. 获取是否为治疗技能
+        if (currentSkillData.isRecover === true) {
+            isRecover = true;
+        } else if (currentSkillData.content && currentSkillData.content.toString().includes('rpg_recover')) {
+            isRecover = true;
+        }
     }
-    
-    // 如果找到对应的技能键且存在内容，则检查是否包含恢复标识
-    // if (skillKey && contentList[skillType][skillKey].content) {
-    //     const src = contentList[skillType][skillKey].content.toString();
-    //     isRecover = src.includes('rpg_recover');
-    // }
-    if(skillKey&&contentList[skillType][skillKey].isRecover){
-        isRecover = contentList[skillType][skillKey].isRecover
-    }
+    // --- 【核心修复结束】 ---
 
     const extraEnergy = Math.max(0, energyCost - 4);
 
@@ -422,28 +575,50 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
         }
 
         const t = targets[targetIndex++];
-        if (!t.alive) {
+        if (!t || !t.alive) { // 【修复】增加 t 的空值检查
             processNextTarget();
             return;
         }
 
         if (isRecover) {
-            let healAmount = Math.floor(actor.atk * coefficient);
+            // 【修复】确保 actor.atk 是数字
+            const atk = Number(actor.atk) || 0;
+            let healAmount = Math.floor(atk * coefficient);
             if (extraEnergy > 0) {
                 healAmount = Math.floor(healAmount * (1 + extraEnergy * 0.1));
             }
-            const actualHeal = Math.min(healAmount, t.maxHp - t.hp);
-            t.hp += actualHeal;
+            // 确保 maxHp 和 hp 是数字
+            const maxHp = Number(t.maxHp) || 1;
+            const currentHp = Number(t.hp) || 0;
+            const actualHeal = Math.min(healAmount, maxHp - currentHp);
+            
+            t.hp = currentHp + actualHeal; // 更新血量
+            
             addBattleLog(`${t.name} 回复了 ${actualHeal} 生命值`);
             showDamageNumber(t, actualHeal, true);
             updateBattleUI();
             processNextTarget();
         } else {
-            let dmg = calcDamage(actor, t.def, coefficient, extraEnergy);
+            // 【修复】确保传入 calcDamage 的参数都是数字
+            const atk = Number(actor.atk) || 0;
+            const def = Number(t.def) || 0;
+            
+            // 注意：calcDamage 内部已经处理了 attacker 对象，但为了安全，这里确保基础值正常
+            let dmg = calcDamage(actor, t, coefficient, extraEnergy, skillType); // 【修改】传入整个 t 对象而不是 t.def，以便 calcDamage 内部处理
+            
+            // 如果 calcDamage 返回 NaN，强制设为 1
+            if (isNaN(dmg)) {
+                console.error(`[Battle] Damage calculation resulted in NaN for ${actor.name} -> ${t.name}. Coeff: ${coefficient}, Atk: ${actor.atk}, Def: ${t.def}`);
+                dmg = 1;
+            }
+
             dmg = applyTreasureDamageModifier(actor, dmg);
+            
+            // 确保 dmg 是整数且至少为 1
+            dmg = Math.max(1, Math.floor(dmg));
+
             addBattleLog(`${t.name} 受到了 ${dmg} 点伤害`);
-            // 延迟触发on_hit，等技能宝物效果后再触发
-                        // 延迟触发on_hit，等技能宝物效果后再触发
+            
             applyDamage(t, dmg, actor, false, false, () => {
                 // 【修复】触发造成伤害后的宝物效果（如狂骨）
                 triggerOnDamageDealt(actor, t, () => {
@@ -459,7 +634,6 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
 
     processNextTarget();
 }
-
 /**
  * 执行角色普通攻击逻辑
  * 
@@ -504,24 +678,24 @@ function executePugong(actor, targets, callback) {
     addBattleLog(`${actor.name} 使用了【${sData.name}】`);
 
     const skillKey = Object.keys(contentList.pugong).find(k => k === skillId);
-    // 解析系数
     const skillType = 'pugong'
-    let coefficient = 1.0;
-    // const src = sData.content ? sData.content.toString() : '';
-    // const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
-    // if (match) coefficient = parseFloat(match[1]);
-
-    const isRecover = contentList[skillType][skillKey].isRecover
-    // 如果找到对应的技能键且存在内容，则解析攻击系数
-    // if (skillKey && contentList[skillType][skillKey].content) {
-    //     const src = contentList[skillType][skillKey].content.toString();
-    //     const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
-    //     if (match) coefficient = parseFloat(match[1]);
-    // }
-    if(skillKey&&contentList[skillType][skillKey].coefficient){
-        coefficient = contentList[skillType][skillKey].coefficient-0;
-    }
     
+    // 【修复】安全获取普攻系数
+    let coefficient = 1.0;
+    if (skillKey && contentList[skillType][skillKey]) {
+        const pData = contentList[skillType][skillKey];
+        if (pData.coefficient !== undefined && pData.coefficient !== null) {
+            coefficient = Number(pData.coefficient);
+        } else if (pData.content) {
+             const src = pData.content.toString();
+             const match = src.match(/player\.atk\s*\*\s*([\d.]+)/);
+             if (match) coefficient = parseFloat(match[1]);
+        }
+        if (isNaN(coefficient)) coefficient = 1.0;
+    }
+
+    const isRecover = contentList[skillType][skillKey] ? contentList[skillType][skillKey].isRecover : false;
+
     // 如果找到对应的技能键且存在内容，则检查是否包含恢复标识
     // if (skillKey && contentList[skillType][skillKey].content) {
     //     const src = contentList[skillType][skillKey].content.toString();
@@ -586,8 +760,13 @@ function executePugong(actor, targets, callback) {
             // 未击杀，正常触发伤害后
             triggerOnDamageDealt(actor, t, processNextTarget);
         } else {
-            // 普通普攻
-            let dmg = calcDamage(actor, t.def, coefficient);
+            // 普通普攻// 普通普攻
+            const atk = Number(actor.atk) || 0;
+            const def = Number(t.def) || 0;
+        
+            let dmg = calcDamage(actor, t, coefficient, 0, 'pugong'); 
+            if (isNaN(dmg)) dmg = 1;
+
             dmg = applyTreasureDamageModifier(actor, dmg);
             addBattleLog(`${t.name} 受到了 ${dmg} 点伤害`);
             // 延迟触发on_hit，等普攻特效播完后再触发
@@ -1486,41 +1665,65 @@ function renderBattleView() {
     addBattleLog(`—— 第 ${bs.round} 轮 ——`);
     addBattleLog(`${bs.firstSide === 'player' ? '我方' : '敌方'}先手`);
 
+        // ... 前面的代码不变 ...
+
     // 隐藏底部导航
     const bottomBar = document.querySelector('.ybrpg-bottom-bar');
     if (bottomBar) bottomBar.style.display = 'none';
 
     // 显示战斗视图
     hideOtherViews('battle-view');
-    // 添加 AI 托管按钮（位于我方区域下方居中）
-const autoBtnDiv = document.createElement('div');
-autoBtnDiv.style.cssText = 'display:flex;justify-content:center;margin-top:6px;width:100%;';
-
-const autoBtn = document.createElement('button');
-autoBtn.className = 'ybrpg-btn';
-autoBtn.style.cssText = 'width:auto;padding:4px 16px;font-size:12px;';
-autoBtn.textContent = window.autoBattle ? '🎮 自动战斗' : '🎮 手动战斗';
-autoBtn.id = 'battle-auto-btn';
-autoBtn.onclick = () => {
-    window.autoBattle = !window.autoBattle;
-    autoBtn.textContent = window.autoBattle ? '🎮 自动战斗' : '🎮 手动战斗';
     
-    // 如果切换为自动且当前处于玩家回合，立即行动
-    if (window.autoBattle && battleState && battleState.phase === 'player_action') {
-        const currentUnit = battleState.currentTurnSide === 'player'
-            ? battleState.playerUnits[battleState.currentTurnIndex]
-            : null;
-        if (currentUnit && currentUnit.alive) {
-            const action = aiChooseAction(currentUnit);
-            if (action && action.targets.length > 0) {
-                executePlayerTurn(currentUnit, action);
+    // --- 底部按钮区域 ---
+    const controlsDiv = document.createElement('div');
+    controlsDiv.style.cssText = 'display:flex; flex-direction:column; align-items:center; width:100%; margin-top:10px; gap:5px;';
+
+    // 1. 自动战斗按钮
+    const autoBtn = document.createElement('button');
+    autoBtn.className = 'ybrpg-btn';
+    autoBtn.style.cssText = 'width:auto;padding:4px 16px;font-size:12px;';
+    autoBtn.textContent = window.autoBattle ? '🎮 自动战斗' : '🎮 手动战斗';
+    autoBtn.id = 'battle-auto-btn';
+    autoBtn.onclick = () => {
+        window.autoBattle = !window.autoBattle;
+        autoBtn.textContent = window.autoBattle ? '🎮 自动战斗' : '🎮 手动战斗';
+        
+        // 如果切换为自动且当前处于玩家回合，立即行动
+        if (window.autoBattle && battleState && battleState.phase === 'player_action') {
+            const currentUnit = battleState.currentTurnSide === 'player'
+                ? battleState.playerUnits[battleState.currentTurnIndex]
+                : null;
+            if (currentUnit && currentUnit.alive) {
+                const action = aiChooseAction(currentUnit);
+                if (action && action.targets.length > 0) {
+                    executePlayerTurn(currentUnit, action);
+                }
             }
         }
-    }
-};
-autoBtnDiv.appendChild(autoBtn);
-// 将按钮插入到我方区域之后（field末尾）
-field.appendChild(autoBtnDiv);
+    };
+    controlsDiv.appendChild(autoBtn);
+
+    // 2. 【修改】逃跑按钮 - 使用项目自带 confirmDialog
+    const escapeBtn = document.createElement('button');
+    escapeBtn.className = 'ybrpg-btn';
+    escapeBtn.style.cssText = 'width:auto;padding:4px 16px;font-size:12px;background-color:#d9534f;border-color:#d43f3a;color:#fff;';
+    escapeBtn.textContent = '🏃 逃跑';
+    escapeBtn.onclick = () => {
+        // 调用项目自带的确认对话框
+        confirmDialog('确定要放弃本次战斗吗？', () => {
+            // 确认回调：判定为敌方胜利（玩家失败）
+            endBattle('enemy');
+        }, () => {
+            // 取消回调：什么都不做，或者可以加个提示
+            // toast('已取消逃跑', 'info');
+        });
+    };
+    controlsDiv.appendChild(escapeBtn);
+
+    // 将控制面板添加到战场区域
+    field.appendChild(controlsDiv);
+    
+    container.appendChild(field);
     container.style.display = 'flex';
 }
 
@@ -1894,10 +2097,12 @@ let targetSelection = null;
  * @param {number} energyCost - 技能消耗的能量值
  * @returns {void}
  */
-
 function enterTargetSelection(actor, skillType, skillId, energyCost) {
     const sData = contentList[skillType] && contentList[skillType][skillId];
-    if (!sData) return;
+    if (!sData) {
+        console.warn(`[Battle] Skill data not found for ${skillId}`);
+        return;
+    }
 
     // 1. 严格判断是否为治疗
     let isRecover = false;
@@ -1914,7 +2119,7 @@ function enterTargetSelection(actor, skillType, skillId, energyCost) {
 
     const targetConfig = sData.target || ['one', 'first'];
     const mode = targetConfig[0];
-    const count = targetConfig[2] || 1;
+    const count = targetConfig[2] || 1; // 默认选择1个，如果是 manual_multi 通常会指定数量
 
     // 初始化全局目标选择状态对象
     targetSelection = { 
@@ -1930,10 +2135,8 @@ function enterTargetSelection(actor, skillType, skillId, energyCost) {
     };
 
     // --- 自动释放的情况 (无需玩家逐个点选) ---
-    // --- 【修改点1】自动释放的情况 ---
-    // 注意：这里移除了 'column' 和 'row'，让它们进入下面的手动选择逻辑
-    // 如果你希望 'row' 也能自选，也把它从下面这个数组里去掉
-    if (['all', 'manual_multi', 'lowest_hp_multi'].includes(mode)) {
+    // 注意：manual_multi 必须从这里的数组中移除，否则会变成自动随机选择
+    if (['all', 'lowest_hp_multi'].includes(mode)) {
         const targets = resolveSkillTargets(sData, actor, targetSide);
         
         if (targets.length > 0) {
@@ -1952,19 +2155,27 @@ function enterTargetSelection(actor, skillType, skillId, energyCost) {
     }
 
     // --- 手动选择情况 ---
-    // 'one', 'exclude_self', 'row', 'column' 都会走到这里
+    
+    // 1. 单体选择 (one / exclude_self)
     if (mode === 'one' || mode === 'exclude_self') {
         addBattleLog('请点击选择目标');
         highlightSelectableTargets(mode, isRecover, targetSide);
     } 
-    // 【修改点2】增加 row 和 column 的手动高亮入口
+    // 2. 行/列选择 (需要点击一个目标来确定哪一行/列)
     else if (mode === 'row' || mode === 'column') {
         addBattleLog(`请点击选择${mode === 'row' ? '行' : '列'}中的一个目标`);
         highlightSelectableTargets(mode, isRecover, targetSide);
     }
+    // 3. 【关键修复】手动多选 (manual_multi)
     else if (mode === 'manual_multi') {
         addBattleLog(`请依次选择 ${count} 个目标 (已选: 0/${count})`);
         highlightSelectableTargets('manual_multi', isRecover, targetSide);
+    }
+    // 4. 其他未知模式 fallback
+    else {
+        console.warn(`[Battle] Unknown target mode: ${mode}. Defaulting to one.`);
+        addBattleLog('请点击选择目标');
+        highlightSelectableTargets('one', isRecover, targetSide);
     }
 }
 
@@ -2194,17 +2405,18 @@ function showBattleResult(winner) {
     dialog.appendChild(stats);
 
     // 胜利时显示金币奖励
+     // 胜利时显示金币奖励
     if (winner === 'player') {
-        const isBoss = bs.eventType === 'boss';
-        const baseGold = 50 + (bs.enemyCount || 1) * 30;
-        const goldScale = bs.goldScale || 1.0;
-        const goldReward = Math.floor((isBoss ? baseGold * 2 : baseGold) * goldScale);
+        // 【修改】直接读取 startBattle 时传入的预期金币
+        const goldReward = bs.expectedGold || 0;
+        
         const rewardDiv = document.createElement('div');
         rewardDiv.className = 'battle-result-stats';
         rewardDiv.style.color = '#ffd700';
         rewardDiv.style.marginTop = '8px';
-        const scaleText = goldScale > 1 ? ` (x${goldScale})` : '';
-        rewardDiv.innerHTML = `💰 金币奖励: +${goldReward}${scaleText}`;
+        
+        // 显示金币
+        rewardDiv.innerHTML = `💰 金币奖励: +${goldReward}`;
         dialog.appendChild(rewardDiv);
     }
 
@@ -2586,3 +2798,4 @@ function processSealTurns(side) {
         }
     });
 }
+
