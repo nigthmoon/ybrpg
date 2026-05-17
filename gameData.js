@@ -573,16 +573,23 @@ class GameData {
      * @param {string} toCharId 目标角色ID（换上来的角色）
      */
     transferTreasures(fromCharId, toCharId) {
-        // const fromTreasures = this.getCharTreasures(fromCharId);
-        // const toTreasures = this.getCharTreasures(toCharId);
         // for (let i = 0; i < fromTreasures.length; i++) {
         //     toTreasures[i] = fromTreasures[i];
         //     fromTreasures[i] = null;
         // }
+        
+        // if (!this.data._treasures) this.data._treasures = {};
+        // if (!this.data._treasures[instanceId]) {
+        //     this.data._treasures[instanceId] = [null, null, null, null, null, null];
+        // }
+        // return this.data._treasures[instanceId];
+
         if(!window.treasureEquipData) window.treasureEquipData = {};
         var tttt = window.treasureEquipData[toCharId]||[null, null, null, null, null, null]
         window.treasureEquipData[toCharId]= window.treasureEquipData[fromCharId];
         window.treasureEquipData[fromCharId]= tttt;
+        this.data._treasures[fromCharId]=window.treasureEquipData[fromCharId]
+        this.data._treasures[toCharId]=window.treasureEquipData[toCharId]
         // for (let i = 0; i < fromTreasures.length; i++) {
         //     toTreasures[i] = fromTreasures[i];
         //     fromTreasures[i] = null;

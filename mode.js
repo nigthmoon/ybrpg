@@ -1376,38 +1376,54 @@ function showCharSelectPopup(slotIndex) {
         selectBtn.textContent = '选择';
         selectBtn.onclick = (e) => {
             e.stopPropagation();
+            
             const existIdx = window.currentTeam.indexOf(charInst.instanceId);
             const oldInstanceId = window.currentTeam[slotIndex];
 
+            // 1. 处理队伍数据交换
             if (existIdx !== -1) {
-                // 角色已在其他方格，视为交换位置
                 window.currentTeam[existIdx] = oldInstanceId;
-                refreshTeamSlot(existIdx);
-                
             } else if (oldInstanceId) {
-                // 新角色上阵，原方格角色被换下，转移宝物
+                // 转移宝物
                 if (typeof gameData.transferTreasures === 'function') {
                     gameData.transferTreasures(oldInstanceId, charInst.instanceId);
                 }
-                refreshTeamSlot(existIdx);
             }
 
+            // 2. 设置新角色
             window.currentTeam[slotIndex] = charInst.instanceId;
-            refreshTeamSlot(slotIndex);
+            
+            // 3. 更新选中状态
+            window._selectedSlotIndex = slotIndex;
+
+            // 4. 【关键修改】使用 setTimeout 延迟刷新，确保数据已完全写入且当前点击事件处理完毕
+            // 这样可以避免与弹窗关闭、DOM 移除等操作发生竞争
+            setTimeout(() => {
+                // A. 刷新网格中的单个槽位（显示头像、名字等）
+                refreshTeamSlot(slotIndex);
+                
+                // B. 如果存在被交换出去的旧槽位，也刷新它
+                if (existIdx !== -1 && existIdx !== slotIndex) {
+                    refreshTeamSlot(existIdx);
+                }
+
+                // C. 刷新详情区域
+                const newInstanceId = window.currentTeam[slotIndex];
+                if (newInstanceId && window.charBagData && window.charBagData[newInstanceId]) {
+                    const newInstanceData = window.charBagData[newInstanceId];
+                    const newCharId = newInstanceData.charId || newInstanceId;
+                    
+                    // 强制调用详情刷新
+                    showTeamCharInfo(slotIndex, newInstanceId, newCharId);
+                }
+                
+                // D. 自动保存
+                SaveManager.autoSave();
+            }, 0);
+
+            // 5. 提示与关闭弹窗
             toast(`${charInst.name} (Lv.${charInst.level}) 已上阵`, 'success');
             overlay.remove();
-            window._selectedSlotIndex = slotIndex;
-            console.log('当前序号', existIdx,slotIndex);
-            // 如果当前选中的是该格子，刷新详情
-            showTeamCharInfo(slotIndex, charInst.instanceId, charInst.charId);
-            // if (window._selectedSlotIndex === slotIndex) {
-            var num = slotIndex;
-            const instanceId = window.currentTeam[num];
-            const instanceData = window.charBagData[instanceId];
-            const charId = instanceData.charId || instanceId;
-            showTeamCharInfo(num, instanceId, charId);
-            // }
-            SaveManager.autoSave();
         };
         // var num = window._selectedSlotIndex;
         //     const instanceId = window.currentTeam[num];
