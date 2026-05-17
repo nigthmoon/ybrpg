@@ -377,8 +377,16 @@ function onTeamNavTrain() {
 }
 
 
+/**
 // 在team-info-area中展示选中武将的详情
 // 修改参数：增加 instanceId
+
+ * 显示队伍中指定角色的详细信息
+ * @param {number} slotIndex - 角色在队伍中的槽位索引
+ * @param {string|number} instanceId - 实例ID，用于标识具体的游戏实例或会话
+ * @param {string|number} charId - 角色ID，用于标识具体的角色
+ * @returns {void}
+ */
 function showTeamCharInfo(slotIndex, instanceId, charId) {
     const infoArea = document.getElementById('team-info-area');
     if (!infoArea) return;
@@ -1375,11 +1383,13 @@ function showCharSelectPopup(slotIndex) {
                 // 角色已在其他方格，视为交换位置
                 window.currentTeam[existIdx] = oldInstanceId;
                 refreshTeamSlot(existIdx);
+                
             } else if (oldInstanceId) {
                 // 新角色上阵，原方格角色被换下，转移宝物
                 if (typeof gameData.transferTreasures === 'function') {
                     gameData.transferTreasures(oldInstanceId, charInst.instanceId);
                 }
+                refreshTeamSlot(existIdx);
             }
 
             window.currentTeam[slotIndex] = charInst.instanceId;
@@ -1387,9 +1397,23 @@ function showCharSelectPopup(slotIndex) {
             toast(`${charInst.name} (Lv.${charInst.level}) 已上阵`, 'success');
             overlay.remove();
             window._selectedSlotIndex = slotIndex;
+            console.log('当前序号', existIdx,slotIndex);
+            // 如果当前选中的是该格子，刷新详情
             showTeamCharInfo(slotIndex, charInst.instanceId, charInst.charId);
+            // if (window._selectedSlotIndex === slotIndex) {
+            var num = slotIndex;
+            const instanceId = window.currentTeam[num];
+            const instanceData = window.charBagData[instanceId];
+            const charId = instanceData.charId || instanceId;
+            showTeamCharInfo(num, instanceId, charId);
+            // }
             SaveManager.autoSave();
         };
+        // var num = window._selectedSlotIndex;
+        //     const instanceId = window.currentTeam[num];
+        //     const instanceData = window.charBagData[instanceId];
+        //     const charId = instanceData.charId || instanceId;
+        //     showTeamCharInfo(num, instanceId, charId);
 
         row.appendChild(selectBtn);
 
@@ -3336,65 +3360,81 @@ function renderChapterEventList(container, chapterKey) {
         if (eventIds.length === 0 && Object.keys(eventPack).length > 0) {
             eventIds = Object.keys(eventPack).sort();
         }
-    
+
         // 遍历该秘境系列下的所有关卡
         eventIds.forEach((eventId, index) => {
             const eventData = eventPack[eventId];
             if (!eventData) return;
-    
+
             // 1. 判断解锁状态
-            // 规则：
-            // a. 如果是第一关 (index === 0) 且 prev 为 null 或不存在，默认解锁（或者检查全局变量）
-            // b. 如果有 prev，检查 prev 对应的关卡是否已通过 (假设有一个函数 isLevelPassed 或检查存档)
-            //    由于上下文未提供 isLevelPassed，这里假设 window.passedLevels 是一个包含已通关ID的数组
-            //    如果没有 passedLevels，暂时默认为解锁，或者根据 prev 是否存在做简单判断
-            
             let isLocked = false;
             let lockReason = '';
-    
+            let isNew = false; // 【新增】标记是否为最新可挑战关卡
+
+            // 获取已通关列表
+            var passed = Object.keys(window.playerProgress || {});
+
             if (eventData.prev) {
-                // 检查前置关卡是否通过
-                // 注意：prev 可能是 'sp1-1' 这样的字符串，需要在整个 SPeventList 中查找其状态
-                // 假设我们有一个辅助函数 checkLevelStatus(prevId) 返回 boolean
-                // 这里模拟逻辑：如果 prev 存在，且不在已通关列表中，则锁定
-                var passed = Object.keys(window.playerProgress);
+                // 有显式前置关卡
                 const prevPassed = passed && passed.includes(eventData.prev);
                 
-                // 特殊处理：如果 prev 指向的是另一个系列的关卡，也需要检查那个系列的状态
                 if (!prevPassed) {
                     isLocked = true;
                     lockReason = `需先通过【${getEventName(eventData.prev)}】`;
+                } else {
+                    // 前置已通过，检查自己是否已通过
+                    if (!passed.includes(eventId)) {
+                        isNew = true; // 前置过了，自己没过，标记为新
+                    }
                 }
             } else if (index > 0) {
-                // 如果没有显式 prev，但也不是第一关，通常隐含前置是上一关
+                // 没有显式 prev，隐含前置是上一关
                 const prevId = eventIds[index - 1];
-                const prevPassed =  prevPassed&& prevPassed.includes(prevId);
+                const prevPassed = passed && passed.includes(prevId);
+                
                 if (!prevPassed) {
                     isLocked = true;
                     lockReason = `需先通过上一关`;
+                } else {
+                    // 前置（上一关）已过，检查自己是否已通过
+                    if (!passed.includes(eventId)) {
+                        isNew = true; // 前置过了，自己没过，标记为新
+                    }
+                }
+            } else {
+                // 第一关 (index === 0) 且无 prev
+                if (!passed.includes(eventId)) {
+                    isNew = true; // 第一关且未通过，标记为新
                 }
             }
-    
+
             // 2. 创建按钮
             const levelBtn = document.createElement('button');
             levelBtn.className = 'ybrpg-btn';
             levelBtn.style.width = '95%';
             levelBtn.style.marginBottom = '5px';
             
+            // 构建显示文本
+            let btnText = `▶ ${eventData.name}`;
+            if (isNew) {
+                btnText += ' <span style="color:#ff4444;font-weight:bold;font-size:12px;">(新)</span>';
+            }
+
             // 样式区分：锁定状态
             if (isLocked) {
                 levelBtn.style.opacity = '0.6';
                 levelBtn.style.cursor = 'not-allowed';
-                levelBtn.textContent = `🔒 ${eventData.name} (${lockReason})`;
+                // 锁定状态下不显示“新”，或者你可以选择显示“🔒 ... (需前置)”
+                levelBtn.innerHTML = `🔒 ${eventData.name} <span style="font-size:12px;color:#aaa;">(${lockReason})</span>`;
             } else {
-                levelBtn.textContent = `▶ ${eventData.name}`;
+                levelBtn.innerHTML = btnText; // 使用 innerHTML 以支持标签样式
                 // 可选：如果是Boss关或特殊关，加高亮
                 if (eventData.type === 'boss') {
                     levelBtn.style.borderColor = '#ff4444';
                     levelBtn.style.color = '#ff4444';
                 }
             }
-    
+
             // 3. 点击事件
             levelBtn.onclick = () => {
                 if (isLocked) {
@@ -3482,19 +3522,8 @@ function renderChapterEventList(container, chapterKey) {
                         }
                     }
                 });
-                // // 进入战斗或子页面
-                // // 假设 renderDungeonView 或 startBattle 能处理秘境数据
-                // // 这里调用通用的入口，传入 eventId 和 数据来源标记 'secret'
-                // if (typeof renderDungeonView === 'function') {
-                //      // 如果 renderDungeonView 支持直接传入 eventId 查找数据
-                //      renderDungeonView(container, eventId, 'secret');
-                // } else {
-                //      toast('正在进入秘境...', 'info');
-                //      // TODO: 调用具体的秘境战斗初始化函数
-                //      // startSecretBattle(eventData);
-                // }
             };
-    
+
             listContainer.appendChild(levelBtn);
         });
         container.appendChild(listContainer);
@@ -5463,117 +5492,13 @@ function showBagCharDetailPopup(instanceId, charId) {
         // 1. 获取突破信息以判断状态
         const currentTupo = instData.tupolevel || 0;
         // 在 showBagCharDetailPopup 中找到构建突破按钮的部分
-
-        // ... 前文代码 ...
-
         // 获取突破信息
         const breakInfo = getBreakthroughInfo(char, currentTupo);
         const breakthroughBtn = document.createElement('button');
         breakthroughBtn.className = 'ybrpg-btn';
         breakthroughBtn.id = 'breakthrough-btn';
         breakthroughBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;flex:1;';
-        // breakthroughBtn.style.marginTop = '10px';
-        // breakthroughBtn.style.width = '100%';
-
-        // var rankList = ['junk', 'common', 'rare', 'epicfake','epic', 'legend', 'kami'];
-        // // let cost = 0;
-        // // let needPromotion = false;
-        // // let nextRank = null; // 升阶后的目标品质
-
-        // // 获取角色当前品质的索引
-        // const currentRank = breakInfo.rank || 'common';
-        // const currentRankIndex = rankList.indexOf(currentRank);
-
-
-        // const targetRank = 'epicfake';
-        // const targetIndex = rankList.indexOf(targetRank);
-
-        // if (breakInfo.maxed) {
-        //     breakthroughBtn.textContent = '已突破至极限';
-        //     breakthroughBtn.disabled = true;
-        //     breakthroughBtn.style.opacity = '0.6';
-        // } 
-        // {
-
-        //     // --- 升阶状态 ---
-        //     const targetRankLabel = getRankLabel(breakInfo.nextRank);
-        //     breakthroughBtn.textContent = `升阶`;
-        //     breakthroughBtn.style.background = '#ffaa00'; // 橙色表示特殊操作
-
-        //     breakthroughBtn.onclick = () => {
-        //         // 直接调用突破函数，内部会处理升阶逻辑
-        //         // 这里可以加一个专门的升阶确认弹窗，或者直接调用
-        //         confirmDialog(`确定要将【${char.name}】升阶至【${targetRankLabel}】吗？\n(可能需要消耗突破石)`, () => {
-        //             const result = breakthroughCharacterInstance(instanceId);
-        //             if (result.success) {
-        //                 toast(result.message, 'success');
-        //                 // 刷新弹窗
-        //                 const currentOverlay = document.getElementById('bag-char-detail-overlay');
-        //                 if (currentOverlay) {
-        //                     const dialog = currentOverlay.querySelector('.gallery-detail-dialog');
-        //                     if (dialog) {
-        //                         // 2. 重新渲染弹窗内容
-        //                         // 为了简单起见，我们清空 dialog 并重新调用构建逻辑
-        //                         // 注意：这需要我们将构建 dialog 内容的逻辑提取出来，或者简单地重新赋值 innerHTML
-
-        //                         // 由于 showBagCharDetailPopup 逻辑较长，我们采用“重新生成并替换”的策略
-        //                         // 先保存滚动位置
-        //                         const scrollTop = dialog.scrollTop;
-
-        //                         // 清空当前内容
-        //                         dialog.innerHTML = '';
-
-        //                         // 重新构建内容 (这里需要复制 showBagCharDetailPopup 中构建 dialog 的核心代码)
-        //                         // 为了避免代码重复，建议你将 showBagCharDetailPopup 中从 "const dialog = ..." 开始到 "dialog.appendChild(btnRow)" 之前的代码提取为一个函数 buildCharDetailContent(charInfo, instanceId)
-
-        //                         // 临时方案：直接重新调用 showBagCharDetailPopup，但先移除旧的 overlay
-        //                         // 为了减少闪烁，我们可以先隐藏 overlay
-        //                         currentOverlay.style.visibility = 'hidden';
-
-        //                         // 移除旧 overlay
-        //                         currentOverlay.remove();
-
-        //                         // 立即创建新的 (由于 JS 执行很快，且图片有缓存，闪烁会非常轻微)
-        //                         showBagCharDetailPopup(instanceId, charId);
-
-                                
-        //                         // 如果希望完全无闪烁，需要实现上述的局部更新逻辑
-        //                     }
-        //                 }
-
-        //                 // 刷新背包视图背景
-        //                 if (typeof renderBagView === 'function') {
-        //                     const bagView = document.getElementById('bag-view');
-        //                     if (bagView) renderBagView(bagView);
-        //                 }
-        //                 const rankEl = dialog.querySelector('.gallery-detail-rank');
-        //                 if (rankEl) {
-        //                     const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-        //                     const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' };
-        //                     const rankText = rankLabels[saveData.rank] || saveData.rank;
-        //                     rankEl.innerHTML = `<span style="color:${rankColors[saveData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${saveData.level}</span>`;
-        //                 }
-        //                 const tupoEl = dialog.querySelector('.gallery-detail-name');
-        //                 if (tupoEl) {
-        //                     const tupoTextx = saveData.tupolevel ? `+${saveData.tupolevel}` : '';
-        //                     tupoEl.textContent = saveData.name + tupoTextx;
-        //                 }
-        //                 const breakthroughBtn = document.getElementById('breakthrough-btn');
-        //                 console.log('breakthroughBtn', breakthroughBtn)
-        //                 breakthroughBtn.textContent = '突破'
-        //                 breakthroughBtn.style.background = '#44aaff'; // 橙色表示特殊操作
-        //                 updateCharacterSP();
-        //                 // 刷新背包视图背景
-        //                 if (typeof renderBagView === 'function') {
-        //                     const bagView = document.getElementById('bag-view');
-        //                     if (bagView) renderBagView(bagView);
-        //                 }
-        //             } else {
-        //                 toast(result.message, 'error');
-        //             }
-        //         });
-        //     };
-        // } 
+        
         {
             function changeBreakthroughBtn(breakthroughBtn){
                 if(breakInfo.maxed){
@@ -5841,7 +5766,7 @@ function updateCharacterSP(current) {
  * @param {number} currentLevel - 当前等级
  */
 function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
-    const requiredExp = currentLevel; // 所需经验值 = 当前等级
+    // const requiredExp = currentLevel; // 所需经验值 = 当前等级
 
     // 获取目标角色的品质
     const targetRank = characterList[targetCharId]?.rank;
@@ -5883,7 +5808,7 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 
     const title = document.createElement('div');
     title.className = 'char-select-title';
-    title.textContent = `选择同品质材料（需要总等级 ${requiredExp}）`;
+    title.textContent = `选择同品质材料`;
     popup.appendChild(title);
 
     const scrollDiv = document.createElement('div');
@@ -5902,7 +5827,7 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
     const countLabel = document.createElement('div');
     countLabel.style.color = '#aaa';
     countLabel.id = 'upgrade-count-label';
-    countLabel.textContent = '已选: 0 / 所需: ' + requiredExp;
+    countLabel.textContent = '已选: 0 将升至'+currentLevel+'级';
     infoBar.appendChild(countLabel);
 
     const confirmBtn = document.createElement('button');
@@ -5914,11 +5839,7 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
     confirmBtn.onclick = () => {
         const selected = consumables.filter(c => c.selected);
         const totalLevel = selected.reduce((s, c) => s + c.level, 0);
-        if (totalLevel !== currentLevel) {
-            toast('所选消耗品总等级不匹配，无法升级', 'warning');
-            return;
-        }
-
+        const newLevel = currentLevel + totalLevel;
         // 消耗选中的角色
         selected.forEach(c => {
             delete window.charBagData[c.instanceId];
@@ -5933,7 +5854,6 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 
         // 升级目标角色
         const targetData = window.charBagData[targetInstId];
-        const newLevel = currentLevel + 1;
         targetData.level = newLevel;
         const ratio = (100 + 10 * (newLevel - 1)) / 100; // 提升比例
 
@@ -6064,10 +5984,11 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
         const totalLevel = selected.reduce((s, c) => s + c.level, 0);
         const countLabel = document.getElementById('upgrade-count-label');
         const confirmBtn = document.getElementById('upgrade-confirm-btn');
-        if (countLabel) countLabel.textContent = `已选: ${totalLevel} / 所需: ${requiredExp}`;
+        const newLevel = currentLevel + totalLevel;
+        if (countLabel) countLabel.textContent = `已选: ${totalLevel} 将升至 ${newLevel}级`;
         if (confirmBtn) {
-            confirmBtn.disabled = totalLevel !== requiredExp;
-            confirmBtn.style.opacity = totalLevel !== requiredExp ? '0.5' : '1';
+            confirmBtn.disabled = !totalLevel;
+            confirmBtn.style.opacity = !totalLevel ? '0.5' : '1';
         }
     }
 
