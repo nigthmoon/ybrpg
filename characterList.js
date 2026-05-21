@@ -52,7 +52,7 @@ const characterList = {
 			// Level 5 (角色专有突破buff - 示例：无视防御)
 			{
 				level: 5,
-				type: 'on_skill_hit', 
+				type: 'on_skill_hit_target', 
 				chance: 0.3, 
 				effect: 'seal_1', 
 				desc: '使用技能后，30%几率封印目标一回合'
@@ -90,9 +90,9 @@ const characterList = {
 			// Level 10 (角色专属buff - 示例：吸血)
 			{
 				level: 10,
-				type: 'on_skill_hit', 
+				type: 'on_skill_hit_target', 
 				chance: 0.2, 
-				effect: 'stun_1', 
+				effect: 'stun_target_1', 
 				desc: '使用技能后，20%几率令目标眩晕1回合'
 			},
 			// Level 11
@@ -113,7 +113,7 @@ const characterList = {
 			// Level 13 (专属buff - 示例：减伤)
 			{
 				level: 13,
-				type: 'lifesteal', 
+				type: 'on_hit_source', 
 				trigger: 'pugong', 
 				percent: 0.5, desc: '普攻后吸血50%'
 			},
@@ -217,9 +217,9 @@ const characterList = {
 			// Level 5 (角色专有突破buff - 示例：无视防御)
 			{
 				level: 5,
-				type: 'on_pugong_hit', 
+				type: 'on_pugong_hit_target', 
 				chance: 0.2, 
-				effect: 'stun_1', 
+				effect: 'stun_target_1', 
 				desc: '普攻时，20%几率令目标眩晕1回合'
 			},
 			// Level 6
@@ -240,10 +240,10 @@ const characterList = {
 			// Level 8 (角色专属buff - 示例：增伤)
 			{
 				level: 8,
-				type: 'lifesteal', 
+				type: 'on_hit_source', 
 				trigger: 'pugong', 
-				percent: 0.5, 
-				desc: '普攻后吸血50%'
+				percent: 0.2, 
+				desc: '普攻后吸血20%'
 			},
 			// Level 9
 			{
@@ -279,10 +279,10 @@ const characterList = {
 			// Level 13 (专属buff - 示例：减伤)
 			{
 				level: 13,
-				type: 'first_hit_bonus', 
-				stat: 'dmg_dealt', 
-				value: 0.5, 
-				desc: '进入战斗的首次普攻或技能伤害增加50%'
+				type: 'on_skill_end', 
+				chance: 1.0, 
+				effect: 'extra_pugong', 
+				desc: '使用技能后，立即进行一次自动普攻（不触发部分手动选择逻辑）'
 			},
 			// Level 14
 			{
@@ -302,10 +302,11 @@ const characterList = {
 			// Level 16 (专属buff - 示例：首击特效)
 			{
 				level: 16,
-				type: 'on_skill_end', 
-				chance: 1.0, 
-				effect: 'add_energy_self_2', 
-				desc: '使用技能后，恢复2点能量'
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+				
 			},
 			// Level 17
 			{
@@ -320,8 +321,8 @@ const characterList = {
 				level: 18,
 				type: 'on_skill_end', 
 				chance: 1.0, 
-				effect: 'extra_pugong', 
-				desc: '使用技能后，立即进行一次自动普攻（不触发部分手动选择逻辑）'
+				effect: 'add_energy_self_2', 
+				desc: '使用技能后，恢复2点能量'
 			},
 			// Level 19
 			{
@@ -383,6 +384,10 @@ const characterList = {
 			// Level 5 (角色专有突破buff - 示例：无视防御)
 			{
 				level: 5,
+				type: 'on_pugong_hit_target', 
+				chance: 0.2, 
+				effect: 'drain_energy_1', 
+				desc: '普攻时，20%几率令目标降低1能量'
 			},
 			// Level 6
 			{
@@ -402,6 +407,10 @@ const characterList = {
 			// Level 8 (角色专属buff - 示例：增伤)
 			{
 				level: 8,
+				type: 'on_hit_source', 
+				trigger: 'pugong', 
+				percent: 0.2, 
+				desc: '普攻后吸血20%'
 			},
 			// Level 9
 			{
@@ -414,6 +423,10 @@ const characterList = {
 			// Level 10 (角色专属buff - 示例：吸血)
 			{
 				level: 10,
+				type: 'on_pugong_start', 
+				chance: 0.25, 
+				effect: 'add_energy_team_1', 
+				desc: '普攻时，25%增加全队1能量'
 			},
 			// Level 11
 			{
@@ -433,6 +446,10 @@ const characterList = {
 			// Level 13 (专属buff - 示例：减伤)
 			{
 				level: 13,
+				type: 'on_skill_end', 
+				chance: 1.0, 
+				effect: 'extra_pugong', 
+				desc: '使用技能后，立即进行一次自动普攻（不触发部分手动选择逻辑）'
 			},
 			// Level 14
 			{
@@ -452,6 +469,11 @@ const characterList = {
 			// Level 16 (专属buff - 示例：首击特效)
 			{
 				level: 16,
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+				
 			},
 			// Level 17
 			{
@@ -464,6 +486,10 @@ const characterList = {
 			// Level 18 (专属buff - 示例：控制抗性/反击)
 			{
 				level: 18,
+				type: 'on_skill_end', 
+				chance: 1.0, 
+				effect: 'add_energy_self_2', 
+				desc: '使用技能后，恢复2点能量'
 			},
 			// Level 19
 			{
@@ -525,6 +551,10 @@ const characterList = {
 			// Level 5 (角色专有突破buff - 示例：无视防御)
 			{
 				level: 5,
+				type: 'on_pugong_hit_target', 
+				chance: 0.3, 
+				effect: 'seal_1', 
+				desc: '普攻时，30%几率封印目标一回合'
 			},
 			// Level 6
 			{
@@ -544,6 +574,10 @@ const characterList = {
 			// Level 8 (角色专属buff - 示例：增伤)
 			{
 				level: 8,
+				type: 'on_hit_source', 
+				trigger: 'pugong', 
+				percent: 0.2, 
+				desc: '普攻后吸血20%'
 			},
 			// Level 9
 			{
@@ -556,6 +590,10 @@ const characterList = {
 			// Level 10 (角色专属buff - 示例：吸血)
 			{
 				level: 10,
+				type: 'on_pugong_start', 
+				chance: 0.25, 
+				effect: 'add_energy_team_1', 
+				desc: '普攻时，25%增加全队1能量'
 			},
 			// Level 11
 			{
@@ -575,6 +613,10 @@ const characterList = {
 			// Level 13 (专属buff - 示例：减伤)
 			{
 				level: 13,
+				type: 'on_skill_end', 
+				chance: 1.0, 
+				effect: 'extra_pugong', 
+				desc: '使用技能后，立即进行一次自动普攻（不触发部分手动选择逻辑）'
 			},
 			// Level 14
 			{
@@ -594,6 +636,11 @@ const characterList = {
 			// Level 16 (专属buff - 示例：首击特效)
 			{
 				level: 16,
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+				
 			},
 			// Level 17
 			{
@@ -606,6 +653,10 @@ const characterList = {
 			// Level 18 (专属buff - 示例：控制抗性/反击)
 			{
 				level: 18,
+				type: 'on_skill_end', 
+				chance: 1.0, 
+				effect: 'add_energy_self_2', 
+				desc: '使用技能后，恢复2点能量'
 			},
 			// Level 19
 			{
@@ -613,8 +664,7 @@ const characterList = {
 				type: 'self_energy',
 				value: 1,
 				desc: '初始能量+1'
-			}
-		],//预留接口，一并粘贴
+			}],//预留接口，一并粘贴
 	},
 	//上面这几个没配置 
 	// --- 传说级 (Legend) ---
@@ -669,10 +719,10 @@ const characterList = {
 			// Level 5 
 			{
 				level: 5,
-				type: 'stat_percent',
-				stat: 'dmg_dealt',
-				value: 0.3,
-				desc: '获得30%增伤'
+				type: 'self_stat_percent',
+				stats: ['atk'],
+				percent: 1,
+				desc: '初始化时获得100%的攻击加成'
 			},
 			// Level 6
 			{
@@ -731,7 +781,7 @@ const characterList = {
 			// Level 13 
 			{
 				level: 13,
-				type: 'lifesteal', 
+				type: 'on_hit_source', 
 				trigger: 'skill', 
 				percent: 1.0, 
 				desc: '技能后吸血100%'
@@ -754,10 +804,10 @@ const characterList = {
 			// Level 16 
 			{
 				level: 16,
-				type: 'self_stat_percent',
-				stats: ['atk'],
-				percent: 1,
-				desc: '初始化时获得100%的攻击加成'
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
 			},
 			// Level 17
 			{
@@ -858,10 +908,10 @@ const characterList = {
 			// Level 8
 			{
 				level: 8,
-				type: 'on_skill_end', 
+				type: 'on_kill', // 假设我们定义一个 on_kill 触发类型，或者在代码中特殊处理
 				chance: 1.0, 
-				effect: 'extra_pugong', 
-				desc: '使用技能后，立即进行一次自动普攻（不触发部分手动选择逻辑）'
+				effect: 'add_extra_turn_1', 
+				desc: '成功击杀敌人后，获得1个额外行动回合' 
 			},
 			// Level 9
 			{
@@ -874,10 +924,10 @@ const characterList = {
 			// Level 10 
 			{
 				level: 10,
-				type: 'on_skill_end', 
-				chance: 1.0, 
-				effect: 'add_energy_self_2', 
-				desc: '使用技能后，恢复2点能量' 
+				type: 'stat_percent', 
+				stat: 'dmg_dealt', 
+				value: 0.1, 
+				desc: '获得10%增伤'
 			},
 			// Level 11
 			{
@@ -919,7 +969,11 @@ const characterList = {
 			},
 			// Level 16 
 			{
-				level: 16,
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
 			},
 			// Level 17
 			{
@@ -932,10 +986,10 @@ const characterList = {
 			// Level 18 
 			{
 				level: 18,
-				type: 'self_stat_percent',
-				stats: ['hp'],
-				percent: 0.5,
-				desc: '初始化时获得50%的血量加成'
+				type: 'on_pugong_hit_target', // 建议改为 on_skill_hit，或者在代码中特殊处理 on_skill_end 作用于目标
+        		chance: 1.0, 
+				effect: 'apply_heal_block_1', 
+				desc: '技能命中后，令目标禁疗1回合（直到下一轮目标的回合开始前）'
 			},
 			// Level 19
 			{
@@ -956,7 +1010,162 @@ const characterList = {
 		rank: "legend",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+				type: 'on_pugong_hit_target', 
+				chance: 0.6, 
+				effect: 'seal_1', 
+				desc: '使用技能后，60%几率封印目标一回合'
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+				type: 'on_hit_self', 
+				chance: 1.0, 
+				effect: 'counter_pugong', 
+				coefficient: 0.75, 
+				desc: '受到普攻或技能伤害时，对来源进行一次特殊普攻，造成75%攻击力的伤害' 
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+				type: 'stat_percent', 
+				stat: 'dmg_taken', 
+				value: -0.3, 
+				desc: '获得30%减伤'
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+				type: 'on_hit_self', 
+				chance: 0.5, 
+				effect: 'drain_source_1', 
+				desc: '受到普攻或技能伤害时，50%几率减少来源1能量'
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+				type: 'stat_percent', 
+				stat: 'dmg_dealt', 
+				value: 0.3, 
+				desc: '获得30%增伤'
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_041mmuqin: {
 		name: "慕琴",
@@ -967,8 +1176,276 @@ const characterList = {
 		template: 'balanced', // 均衡
 		rank: "legend",
 		tip: 'damage',
-		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		ties:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_049waner: {
 		name: "王婉儿",
@@ -980,7 +1457,141 @@ const characterList = {
 		rank: "legend",
 		tip: 'recover',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_048wushuang: {
 		name: "吴爽",
@@ -992,7 +1603,141 @@ const characterList = {
 		rank: "legend",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_076zhujun: {
 		name: "朱焌",
@@ -1004,7 +1749,141 @@ const characterList = {
 		rank: "legend",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_107tushanshuili: {
 		name: "涂山水璃",
@@ -1016,7 +1895,141 @@ const characterList = {
 		rank: "legend",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_008wuyuxin: {
 		name: "吴雨欣",
@@ -1028,7 +2041,141 @@ const characterList = {
 		rank: "legend",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_002chenailin: {
 		name: "陈爱琳",
@@ -1040,7 +2187,141 @@ const characterList = {
 		rank: "legend",
 		tip: 'recover',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 
 	// --- 史诗级 (Epic) ---
@@ -1054,7 +2335,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'recover',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_016manchengqi: {
 		name: "满城柒",
@@ -1066,7 +2481,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_018zhangqing: {
 		name: "张晴",
@@ -1078,7 +2627,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_059starsFall3: {
 		name: "周靈",
@@ -1090,7 +2773,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_059starsFall4: {
 		name: "李曉",
@@ -1102,7 +2919,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_068qingyue: {
 		name: "清月姑娘",
@@ -1114,7 +3065,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_070lvyanqiu: {
 		name: "吕艳秋",
@@ -1126,7 +3211,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_033xiaohui: {
 		name: "小慧",
@@ -1138,7 +3357,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_038bianqiuwen: {
 		name: "卞秋雯",
@@ -1150,7 +3503,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	db_ybsl_067snake: {
 		name: "蛇妃",
@@ -1162,7 +3649,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 
 
@@ -1176,7 +3797,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'recover',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_001sunlisong: {
 		name: "孙丽松",
@@ -1188,7 +3943,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_006wanghanzhen: {
 		name: "王汉桢",
@@ -1200,7 +4089,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_009liyushan: {
 		name: "李玉珊",
@@ -1212,7 +4235,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_010zhouyue: {
 		name: "周玥",
@@ -1224,7 +4381,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_013yinji: {
 		name: "尹超跃",
@@ -1236,7 +4527,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_018huanqing: {
 		name: "幻晴",
@@ -1248,7 +4673,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_036bright: {
 		name: "熙",
@@ -1260,7 +4819,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_092handan: {
 		name: "玉蝶心",
@@ -1272,7 +4965,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_083xiaozhu: {
 		name: "小筑",
@@ -1284,7 +5111,141 @@ const characterList = {
 		rank: "epic",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 
 	// --- 伪史诗 (Epicfake) ---
@@ -1298,7 +5259,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'recover',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_020jiayutong: {
 		name: "贾雨桐",
@@ -1310,7 +5405,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_025wanghe: {
 		name: "王贺",
@@ -1322,7 +5551,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_042pingzi: {
 		name: "蘋姉",
@@ -1334,7 +5697,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_043fangjiayu: {
 		name: "房佳谕",
@@ -1346,7 +5843,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_046jiangxuewu: {
 		name: "江雪舞",
@@ -1358,7 +5989,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_059starsFall2: {
 		name: "宋橤",
@@ -1370,7 +6135,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_060liutianhang: {
 		name: "刘天杭",
@@ -1382,7 +6281,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_079xiaoxin: {
 		name: "小新",
@@ -1394,7 +6427,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_003yanshuang: {
 		name: "闫爽",
@@ -1406,7 +6573,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'recover',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_004zhangyujie: {
 		name: "张玉洁",
@@ -1418,7 +6719,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_005wangruobing: {
 		name: "王若冰",
@@ -1430,7 +6865,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_007wugege: {
 		name: "吴格格",
@@ -1442,7 +7011,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_011gaoyuhang: {
 		name: "高宇航",
@@ -1454,7 +7157,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_047zhangmi: {
 		name: "张汨",
@@ -1466,7 +7303,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_026can: {
 		name: "蚕",
@@ -1478,7 +7449,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_027rain: {
 		name: "雨",
@@ -1490,7 +7595,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_029dawn: {
 		name: "黎",
@@ -1502,7 +7741,141 @@ const characterList = {
 		rank: "epicfake",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 
 	// --- 稀有 (Rare) ---
@@ -1516,7 +7889,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_045gaocong: {
 		name: "高聪",
@@ -1536,7 +8043,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'recover',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_024yuetong: {
 		name: "岳瞳",
@@ -1548,7 +8189,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_053qiuer: {
 		name: "秋儿",
@@ -1560,7 +8335,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_054yueer: {
 		name: "悦儿",
@@ -1572,7 +8481,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_055zhengyan: {
 		name: "郑琰",
@@ -1584,7 +8627,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_012zhengjiayi: {
 		name: "郑佳怡",
@@ -1596,7 +8773,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_037diamondqueen: {
 		name: "方块公主",
@@ -1608,7 +8919,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_044huruihang: {
 		name: "胡瑞航",
@@ -1620,7 +9065,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_121tujing: {
 		name: "涂静",
@@ -1633,7 +9212,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'recover',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_122wangbingyu: {
 		name: "王冰雨",
@@ -1645,7 +9358,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 	ybsl_123xuelang: {
 		name: "雪琅",
@@ -1657,7 +9504,141 @@ const characterList = {
 		rank: "rare",
 		tip: 'damage',
 		ties:[],//预留接口，一并粘贴
-		tupoList:[],//预留接口，一并粘贴
+		tupoList:[
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		],//预留接口，一并粘贴
 	},
 };
 
@@ -1688,6 +9669,145 @@ const characterTemplate = {
 		junk: { hp: 168, atk: 37, def: 8, spe: 30 },
 	},
 }
+/**
+ 
+
+			{
+				level: 0,
+				type: 'self_stat_flat',
+				stat: 'atk',
+				value: 100,
+				desc: '初始化时攻击+100固定数值'
+			},
+			// Level 1
+			{
+				level: 1,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 2
+			{
+				level: 2,
+				type: 'self_stat_flat',
+				stat: 'def',
+				value: 50,
+				desc: '初始化时防御+50固定数值'
+			},
+			// Level 3
+			{
+				level: 3,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 4
+			{
+				level: 4,
+				type: 'self_stat_flat',
+				stat: 'hp',
+				value: 200,
+				desc: '初始化时血量+200固定数值'
+			},
+			// Level 5 
+			{
+				level: 5,
+			},
+			// Level 6
+			{
+				level: 6,
+				type: 'self_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 7
+			{
+				level: 7,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 8
+			{
+				level: 8,
+			},
+			// Level 9
+			{
+				level: 9,
+				type: 'team_stat_flat',
+				stat: 'atk',
+				value: 200,
+				desc: '初始化时全队获得攻击+200固定数值'
+			},
+			// Level 10 
+			{
+				level: 10,
+			},
+			// Level 11
+			{
+				level: 11,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 12
+			{
+				level: 12,
+				type: 'team_stat_flat',
+				stat: 'def',
+				value: 100,
+				desc: '初始化时全队获得防御+100固定数值'
+			},
+			// Level 13 
+			{
+				level: 13,
+			},
+			// Level 14
+			{
+				level: 14,
+				type: 'team_stat_flat',
+				stat: 'hp',
+				value: 300,
+				desc: '初始化时全队获得血量+300固定数值'
+			},
+			// Level 15
+			{
+				level: 15,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			},
+			// Level 16 
+			{
+				level: 16, 
+				type: 'self_stat_flat',
+				stat: ['atk','def','hp'],
+				value: [1000,500,2000],
+				desc: '攻击+1000，防御+500，血量+2000'
+			},
+			// Level 17
+			{
+				level: 17,
+				type: 'team_stat_percent',
+				stats: ['atk', 'def', 'hp'],
+				percent: 0.1,
+				desc: '初始化时获得10%的攻防血加成'
+			},
+			// Level 18 
+			{
+				level: 18,
+			},
+			// Level 19
+			{
+				level: 19,
+				type: 'self_energy',
+				value: 1,
+				desc: '初始能量+1'
+			}
+		
+		
+ */
 /*
 所有治疗默认为均衡系，且带有治疗系的标签
 否则均为伤害系，根据偏攻，偏防，均衡分类

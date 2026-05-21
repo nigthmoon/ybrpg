@@ -132,10 +132,14 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
             sealTurns: 0,
             sealOwner: null,
             permanentlySealed: false,
-            extraTurn: false,
+            extraTurn: false, // 保留旧标记以兼容旧代码（如有），或逐步废弃
+            extraTurnCount: 0, // 【新增】额外回合计数
+            tupoList: tupoList,
+            tupolevel: tupolevel,
             // 暂存全队Buff用于后续统一计算
             _teamBuffs: teamBuffs, 
-            _teamPercentBuffs: teamPercentBuffs
+            _teamPercentBuffs: teamPercentBuffs,
+            hasAttacked: false
         };
 
         // 将被动Buff ID 存入 unit.buff 数组，供战斗逻辑检查
@@ -330,7 +334,6 @@ function nextTurn() {
         // 【修改】调用新的统一状态处理函数
         processStatusTurns(bs.firstSide); 
         // 2. 【新增】结算中毒伤害
-        applyPoisonDamage(); // 确保这个函数已定义
         
         updateBattleUI();
         nextTurn();
@@ -411,25 +414,39 @@ function afterAction() {
     const bs = battleState;
     if (bs.phase === 'ended') return;
 
-    // 检查胜负条件，若任意一方被击败则结束战斗
-    if (isSideDefeated('player')) {
-        endBattle('enemy');
-        return;
-    }
-    if (isSideDefeated('enemy')) {
-        endBattle('player');
-        return;
-    }
+    // 检查胜负
+    if (isSideDefeated('player')) { endBattle('enemy'); return; }
+    if (isSideDefeated('enemy')) { endBattle('player'); return; }
 
-    // 检查当前行动者是否触发【连破】机制以获得额外行动机会
+    // 获取当前行动单位
     const currentUnit = bs.currentTurnSide === 'player'
         ? bs.playerUnits[bs.currentTurnIndex]
         : bs.enemyUnits[bs.currentTurnIndex];
 
-    if (currentUnit && currentUnit.alive && currentUnit.extraTurn) {
-        currentUnit.extraTurn = false;
-        addBattleLog(`${currentUnit.name} 因【连破】获得额外行动！`);
+    // 【新增】在当前角色行动结束后，立即结算其身上的中毒伤害
+    if (currentUnit && currentUnit.alive) {
+        applyPoisonDamageToUnit(currentUnit);
+    }
+
+    // 检查胜负 (中毒可能导致死亡，所以结算完中毒后要再次检查胜负)
+    if (isSideDefeated('player')) { endBattle('enemy'); return; }
+    if (isSideDefeated('enemy')) { endBattle('player'); return; }
+
+    // 【核心修改】检查是否有额外回合计数
+    if (currentUnit && currentUnit.alive && (currentUnit.extraTurnCount > 0 || currentUnit.extraTurn)) {
+        
+        // 消耗一个额外回合
+        if (currentUnit.extraTurnCount > 0) {
+            currentUnit.extraTurnCount--;
+        } else {
+            // 兼容旧的 boolean 标记
+            currentUnit.extraTurn = false;
+        }
+
+        addBattleLog(`${currentUnit.name} 因【额外回合】再次行动！`);
         updateBattleUI();
+
+        // 直接进入该单位的行动阶段，不切换回合
         if (currentUnit.side === 'player') {
             bs.phase = 'player_action';
             showPlayerActionUI(currentUnit);
@@ -437,20 +454,21 @@ function afterAction() {
             bs.phase = 'enemy_action';
             executeAITurn(currentUnit);
         }
-        return;
+        return; // 重要：直接返回，不执行后续的 nextTurn 逻辑
     }
 
+    // --- 原有逻辑：如果没有额外回合，则正常切换先手/后手或进入下一轮 ---
+    
     const secondSide = bs.firstSide === 'player' ? 'enemy' : 'player';
 
-    // 若当前为先手方行动完毕，尝试寻找后手方可行动单位并切换回合顺序
+    // 若当前为先手方行动完毕...
     if (bs.currentTurnSide === bs.firstSide) {
         const secondActor = findNextActor(secondSide);
         if (secondActor) {
             bs.actedSlots[secondSide].add(secondActor.slotIndex);
             bs.currentTurnSide = secondSide;
             bs.currentTurnIndex = secondActor.slotIndex;
-            // 触发回合开始时的宝物效果，待动画结束后继续执行行动逻辑
-            updateBattleUI()
+            updateBattleUI();
             triggerOnTurnStart(secondActor, () => {
                 updateBattleUI();
                 if (secondSide === 'player') {
@@ -463,7 +481,6 @@ function afterAction() {
             });
             return;
         }
-        // 后手方无人可行动，进入下一回合
     }
 
     // 后手方行动完毕，或先手行动后后手方无可用单位，推进至下一回合
@@ -610,7 +627,12 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
             triggerOnSkill(actor, targets, energyCost, isRecover, () => {
                 
                 // 【新增】2. 检查并执行突破带来的“技能后”特殊效果
-                handlePostSkillBreakthroughEffects(actor, targets,'on_skill_hit', () => {
+                handlePostSkillBreakthroughEffects(actor, targets,'on_skill_hit_source', () => {
+                    // 3. 最后触发被攻击者的 on_hit (如果之前延迟了)
+                    // triggerPendingOnHits(pendingOnHitTargets, actor, callback);
+                });
+                // 【新增】2. 检查并执行突破带来的“技能后”特殊效果
+                handlePostSkillBreakthroughEffects(actor, targets,'on_skill_hit_target', () => {
                     // 3. 最后触发被攻击者的 on_hit (如果之前延迟了)
                     triggerPendingOnHits(pendingOnHitTargets, actor, callback);
                 });
@@ -637,6 +659,8 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
             // 【修复】确保 actor.atk 是数字
             const atk = Number(actor.atk) || 0;
             let healAmount = Math.floor(atk * coefficient);
+            const healMultiplier = getHealModifier(actor);
+            healAmount = Math.floor(healAmount * healMultiplier);
             if (extraEnergy > 0) {
                 healAmount = Math.floor(healAmount * (1 + extraEnergy * 0.1));
             }
@@ -644,7 +668,8 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
             const maxHp = Number(t.maxHp) || 1;
             const currentHp = Number(t.hp) || 0;
             const actualHeal = Math.min(healAmount, maxHp - currentHp);
-            
+            // 在 calculate healAmount 之后
+            // 【新增】应用突破带来的治疗量加成
             t.hp = currentHp + actualHeal; // 更新血量
             
             addBattleLog(`${t.name} 回复了 ${actualHeal} 生命值`);
@@ -663,6 +688,8 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
                 console.error(`[Battle] Damage calculation resulted in NaN...`);
                 dmg = 1;
             }
+            const dmgMultiplier = getDamageModifier(actor, 'dmg_dealt');
+            dmg = Math.floor(dmg * dmgMultiplier);
 
             dmg = applyTreasureDamageModifier(actor, dmg);
             dmg = Math.max(1, Math.floor(dmg));
@@ -697,6 +724,7 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
                 });
             }, true);
         }
+        processBreakthroughEffect(actor, 'on_skill_end', {});
     }
 
     processNextTarget();
@@ -711,7 +739,7 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
 function executePugong(actor, targets, callback) {
     const bs = battleState;
     if (!bs) { if(callback) callback(); return; }
-
+    handleOnPugongStartBreakthroughs(actor);
     const skillId = actor.skills[0] || 'attack1';
     
     // 【修复】确保 contentList 存在
@@ -732,12 +760,13 @@ function executePugong(actor, targets, callback) {
             target: ['one', 'first']     // 默认单体
         };
     }
+    
+    // console.log('普攻初始化了')
     // const sData = window.contentList.pugong[skillId];
     // if (!sData) {
     //     if (callback) callback();
     //     return;
     // }
-
     // 普攻指令下达，立即回复1能量
     actor.energy = Math.min(8, actor.energy + 1);
     updateBattleUI();
@@ -781,10 +810,17 @@ function executePugong(actor, targets, callback) {
     const pendingOnHitTargets = [];
 
     function processNextTarget() {
+    
+        // console.log('走一次')
         if (targetIndex >= targets.length) {
             // 所有目标处理完毕，触发被攻击宝物
+            handlePostActionBreakthroughEffects(actor, targets, 'on_pugong_hit_source', () => {
+
+                // // 2. 再触发原有的宝物/被动 (如狂骨等)
+                // triggerPendingOnHits(pendingOnHitTargets, actor, callback);
+            });
             // 【新增】1. 先触发突破带来的“普攻命中后”特殊效果 (中毒、封印等)
-            handlePostActionBreakthroughEffects(actor, targets, 'on_pugong_hit', () => {
+            handlePostActionBreakthroughEffects(actor, targets, 'on_pugong_hit_target', () => {
 
                 // 2. 再触发原有的宝物/被动 (如狂骨等)
                 triggerPendingOnHits(pendingOnHitTargets, actor, callback);
@@ -811,6 +847,9 @@ function executePugong(actor, targets, callback) {
             }
 
             let healAmount = Math.floor(actor.atk * coefficient);
+            
+            const healMultiplier = getHealModifier(actor);
+            healAmount = Math.floor(healAmount * healMultiplier);
             const actualHeal = Math.min(healAmount, t.maxHp - t.hp);
             t.hp += actualHeal;
             showDamageNumber(t, actualHeal, true);
@@ -821,6 +860,8 @@ function executePugong(actor, targets, callback) {
             // 绝情：真实伤害
             addBattleLog(`${actor.name} 的【绝情】效果发动，普攻改为真实伤害！`);
             let dmg = Math.floor(actor.atk * coefficient);
+            const dmgMultiplier = getDamageModifier(actor, 'dmg_dealt');
+            dmg = Math.floor(dmg * dmgMultiplier);
             dmg = applyTreasureDamageModifier(actor, dmg);
             t.hp -= dmg;
             showDamageNumber(t, dmg, false);
@@ -849,11 +890,13 @@ function executePugong(actor, targets, callback) {
             let dmg = calcDamage(actor, t, coefficient, 0, 'pugong'); 
             if (isNaN(dmg)) dmg = 1;
 
+            const dmgMultiplier = getDamageModifier(actor, 'dmg_dealt');
+            dmg = Math.floor(dmg * dmgMultiplier);
             dmg = applyTreasureDamageModifier(actor, dmg);
             
             // 【新增】获取普攻吸血比例
             const lifestealPercent = getLifestealPercent(actor, 'pugong');
-
+            // console.log('普攻吸血比例:', lifestealPercent)
             addBattleLog(`${t.name} 受到了 ${dmg} 点伤害`);
             
             applyDamage(t, dmg, actor, false, false, () => {
@@ -861,7 +904,7 @@ function executePugong(actor, targets, callback) {
                 if (lifestealPercent > 0 && actor.alive) {
                     const healAmount = Math.floor(dmg * lifestealPercent);
                     if (healAmount > 0) {
-                        const actualHeal = Math.min(healAmount, actor.maxHp - actor.hp);
+                        const actualHeal = healAmount;
                         if (actualHeal > 0) {
                             actor.hp += actualHeal;
                             addBattleLog(`${actor.name} 通过【普攻吸血】恢复了 ${actualHeal} 点生命值`);
@@ -881,8 +924,10 @@ function executePugong(actor, targets, callback) {
             }, true);
         }
     }
+    // console.log('走到这里了')
 
     processNextTarget();
+    processBreakthroughEffect(actor, 'on_pugong_start', {});
 }
 
 function applyDamage(unit, dmg, attacker, isSpecialPugong = false, isTrueDamage = false, callback, deferOnHit = false) {
@@ -906,6 +951,8 @@ function applyDamage(unit, dmg, attacker, isSpecialPugong = false, isTrueDamage 
         if (attacker && attacker.alive) {
             attacker.energy = Math.min(8, attacker.energy + 1);
             addBattleLog(`${attacker.name} 击杀目标，恢复1能量`);
+            // 【新增】检查突破带来的“击杀再动”效果
+            checkKillExtraTurn(attacker);
         }
         // 触发亡语宝物（断肠、追忆），动画结束后触发敌方阵亡监听
         triggerOnDeath(unit, attacker, () => {
@@ -1604,6 +1651,7 @@ function bs_animateAction(actor, action, callback) {
         }
 
         if (action.type === 'pugong') {
+            // console.log('执行普攻了')
             executePugong(actor, action.targets, onActionComplete);
         } else {
             executeSkill(actor, action.skillType, action.skillId, action.targets, action.energyCost, onActionComplete);
@@ -1886,14 +1934,19 @@ function createUnitSlot(unit, side, slotIndex) {
         this.src = `./image/character/${unit.id}.webp`;
     };
     slot.appendChild(img);
-
+    
     // 底部半透明信息遮罩（名称 + 血条 + 能量）
     const infoOverlay = document.createElement('div');
     infoOverlay.className = 'battle-unit-info';
-
+// console.log(unit)
     const nameEl = document.createElement('div');
     nameEl.className = 'battle-unit-name';
-    nameEl.textContent = unit.name;
+    const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    if (RANK_BORDER_COLORS[unit.rank]) {
+        nameEl.style.color = RANK_BORDER_COLORS[unit.rank];
+    }
+    const tupolevel = unit.tupolevel?`+${unit.tupolevel}`:'';
+    nameEl.textContent = unit.name+tupolevel;
     infoOverlay.appendChild(nameEl);
 
     const hpBar = document.createElement('div');
@@ -2601,72 +2654,87 @@ function exitBattle() {
 // ====== 宝物时点触发系统 ======
 
 /**
- * 显示宝物特效动画
+ * 通用特效动画显示函数 (适配宝物、突破、技能等)
  * @param {Object} unit - 目标角色
- * @param {string} treasureId - 宝物ID
- * @param {string} effectType - 效果类型: 'heal', 'damage', 'atk-up', 'def-up', 'default'
+ * @param {string} effectId - 效果ID (宝物ID / 技能ID / 突破效果ID)
+ * @param {string} effectType - 效果类型/视觉样式: 
+ *   - 'heal': 治疗 (绿色)
+ *   - 'damage': 伤害 (红色)
+ *   - 'atk-up': 攻击提升 (橙色)
+ *   - 'def-up': 防御提升 (蓝色)
+ *   - 'breakthrough': 突破特效 (紫色/金色，可根据CSS定义)
+ *   - 'skill': 技能特效
+ *   - 'default': 默认宝物样式
+ * @param {string} displayText - [可选] 自定义飘字文本。如果提供，将优先显示此文本，忽略ID对应的名称。
  * @param {Function} callback - 动画结束回调
  */
-function showTreasureEffect(unit, treasureId, effectType = 'default', callback) {
+function showTreasureEffect(unit, effectId, effectType = 'default', callback, displayText = null) {
     const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
     if (!slotEl) {
         if (callback) callback();
         return;
     }
 
+    // 1. 尝试获取宝物定义 (如果是宝物ID)
     const treasureDefs = gameData.getTreasureList();
-    const tDef = treasureDefs[treasureId];
-    const treasureName = tDef ? tDef.name : treasureId;
-
-    // 创建特效容器
-    const effectDiv = document.createElement('div');
-    effectDiv.className = 'treasure-effect-group';
-    slotEl.appendChild(effectDiv);
-
-    // 根据效果类型确定CSS类
-    let effectClass = '';
-
-    switch (effectType) {
-        case 'heal':
-            effectClass = 'heal';
-            break;
-        case 'damage':
-            effectClass = 'damage';
-            break;
-        case 'atk-up':
-            effectClass = 'atk-up';
-            break;
-        case 'def-up':
-            effectClass = 'def-up';
-            break;
-        default:
-            effectClass = '';
+    const tDef = treasureDefs[effectId];
+    
+    // 2. 确定显示名称/文本
+    // 优先级: 自定义文本 > 宝物名称 > 效果ID本身
+    let finalText = displayText;
+    if (!finalText) {
+        if (tDef && tDef.name) {
+            finalText = `【${tDef.name}】`;
+        } else {
+            // 如果不是宝物，可能是突破效果ID (如 'stun_target_1') 或技能ID
+            // 这里可以做一个简单的格式化，或者直接使用ID
+            // 为了美观，如果ID包含下划线，可以尝试美化，否则直接显示
+            finalText = `【${effectId}】`; 
+        }
     }
 
-    // 宝物图片飘字（仅显示宝物图片或名称，不显示emoji）
+    // 3. 创建特效容器
+    const effectDiv = document.createElement('div');
+    // 根据 effectType 添加额外的 CSS 类，以便在样式表中定义不同的动画或颜色
+    effectDiv.className = `treasure-effect-group type-${effectType}`;
+    slotEl.appendChild(effectDiv);
+
+    // 4. 创建内容元素 (图片或文字)
     const nameEl = document.createElement('div');
     nameEl.className = 'treasure-effect';
+    
+    // 如果有宝物定义且有图标，优先显示图标
     if (tDef && tDef.icon) {
-        // 只显示宝物图片
         const img = document.createElement('img');
         img.src = tDef.icon;
         img.style.cssText = 'width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,215,0,0.9));';
         img.onerror = function() {
-            nameEl.textContent = `【${treasureName}】`;
+            // 图片加载失败时显示文字
+            nameEl.textContent = finalText;
         };
         nameEl.appendChild(img);
     } else {
-        nameEl.textContent = `【${treasureName}】`;
+        // 没有图标，直接显示文字
+        nameEl.textContent = finalText;
+        
+        // 【可选】根据 effectType 给文字添加特定样式类
+        // 例如: nameEl.classList.add(`text-${effectType}`);
+        // 你可以在 CSS 中定义 .text-breakthrough { color: purple; } 等
     }
+    
     effectDiv.appendChild(nameEl);
 
-    // 动画结束后移除
+    // 5. 动画结束后移除
+    // 注意：不同特效可能需要不同的持续时间，这里暂时统一为 1000ms
+    // 如果需要更精细的控制，可以根据 effectType 设置不同的 timeout
+    const duration = 1000; 
+    
     setTimeout(() => {
         if (effectDiv.parentNode) {
             effectDiv.parentNode.removeChild(effectDiv);
         }
         if (callback) callback();
-    }, 1000);
+    }, duration);
 }
 
 /**
@@ -2994,25 +3062,15 @@ function handlePostSkillBreakthroughEffects(actor, targets, triggerType, callbac
     const library = window.BREAKTHROUGH_BUFF_LIBRARY || {};
     let effectsToProcess = [];
 
-    // 1. 收集所有匹配的突破被动效果
-    const passiveIds = actor.buff.filter(b => typeof b === 'string');
-    
-    passiveIds.forEach(effectId => {
+    actor.buff.forEach(effectId => {
         const def = library[effectId];
         if (def && def.type === triggerType) {
-            // 判定几率
             if (Math.random() < (def.chance || 1.0)) {
-                // 如果是命中类效果，通常作用于目标
-                if (targets && targets.length > 0) {
-                    targets.forEach(t => {
-                        if (t.alive) {
-                            effectsToProcess.push({ def, targetUnit: t, effectId: effectId });
-                        }
-                    });
-                } else {
-                    // 如果没有目标（比如全体buff），作用于自己
-                    effectsToProcess.push({ def, targetUnit: actor, effectId: effectId });
-                }
+                effectsToProcess.push({
+                    def: def,
+                    effectId: effectId,
+                    targetUnit: actor 
+                });
             }
         }
     });
@@ -3022,7 +3080,6 @@ function handlePostSkillBreakthroughEffects(actor, targets, triggerType, callbac
         return;
     }
 
-    // 2. 执行队列
     let index = 0;
     function processNextEffect() {
         if (index >= effectsToProcess.length) {
@@ -3035,154 +3092,108 @@ function handlePostSkillBreakthroughEffects(actor, targets, triggerType, callbac
         const unit = item.targetUnit; 
         const effectType = effectDef.effect;
         
-        // 【关键】从 effectId 提取持续回合数 (如 stun_2 -> 2)
         const durationMatch = item.effectId.match(/_(\d+)$/);
         const duration = durationMatch ? parseInt(durationMatch[1]) : 1;
 
         addBattleLog(`${unit.name} 触发了突破效果：${effectDef.desc}`);
 
-        // --- 具体效果实现 ---
+        // --- 【新增】播放突破特效 ---
+        showTreasureEffect(unit, item.effectId, 'breakthrough', () => {
+            
+            // 逻辑与普攻版类似，根据 triggerType 决定作用目标
+            // on_skill_hit_target -> 作用于 targets
+            // on_skill_hit_source -> 作用于 actor (或特定逻辑)
+            
+            let targetToApply = null;
+            if (triggerType.includes('_target')) {
+                 // 技能通常可能有多目标，这里简单处理为第一个存活目标，或者你可以遍历
+                 targetToApply = targets.find(t => t && t.alive);
+            } else {
+                 targetToApply = unit;
+            }
 
-        // A. 控制类：眩晕
-        if (effectType.startsWith('stun_')) {
-            if (unit && unit.alive) {
-                unit.stunned = true;
-                unit.stunOwner = actor.side;
-                unit.stunnedTurnsLeft = duration;
-                unit.stunPermanent = false;
-                addBattleLog(`${unit.name} 被【眩晕】了，持续 ${duration} 回合！`);
-                const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
-                if (slotEl) slotEl.classList.add('stunned');
+            // --- 具体效果实现 ---
+            if (effectType.startsWith('stun_')) {
+                if (targetToApply && targetToApply.alive) {
+                     targetToApply.stunned = true;
+                     targetToApply.stunOwner = unit.side; 
+                     targetToApply.stunnedTurnsLeft = duration; 
+                     targetToApply.stunPermanent = false;
+                     addBattleLog(`${targetToApply.name} 被 ${unit.name} 的【突破】眩晕了！`);
+                     updateBattleUI();
+                }
             }
-            setTimeout(processNextEffect, 100);
-        }
-        // B. 控制类：封印
-        else if (effectType.startsWith('seal_')) {
-            if (unit && unit.alive) {
-                unit.sealed = true;
-                unit.sealOwner = actor.side;
-                unit.sealedTurnsLeft = duration;
-                unit.sealPermanent = false;
-                addBattleLog(`${unit.name} 被【封印】了，持续 ${duration} 回合！`);
-                const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
-                if (slotEl) slotEl.classList.add('sealed');
+            else if (effectType.startsWith('poison_')) {
+                 if (targetToApply && targetToApply.alive) {
+                     targetToApply.poisoned = true;
+                     targetToApply.poisonTurnsLeft += duration;
+                     targetToApply.poisonOwner = unit.side;
+                     addBattleLog(`${targetToApply.name} 中了【毒】！`);
+                     updateBattleUI();
+                 }
             }
-            setTimeout(processNextEffect, 100);
-        }
-        // C. 控制类：中毒 (Poison)
-        else if (effectType === 'poison') {
-            if (unit && unit.alive) {
-                if (!unit.poisonStacks) unit.poisonStacks = [];
-                const poisonCoeff = effectDef.value || 0.05;
-                unit.poisonStacks.push({
-                    coeff: poisonCoeff,
-                    atkRef: actor.atk, // 记录施加者攻击力
-                    sourceSide: actor.side
-                });
-                addBattleLog(`${unit.name} 陷入了【中毒】状态！(层数: ${unit.poisonStacks.length})`);
-                const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
-                if (slotEl) slotEl.classList.add('poisoned');
+            // ... 其他效果同理 ...
+            else if (effectType.startsWith('drain_energy_')) {
+                 const amount = parseInt(effectType.split('_')[2]) || 1;
+                 if (targetToApply && targetToApply.alive) {
+                     targetToApply.energy = Math.max(0, targetToApply.energy - amount);
+                     addBattleLog(`${targetToApply.name} 降低了 ${amount} 点能量`);
+                     updateBattleUI();
+                 }
             }
-            setTimeout(processNextEffect, 100);
-        }
-        // D. 其他效果 (如减能 drain_energy_1 等，可根据需要继续添加)
-        else if (effectType.startsWith('drain_energy_')) {
-             const amount = parseInt(effectType.split('_')[2]) || 1;
-             if (unit && unit.alive) {
-                 unit.energy = Math.max(0, unit.energy - amount);
-                 addBattleLog(`${unit.name} 降低了 ${amount} 点能量`);
-                 updateBattleUI();
-             }
-             setTimeout(processNextEffect, 100);
-        }
-        // E. 无敌/禁疗等状态 (如果需要技能后给自己加状态，也可以在这里处理)
-        else if (effectType.startsWith('apply_invincible')) {
-             unit.invincible = true;
-             unit.invincibleOwnerSide = actor.side;
-             unit.invincibleTurnsLeft = duration;
-             unit.invinciblePermanent = false;
-             addBattleLog(`${unit.name} 获得了【无敌】状态，持续 ${duration} 回合！`);
-             const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
-             if (slotEl) slotEl.classList.add('invincible-effect');
-             setTimeout(processNextEffect, 100);
-        }
-        else if (effectType.startsWith('apply_heal_block')) {
-             unit.healBlocked = true;
-             unit.healBlockOwnerSide = actor.side;
-             unit.healBlockedTurnsLeft = duration;
-             unit.healBlockPermanent = false;
-             addBattleLog(`${unit.name} 被【禁疗】了，持续 ${duration} 回合！`);
-             const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
-             if (slotEl) slotEl.classList.add('heal-blocked-effect');
-             setTimeout(processNextEffect, 100);
-        }
-        else {
-            console.warn(`[Battle] Unhandled breakthrough effect: ${effectType}`);
-            setTimeout(processNextEffect, 50);
-        }
+            else {
+                 console.warn(`[Battle] Unhandled skill breakthrough effect: ${effectType}`);
+            }
+
+            setTimeout(processNextEffect, 150);
+        },'突破效果');
     }
 
     processNextEffect();
 }
 
 /**
- * 通用行动后突破效果处理器
+ * 通用行动后突破效果处理器 (支持普攻和技能 - 普攻版)
  * @param {Object} actor - 发起行动的角色
  * @param {Array} targets - 行动的目标列表
- * @param {String} triggerType - 触发类型 ('on_pugong_hit' 或 'on_skill_hit')
+ * @param {String} triggerType - 触发类型 ('on_pugong_hit_source', 'on_pugong_hit_target', 'on_hit_self'等)
  * @param {Function} callback - 完成后的回调
  */
 function handlePostActionBreakthroughEffects(actor, targets, triggerType, callback) {
-    if (!actor || !actor.buff) { if(callback) callback(); return; }
+    // 【修复】增加空值检查
+    if (!actor || !actor.buff) { 
+        if(callback) callback(); 
+        return; 
+    }
     
     const library = window.BREAKTHROUGH_BUFF_LIBRARY || {};
     let effectsToProcess = [];
 
+    // 收集所有触发的突破效果
     actor.buff.forEach(effectId => {
         const def = library[effectId];
+        // 匹配触发类型
         if (def && def.type === triggerType) {
+            // 概率判定
             if (Math.random() < (def.chance || 1.0)) {
-                // 如果是命中类效果，通常作用于目标；如果是自身增益，作用于 actor
-                // 这里简化处理：假设 on_xxx_hit 都是作用于 targets
-                let targetUnit = actor; // 默认作用于自己
-                
-                if (triggerType.includes('_hit')) {
-                    // 命中类：作用于传入的 targets (敌人)
-                    if (targets && targets.length > 0) {
-                         targets.forEach(t => {
-                             if(t.alive) effectsToProcess.push({ def, targetUnit: t, effectId });
-                         });
-                    }
-                } else if (triggerType === 'on_hit_self') {
-                    // 受击类：效果通常作用于“攻击者”(targets[0])，或者是给自己加Buff
-                    // 这里需要根据 effectDef.effect 的具体内容判断
-                    // 例如：add_self_energy_1 -> 作用于 actor
-                    // 例如：stun_source_1 -> 作用于 targets[0]
-                    
-                    if (def.effect.includes('source')) {
-                        // 反弹类效果
-                        const source = targets && targets.length > 0 ? targets[0] : null;
-                        if (source && source.alive) {
-                            effectsToProcess.push({ def, targetUnit: source, effectId, isSource: true });
-                        }
-                    } else {
-                        // 自身增益类
-                        effectsToProcess.push({ def, targetUnit: actor, effectId });
-                    }
-                } else {
-                    // 行动结束类：作用于自己
-                    effectsToProcess.push({ def, targetUnit: actor, effectId });
-                }
+                effectsToProcess.push({
+                    def: def,
+                    effectId: effectId,
+                    // 确定特效显示的目标：通常突破特效显示在发起者(actor)身上，
+                    // 除非是 on_hit_self (受击反震)，此时可能希望显示在受害者身上，或者依然显示在发起者表示他触发了反震。
+                    // 这里统一显示在 actor 身上，代表 actor 的突破能力生效
+                    targetUnit: actor 
+                });
             }
         }
     });
 
+    // 如果没有效果触发，直接回调
     if (effectsToProcess.length === 0) {
         if (callback) callback();
         return;
     }
 
-    // 2. 执行队列 (复用之前的逻辑结构)
     let index = 0;
     function processNextEffect() {
         if (index >= effectsToProcess.length) {
@@ -3193,7 +3204,7 @@ function handlePostActionBreakthroughEffects(actor, targets, triggerType, callba
         const item = effectsToProcess[index++];
         const effectDef = item.def;
         const unit = item.targetUnit; 
-        const effectType = effectDef.effect;
+        const effectType = effectDef.effect; // 例如: 'stun_target_1', 'poison_2'
         
         // 【关键】从 effectId 提取持续回合数 (如 stun_2 -> 2)
         const durationMatch = item.effectId.match(/_(\d+)$/);
@@ -3201,117 +3212,180 @@ function handlePostActionBreakthroughEffects(actor, targets, triggerType, callba
 
         addBattleLog(`${unit.name} 触发了突破效果：${effectDef.desc}`);
 
-        // --- 具体效果实现 (复用并扩展之前的 switch case) ---
-
-        // A. 控制类：眩晕
-        if (effectType.startsWith('stun_')) {
-            if (unit && unit.alive) {
-                unit.stunned = true;
-                unit.stunOwner = actor.side;
-                unit.stunnedTurnsLeft = duration;
-                unit.stunPermanent = false;
-                addBattleLog(`${unit.name} 被【眩晕】了，持续 ${duration} 回合！`);
-                const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
-                if (slotEl) slotEl.classList.add('stunned');
-            }
-            setTimeout(processNextEffect, 100);
-        }
-        // B. 控制类：封印
-        else if (effectType.startsWith('seal_')) {
-            if (unit && unit.alive) {
-                unit.sealed = true;
-                unit.sealOwner = actor.side;
-                unit.sealedTurnsLeft = duration;
-                unit.sealPermanent = false;
-                addBattleLog(`${unit.name} 被【封印】了，持续 ${duration} 回合！`);
-                const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
-                if (slotEl) slotEl.classList.add('sealed');
-            }
-            setTimeout(processNextEffect, 100);
-        }
-        // C. 控制类：中毒 (Poison)
-        else if (effectType === 'poison') {
-            if (unit && unit.alive) {
-                if (!unit.poisonStacks) unit.poisonStacks = [];
-                const poisonCoeff = effectDef.value || 0.05;
-                unit.poisonStacks.push({
-                    coeff: poisonCoeff,
-                    atkRef: actor.atk, // 记录施加者攻击力
-                    sourceSide: actor.side
-                });
-                addBattleLog(`${unit.name} 陷入了【中毒】状态！(层数: ${unit.poisonStacks.length})`);
-                const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
-                if (slotEl) slotEl.classList.add('poisoned');
-            }
-            setTimeout(processNextEffect, 100);
-        }
-        // ... 之前的眩晕、封印、中毒逻辑 ...
-
-        // F. 受击回能 (add_self_energy_1)
-        else if (effectType === 'add_self_energy_1') {
-            if (unit && unit.alive) {
-                unit.energy = Math.min(8, unit.energy + 1);
-                addBattleLog(`${unit.name} 因【受击】恢复了1点能量`);
-                updateBattleUI();
-            }
-            setTimeout(processNextEffect, 100);
-        }
+        // --- 【新增】播放突破特效 ---
+        // 使用 showTreasureEffect 模拟突破特效
+        // 参数: unit(显示对象), effectId(作为ID), 'breakthrough'(作为特效类型标识), 回调
+        // 注意：如果 showTreasureEffect 内部严格校验 treasure ID，可能需要确保 effectId 能被识别，
+        // 或者修改 showTreasureEffect 允许任意字符串作为特效名。
+        // 假设 showTreasureEffect 能够处理非宝物ID，或者我们传入一个通用的 'breakthrough' 类型
         
-        // G. 受击反晕攻击者 (stun_source_1)
-        // 注意：在 on_hit_self 语境下，targetUnit 是受害者(unit)，但效果要作用于 攻击者(attacker)
-        // 我们的通用函数里 item.targetUnit 默认是 unit (受害者)。
-        // 对于 stun_source，我们需要特殊处理：作用于 attacker。
-        else if (effectType === 'stun_source_1') {
-            // 这里的 unit 是受害者。我们需要找到攻击者。
-            // 由于 handlePostActionBreakthroughEffects 的第二个参数 targets 传的是 [attacker]
-            // 所以我们可以从 targets 里拿，或者在调用时特殊处理。
-            // 修正：在 applyDamage 调用时，我们传的是 [attacker] 作为 targets。
-            // 但在 handlePostActionBreakthroughEffects 内部，对于 on_hit_self，
-            // 我们通常希望效果作用于“来源”。
+        showTreasureEffect(unit, item.effectId, 'breakthrough', () => {
             
-            // 简单做法：在通用函数里，如果 effect 包含 source，则作用于 targets[0] (即攻击者)
-            const sourceUnit = targets && targets.length > 0 ? targets[0] : null;
-            if (sourceUnit && sourceUnit.alive) {
-                 sourceUnit.stunned = true;
-                 sourceUnit.stunOwner = unit.side; // 记录是谁晕的
-                 sourceUnit.stunnedTurnsLeft = 1; // 默认1回合，或者从 effectId 解析
-                 sourceUnit.stunPermanent = false;
-                 addBattleLog(`${sourceUnit.name} 被 ${unit.name} 的【反震】眩晕了！`);
-                 const slotEl = document.querySelector(`.battle-unit[data-side="${sourceUnit.side}"][data-slot="${sourceUnit.slotIndex}"]`);
-                 if (slotEl) slotEl.classList.add('stunned');
+            // --- 具体效果实现 (在动画结束后执行) ---
+
+            // A. 眩晕 (Stun)
+            if (effectType.startsWith('stun_target_')) {
+                // 默认作用于目标，如果是 on_hit_self 且逻辑需要作用于攻击者，需在外层处理 targets
+                // 这里假设 effectDef 或 context 已经明确了作用对象，或者我们默认作用于 targets[0] (如果是攻击类)
+                // 为了简化，这里沿用你原有的逻辑结构，但包裹在回调里
+                
+                // 判断作用目标：
+                // 如果是 on_pugong_hit_target / on_skill_hit_target -> 作用于 targets
+                // 如果是 on_pugong_hit_source / on_hit_self -> 作用于 actor 或 attacker
+                let targetToApply = null;
+                
+                if (triggerType.includes('_target')) {
+                    // 作用于敌人，取第一个存活敌人
+                    targetToApply = targets.find(t => t && t.alive);
+                } else if (triggerType === 'on_hit_self') {
+                    // 受击反震，通常晕眩攻击者。
+                    // 注意：在此函数上下文中，targets 可能是 [attacker] (见调用处)
+                    targetToApply = targets && targets.length > 0 ? targets[0] : null;
+                } else {
+                    // 其他情况默认作用于 actor 自己 (如自buff)
+                    targetToApply = unit; 
+                }
+
+                if (targetToApply && targetToApply.alive) {
+                     targetToApply.stunned = true;
+                     targetToApply.stunOwner = unit.side; 
+                     targetToApply.stunnedTurnsLeft = duration; 
+                     targetToApply.stunPermanent = false;
+                     addBattleLog(`${targetToApply.name} 被 ${unit.name} 的【突破】眩晕了 ${duration} 回合！`);
+                     
+                     // 更新UI以显示眩晕状态
+                     updateBattleUI();
+                }
             }
-            setTimeout(processNextEffect, 100);
-        }
+            // // B. 中毒 (Poison)
+            // else if (effectType.startsWith('poison_')) {
+            //      let targetToApply = triggerType.includes('_target') ? targets.find(t => t && t.alive) : unit;
+            //      if (targetToApply && targetToApply.alive) {
+            //          // 简单的中毒逻辑：添加标记，回合初结算
+            //          // 假设有一个 poisonTurnsLeft 属性
+            //          targetToApply.poisoned = true;
+            //          targetToApply.poisonTurnsLeft += duration; // 或者累加
+            //          targetToApply.poisonOwner = unit.side;
+            //          addBattleLog(`${targetToApply.name} 中了【毒】，每回合损失生命值！`);
+            //          updateBattleUI();
+            //      }
+            // }
+                        // ... 之前的代码 (如 stun_source_) ...
 
-        // H. 受击给队友加能 (add_energy_team_1)
-        else if (effectType === 'add_energy_team_1') {
-             // 需要获取队友列表
-             const teamSide = unit.side;
-             const teammates = getAliveUnits(teamSide).filter(u => u !== unit);
-             teammates.forEach(tm => {
-                 tm.energy = Math.min(8, tm.energy + 1);
-             });
-             addBattleLog(`${unit.name} 的【羁绊】使全队增加了1能量`);
-             updateBattleUI();
-             setTimeout(processNextEffect, 100);
-        }
+                        // H. 受击反毒 (poison_source)
+            else if (effectType === 'poison_source') {
+                 const sourceUnit = targets && targets.length > 0 ? targets[0] : null;
+                 
+                 if (sourceUnit && sourceUnit.alive) {
+                     const poisonCoeff = effectDef.value || 0.05;
+                     
+                     sourceUnit.poisoned = true;
+                     sourceUnit.poisonOwner = unit.side;
+                     
+                     // 【新增】记录施毒者(即当前的 unit)的攻击力，用于后续结算伤害
+                     sourceUnit.poisonSourceAtk = unit.atk; 
 
-        // D. 其他效果 (如减能 drain_energy_1 等，可根据需要继续添加)
-        else if (effectType.startsWith('drain_energy_')) {
-             const amount = parseInt(effectType.split('_')[2]) || 1;
-             if (unit && unit.alive) {
-                 unit.energy = Math.max(0, unit.energy - amount);
-                 addBattleLog(`${unit.name} 降低了 ${amount} 点能量`);
+                     if (!sourceUnit.poisonCoeff) {
+                         sourceUnit.poisonCoeff = 0;
+                     }
+                     sourceUnit.poisonCoeff += poisonCoeff;
+                     
+                     addBattleLog(`${sourceUnit.name} 被 ${unit.name} 的【突破】施加了中毒！(系数: ${Math.floor(poisonCoeff * 100)}%)`);
+                     updateBattleUI();
+                 }
+            }
+            
+            // ... 之后的代码 (else warn) ...
+            // C. 封印 (Seal - 假设存在)
+            else if (effectType.startsWith('seal_')) {
+                 let targetToApply = triggerType.includes('_target') ? targets.find(t => t && t.alive) : unit;
+                 if (targetToApply && targetToApply.alive) {
+                     targetToApply.sealed = true;
+                     targetToApply.sealedTurnsLeft = duration;
+                     addBattleLog(`${targetToApply.name} 被【封印】，无法使用技能！`);
+                     updateBattleUI();
+                 }
+            }
+            // D. 减能 (Drain Energy)
+            else if (effectType.startsWith('drain_energy_')) {
+                 const amount = parseInt(effectType.split('_')[2]) || 1;
+                 let targetToApply = triggerType.includes('_target') ? targets.find(t => t && t.alive) : unit;
+                 if (targetToApply && targetToApply.alive) {
+                     targetToApply.energy = Math.max(0, targetToApply.energy - amount);
+                     addBattleLog(`${targetToApply.name} 降低了 ${amount} 点能量`);
+                     updateBattleUI();
+                 }
+            }
+            // E. 无敌/增益等
+            else if (effectType.startsWith('apply_invincible')) {
+                 unit.invincible = true;
+                 unit.invincibleOwnerSide = unit.side;
+                 unit.invincibleTurnsLeft = duration;
+                 unit.invinciblePermanent = false;
+                 addBattleLog(`${unit.name} 获得了【无敌】状态，持续 ${duration} 回合！`);
                  updateBattleUI();
-             }
-             setTimeout(processNextEffect, 100);
-        }
-        else {
-            console.warn(`[Battle] Unhandled breakthrough effect in Pugong: ${effectType}`);
-            setTimeout(processNextEffect, 50);
-        }
+            }
+             // F. 受击回能 (add_self_energy_1) - 通常在 on_hit_self 中
+            else if (effectType.startsWith('add_self_energy_')) {
+                if (unit && unit.alive) {
+                    unit.energy = Math.min(8, unit.energy + duration);
+                    addBattleLog(`${unit.name} 因【突破】恢复了${duration}点能量`);
+                    updateBattleUI();
+                }
+            }
+            // G. 受击反晕 (stun_source_1) - 特殊处理
+            else if (effectType.startsWith('stun_source_')) {
+                 // 在 on_hit_self 语境下，targets[0] 是攻击者
+                 const sourceUnit = targets && targets.length > 0 ? targets[0] : null;
+                 if (sourceUnit && sourceUnit.alive) {
+                     sourceUnit.stunned = true;
+                     sourceUnit.stunOwner = unit.side;
+                     sourceUnit.stunnedTurnsLeft = duration; 
+                     sourceUnit.stunPermanent = false;
+                     addBattleLog(`${sourceUnit.name} 被 ${unit.name} 的【反震】眩晕了！`);
+                     updateBattleUI();
+                 }
+            }
+            
+            else if (effectType.startsWith('counter_pugong')){
+                const coefficient = duration;
+                // 计算反击伤害 (基于受害者的攻击力)
+                // 注意：这里通常不享受增伤Buff，或者你可以选择让它享受。
+                // 简单实现：直接计算基础伤害
+                let counterDmg = Math.floor(unit.atk * coefficient);
+                // 可选：应用受害者的增伤Buff
+                // const dmgMultiplier = getDamageModifier(victim, 'dmg_dealt');
+                // counterDmg = Math.floor(counterDmg * dmgMultiplier);
+    
+                // 可选：应用攻击者的减伤Buff
+                // const takenMultiplier = getDamageModifier(attacker, 'dmg_taken');
+                // counterDmg = Math.floor(counterDmg * takenMultiplier);
+    
+                counterDmg = Math.max(1, counterDmg); // 至少1点伤害
+                const sourceUnit = targets && targets.length > 0 ? targets[0] : null;
+                if (sourceUnit && sourceUnit.alive) {
+                    // 执行伤害
+                    applyDamage(targets[0], counterDmg, unit, false, false, () => {
+                        // 反击伤害通常不触发进一步的连锁反应（如再次刚烈），防止死循环
+                        updateBattleUI();
+                    }, true); // deferOnHit=true 防止触发攻击者的受击效果导致无限递归
+                    
+                    updateBattleUI();
+                    addBattleLog(`${unit.name} 触发【刚烈】，对 ${sourceUnit.name} 造成 ${counterDmg} 点反击伤害！`);
+                    // 播放特效
+                    showTreasureEffect(unit, 'counter_pugong', 'damage', null, '突破反击');
+                }
+            }
+            else {
+                console.warn(`[Battle] Unhandled breakthrough effect: ${effectType}`);
+            }
+
+            // 当前效果处理完毕，延迟一下再处理下一个，让节奏更清晰
+            setTimeout(processNextEffect, 150);
+        },'突破效果');
     }
 
+    // 开始处理队列
     processNextEffect();
 }
 
@@ -3322,22 +3396,26 @@ function handlePostActionBreakthroughEffects(actor, targets, triggerType, callba
  * @returns {number} 吸血比例 (0-1)
  */
 function getLifestealPercent(unit, triggerType) {
-    if (!unit || !unit.buff) return 0;
+    if (!unit || !unit.tupoList) return 0;
+    // console.log(unit)
     
     const library = window.BREAKTHROUGH_BUFF_LIBRARY || {};
     let totalPercent = 0;
 
     // 遍历角色身上的所有 buff ID
-    unit.buff.forEach(buffId => {
+    unit.tupoList.forEach(buffId => {
+        // console.log(buffId)
         // 如果 buffId 是字符串，去库裡查定义
         if (typeof buffId === 'string') {
             const def = library[buffId];
-            if (def && def.type === 'lifesteal' && def.trigger === triggerType) {
+            if (def && def.type === 'on_hit_source' && def.trigger === triggerType) {
                 totalPercent += (def.percent || 0);
             }
+            // console.log('新版本:', def)
         } 
         // 兼容旧版：如果 buff 是直接嵌入的对象（虽然推荐用 ID 引用）
-        else if (typeof buffId === 'object' && buffId.type === 'lifesteal' && buffId.trigger === triggerType) {
+        else if (typeof buffId === 'object' && buffId.type === 'on_hit_source' && buffId.trigger === triggerType) {
+            // console.log('旧版本:', buffId)
             totalPercent += (buffId.percent || 0);
         }
     });
@@ -3401,3 +3479,265 @@ function applyPoisonDamage() {
     updateBattleUI();
 }
 
+/**
+ * 通用突破效果处理器
+ * @param {Object} unit - 触发效果的角色
+ * @param {string} triggerType - 触发类型 (与 tupoList 中的 type 对应)
+ * @param {Object} context - 上下文数据 (如 damage, targets, skillType 等)
+ * @returns {Object} 处理结果 (如 modifiedDamage, extraEnergy 等)
+ */
+function processBreakthroughEffect(unit, triggerType, context = {}) {
+    if (!unit || !unit.tupoList || unit.tupolevel === undefined) return {};
+
+    let result = {};
+    const currentLevel = unit.tupolevel;
+
+    // 遍历该角色所有已解锁的突破等级 (0 到 currentLevel)
+    for (let i = 0; i <= currentLevel; i++) {
+        const buff = unit.tupoList[i];
+        if (!buff || buff.type !== triggerType) continue;
+
+        // --- 1. 首击增伤 (first_hit_bonus) ---
+        if (triggerType === 'first_hit_bonus') {
+            // 假设 context 包含 { isFirstHit: boolean }
+            if (context.isFirstHit && buff.stat === 'dmg_dealt') {
+                // 记录增伤比例，后续在 calcDamage 或 applyDamage 中应用
+                // 注意：这里需要配合战斗状态记录“是否为首击”
+                // 简单实现：直接在 result 中返回增伤系数
+                result.dmgMultiplier = (result.dmgMultiplier || 1) + (buff.value || 0);
+                addBattleLog(`${unit.name} 触发【首击增伤】，伤害增加 ${Math.floor((buff.value || 0) * 100)}%`);
+            }
+        }
+
+        // --- 2. 技能结束后效果 (on_skill_end) ---
+        else if (triggerType === 'on_skill_end') {
+            // 示例：恢复能量
+            if (buff.effect === 'add_energy_self_2') {
+                const energyGain = 2;
+                unit.energy = Math.min(8, unit.energy + energyGain);
+                addBattleLog(`${unit.name} 突破效果发动，恢复 ${energyGain} 点能量`);
+                showTreasureEffect(unit, 'breakthrough_energy', 'atk-up', null, '+2 能量');
+            }
+            // 示例：额外普攻
+            else if (buff.effect === 'extra_pugong') {
+                // 标记需要额外行动，这在 afterAction 中处理
+                // unit.extraTurn = true; 
+                unit.extraTurnCount += 1
+                addBattleLog(`${unit.name} 突破效果发动，获得额外行动机会`);
+            }
+        }
+
+        // --- 3. 普攻开始时效果 (on_pugong_start) ---
+        else if (triggerType === 'on_pugong_start') {
+            // 示例：全队加能量
+            if (buff.effect === 'add_energy_team_1' && Math.random() < (buff.chance || 1)) {
+                const sideUnits = unit.side === 'player' ? battleState.playerUnits : battleState.enemyUnits;
+                sideUnits.forEach(u => {
+                    if (u && u.alive) {
+                        u.energy = Math.min(8, u.energy + 1);
+                    }
+                });
+                addBattleLog(`${unit.name} 突破效果发动，全队恢复 1 点能量`);
+                updateBattleUI();
+            }
+        }
+        
+        // --- 4. 其他类型可以在这里扩展 ---
+    }
+
+    return result;
+}
+/**
+ * 获取角色的最终伤害修正系数 (整合所有增伤/减伤来源)
+ * @param {Object} unit - 角色对象
+ * @param {string} damageType - 'dmg_dealt' (造成伤害) 或 'dmg_taken' (受到伤害)
+ * @returns {number} 最终系数 (例如 1.2 表示增伤20%, 0.8 表示减伤20%)
+ */
+function getDamageModifier(unit, damageType) {
+    if (!unit || !unit.buff) return 1.0;
+    
+    let modifier = 1.0;
+    const library = window.BREAKTHROUGH_BUFF_LIBRARY || {};
+
+    // 遍历单位所有的 buff/effectId
+    unit.buff.forEach(effectId => {
+        const def = library[effectId];
+        if (!def) return;
+
+        // 检查是否是 stat_percent 类型且针对 dmg_dealt 或 dmg_taken
+        if (def.type === 'stat_percent') {
+            if (damageType === 'dmg_dealt' && def.stat === 'dmg_dealt') {
+                modifier += def.value;
+            } else if (damageType === 'dmg_taken' && def.stat === 'dmg_taken') {
+                modifier += def.value; // value 通常为负数表示减伤
+            }
+        }
+        
+        // 如果有其他类型的增伤（比如 first_hit_bonus 已经在 calcDamage 处理了，这里主要处理被动常驻）
+        // 可以在这里扩展
+    });
+
+    // 限制最小值为 0.1 (防止完全免伤导致逻辑错误，可选)
+    return Math.max(0.1, modifier);
+}
+
+/**
+ * 获取角色的最终治疗量修正系数
+ * @param {Object} unit - 角色对象
+ * @returns {number} 最终系数
+ */
+function getHealModifier(unit) {
+    if (!unit || !unit.buff) return 1.0;
+    
+    let modifier = 1.0;
+    const library = window.BREAKTHROUGH_BUFF_LIBRARY || {};
+
+    unit.buff.forEach(effectId => {
+        const def = library[effectId];
+        if (!def) return;
+
+        if (def.type === 'stat_percent' && def.stat === 'heal_done') {
+            modifier += def.value;
+        }
+    });
+
+    return Math.max(0.1, modifier);
+}
+
+/**
+ * 处理普攻开始时的突破效果 (on_pugong_start)
+ * @param {Object} actor - 发起普攻的角色
+ */
+function handleOnPugongStartBreakthroughs(actor) {
+    if (!actor || !actor.buff) return;
+    
+    const library = window.BREAKTHROUGH_BUFF_LIBRARY || {};
+    const sideUnits = actor.side === 'player' ? battleState.playerUnits : battleState.enemyUnits;
+
+    actor.buff.forEach(effectId => {
+        const def = library[effectId];
+        if (!def || def.type !== 'on_pugong_start') return;
+
+        // 概率判定
+        if (Math.random() >= (def.chance || 1.0)) return;
+
+        // 执行具体效果
+        if (def.effect === 'add_energy_team_1') {
+            // 全队加1能量
+            sideUnits.forEach(u => {
+                if (u && u.alive) {
+                    u.energy = Math.min(8, u.energy + 1);
+                }
+            });
+            addBattleLog(`${actor.name} 触发【突破】，全队恢复1点能量`);
+            showTreasureEffect(actor, effectId, 'atk-up', null, '全队+1能量');
+        } 
+        else if (def.effect === 'add_energy_lowest_1') {
+            // 【新增】令能量最低的一名队友增加1能量
+            // 1. 筛选存活队友
+            const aliveTeammates = sideUnits.filter(u => u && u.alive && u !== actor);
+            
+            if (aliveTeammates.length > 0) {
+                // 2. 找到能量最低的
+                // sort 升序，取第一个
+                const lowestEnergyUnit = aliveTeammates.sort((a, b) => a.energy - b.energy)[0];
+                
+                if (lowestEnergyUnit) {
+                    const oldEnergy = lowestEnergyUnit.energy;
+                    lowestEnergyUnit.energy = Math.min(8, lowestEnergyUnit.energy + 1);
+                    
+                    if (lowestEnergyUnit.energy > oldEnergy) {
+                        addBattleLog(`${actor.name} 触发【突破】，能量最低的 ${lowestEnergyUnit.name} 恢复1点能量`);
+                        showTreasureEffect(lowestEnergyUnit, effectId, 'atk-up', null, '+1能量');
+                        updateBattleUI(); // 确保UI更新
+                    }
+                }
+            }
+        }
+    });
+}
+
+/**
+ * 检查击杀者是否拥有“击杀获得额外回合”的突破效果
+ * @param {Object} killer - 击杀者
+ */
+function checkKillExtraTurn(killer) {
+    if (!killer || !killer.tupoList) return;
+
+    const currentLevel = killer.tupolevel || 0;
+    
+    // 遍历已解锁的突破等级
+    for (let i = 0; i <= currentLevel; i++) {
+        const buff = killer.tupoList[i];
+        // 假设配置中 type 为 'on_kill' 或特定标识
+        // 这里我们直接检查 effectId 或 type 匹配
+        if (buff && buff.type === 'on_kill' && buff.effect === 'add_extra_turn_1') {
+            // 概率判定（如果配置了 chance）
+            if (Math.random() < (buff.chance || 1.0)) {
+                killer.extraTurnCount = (killer.extraTurnCount || 0) + 1;
+                addBattleLog(`${killer.name} 触发【突破·连杀】，获得1个额外回合！`);
+                // 可选：播放特效
+                showTreasureEffect(killer, 'breakthrough_kill', 'atk-up', null, '额外回合+1');
+            }
+        }
+    }
+}
+
+/**
+ * 结算指定单位的中毒伤害
+ * @param {Object} unit - 需要结算中毒的单位
+ */
+function applyPoisonDamageToUnit(unit) {
+    if (!unit || !unit.alive || !unit.poisoned || unit.poisonCoeff <= 0) {
+        return;
+    }
+
+    // 计算伤害：基于施毒者(通常是攻击者，但这里简化为基于受害者最大血量或固定系数)
+    // 根据你的配置 value: 0.05，通常指每秒/每回合损失最大生命值的5% 或 攻击力的5%
+    // 这里假设是基于受害者最大生命值的百分比，或者你可以改为基于 unit.atk (如果是反震毒，atk属于受害者自己，不太合理)
+    // 更合理的逻辑：中毒伤害通常基于【施毒者】的攻击力。但由于是受击触发，施毒者是 attacker。
+    // 为了简化，我们暂时使用：受害者最大生命值 * 中毒系数
+    // 如果你希望基于攻击力，需要在施加中毒时记录施毒者的 atk
+    
+    // 方案A: 基于最大生命值百分比 (常见于DOT)
+    // const damage = Math.floor(unit.maxHp * unit.poisonCoeff);
+    
+    // 方案B: 基于施毒者攻击力 (需要在 handlePostActionBreakthroughEffects 中记录 sourceAtk)
+    // 假设我们在施加中毒时记录了 sourceAtk 在 unit.poisonSourceAtk
+    const sourceAtk = unit.poisonSourceAtk || unit.atk; // fallback
+    const damage = Math.floor(sourceAtk * unit.poisonCoeff);
+
+    if (damage > 0) {
+        unit.hp -= damage;
+        addBattleLog(`${unit.name} 因【中毒】损失了 ${damage} 点生命值`);
+        showDamageNumber(unit, damage, false);
+        
+        // 更新UI
+        updateBattleUI();
+
+        // 检查是否死亡
+        if (unit.hp <= 0) {
+            unit.hp = 0;
+            unit.alive = false;
+            addBattleLog(`${unit.name} 因【中毒】阵亡！`);
+            
+            // 处理阵亡逻辑 (触发亡语等)
+            // 注意：这里没有 attacker 对象，因为是持续伤害致死
+            // 如果需要触发亡语，可以调用 triggerOnDeath(unit, null, ...)
+            // 但通常持续伤害致死不触发击杀者的连破等效果，除非你指定了 poisonOwner
+            if (unit.poisonOwner) {
+                 // 如果有记录施毒者，可以尝试触发一些逻辑，但通常简单处理即可
+            }
+        }
+    }
+    
+    // 如果中毒有回合限制，在这里减少
+    // if (unit.poisonTurnsLeft) {
+    //     unit.poisonTurnsLeft--;
+    //     if (unit.poisonTurnsLeft <= 0) {
+    //         unit.poisoned = false;
+    //         unit.poisonCoeff = 0;
+    //         addBattleLog(`${unit.name} 的【中毒】效果消失了`);
+    //     }
+    // }
+}

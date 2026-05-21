@@ -18,7 +18,7 @@ const SPeventList = {
                 gold: 300,
                 enemy: [
                     {}, {}, {}, {}, 
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [],tupolevel:6,}, {}
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [],tupolevel:1,}, {}
                 ],
             },
             'sp1-2': {
@@ -30,7 +30,7 @@ const SPeventList = {
                 gold: 500,
                 enemy: [
                     {}, {}, {}, {}, 
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 125, def: 65, spe: 65, buff: [],tupolevel:6,}, {}
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 125, def: 65, spe: 65, buff: [],tupolevel:2,}, {}
                 ],
             },
             'sp1-3': {
@@ -42,7 +42,7 @@ const SPeventList = {
                 gold: 700,
                 enemy: [
                     {}, {}, {}, {}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1500, atk: 150, def: 80, spe: 80, buff: [],tupolevel:6,}, {}
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1500, atk: 150, def: 80, spe: 80, buff: [],tupolevel:3,}, {}
                 ],
             },
             'sp1-4': {
@@ -53,9 +53,9 @@ const SPeventList = {
                 prev: 'sp1-3',
                 gold: 1000,
                 enemy: [
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 65, def: 65, spe: 65, buff: [], tupolevel: 6, },{}, 
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 6, },{}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 6, }, {}
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 65, def: 65, spe: 65, buff: [], tupolevel: 4, },{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 4, },{}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 4, }, {}
                 ],
 
             },
@@ -68,7 +68,7 @@ const SPeventList = {
                 gold: 1500,
                 enemy: [
                     {}, {}, {}, {}, 
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1800, atk: 175, def: 95, spe: 95, buff: [],tupolevel:6,}, {}
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1800, atk: 175, def: 95, spe: 95, buff: [],tupolevel:8,}, {}
                 ],
             },
             'sp1-6': {
@@ -80,7 +80,7 @@ const SPeventList = {
                 gold: 1750,
                 enemy: [
                     {}, {}, {}, {}, 
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 2000, atk: 200, def: 110, spe: 110, buff: [],tupolevel:6,}, {}
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 2000, atk: 200, def: 110, spe: 110, buff: [],tupolevel:8,}, {}
                 ],
             },
             'sp1-7': {
@@ -92,7 +92,7 @@ const SPeventList = {
                 gold: 2000,
                 enemy: [
                     {}, {}, {}, {}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:6,}, {}
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:8,}, {}
                 ],
             },
             'sp1-8': {
@@ -103,9 +103,9 @@ const SPeventList = {
                 prev: 'sp1-7',
                 gold: 2200,
                 enemy: [
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 2000, atk: 200, def: 110, spe: 110, buff: [],tupolevel:6,},{}, 
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1800, atk: 175, def: 95, spe: 95, buff: [],tupolevel:6,}, {}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:6,}, {}
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 2000, atk: 200, def: 110, spe: 110, buff: [],tupolevel:8,},{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1800, atk: 175, def: 95, spe: 95, buff: [],tupolevel:8,}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:8,}, {}
                 ],
 
             },
@@ -118,7 +118,7 @@ const SPeventList = {
                 gold: 2800,
                 enemy: [
                     {}, {}, {}, {}, 
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 3000, atk: 300, def: 180, spe: 150, buff: [],tupolevel:6,}, {}
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 3000, atk: 300, def: 180, spe: 150, buff: [],tupolevel:12,}, {}
                 ],
             },
             'sp1-10': {
@@ -130,7 +130,7 @@ const SPeventList = {
                 gold: 3300,
                 enemy: [
                     {}, {}, {}, {}, 
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 3500, atk: 350, def: 200, spe: 180, buff: [],tupolevel:6,}, {}
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 3500, atk: 350, def: 200, spe: 180, buff: [],tupolevel:12,}, {}
                 ],
             },
             'sp1-11': {
@@ -142,7 +142,7 @@ const SPeventList = {
                 gold: 3800,
                 enemy: [
                     {}, {}, {}, {},
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,},{}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:12,},{}, 
                 ]
             },
             'sp1-12': {
@@ -153,9 +153,9 @@ const SPeventList = {
                 prev: 'sp1-11',
                 gold: 4300,
                 enemy: [
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 3000, atk: 300, def: 180, spe: 150, buff: [],tupolevel:6,},{}, 
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 3500, atk: 350, def: 200, spe: 180, buff: [],tupolevel:6,}, {}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,},{}
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 3000, atk: 300, def: 180, spe: 150, buff: [],tupolevel:12,},{}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 3500, atk: 350, def: 200, spe: 180, buff: [],tupolevel:12,}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:12,},{}
                 ]
             },
             'sp1-13': {
@@ -166,9 +166,9 @@ const SPeventList = {
                 prev: 'sp2-5',
                 gold: 5500,
                 enemy: [
-                    { name: '涂山小红', id: 'ybsl_017xiaohong', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,},{}, 
+                    { name: '涂山小红', id: 'ybsl_017xiaohong', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:16,},{}, 
                     {}, {}, 
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},{}
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:16,},{}
                 ]
             },
             'sp1-14': {
@@ -179,9 +179,9 @@ const SPeventList = {
                 prev: 'sp1-13',
                 gold: 6700,
                 enemy: [
-                    { name: '彡', id: 'ybsl_047shan', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,},{}, 
+                    { name: '彡', id: 'ybsl_047shan', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:16,},{}, 
                     {}, {}, 
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,},{}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:16,},{}, 
                 ]
             },
             'sp1-15': {
@@ -192,9 +192,9 @@ const SPeventList = {
                 prev: 'sp1-14',
                 gold: 7900,
                 enemy: [
-                    { name: '鞠熒', id: 'ybsl_059starsFall1', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,},{}, 
+                    { name: '鞠熒', id: 'ybsl_059starsFall1', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:16,},{}, 
                     {}, {}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 10000, atk: 1000, def: 350, spe: 270, buff: [],tupolevel:6,},{}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 10000, atk: 1000, def: 350, spe: 270, buff: [],tupolevel:16,},{}, 
                 ]
 
             },
@@ -206,12 +206,12 @@ const SPeventList = {
                 prev: 'sp1-15',
                 gold: 9000,
                 enemy: [
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},
-                    { name: '慕琴', id: 'ybsl_041mmuqin', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,}, 
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,}, 
-                    { name: '王婉儿', id: 'ybsl_049waner', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 10000, atk: 1000, def: 350, spe: 270, buff: [],tupolevel:6,},
-                    { name: '吴爽', id: 'ybsl_048wushuang', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:16,},
+                    { name: '慕琴', id: 'ybsl_041mmuqin', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:16,}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:16,}, 
+                    { name: '王婉儿', id: 'ybsl_049waner', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:16,}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 10000, atk: 1000, def: 350, spe: 270, buff: [],tupolevel:16,},
+                    { name: '吴爽', id: 'ybsl_048wushuang', hp: 5000, atk: 500, def: 300, spe: 220, buff: [],tupolevel:16,}, 
                 ]
             },
             'sp1-17': {
@@ -222,12 +222,12 @@ const SPeventList = {
                 prev: 'sp2-6',
                 gold: 40000,
                 enemy: [
-                    { name: '李曉', id: 'ybsl_059starsFall4', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},
-                    { name: '周靈', id: 'ybsl_059starsFall3', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
-                    { name: '宋橤', id: 'ybsl_059starsFall2', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,}, 
-                    { name: '清月姑娘', id: 'ybsl_068qingyue', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
-                    { name: '鞠熒', id: 'ybsl_059starsFall1', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:6,},
-                    { name: '香紫姑娘', id: 'ybsl_069xiangzi', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '李曉', id: 'ybsl_059starsFall4', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,},
+                    { name: '周靈', id: 'ybsl_059starsFall3', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
+                    { name: '宋橤', id: 'ybsl_059starsFall2', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:20,}, 
+                    { name: '清月姑娘', id: 'ybsl_068qingyue', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
+                    { name: '鞠熒', id: 'ybsl_059starsFall1', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:20,},
+                    { name: '香紫姑娘', id: 'ybsl_069xiangzi', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
                 ]
             },
             'sp1-18': {
@@ -238,12 +238,12 @@ const SPeventList = {
                 prev: 'sp1-17',
                 gold: 40000,
                 enemy: [
-                    { name: '小慧', id: 'ybsl_033xiaohui', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},
-                    { name: '幻晴', id: 'ybsl_018huanqing', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
-                    { name: '张晴', id: 'ybsl_018zhangqing', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,}, 
-                    { name: '涂山小红', id: 'ybsl_017xiaohong', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
-                    { name: '王海茹', id: 'ybsl_015wanghairu', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:6,},
-                    { name: '满城柒', id: 'ybsl_016manchengqi', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '小慧', id: 'ybsl_033xiaohui', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,},
+                    { name: '幻晴', id: 'ybsl_018huanqing', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
+                    { name: '张晴', id: 'ybsl_018zhangqing', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:20,}, 
+                    { name: '涂山小红', id: 'ybsl_017xiaohong', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
+                    { name: '王海茹', id: 'ybsl_015wanghairu', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:20,},
+                    { name: '满城柒', id: 'ybsl_016manchengqi', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
                 ]
             },
             'sp1-19': {
@@ -254,12 +254,12 @@ const SPeventList = {
                 prev: 'sp1-18',
                 gold: 40000,
                 enemy: [
-                    { name: '高宇航', id: 'ybsl_011gaoyuhang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},
-                    { name: '周玥', id: 'ybsl_010zhouyue', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
-                    { name: '王若冰', id: 'ybsl_005wangruobing', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,}, 
-                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
-                    { name: '吴雨欣', id: 'ybsl_008wuyuxin', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:6,},
-                    { name: '郑佳怡', id: 'ybsl_012zhengjiayi', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '高宇航', id: 'ybsl_011gaoyuhang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,},
+                    { name: '周玥', id: 'ybsl_010zhouyue', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
+                    { name: '王若冰', id: 'ybsl_005wangruobing', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:20,}, 
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
+                    { name: '吴雨欣', id: 'ybsl_008wuyuxin', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:20,},
+                    { name: '郑佳怡', id: 'ybsl_012zhengjiayi', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
                 ]
             },
             'sp1-20': {
@@ -270,12 +270,12 @@ const SPeventList = {
                 prev: 'sp1-19',
                 gold: 40000,
                 enemy: [
-                    { name: '尹超跃', id: 'ybsl_013yinji', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},
-                    { name: '玉蝶心', id: 'ybsl_092handan', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
-                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:6,}, 
-                    { name: '吴格格', id: 'ybsl_007wugege', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
-                    { name: '王汉桢', id: 'ybsl_006wanghanzhen', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:6,},
-                    { name: '孙丽松', id: 'ybsl_001sunlisong', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, 
+                    { name: '尹超跃', id: 'ybsl_013yinji', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,},
+                    { name: '玉蝶心', id: 'ybsl_092handan', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
+                    { name: '陈爱琳', id: 'ybsl_002chenailin', hp: 9000, atk: 900, def: 325, spe: 245, buff: [],tupolevel:20,}, 
+                    { name: '吴格格', id: 'ybsl_007wugege', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
+                    { name: '王汉桢', id: 'ybsl_006wanghanzhen', hp: 15000, atk: 1300, def: 500, spe: 300, buff: [],tupolevel:20,},
+                    { name: '孙丽松', id: 'ybsl_001sunlisong', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, 
                 ]
             },
         }
@@ -296,9 +296,9 @@ const SPeventList = {
                 prev: 'sp1-1',
                 gold : 900,
                 enemy: [
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 6, },{}, 
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 6, },{}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 6, }, {}
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 2, },{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 2, },{}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 800, atk: 100, def: 50, spe: 50, buff: [], tupolevel: 2, }, {}
                 ],
             },
             'sp2-2': {
@@ -309,9 +309,9 @@ const SPeventList = {
                 prev: 'sp1-2',
                 gold : 1200,
                 enemy: [
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 125, def: 65, spe: 65, buff: [], tupolevel: 6, },{}, 
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1200, atk: 125, def: 65, spe: 65, buff: [], tupolevel: 6, },{}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1200, atk: 125, def: 65, spe: 65, buff: [], tupolevel: 6, }, {}
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1200, atk: 125, def: 65, spe: 65, buff: [], tupolevel: 4, },{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1200, atk: 125, def: 65, spe: 65, buff: [], tupolevel: 4, },{}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1200, atk: 125, def: 65, spe: 65, buff: [], tupolevel: 4, }, {}
                 ],
             },
             'sp2-3': {
@@ -322,9 +322,9 @@ const SPeventList = {
                 prev: 'sp1-4',
                 gold : 2400,
                 enemy: [
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 6, },{}, 
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 6, },{}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 6, }, {}
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 8, },{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 8, },{}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 1500, atk: 150, def: 80, spe: 80, buff: [], tupolevel: 8, }, {}
                 ],
             },
             'sp2-4': {
@@ -335,9 +335,9 @@ const SPeventList = {
                 prev: 'sp1-8',
                 gold : 4800,
                 enemy: [
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:6,},{}, 
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:6,}, {}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:6,}, {}
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:12,},{}, 
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:12,}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 2500, atk: 250, def: 150, spe: 120, buff: [],tupolevel:12,}, {}
                 ]
             },
             'sp2-5': {
@@ -348,9 +348,9 @@ const SPeventList = {
                 prev: 'sp1-12',
                 gold : 9600,
                 enemy: [
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 5000, atk: 500, def: 300, spe: 150, buff: [],tupolevel:6,},{}, 
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 5000, atk: 500, def: 300, spe: 150, buff: [],tupolevel:6,}, {}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 5000, atk: 500, def: 300, spe: 150, buff: [],tupolevel:6,},{}
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 5000, atk: 500, def: 300, spe: 150, buff: [],tupolevel:16,},{}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 5000, atk: 500, def: 300, spe: 150, buff: [],tupolevel:16,}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 5000, atk: 500, def: 300, spe: 150, buff: [],tupolevel:16,},{}
                 ]
             },
             'sp2-6': {
@@ -361,9 +361,9 @@ const SPeventList = {
                 prev: 'sp1-16',
                 gold : 19200,
                 enemy: [
-                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},{}, 
-                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,}, {}, 
-                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:6,},{}
+                    { name: '风魔狼', id: 'ybsl_fengmolang', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,},{}, 
+                    { name: '雷魔鹰', id: 'ybsl_leimoying', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,}, {}, 
+                    { name: '魇魔花', id: 'ybsl_yanmohua', hp: 8000, atk: 800, def: 300, spe: 220, buff: [],tupolevel:20,},{}
                 ]
             },
         },

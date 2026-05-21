@@ -2750,3 +2750,46 @@ h1, h2 {
     border-radius: 3px;
     z-index: 3;
 }
+/* 默认宝物特效 */
+.treasure-effect-group {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    animation: floatUpFade 1s ease-out forwards;
+}
+
+/* 突破特效 - 霓虹清晰版 */
+.treasure-effect-group.type-breakthrough .treasure-effect {
+    /* 1. 文字颜色改为更亮的淡紫色或白色，确保中心明亮 */
+    color: #fff; 
+    
+    /* 2. 关键：添加黑色描边，解决“糊成一团”的问题 */
+    -webkit-text-stroke: 1px #4a0060; 
+    /* text-stroke: 1px #4a0060; */
+    font-size: 14px;
+    /* 3. 加粗字体，增加存在感 */
+    /* font-weight: bold; */
+    
+    /* 4. 多层阴影营造层次感：内层强光，外层扩散 */
+    text-shadow: 
+        0 0 5px #d000ff,   /* 紧贴文字的紫光 */
+        0 0 10px #d000ff,  /* 中层扩散 */
+        0 0 20px #9000cc;  /* 外层深色光晕，增加反差 */
+}
+/* 技能特效 - 蓝色光晕 */
+.treasure-effect-group.type-skill .treasure-effect {
+    color: #00ccff;
+    text-shadow: 0 0 5px #00ccff;
+}
+
+/* 治疗特效 - 绿色 */
+.treasure-effect-group.type-heal .treasure-effect {
+    color: #00ff00;
+}
+
+@keyframes floatUpFade {
+    0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+}

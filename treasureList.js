@@ -37,7 +37,8 @@ const TREASURE_DEFS = {
         price: 300,
         effect(ctx) {
             if (ctx.killer && ctx.killer.alive) {
-                ctx.killer.extraTurn = true;
+                // ctx.killer.extraTurn = true;
+                ctx.killer.extraTurnCount++;
                 ctx.addLog(`${ctx.killer.name} 的【连破】发动，可再进行一次行动！`);
             }
         },

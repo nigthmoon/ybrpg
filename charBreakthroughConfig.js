@@ -16,13 +16,13 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
     'dmg_reduce_50': { type: 'stat_percent', stat: 'dmg_taken', value: -0.5, desc: '获得50%减伤' },
 
     // --- 吸血类 ---
-    'lifesteal_pugong_50': { type: 'lifesteal', trigger: 'pugong', percent: 0.5, desc: '普攻后吸血50%' },
-    'lifesteal_pugong_75': { type: 'lifesteal', trigger: 'pugong', percent: 0.75, desc: '普攻后吸血75%' },
-    'lifesteal_pugong_100': { type: 'lifesteal', trigger: 'pugong', percent: 1.0, desc: '普攻后吸血100%' },
+    'lifesteal_pugong_50': { type: 'on_hit_source', trigger: 'pugong', percent: 0.5, desc: '普攻后吸血50%' },
+    'lifesteal_pugong_75': { type: 'on_hit_source', trigger: 'pugong', percent: 0.75, desc: '普攻后吸血75%' },
+    'lifesteal_pugong_100': { type: 'on_hit_source', trigger: 'pugong', percent: 1.0, desc: '普攻后吸血100%' },
 
-    'lifesteal_skill_50': { type: 'lifesteal', trigger: 'skill', percent: 0.5, desc: '技能后吸血50%' },
-    'lifesteal_skill_75': { type: 'lifesteal', trigger: 'skill', percent: 0.75, desc: '技能后吸血75%' },
-    'lifesteal_skill_100': { type: 'lifesteal', trigger: 'skill', percent: 1.0, desc: '技能后吸血100%' },
+    'lifesteal_skill_50': { type: 'on_hit_source', trigger: 'skill', percent: 0.5, desc: '技能后吸血50%' },
+    'lifesteal_skill_75': { type: 'on_hit_source', trigger: 'skill', percent: 0.75, desc: '技能后吸血75%' },
+    'lifesteal_skill_100': { type: 'on_hit_source', trigger: 'skill', percent: 1.0, desc: '技能后吸血100%' },
     // --- 亡语类 (On Death) ---
     'death_heal_self_atk100': { type: 'on_death', effect: 'heal_self', value: 'atk_100', limit: 1, desc: '亡语，每局限一次，恢复生命值至攻击力*100%' },
     'death_energy_drain_enemy_2': { type: 'on_death', effect: 'drain_energy_all_enemy', value: 2, desc: '亡语，令所有敌人降低能量2' },
@@ -46,42 +46,42 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
     'ignore_def_all_100': { type: 'ignore_def', trigger: 'all', value: 1.0, desc: '所有伤害无视对方全部防御力' },
 
     // --- 控制类：封印 (Seal) ---
-    'seal_target_30_pugong': { type: 'on_pugong_hit', chance: 0.3, effect: 'seal_1', desc: '普攻时，30%几率封印目标一回合' },
-    'seal_target_60_pugong': { type: 'on_pugong_hit', chance: 0.6, effect: 'seal_1', desc: '普攻时，60%几率封印目标一回合' },
-    'seal_target_100_pugong': { type: 'on_pugong_hit', chance: 1.0, effect: 'seal_1', desc: '普攻时，100%几率封印目标一回合' },
+    'seal_target_30_pugong': { type: 'on_pugong_hit_target', chance: 0.3, effect: 'seal_1', desc: '普攻时，30%几率封印目标一回合' },
+    'seal_target_60_pugong': { type: 'on_pugong_hit_target', chance: 0.6, effect: 'seal_1', desc: '普攻时，60%几率封印目标一回合' },
+    'seal_target_100_pugong': { type: 'on_pugong_hit_target', chance: 1.0, effect: 'seal_1', desc: '普攻时，100%几率封印目标一回合' },
 
-    'seal_target_30_skill': { type: 'on_skill_hit', chance: 0.3, effect: 'seal_1', desc: '使用技能后，30%几率封印目标一回合' },
-    'seal_target_60_skill': { type: 'on_skill_hit', chance: 0.6, effect: 'seal_1', desc: '使用技能后，60%几率封印目标一回合' },
-    'seal_target_100_skill': { type: 'on_skill_hit', chance: 1.0, effect: 'seal_1', desc: '使用技能后，100%几率封印目标一回合' },
+    'seal_target_30_skill': { type: 'on_pugong_hit_target', chance: 0.3, effect: 'seal_1', desc: '使用技能后，30%几率封印目标一回合' },
+    'seal_target_60_skill': { type: 'on_pugong_hit_target', chance: 0.6, effect: 'seal_1', desc: '使用技能后，60%几率封印目标一回合' },
+    'seal_target_100_skill': { type: 'on_pugong_hit_target', chance: 1.0, effect: 'seal_1', desc: '使用技能后，100%几率封印目标一回合' },
 
     // --- 控制类：减能 (Energy Drain) ---
-    'drain_energy_1_20_skill': { type: 'on_skill_hit', chance: 0.2, effect: 'drain_energy_1', desc: '使用技能后，20%几率减少目标1能量' },
-    'drain_energy_1_50_skill': { type: 'on_skill_hit', chance: 0.5, effect: 'drain_energy_1', desc: '使用技能后，50%几率减少目标1能量' },
-    'drain_energy_1_80_skill': { type: 'on_skill_hit', chance: 0.8, effect: 'drain_energy_1', desc: '使用技能后，80%几率减少目标1能量' },
+    'drain_energy_1_20_skill': { type: 'on_pugong_hit_target', chance: 0.2, effect: 'drain_energy_1', desc: '使用技能后，20%几率减少目标1能量' },
+    'drain_energy_1_50_skill': { type: 'on_pugong_hit_target', chance: 0.5, effect: 'drain_energy_1', desc: '使用技能后，50%几率减少目标1能量' },
+    'drain_energy_1_80_skill': { type: 'on_pugong_hit_target', chance: 0.8, effect: 'drain_energy_1', desc: '使用技能后，80%几率减少目标1能量' },
     
-    'drain_energy_2_20_skill': { type: 'on_skill_hit', chance: 0.2, effect: 'drain_energy_2', desc: '使用技能后，20%几率减少目标2能量' },
-    'drain_energy_2_50_skill': { type: 'on_skill_hit', chance: 0.5, effect: 'drain_energy_2', desc: '使用技能后，50%几率减少目标2能量' },
+    'drain_energy_2_20_skill': { type: 'on_pugong_hit_target', chance: 0.2, effect: 'drain_energy_2', desc: '使用技能后，20%几率减少目标2能量' },
+    'drain_energy_2_50_skill': { type: 'on_pugong_hit_target', chance: 0.5, effect: 'drain_energy_2', desc: '使用技能后，50%几率减少目标2能量' },
 
-    'drain_energy_1_20_pugong': { type: 'on_pugong_hit', chance: 0.2, effect: 'drain_energy_1', desc: '普攻时，20%几率令目标降低1能量' },
-    'drain_energy_1_50_pugong': { type: 'on_pugong_hit', chance: 0.5, effect: 'drain_energy_1', desc: '普攻时，50%几率令目标降低1能量' },
-    'drain_energy_1_80_pugong': { type: 'on_pugong_hit', chance: 0.8, effect: 'drain_energy_1', desc: '普攻时，80%几率令目标降低1能量' },
+    'drain_energy_1_20_pugong': { type: 'on_pugong_hit_target', chance: 0.2, effect: 'drain_energy_1', desc: '普攻时，20%几率令目标降低1能量' },
+    'drain_energy_1_50_pugong': { type: 'on_pugong_hit_target', chance: 0.5, effect: 'drain_energy_1', desc: '普攻时，50%几率令目标降低1能量' },
+    'drain_energy_1_80_pugong': { type: 'on_pugong_hit_target', chance: 0.8, effect: 'drain_energy_1', desc: '普攻时，80%几率令目标降低1能量' },
 
     // --- 控制类：眩晕 (Stun) ---
-    'stun_1_20_pugong': { type: 'on_pugong_hit', chance: 0.2, effect: 'stun_1', desc: '普攻时，20%几率令目标眩晕1回合' },
-    'stun_1_50_pugong': { type: 'on_pugong_hit', chance: 0.5, effect: 'stun_1', desc: '普攻时，50%几率令目标眩晕1回合' },
+    'stun_target_1_20_pugong': { type: 'on_pugong_hit_target', chance: 0.2, effect: 'stun_target_1', desc: '普攻时，20%几率令目标眩晕1回合' },
+    'stun_target_1_50_pugong': { type: 'on_pugong_hit_target', chance: 0.5, effect: 'stun_target_1', desc: '普攻时，50%几率令目标眩晕1回合' },
     
-    'stun_1_20_skill': { type: 'on_skill_hit', chance: 0.2, effect: 'stun_1', desc: '使用技能后，20%几率令目标眩晕1回合' },
-    'stun_1_50_skill': { type: 'on_skill_hit', chance: 0.5, effect: 'stun_1', desc: '使用技能后，50%几率令目标眩晕1回合' },
+    'stun_target_1_20_skill': { type: 'on_pugong_hit_target', chance: 0.2, effect: 'stun_target_1', desc: '使用技能后，20%几率令目标眩晕1回合' },
+    'stun_target_1_50_skill': { type: 'on_pugong_hit_target', chance: 0.5, effect: 'stun_target_1', desc: '使用技能后，50%几率令目标眩晕1回合' },
 
     // --- 控制类：中毒 (Poison) ---
     // 系数为攻击力百分比，可叠加
-    'poison_5_atk_20_pugong': { type: 'on_pugong_hit', chance: 0.2, effect: 'poison', value: 0.05, desc: '普攻时，20%几率令目标永久中毒，系数为攻击力5%' },
-    'poison_5_atk_50_pugong': { type: 'on_pugong_hit', chance: 0.5, effect: 'poison', value: 0.05, desc: '普攻时，50%几率令目标永久中毒，系数为攻击力5%' },
-    'poison_5_atk_100_pugong': { type: 'on_pugong_hit', chance: 1.0, effect: 'poison', value: 0.05, desc: '普攻时，100%几率令目标永久中毒，系数为攻击力5%' },
+    'poison_5_atk_20_pugong': { type: 'on_pugong_hit_target', chance: 0.2, effect: 'poison', value: 0.05, desc: '普攻时，20%几率令目标永久中毒，系数为攻击力5%' },
+    'poison_5_atk_50_pugong': { type: 'on_pugong_hit_target', chance: 0.5, effect: 'poison', value: 0.05, desc: '普攻时，50%几率令目标永久中毒，系数为攻击力5%' },
+    'poison_5_atk_100_pugong': { type: 'on_pugong_hit_target', chance: 1.0, effect: 'poison', value: 0.05, desc: '普攻时，100%几率令目标永久中毒，系数为攻击力5%' },
     
-    'poison_10_atk_20_skill': { type: 'on_skill_hit', chance: 0.2, effect: 'poison', value: 0.10, desc: '使用技能后，20%几率令目标永久中毒，系数为攻击力10%' },
-    'poison_10_atk_50_skill': { type: 'on_skill_hit', chance: 0.5, effect: 'poison', value: 0.10, desc: '使用技能后，50%几率令目标永久中毒，系数为攻击力10%' },
-    'poison_10_atk_110_skill': { type: 'on_skill_hit', chance: 1.1, effect: 'poison', value: 0.10, desc: '使用技能后，必中且超额判定，令目标永久中毒，系数为攻击力10%' },
+    'poison_10_atk_20_skill': { type: 'on_pugong_hit_target', chance: 0.2, effect: 'poison', value: 0.10, desc: '使用技能后，20%几率令目标永久中毒，系数为攻击力10%' },
+    'poison_10_atk_50_skill': { type: 'on_pugong_hit_target', chance: 0.5, effect: 'poison', value: 0.10, desc: '使用技能后，50%几率令目标永久中毒，系数为攻击力10%' },
+    'poison_10_atk_110_skill': { type: 'on_pugong_hit_target', chance: 1.1, effect: 'poison', value: 0.10, desc: '使用技能后，必中且超额判定，令目标永久中毒，系数为攻击力10%' },
 
     // --- 首回合特效 ---
     'first_hit_dmg_up_50': { type: 'first_hit_bonus', stat: 'dmg_dealt', value: 0.5, desc: '进入战斗的首次普攻或技能伤害增加50%' },
@@ -97,6 +97,28 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
     
     'on_hit_stun_target_10': { type: 'on_hit_self', chance: 0.1, effect: 'stun_source_1', desc: '受到普攻或技能伤害时，10%几率令目标眩晕1回合' },
     'on_hit_stun_target_20': { type: 'on_hit_self', chance: 0.2, effect: 'stun_source_1', desc: '受到普攻或技能伤害时，20%几率令目标眩晕1回合' },
+
+    'on_hit_counter_100': { 
+        type: 'on_hit_self', 
+        chance: 1.0, 
+        effect: 'counter_pugong', 
+        coefficient: 1.0, 
+        desc: '受到普攻或技能伤害时，对来源进行一次特殊普攻，造成100%攻击力的伤害' 
+    },
+    'on_hit_counter_75': { 
+        type: 'on_hit_self', 
+        chance: 1.0, 
+        effect: 'counter_pugong', 
+        coefficient: 0.75, 
+        desc: '受到普攻或技能伤害时，对来源进行一次特殊普攻，造成75%攻击力的伤害' 
+    },
+    'on_hit_counter_50': { 
+        type: 'on_hit_self', 
+        chance: 1.0, 
+        effect: 'counter_pugong', 
+        coefficient: 0.5, 
+        desc: '受到普攻或技能伤害时，对来源进行一次特殊普攻，造成50%攻击力的伤害' 
+    },
     
     'on_hit_poison_source_5_20': { type: 'on_hit_self', chance: 0.2, effect: 'poison_source', value: 0.05, desc: '受到普攻或技能伤害时，20%几率令来源中毒，系数为攻击力5%' },
     'on_hit_poison_source_5_50': { type: 'on_hit_self', chance: 0.5, effect: 'poison_source', value: 0.05, desc: '受到普攻或技能伤害时，50%几率令来源中毒，系数为攻击力5%' },
@@ -118,11 +140,17 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
         effect: 'apply_invincible_1', 
         desc: '使用技能后，获得1回合无敌状态（免疫所有伤害，直到下一轮你的回合开始前）' 
     },
-
+    // 【新增】击杀后获得额外回合
+    'kill_extra_turn_1': { 
+        type: 'on_kill', // 假设我们定义一个 on_kill 触发类型，或者在代码中特殊处理
+        chance: 1.0, 
+        effect: 'add_extra_turn_1', 
+        desc: '成功击杀敌人后，获得1个额外行动回合' 
+    },
     // 【新增】禁疗一回合 (持续到下一轮目标行动前)
     // 注意：虽然配置在 on_skill_end，但逻辑上我们会让它作用于 targets
     'skill_heal_block_1': { 
-        type: 'on_skill_hit', // 建议改为 on_skill_hit，或者在代码中特殊处理 on_skill_end 作用于目标
+        type: 'on_pugong_hit_target', // 建议改为 on_skill_hit，或者在代码中特殊处理 on_skill_end 作用于目标
         chance: 1.0, 
         effect: 'apply_heal_block_1', 
         desc: '技能命中后，令目标禁疗1回合（直到下一轮目标的回合开始前）' 

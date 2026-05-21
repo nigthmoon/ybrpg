@@ -175,7 +175,13 @@ function renderTeamView(container) {
     const navBtns = [
         { id: 'btn-team-change', text: '更换', action: () => onTeamNavChange() },
         { id: 'btn-team-train', text: '培养', action: () => onTeamNavTrain() },
-        { id: 'btn-team-other', text: '其他', action: () => { console.log('其他 - 预留接口'); } },
+        { 
+            id: 'btn-team-other', 
+            text: '突破预览', // 建议修改文字
+            action: () => { 
+                showBreakthroughPreviewView(); 
+            } 
+        },
     ];
     navBtns.forEach(cfg => {
         const btn = document.createElement('button');
@@ -193,7 +199,238 @@ function renderTeamView(container) {
     // 记录当前选中的方格索引
     window._selectedSlotIndex = null;
 }
+/**
+ * 显示突破预览视图 (主入口 - 优化版)
+ */
+function showBreakthroughPreviewView() {
+    // 1. 隐藏底部导航栏
+    const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+    if (bottomBar) {
+        bottomBar.style.display = 'none';
+    }
+    // 1. 隐藏其他视图
+    hideOtherViews('breakthrough-preview-view');
 
+    // 2. 查找或创建容器
+    let view = document.getElementById('breakthrough-preview-view');
+    
+    // 如果不存在，则动态创建整个视图结构
+    if (!view) {
+        view = createBreakthroughPreviewDOM();
+        document.getElementById('ybrpg-root').appendChild(view);
+    }
+
+    // 3. 显示视图
+    view.style.display = 'flex';
+    
+    // 4. 渲染数据
+    renderBreakthroughContent();
+}
+
+/**
+ * 动态创建突破预览界面的 DOM 结构 (优化版 - 无滑块，列表式)
+ * @returns {HTMLElement} 创建的视图容器
+ */
+function createBreakthroughPreviewDOM() {
+    const view = document.createElement('div');
+    view.id = 'breakthrough-preview-view';
+    // 基础布局样式
+    view.style.cssText = 'display:none; width:100%; height:100%; flex-direction:column; align-items:center; padding-top:20px; overflow:hidden; background:#1a1a1a;';
+
+    // --- 标题 ---
+    const title = document.createElement('h2');
+    title.textContent = '突破能力图鉴';
+    title.style.cssText = 'color:#ffd700; margin-bottom:15px; text-shadow:0 0 10px rgba(255,215,0,0.5); font-size:20px;';
+    view.appendChild(title);
+
+    // --- 主体内容区 (仿 team-info-area 风格，但用于展示突破列表) ---
+    const contentArea = document.createElement('div');
+    contentArea.id = 'breakthrough-content-area';
+    contentArea.style.cssText = 'width:95%; max-width:400px; flex:1; display:flex; flex-direction:column; background:#222; border-radius:8px; border:1px solid #444; overflow:hidden; margin-bottom:15px;';
+
+    // 1. 顶部角色概览栏 (固定不滚动)
+    const headerBar = document.createElement('div');
+    headerBar.id = 'breakthrough-header';
+    headerBar.style.cssText = 'display:flex; align-items:center; padding:10px; background:#2a2a2a; border-bottom:1px solid #444; flex-shrink:0;';
+    
+    const charImg = document.createElement('img');
+    charImg.id = 'bp-char-img';
+    charImg.style.cssText = 'width:50px; height:50px; border-radius:4px; border:1px solid #ffd700; object-fit:cover; margin-right:10px;';
+    charImg.src = './image/character/default.jpg';
+    
+    const charInfo = document.createElement('div');
+    charInfo.style.cssText = 'flex:1;';
+    
+    const charName = document.createElement('div');
+    charName.id = 'bp-char-name';
+    charName.style.cssText = 'color:#fff; font-weight:bold; font-size:16px;';
+    charName.textContent = '未选择角色';
+    
+    const charLevel = document.createElement('div');
+    charLevel.id = 'bp-char-level';
+    charLevel.style.cssText = 'color:#aaa; font-size:12px; margin-top:2px;';
+    charLevel.textContent = '突破等级: 0';
+
+    charInfo.appendChild(charName);
+    charInfo.appendChild(charLevel);
+    headerBar.appendChild(charImg);
+    headerBar.appendChild(charInfo);
+    contentArea.appendChild(headerBar);
+
+    // 2. 突破列表滚动区
+    const listContainer = document.createElement('div');
+    listContainer.id = 'bp-list-container';
+    listContainer.style.cssText = 'flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:10px;';
+    
+    // 自定义滚动条样式 (可选，通过JS注入style标签或inline)
+    listContainer.style.scrollbarWidth = 'thin';
+    listContainer.style.scrollbarColor = '#555 #222';
+
+    contentArea.appendChild(listContainer);
+    view.appendChild(contentArea);
+    // --- 返回按钮 ---
+    const backBtn = document.createElement('button');
+    backBtn.className = 'ybrpg-back-btn';
+    backBtn.textContent = '返回队伍';
+    backBtn.onclick = () => {
+        // 1. 隐藏当前突破预览视图
+        view.style.display = 'none';
+
+        // 2. 恢复底部导航栏
+        const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+        if (bottomBar) {
+            bottomBar.style.display = 'flex';
+        }
+
+        // 3. 切换回队伍视图
+        const teamView = document.getElementById('team-view');
+        if (teamView) {
+            hideOtherViews('team-view');
+            teamView.style.display = 'flex';
+        }
+    };
+    view.appendChild(backBtn);
+    return view;
+}
+
+/**
+ * 渲染突破预览内容 (根据当前选中的角色)
+ */
+function renderBreakthroughContent() {
+    // 1. 获取当前选中的角色实例 ID
+    let instanceId = null;
+    const selectedIdx = window._selectedSlotIndex;
+    
+    if (selectedIdx !== null && selectedIdx !== undefined && window.currentTeam[selectedIdx]) {
+        instanceId = window.currentTeam[selectedIdx];
+    } else if (window.currentTeam && window.currentTeam.length > 0) {
+        instanceId = window.currentTeam.find(id => id);
+    }
+
+    const listContainer = document.getElementById('bp-list-container');
+    const charImg = document.getElementById('bp-char-img');
+    const charName = document.getElementById('bp-char-name');
+    const charLevel = document.getElementById('bp-char-level');
+
+    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+        if(charName) charName.textContent = '无可用角色';
+        if(listContainer) listContainer.innerHTML = '<div style="color:#666;text-align:center;margin-top:20px;">请先在队伍中选择一个角色</div>';
+        return;
+    }
+
+    const instData = window.charBagData[instanceId];
+    const charId = instData.charId || instanceId;
+    const baseChar = characterList[charId];
+
+    if (!baseChar) return;
+
+    // 2. 更新顶部概览
+    charImg.src = `./image/character/${charId}.jpg`;
+    charImg.onerror = function() { this.src = './image/character/default.jpg'; };
+    charName.textContent = baseChar.name;
+    
+    const currentTupoLevel = instData.tupolevel || 0;
+    charLevel.textContent = `当前突破: ${currentTupoLevel} 阶`;
+
+    // 3. 获取突破配置并渲染列表
+    // 优先使用角色自带的 tupoList，否则使用全局模板
+    const tupoList = baseChar.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
+    
+    listContainer.innerHTML = ''; // 清空旧数据
+
+    if (!tupoList || tupoList.length === 0) {
+        listContainer.innerHTML = '<div style="color:#666;text-align:center;margin-top:20px;">该角色暂无突破数据</div>';
+        return;
+    }
+
+    // 遍历突破列表
+    tupoList.forEach((buff, index) => {
+        const isUnlocked = index+1 <= currentTupoLevel;
+        
+        const item = document.createElement('div');
+        // 样式：已解锁亮色背景，未解锁暗色背景
+        item.style.cssText = `
+            background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'}; 
+            border: 1px solid ${isUnlocked ? '#d000ff' : '#333'}; 
+            border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
+            border-radius: 4px; 
+            padding: 10px; 
+            opacity: ${isUnlocked ? 1 : 0.6};
+            transition: all 0.2s;
+        `;
+
+        // 标题行：突破等级 + 状态图标
+        const headerRow = document.createElement('div');
+        headerRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;';
+        
+        const levelTitle = document.createElement('span');
+        levelTitle.style.cssText = `font-weight:bold; font-size:14px; color:${isUnlocked ? '#ffd700' : '#888'};`;
+        // 索引0对应人类理解的"第一阶"或"突破 I"
+        levelTitle.textContent = `突破 ${index + 1} 阶`;
+        
+        const statusIcon = document.createElement('span');
+        statusIcon.style.cssText = 'font-size:12px;';
+        statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
+        statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
+
+        headerRow.appendChild(levelTitle);
+        headerRow.appendChild(statusIcon);
+        item.appendChild(headerRow);
+
+        // 描述内容
+        const descDiv = document.createElement('div');
+        descDiv.style.cssText = `font-size:13px; line-height:1.4; color:${isUnlocked ? '#ddd' : '#666'};`;
+        
+        if (buff.desc) {
+            descDiv.textContent = buff.desc;
+        } else if (buff.type) {
+            // 如果没有描述，尝试根据类型生成简单描述
+            let typeDesc = '';
+            if (buff.type === 'self_stat_flat') {
+                const val = Array.isArray(buff.value) ? buff.value.join('/') : buff.value;
+                const stat = Array.isArray(buff.stat) ? buff.stat.join('/') : buff.stat;
+                typeDesc = `永久增加 ${stat}: ${val}`;
+            } else if (buff.type === 'passive_effect') {
+                typeDesc = `获得被动效果: ${buff.effectId || '未知'}`;
+            } else {
+                typeDesc = `效果类型: ${buff.type}`;
+            }
+            descDiv.textContent = typeDesc;
+        } else {
+            descDiv.textContent = '暂无详细描述';
+        }
+        
+        item.appendChild(descDiv);
+
+        // 如果是已解锁，可以加一点 hover 效果
+        if (isUnlocked) {
+            item.onmouseover = () => { item.style.background = '#33334a'; };
+            item.onmouseout = () => { item.style.background = '#2a2a3a'; };
+        }
+
+        listContainer.appendChild(item);
+    });
+}
 /**
  * 渲染单个布阵方格的内容
  * @param {HTMLElement} slotEl - 需要渲染内容的DOM元素节点
@@ -3292,9 +3529,10 @@ function buildPlayerTeamForBattle() {
             atk: instData.atk || (base ? base.atk : 0),
             def: instData.def || (base ? base.def : 0),
             spe: instData.spe || (base ? base.spe : 0),
-            skills: base ? base.skills : [],
+            skills: instData.skills||(base ? base.skills : []),
             buff: instData.buff || [],
             treasures: treasures,     
+            rank: instData.rank || (base ? base.rank : 'conmon'),
             tupolevel: instData.tupolevel || 0, 
             tupoList: instData.tupoList || (base ? base.tupoList : []),        // 宝物数组，用于战斗内时点触发
         };
@@ -3480,15 +3718,19 @@ function renderChapterEventList(container, chapterKey) {
                     return {
                         id: e.id,
                         name: e.name || base.name || e.id,
-                        hp: e.hp || 0,
-                        atk: e.atk || 0,
-                        def: e.def || 0,
-                        spe: e.spe || 0,
-                        skills: base.skills || [],
+                        hp: e.hp ||base.hp ||0,
+                        atk: e.atk || base.atk || 0,
+                        def: e.def || base.def|| 0,
+                        spe: e.spe || base.spe|| 0,
+                        skills: e.skills||base.skills || [],
                         buff: e.buff || [],
                         treasures: e.treasures || [],
+                        tupoList:e.tupoList ||base.tupoList || [],
+                        tupolevel:e.tupolevel || 0,
+                        rank:e.rank || base.rank || 'conmon',
                     };
                 });
+                console.log(enemyTeam)
                 while (enemyTeam.length < 6) {
                     enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
                 }
@@ -3686,15 +3928,16 @@ function renderChapterEventList(container, chapterKey) {
                         return {
                             id: e.id,
                             name: e.name || base.name || e.id,
-                            hp: e.hp || 0,
-                            atk: e.atk || 0,
-                            def: e.def || 0,
-                            spe: e.spe || 0,
-                            skills: base.skills || [],
+                            hp: e.hp ||base.hp ||0,
+                            atk: e.atk || base.atk || 0,
+                            def: e.def || base.def|| 0,
+                            spe: e.spe || base.spe|| 0,
+                            skills: e.skills||base.skills || [],
                             buff: e.buff || [],
                             treasures: e.treasures || [],
+                            rank: e.rank || base.rank || 'conmon',
                             tupolevel: e.tupolevel || 0, 
-                            tupoList: e.tupoList || [],     
+                            tupoList:e.tupoList ||base.tupoList || [],
                         };
                     });
                     // for(k of cards.filter(c=>!upe.includes(c))){
@@ -6754,8 +6997,8 @@ function syncInstanceTupoList(instanceId) {
         }
         
         // 确保突破等级不超过列表长度-1
-        if (instData.tupolevel >= newTupoList.length) {
-            instData.tupolevel = newTupoList.length - 1;
+        if (instData.tupolevel >= newTupoList.length+1) {
+            instData.tupolevel = newTupoList.length;
         }
 
         console.log(`[同步突破] 角色 ${baseChar.name} (${instanceId}) 已同步最新突破列表，共 ${newTupoList.length} 阶`);
