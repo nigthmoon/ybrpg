@@ -3915,10 +3915,10 @@ const characterList = {
 			// Level 18 
 			{
 				level: 18,
-				type: 'team_stat_percent',
+				type: 'self_stat_percent',
 				stats: ['hp'],
 				percent: 0.5,
-				desc: '初始化时全队获得50%的血加成'
+				desc: '初始化时获得50%的血加成'
 			},
 			// Level 19
 			{
