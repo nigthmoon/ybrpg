@@ -664,6 +664,10 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
             if (extraEnergy > 0) {
                 healAmount = Math.floor(healAmount * (1 + extraEnergy * 0.1));
             }
+            // 【新增】触发普攻治疗相关的突破效果 (on_heal, trigger: pugong)
+            handleOnHealBreakthroughEffects(actor, t, 'skill', () => {
+                processNextTarget();
+            });
             // 确保 maxHp 和 hp 是数字
             const maxHp = Number(t.maxHp) || 1;
             const currentHp = Number(t.hp) || 0;
@@ -847,7 +851,12 @@ function executePugong(actor, targets, callback) {
             }
 
             let healAmount = Math.floor(actor.atk * coefficient);
-            
+            // 【新增】触发普攻治疗相关的突破效果 (on_heal, trigger: pugong)
+                    // 【新增】触发技能治疗相关的突破效果 (on_heal, trigger: skill)
+            handleOnHealBreakthroughEffects(actor, t, 'pugong', () => {
+                processNextTarget();
+            });
+
             const healMultiplier = getHealModifier(actor);
             healAmount = Math.floor(healAmount * healMultiplier);
             const actualHeal = Math.min(healAmount, t.maxHp - t.hp);
@@ -2857,47 +2866,200 @@ function triggerBattleStartPassive(unit, callback) {
 
 /**
  * 角色阵亡时触发亡语（异步）
+ * @param {Object} unit - 阵亡的单位对象，需包含 treasures 属性及基础属性(atk, hp等)
+ * @param {Object} killer - 击杀者对象
+ * @param {Function} [callback] - 所有亡语效果执行完毕后的回调函数
  */
 function triggerOnDeath(unit, killer, callback) {
-    if (!unit || !unit.treasures) {
+    // 参数校验
+    if (!unit || !unit.treasures||!unit.tupoList||!unit.buffs) {
         if (callback) callback();
         return;
     }
-    const treasureDefs = gameData.getTreasureList();
-    const matchingTreasures = unit.treasures.filter(tid =>
-        tid && treasureDefs[tid] && treasureDefs[tid].type === 'on_death'
-    );
 
-    if (matchingTreasures.length === 0) {
+    // 获取全局突破/Buff配置库
+    const buffLib = window.BREAKTHROUGH_BUFF_LIBRARY || {};
+    const buffs = unit.buffs || [];
+    const treasureDefs = gameData.getTreasureList(); // 假设原有宝藏定义在此
+    const tupoList= unit.tupoList || [];
+    // 收集所有需要触发的亡语效果列表
+    // 来源1: 原有宝藏系统 (type === 'on_death')
+    // 来源2: 突破系统 (通过 treasures 存储 effectId，且在 buffLib 中 type === 'on_death')
+    const deathEffects = [];
+    if(buffs.length>0)unit.buffs.forEach(buff=>{
+        if (!buff) return;
+        // 检查是否是常规Buff库中的亡语
+        if (buffs[buff] && buffs[buff].type === 'on_death') {
+            deathEffects.push({ source: 'breakthrough', def: buffs[buff], id: buff ,});
+        }
+    })
+    if(tupoList.length>0)unit.tupoList.forEach(tupo => { 
+        if (!tupo) return;
+        // 检查是否是突破Buff库中的亡语
+        if (tupoList[tupo] && tupoList[tupo].type === 'on_death') {
+            deathEffects.push({ source: 'breakthrough', def: tupoList[tupo], id: tupo });
+        }
+    });
+    if(Object.keys(unit.treasures).length>0)unit.treasures.forEach(tid => {
+        if (!tid) return;
+
+        // 检查是否是原有宝藏定义
+        if (treasureDefs[tid] && treasureDefs[tid].type === 'on_death') {
+            deathEffects.push({ source: 'treasure', def: treasureDefs[tid], id: tid });
+        }
+    });
+    
+
+    // 若无匹配的亡语，直接返回
+    if (deathEffects.length === 0) {
         if (callback) callback();
         return;
     }
 
     let index = 0;
 
+    /**
+     * 解析数值配置
+     * @param {String|Number} valConfig - 配置值，如 2, 'all', 'atk_100', 'self_atk_100'
+     * @param {Object} sourceUnit - 来源单位（通常是死者）
+     * @returns {Number|String} 解析后的数值
+     */
+    function parseValue(valConfig, sourceUnit) {
+        if (typeof valConfig === 'number') return valConfig;
+        if (valConfig === 'all') return 'all'; // 特殊标记：全部
+        
+        // 处理字符串格式，如 'atk_100' (攻击力*100%) 或 'self_atk_100'
+        if (typeof valConfig === 'string') {
+            const parts = valConfig.split('_');
+            // 简单解析逻辑：假设格式为 stat_percent
+            // 实际项目中可能需要更复杂的解析器来区分 self_atk 还是 target_atk
+            // 这里假设默认取 sourceUnit 的属性
+            let statName = parts[0]; 
+            let percent = 1;
+            
+            if (parts.length > 1) {
+                // 如果第一部分是 self，第二部分才是属性名 (e.g., self_atk_100 -> parts: ['self', 'atk', '100'])
+                if (statName === 'self' && parts.length >= 3) {
+                    statName = parts[1];
+                    percent = parseInt(parts[2]) / 100;
+                } else {
+                    // 普通格式 (e.g., atk_100 -> parts: ['atk', '100'])
+                    percent = parseInt(parts[1]) / 100;
+                }
+            }
+
+            const baseVal = sourceUnit[statName] || 0;
+            return Math.floor(baseVal * percent);
+        }
+        return 0;
+    }
+
+    /**
+     * 递归触发下一个亡语效果
+     */
     function triggerNext() {
-        if (index >= matchingTreasures.length) {
+        if (index >= deathEffects.length) {
             if (callback) callback();
             return;
         }
 
-        const tid = matchingTreasures[index++];
-        const tDef = treasureDefs[tid];
+        const item = deathEffects[index++];
+        const def = item.def;
+        const effectType = def.effect; // 如 'heal_self', 'drain_energy_all_enemy'
+        
+        // 显示特效 (可选，根据UI需求调整)
+        // showTreasureEffect(unit, item.id, 'death', () => { ... });
 
-        showTreasureEffect(unit, tid, 'damage', () => {
-            const ctx = buildTreasureContext({ unit, killer });
-            if (typeof tDef.effect === 'function') {
-                tDef.effect(ctx);
+        console.log(`触发亡语: ${def.desc}`);
+
+        // --- 效果执行逻辑 ---
+        switch (effectType) {
+            case 'heal_self': {
+                if(def.limit&&def.limit>0)break;
+
+                // 亡语，每局限一次，恢复生命值至攻击力*100%
+                // 注意：单位已死亡，通常亡语治疗是复活或给队友加血，如果是给自己加血可能意味着复活逻辑
+                // 这里假设是复活逻辑或者只是计算数值用于其他用途
+                // 如果游戏逻辑允许死后治疗即复活：
+                const healVal = parseValue(def.value, unit);
+                if (unit.revive) {
+                    unit.revive(healVal); // 假设存在复活接口
+                } else {
+                    unit.hp = healVal; // 或者直接修改血量
+                    unit.isDead = false;
+                }
+                unit.log('技能效果：涅槃' + healVal);
+                def.limit --;
+                break;
             }
-            // 亡语效果执行后立即更新UI
-            updateBattleUI();
-            setTimeout(triggerNext, 100);
-        });
+
+            case 'drain_energy_all_enemy': {
+                // 令所有敌人降低能量
+                const val = def.value; // 2 or 'all'
+                const enemies = battle.getEnemies(unit); // 假设获取敌人列表的接口
+                enemies.forEach(enemy => {
+                    if (val === 'all') {
+                        enemy.energy = 0;
+                    } else {
+                        enemy.energy = Math.max(0, enemy.energy - val);
+                    }
+                });
+                break;
+            }
+
+            case 'heal_team': {
+                // 令所有队友恢复生命
+                const healVal = parseValue(def.value, unit);
+                const teammates = battle.getTeammates(unit); // 假设获取队友列表的接口
+                teammates.forEach(teammate => {
+                    if (!teammate.isDead) {
+                        teammate.heal(healVal); // 假设存在治疗接口
+                    }
+                });
+                break;
+            }
+
+            case 'add_energy_team': {
+                // 令所有队友恢复能量
+                const energyVal = parseValue(def.value, unit);
+                const teammates = battle.getTeammates(unit);
+                teammates.forEach(teammate => {
+                    if (!teammate.isDead) {
+                        teammate.addEnergy(energyVal); // 假设存在加能量接口
+                    }
+                });
+                break;
+            }
+
+            case 'dmg_true_all_enemy': {
+                // 对所有敌人造成真实伤害
+                const dmgVal = parseValue(def.value, unit);
+                const enemies = battle.getEnemies(unit);
+                enemies.forEach(enemy => {
+                    if (!enemy.isDead) {
+                        enemy.takeTrueDamage(dmgVal, unit); // 假设存在真实伤害接口
+                    }
+                });
+                break;
+            }
+
+            default:
+                console.warn(`未实现的亡语效果类型: ${effectType}`);
+                break;
+        }
+
+        // 更新UI
+        if (window.updateBattleUI) {
+            window.updateBattleUI();
+        }
+
+        // 延迟触发下一个，避免阻塞
+        setTimeout(triggerNext, 100);
     }
 
+    // 开始执行
     triggerNext();
 }
-
 /**
  * 敌方角色阵亡时触发（异步，遍历对方存活角色）
  */
@@ -3294,7 +3456,7 @@ function handlePostActionBreakthroughEffects(actor, targets, triggerType, callba
                      updateBattleUI();
                  }
             }
-            
+
             // ... 之后的代码 (else warn) ...
             // C. 封印 (Seal - 假设存在)
             else if (effectType.startsWith('seal_')) {
@@ -3654,6 +3816,18 @@ function handleOnPugongStartBreakthroughs(actor) {
                 }
             }
         }
+        else if (def.effect ==='add_energy_self_1'){
+            actor.energy=Math.min(actor.energy+1, 8);
+            addBattleLog(`${actor.name} 触发【突破】，自身恢复1点能量`);
+            showTreasureEffect(actor, effectId, 'atk-up', null, '+1能量');
+            updateBattleUI(); // 确保UI更新
+        }
+        else if (def.effect ==='add_energy_self_2'){
+            actor.energy=Math.min(actor.energy+2, 8);
+            addBattleLog(`${actor.name} 触发【突破】，自身恢复2点能量`);
+            showTreasureEffect(actor, effectId, 'atk-up', null, '+2能量');
+            updateBattleUI(); // 确保UI更新
+        }
     });
 }
 
@@ -3671,13 +3845,22 @@ function checkKillExtraTurn(killer) {
         const buff = killer.tupoList[i];
         // 假设配置中 type 为 'on_kill' 或特定标识
         // 这里我们直接检查 effectId 或 type 匹配
-        if (buff && buff.type === 'on_kill' && buff.effect === 'add_extra_turn_1') {
-            // 概率判定（如果配置了 chance）
-            if (Math.random() < (buff.chance || 1.0)) {
-                killer.extraTurnCount = (killer.extraTurnCount || 0) + 1;
-                addBattleLog(`${killer.name} 触发【突破·连杀】，获得1个额外回合！`);
-                // 可选：播放特效
-                showTreasureEffect(killer, 'breakthrough_kill', 'atk-up', null, '额外回合+1');
+        if (buff && buff.type === 'on_kill') {
+            if(buff.effect === 'add_extra_turn_1'){
+                // 概率判定（如果配置了 chance）
+                if (Math.random() < (buff.chance || 1.0)) {
+                    killer.extraTurnCount = (killer.extraTurnCount || 0) + 1;
+                    addBattleLog(`${killer.name} 触发【突破·连杀】，获得1个额外回合！`);
+                    // 可选：播放特效
+                    showTreasureEffect(killer, 'breakthrough_kill', 'atk-up', null, '额外回合+1');
+                }
+            }
+            else if(buff.effect ==='add_energy_self_2'){
+                
+                killer.energy=Math.min(killer.energy+2, 8);
+                addBattleLog(`${killer.name} 触发【突破】，自身恢复2点能量`);
+                showTreasureEffect(killer, 'breakthrough_kill', 'atk-up', null, '+2能量');
+                updateBattleUI(); // 确保UI更新
             }
         }
     }
@@ -3740,4 +3923,127 @@ function applyPoisonDamageToUnit(unit) {
     //         addBattleLog(`${unit.name} 的【中毒】效果消失了`);
     //     }
     // }
+}
+
+/**
+ * 处理治疗时触发的突破效果 (on_heal)
+ * @param {Object} healer - 施法者 (拥有Buff的角色)
+ * @param {Object} target - 被治疗的目标
+ * @param {String} triggerType - 'pugong' 或 'skill'
+ * @param {Function} callback - 完成后的回调
+ */
+function handleOnHealBreakthroughEffects(healer, target, triggerType, callback) {
+    if (!healer || !healer.buff) {
+        if (callback) callback();
+        return;
+    }
+
+    const library = window.BREAKTHROUGH_BUFF_LIBRARY || {};
+    const buffs = healer.buff; // 假设角色身上存储了已激活的 effectId 列表或对象
+    
+    // 注意：你需要确认 healer.buff 的结构。
+    // 如果 healer.buff 是一个数组 ['dmg_up_10', 'heal_energy_target_1_pugong']
+    // 或者是一个对象 { 'dmg_up_10': true, ... }
+    
+    let effectsToProcess = [];
+    
+    // 遍历角色拥有的所有被动/突破效果
+    // 这里假设 healer.breakthroughEffects 或类似字段存储了当前生效的 effectId
+    // 如果之前的代码是将 effectId 直接存在 healer.buff 数组中：
+    const activeEffectIds = healer.buff.filter(b => typeof b === 'string'); 
+
+    activeEffectIds.forEach(effectId => {
+        const config = library[effectId];
+        if (config && config.type === 'on_heal' && config.trigger === triggerType) {
+            effectsToProcess.push(config);
+        }
+    });
+
+    if (effectsToProcess.length === 0) {
+        if (callback) callback();
+        return;
+    }
+
+    let index = 0;
+    function processNext() {
+        if (index >= effectsToProcess.length) {
+            if (callback) callback();
+            return;
+        }
+
+        const effect = effectsToProcess[index++];
+        
+        // 执行具体效果
+        switch (effect.effect) {
+            case 'add_target_energy_1':
+                if (target.alive) {
+                    target.energy = Math.min(8, (target.energy || 0) + 1);
+                    addBattleLog(`${healer.name} 的治疗使 ${target.name} 能量+1`);
+                    // 可选：显示浮动文字
+                    // showFloatingText(target, "能量+1", "blue");
+                }
+                break;
+            
+            case 'cleanse_target':
+                if (target.alive) {
+                    let cleanedCount = 0;
+                    
+                    // 1. 清除封印 (Seal)
+                    if (target.sealed) {
+                        target.sealed = false;
+                        // 如果有永久封印，通常 cleanse 不清除永久封印，除非特别说明
+                        // target.permanentlySealed = false; 
+                        cleanedCount++;
+                        addBattleLog(`${target.name} 的【封印】被解除`);
+                    }
+    
+                    // 2. 清除禁疗 (Heal Block)
+                    if (target.healBlocked) {
+                        target.healBlocked = false;
+                        // 如果有时长限制，也重置计时器
+                        if (target.healBlockTurnsLeft) target.healBlockTurnsLeft = 0;
+                        cleanedCount++;
+                        addBattleLog(`${target.name} 的【禁疗】被解除`);
+                    }
+    
+                    // 3. 清除眩晕 (Stun)
+                    // 注意：请确认你代码中眩晕的具体变量名，通常是 stunned 或 stun
+                    if (target.stunned || target.stun) {
+                        target.stunned = false;
+                        target.stun = false;
+                        if (target.stunTurnsLeft) target.stunTurnsLeft = 0;
+                        cleanedCount++;
+                        addBattleLog(`${target.name} 的【眩晕】被解除`);
+                    }
+    
+                    // 4. 清除中毒 (Poison)
+                    // 注意：请确认你代码中中毒的具体变量名，通常是 poisoned 或 poisonStacks
+                    if (target.poisoned || target.poisonStacks > 0) {
+                        target.poisoned = false;
+                        target.poisonStacks = 0;
+                        target.poisonCoefficient = 0; // 如果有系数
+                        cleanedCount++;
+                        addBattleLog(`${target.name} 的【中毒】被解除`);
+                    }
+    
+                    // 更新 UI 以移除对应的 CSS 类名（如果有）
+                    updateBattleUI();
+                    
+                    if (cleanedCount === 0) {
+                        addBattleLog(`${target.name} 没有可解除的负面效果`);
+                    }
+                }
+                break;
+                
+            default:
+                console.warn(`未实现的 on_heal 效果: ${effect.effect}`);
+                break;
+        }
+
+        updateBattleUI();
+        // 延迟处理下一个效果，避免瞬间结算
+        setTimeout(processNext, 100);
+    }
+
+    processNext();
 }

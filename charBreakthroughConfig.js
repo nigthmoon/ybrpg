@@ -95,8 +95,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
     
     'on_hit_self_energy_1': { type: 'on_hit_self', chance: 1.0, effect: 'add_self_energy_1', desc: '受到普攻或技能伤害时，自身增加1能量' },
     
-    'on_hit_stun_target_10': { type: 'on_hit_self', chance: 0.1, effect: 'stun_source_1', desc: '受到普攻或技能伤害时，10%几率令目标眩晕1回合' },
-    'on_hit_stun_target_20': { type: 'on_hit_self', chance: 0.2, effect: 'stun_source_1', desc: '受到普攻或技能伤害时，20%几率令目标眩晕1回合' },
+    'on_hit_stun_target_10': { type: 'on_hit_self', chance: 0.1, effect: 'stun_source_1', desc: '受到普攻或技能伤害时，10%几率令来源眩晕1回合' },
+    'on_hit_stun_target_20': { type: 'on_hit_self', chance: 0.2, effect: 'stun_source_1', desc: '受到普攻或技能伤害时，20%几率令来源眩晕1回合' },
 
     'on_hit_counter_100': { 
         type: 'on_hit_self', 
@@ -128,6 +128,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
     'pugong_energy_team_25': { type: 'on_pugong_start', chance: 0.25, effect: 'add_energy_team_1', desc: '普攻时，25%增加全队1能量' },
     'pugong_energy_lowest_1': { type: 'on_pugong_start', chance: 1.0, effect: 'add_energy_lowest_1', desc: '普攻时，令能量最低的一名队友增加1能量' },
 
+    'pugong_energy_self_1': { type: 'on_pugong_start', chance: 1.0, effect: 'add_energy_self_1', desc: '普攻时，恢复1点能量' },
+    'pugong_energy_self_2': { type: 'on_pugong_start', chance: 1.0, effect: 'add_energy_self_2', desc: '普攻时，恢复2点能量' },
         // --- 技能类：杂项
 
     'skill_energy_self_2': { type: 'on_skill_end', chance: 1.0, effect: 'add_energy_self_2', desc: '使用技能后，恢复2点能量' },
@@ -147,10 +149,16 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
         effect: 'add_extra_turn_1', 
         desc: '成功击杀敌人后，获得1个额外行动回合' 
     },
+    'kill_add_energy_self_2': { 
+        type: 'on_kill', 
+        chance: 1.0, 
+        effect: 'add_energy_self_2', 
+        desc: '成功击杀敌人后，获得2能量' 
+    },
     // 【新增】禁疗一回合 (持续到下一轮目标行动前)
     // 注意：虽然配置在 on_skill_end，但逻辑上我们会让它作用于 targets
     'skill_heal_block_1': { 
-        type: 'on_pugong_hit_target', // 建议改为 on_skill_hit，或者在代码中特殊处理 on_skill_end 作用于目标
+        type: 'on_skill_hit_target', // 建议改为 on_skill_hit，或者在代码中特殊处理 on_skill_end 作用于目标
         chance: 1.0, 
         effect: 'apply_heal_block_1', 
         desc: '技能命中后，令目标禁疗1回合（直到下一轮目标的回合开始前）' 
