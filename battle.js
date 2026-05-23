@@ -289,202 +289,200 @@ function isSideDefeated(side) {
     return getAliveUnits(side).length === 0;
 }
 
+// ====== 改进后的战斗流程控制 ======
+
+// 增加一个标志位，防止重入
+let isProcessingTurn = false;
+
 /**
  * 推进战斗流程至下一个行动回合。
- * 
- * 该函数负责处理战斗的核心循环逻辑，包括：
- * 1. 检查战斗是否结束或某一方是否被击败。
- * 2. 确定当前轮次的先手和后手方。
- * 3. 寻找双方可行动的角色。
- * 4. 若双方均无可用角色，则结束当前轮次，进入下一轮并重置状态。
- * 5. 若有可行动角色，则根据先手优先原则执行行动，触发回合开始效果，并切换至相应的玩家操作或AI执行阶段。
- * 
- * @returns {void}
  */
-// ====== 战斗流程控制 ======
 function nextTurn() {
-    const bs = battleState;
-    if (bs.phase === 'ended') return;
-
-    // 检查胜负条件，若某一方被击败则结束战斗
-    if (isSideDefeated('player')) {
-        endBattle('enemy');
+    // 【防重入锁】如果正在处理回合，忽略后续调用
+    if (isProcessingTurn) {
+        console.warn('[Battle] nextTurn called while processing, ignored.');
         return;
     }
-    if (isSideDefeated('enemy')) {
-        endBattle('player');
-        return;
-    }
-
-    const secondSide = bs.firstSide === 'player' ? 'enemy' : 'player';
-
-    // 尝试为先手方找可行动角色
-    const firstActor = findNextActor(bs.firstSide);
-    // 尝试为后手方找可行动角色
-    const secondActor = findNextActor(secondSide);
-
-    // 双方都没有可行动角色 → 本轮结束，进入下一轮
-    // 在 nextTurn 函数中：
-    // 双方都没有可行动角色 → 本轮结束，进入下一轮
-    if (!firstActor && !secondActor) {
-        bs.round++;
-        resetActedSlots();
-        addBattleLog(`—— 第 ${bs.round} 轮 ——`);
-        
-        // 【修改】调用新的统一状态处理函数
-        processStatusTurns(bs.firstSide); 
-        // 2. 【新增】结算中毒伤害
-        
-        updateBattleUI();
-        nextTurn();
-        return;
-    }
-    // 先手方有角色则行动，否则空过
-    // 在 nextTurn 中，找到准备让 firstActor 或 secondActor 行动的地方
-
-    // 示例：先手方行动前
-    if (firstActor) {
-        bs.actedSlots[bs.firstSide].add(firstActor.slotIndex);
-        bs.currentTurnSide = bs.firstSide;
-        bs.currentTurnIndex = firstActor.slotIndex;
-        updateBattleUI();
-
-        // 【新增】检查是否眩晕
-        if (firstActor.stunned) {
-            addBattleLog(`${firstActor.name} 处于【眩晕】状态，无法行动！`);
-            // 直接跳过，不触发 triggerOnTurnStart，直接进入 afterAction 或下一位
-            setTimeout(() => afterAction(), 500); 
-            return;
-        }
-
-        // 正常行动流程
-        triggerOnTurnStart(firstActor, () => {
-            updateBattleUI();
-            if (bs.firstSide === 'player') {
-                bs.phase = 'player_action';
-                showPlayerActionUI(firstActor);
-            } else {
-                bs.phase = 'enemy_action';
-                executeAITurn(firstActor);
-            }
-        });
-        return;
-    }
-
-    // 先手方空过，直接执行后手方
-    if (secondActor) {
-        bs.actedSlots[secondSide].add(secondActor.slotIndex);
-        bs.currentTurnSide = secondSide;
-        bs.currentTurnIndex = secondActor.slotIndex;
-        updateBattleUI();
     
-        // 【新增】检查是否眩晕
-        if (secondActor.stunned) {
-            addBattleLog(`${secondActor.name} 处于【眩晕】状态，无法行动！`);
-            setTimeout(() => afterAction(), 500);
+    try {
+        isProcessingTurn = true;
+        const bs = battleState;
+        if (!bs || bs.phase === 'ended') {
+            isProcessingTurn = false;
             return;
         }
-        // 回合开始时触发宝物，动画结束后继续
-        triggerOnTurnStart(secondActor, () => {
-            updateBattleUI();
-            if (secondSide === 'player') {
+
+        // 1. 检查胜负
+        if (isSideDefeated('player')) { endBattle('enemy'); isProcessingTurn = false; return; }
+        if (isSideDefeated('enemy')) { endBattle('player'); isProcessingTurn = false; return; }
+
+        const secondSide = bs.firstSide === 'player' ? 'enemy' : 'player';
+        
+        // 2. 寻找双方可行动角色
+        const firstActor = findNextActor(bs.firstSide);
+        const secondActor = findNextActor(secondSide);
+
+        // 3. 双方都无行动 -> 轮次结束
+        if (!firstActor && !secondActor) {
+            endRound();
+            isProcessingTurn = false;
+            return;
+        }
+
+        // 4. 确定当前行动者
+        let currentActor = null;
+        let isSecondSideActor = false;
+
+        if (firstActor) {
+            currentActor = firstActor;
+            isSecondSideActor = false;
+        } else if (secondActor) {
+            currentActor = secondActor;
+            isSecondSideActor = true;
+        }
+
+        if (!currentActor) {
+            // 理论上不会到这里，但为了安全
+            endRound();
+            isProcessingTurn = false;
+            return;
+        }
+
+        // 5. 标记该角色已行动（立即标记，防止重复选取）
+        const currentSide = isSecondSideActor ? secondSide : bs.firstSide;
+        bs.actedSlots[currentSide].add(currentActor.slotIndex);
+        bs.currentTurnSide = currentSide;
+        bs.currentTurnIndex = currentActor.slotIndex;
+        
+        // 6. 更新 UI (高亮当前角色)
+        updateBattleUI();
+
+        // 7. 检查眩晕/封印等无法行动的状态
+        if (currentActor.stunned || currentActor.sealedAndCannotAct) { // 假设你有这个判断
+             addBattleLog(`${currentActor.name} 处于异常状态，无法行动！`);
+             // 短暂延迟后直接结算
+             setTimeout(() => {
+                 isProcessingTurn = false;
+                 afterAction(); 
+             }, 500);
+             return;
+        }
+
+        // 8. 触发回合开始事件 (异步)
+        // 关键：所有后续逻辑必须在 callback 中执行
+        triggerOnTurnStart(currentActor, () => {
+            // 【双重检查】防止在异步等待期间战斗已结束或角色死亡
+            if (bs.phase === 'ended' || !currentActor.alive) {
+                isProcessingTurn = false;
+                afterAction();
+                return;
+            }
+
+            // 9. 根据阵营分发行动权
+            if (currentSide === 'player') {
                 bs.phase = 'player_action';
-                showPlayerActionUI(secondActor);
+                showPlayerActionUI(currentActor);
             } else {
                 bs.phase = 'enemy_action';
-                executeAITurn(secondActor);
+                executeAITurn(currentActor);
             }
+            
+            // 注意：这里不解锁 isProcessingTurn，直到 afterAction 或 executePlayerTurn 真正开始执行动作
+            // 但实际上，为了让玩家能操作，我们需要在 showPlayerActionUI 后解锁
+            isProcessingTurn = false; 
         });
-        return;
+
+    } catch (e) {
+        console.error('[Battle] Critical Error in nextTurn:', e);
+        addBattleLog('【系统错误】战斗流程异常');
+        isProcessingTurn = false;
     }
 }
 
 /**
+ * 结束当前轮次，进入下一轮
+ */
+function endRound() {
+    const bs = battleState;
+    bs.round++;
+    resetActedSlots();
+    addBattleLog(`—— 第 ${bs.round} 轮 ——`);
+    
+    if (typeof processStatusTurns === 'function') {
+        processStatusTurns(bs.firstSide);
+    }
+    
+    updateBattleUI();
+    // 延迟进入下一轮，给 UI 喘息时间
+    setTimeout(() => nextTurn(), 100);
+}
+
+/**
  * 处理一次行动完成后的逻辑流程。
- * 
- * 主要职责包括：
- * 1. 检查战斗是否结束（胜负判定）。
- * 2. 处理当前单位因【连破】获得的额外行动回合。
- * 3. 若为先手方行动结束，切换至后手方进行行动；若后手方无可用单位，则直接进入下一回合。
- * 4. 若为后手方行动结束，或先手行动后后手方空过，则进入下一回合。
- * 
- * @returns {void}
  */
 function afterAction() {
-    const bs = battleState;
-    if (bs.phase === 'ended') return;
-
-    // 检查胜负
-    if (isSideDefeated('player')) { endBattle('enemy'); return; }
-    if (isSideDefeated('enemy')) { endBattle('player'); return; }
-
-    // 获取当前行动单位
-    const currentUnit = bs.currentTurnSide === 'player'
-        ? bs.playerUnits[bs.currentTurnIndex]
-        : bs.enemyUnits[bs.currentTurnIndex];
-
-    // 【新增】在当前角色行动结束后，立即结算其身上的中毒伤害
-    if (currentUnit && currentUnit.alive) {
-        applyPoisonDamageToUnit(currentUnit);
+    // 【防重入】
+    if (isProcessingTurn) {
+        // 如果正在处理新回合，忽略旧的 afterAction 调用
+        return;
     }
 
-    // 检查胜负 (中毒可能导致死亡，所以结算完中毒后要再次检查胜负)
-    if (isSideDefeated('player')) { endBattle('enemy'); return; }
-    if (isSideDefeated('enemy')) { endBattle('player'); return; }
-
-    // 【核心修改】检查是否有额外回合计数
-    if (currentUnit && currentUnit.alive && (currentUnit.extraTurnCount > 0 || currentUnit.extraTurn)) {
-        
-        // 消耗一个额外回合
-        if (currentUnit.extraTurnCount > 0) {
-            currentUnit.extraTurnCount--;
-        } else {
-            // 兼容旧的 boolean 标记
-            currentUnit.extraTurn = false;
-        }
-
-        addBattleLog(`${currentUnit.name} 因【额外回合】再次行动！`);
-        updateBattleUI();
-
-        // 直接进入该单位的行动阶段，不切换回合
-        if (currentUnit.side === 'player') {
-            bs.phase = 'player_action';
-            showPlayerActionUI(currentUnit);
-        } else {
-            bs.phase = 'enemy_action';
-            executeAITurn(currentUnit);
-        }
-        return; // 重要：直接返回，不执行后续的 nextTurn 逻辑
-    }
-
-    // --- 原有逻辑：如果没有额外回合，则正常切换先手/后手或进入下一轮 ---
-    
-    const secondSide = bs.firstSide === 'player' ? 'enemy' : 'player';
-
-    // 若当前为先手方行动完毕...
-    if (bs.currentTurnSide === bs.firstSide) {
-        const secondActor = findNextActor(secondSide);
-        if (secondActor) {
-            bs.actedSlots[secondSide].add(secondActor.slotIndex);
-            bs.currentTurnSide = secondSide;
-            bs.currentTurnIndex = secondActor.slotIndex;
-            updateBattleUI();
-            triggerOnTurnStart(secondActor, () => {
-                updateBattleUI();
-                if (secondSide === 'player') {
-                    bs.phase = 'player_action';
-                    showPlayerActionUI(secondActor);
-                } else {
-                    bs.phase = 'enemy_action';
-                    executeAITurn(secondActor);
-                }
-            });
+    try {
+        isProcessingTurn = true;
+        const bs = battleState;
+        if (bs.phase === 'ended') {
+            isProcessingTurn = false;
             return;
         }
-    }
 
-    // 后手方行动完毕，或先手行动后后手方无可用单位，推进至下一回合
-    nextTurn();
+        // 1. 检查胜负
+        if (isSideDefeated('player')) { endBattle('enemy'); isProcessingTurn = false; return; }
+        if (isSideDefeated('enemy')) { endBattle('player'); isProcessingTurn = false; return; }
+
+        // 2. 获取当前刚刚行动完毕的单位
+        const currentUnit = bs.currentTurnSide === 'player'
+            ? bs.playerUnits[bs.currentTurnIndex]
+            : bs.enemyUnits[bs.currentTurnIndex];
+
+        // 3. 结算中毒等持续伤害
+        if (currentUnit && currentUnit.alive) {
+            applyPoisonDamageToUnit(currentUnit);
+        }
+
+        // 再次检查胜负
+        if (isSideDefeated('player')) { endBattle('enemy'); isProcessingTurn = false; return; }
+        if (isSideDefeated('enemy')) { endBattle('player'); isProcessingTurn = false; return; }
+
+        // 4. 【核心】检查额外回合
+        if (currentUnit && currentUnit.alive && (currentUnit.extraTurnCount > 0 || currentUnit.extraTurn)) {
+            if (currentUnit.extraTurnCount > 0) currentUnit.extraTurnCount--;
+            else currentUnit.extraTurn = false;
+
+            addBattleLog(`${currentUnit.name} 获得额外回合！`);
+            updateBattleUI();
+            
+            // 重新进入该角色的行动阶段
+            if (currentUnit.side === 'player') {
+                bs.phase = 'player_action';
+                showPlayerActionUI(currentUnit);
+            } else {
+                bs.phase = 'enemy_action';
+                executeAITurn(currentUnit);
+            }
+            isProcessingTurn = false;
+            return; // 重要：直接返回，不执行下面的 nextTurn
+        }
+
+        // 5. 如果没有额外回合，继续寻找下一个行动者
+        // 注意：这里不再手动寻找 secondActor，而是直接调用 nextTurn
+        // nextTurn 会自动根据 actedSlots 寻找下一个未行动的人（无论是先手还是后手）
+        isProcessingTurn = false;
+        nextTurn(); 
+
+    } catch (e) {
+        console.error('[Battle] Critical Error in afterAction:', e);
+        isProcessingTurn = false;
+    }
 }
 function calcDamage(attacker, defender, coefficient, extraEnergy, skillType) {
     // 【核心修复】强制转换为数字，防止 undefined/null 导致 NaN
@@ -1950,7 +1948,7 @@ function createUnitSlot(unit, side, slotIndex) {
 // console.log(unit)
     const nameEl = document.createElement('div');
     nameEl.className = 'battle-unit-name';
-    const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
     if (RANK_BORDER_COLORS[unit.rank]) {
         nameEl.style.color = RANK_BORDER_COLORS[unit.rank];
     }
@@ -2084,24 +2082,32 @@ function getSkillEmoji(skillType, skillId) {
  * @param {boolean} [actor.permanentlySealed] - 角色是否被永久封印
  */
 function showPlayerActionUI(actor) {
-    // 处理自动战斗逻辑：若开启自动战斗且角色存活，则执行AI选择动作并播放动画
+    // 1. 强制清理旧 UI
+    hidePlayerActionUI(); 
+    
+    // 2. 自动战斗检查
     if (window.autoBattle && actor && actor.alive) {
         const action = aiChooseAction(actor);
         if (action && action.targets.length > 0) {
             battleState.phase = 'animating';
-            bs_animateAction(actor, action, () => {
-                setTimeout(() => afterAction(), 400);
+            // 使用 requestAnimationFrame 确保 UI 状态切换后再执行动画
+            requestAnimationFrame(() => {
+                bs_animateAction(actor, action, () => {
+                    setTimeout(() => afterAction(), 400);
+                });
             });
             return;
         }
     }
-    
-    // 隐藏旧的操作UI
-    hidePlayerActionUI();
 
-    // 获取角色对应的DOM插槽元素，若不存在则终止
+    // 3. 查找 DOM
     const slot = document.querySelector(`.battle-unit[data-side="${actor.side}"][data-slot="${actor.slotIndex}"]`);
-    if (!slot) return;
+    if (!slot) {
+        console.error('[UI] Slot not found for', actor.name);
+        // 如果找不到，可能是渲染延迟，尝试重试一次
+        setTimeout(() => showPlayerActionUI(actor), 50);
+        return;
+    }
 
     // 创建操作面板容器
     const panel = document.createElement('div');
@@ -2540,7 +2546,7 @@ function showBattleIntro() {
                 updateBattleUI();
                 // 所有被动宝物触发完毕，开始回合
                 setTimeout(() => {
-                    nextTurn();
+                    new_nextTurn();
                 }, 300);
                 return;
             }
@@ -2559,7 +2565,7 @@ function showBattleIntro() {
 
     // 战斗已启动，直接延迟进入下一回合
     setTimeout(() => {
-        nextTurn();
+        new_nextTurn();
     }, 500);
 }
 
@@ -4046,4 +4052,363 @@ function handleOnHealBreakthroughEffects(healer, target, triggerType, callback) 
     }
 
     processNext();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//------------------------new
+// ====== 【新系统】全局状态标记 ======
+let new_isBusy = false; // 战斗流程锁，防止重入
+
+/**
+ * 【新系统】推进战斗流程至下一个行动者
+ * 职责：寻找下一个该行动的角色，并启动其行动流程。
+ */
+function new_nextTurn() {
+    if (new_isBusy) {
+        console.warn('[NewBattle] System busy, ignoring nextTurn call.');
+        return;
+    }
+
+    try {
+        new_isBusy = true;
+        const bs = battleState;
+        if (!bs || bs.phase === 'ended') {
+            new_isBusy = false;
+            return;
+        }
+
+        // 1. 胜负检查
+        if (isSideDefeated('player')) { endBattle('enemy'); new_isBusy = false; return; }
+        if (isSideDefeated('enemy')) { endBattle('player'); new_isBusy = false; return; }
+
+        const secondSide = bs.firstSide === 'player' ? 'enemy' : 'player';
+
+        // 2. 寻找下一个行动者 (遵循先手优先原则)
+        // 逻辑：先找先手方未行动的 -> 再找后手方未行动的
+        let nextActor = findNextActor(bs.firstSide);
+        let isSecondSide = false;
+
+        if (!nextActor) {
+            nextActor = findNextActor(secondSide);
+            isSecondSide = true;
+        }
+
+        // 3. 如果双方都无人可行动 -> 结束本轮
+        if (!nextActor) {
+            new_endRound();
+            new_isBusy = false;
+            return;
+        }
+
+        // 4. 锁定当前行动者状态
+        const currentSide = isSecondSide ? secondSide : bs.firstSide;
+        
+        // 标记已行动 (防止被重复选取)
+        bs.actedSlots[currentSide].add(nextActor.slotIndex);
+        bs.currentTurnSide = currentSide;
+        bs.currentTurnIndex = nextActor.slotIndex;
+        
+        // 更新 UI 高亮
+        updateBattleUI();
+
+        // 5. 检查异常状态 (眩晕/封印等)
+        if (nextActor.stunned) {
+            addBattleLog(`${nextActor.name} 处于【眩晕】状态，跳过回合！`);
+            // 眩晕跳过，直接结算
+            setTimeout(() => {
+                new_isBusy = false;
+                new_afterAction(); 
+            }, 600);
+            return;
+        }
+
+        // 6. 触发回合开始事件 (异步)
+        // 注意：这里必须等待 triggerOnTurnStart 完成，才能让玩家/AI 操作
+        triggerOnTurnStart(nextActor, () => {
+            // 安全检查：防止在异步期间角色死亡或战斗结束
+            if (bs.phase === 'ended' || !nextActor.alive) {
+                new_isBusy = false;
+                new_afterAction();
+                return;
+            }
+
+            // 7. 分发行动权
+            if (currentSide === 'player') {
+                bs.phase = 'player_action';
+                new_showPlayerActionUI(nextActor);
+            } else {
+                bs.phase = 'enemy_action';
+                new_executeAITurn(nextActor);
+            }
+            
+            // 解锁：此时行动权已交给 UI 或 AI，流程锁释放，等待 afterAction 再次上锁
+            new_isBusy = false; 
+        });
+
+    } catch (e) {
+        console.error('[NewBattle] Error in new_nextTurn:', e);
+        new_isBusy = false;
+    }
+}
+
+/**
+ * 【新系统】行动结束后的处理
+ * 职责：处理额外回合、中毒结算，然后决定是继续连动还是进入下一轮调度。
+ */
+function new_afterAction() {
+    if (new_isBusy) {
+        // 如果系统正忙（例如正在进入下一轮），忽略旧的 afterAction
+        return;
+    }
+
+    try {
+        new_isBusy = true;
+        const bs = battleState;
+        if (bs.phase === 'ended') {
+            new_isBusy = false;
+            return;
+        }
+
+        // 1. 胜负检查
+        if (isSideDefeated('player')) { endBattle('enemy'); new_isBusy = false; return; }
+        if (isSideDefeated('enemy')) { endBattle('player'); new_isBusy = false; return; }
+
+        // 2. 获取刚刚行动的单位
+        const currentUnit = bs.currentTurnSide === 'player'
+            ? bs.playerUnits[bs.currentTurnIndex]
+            : bs.enemyUnits[bs.currentTurnIndex];
+
+        // 3. 结算持续伤害 (如中毒)
+        if (currentUnit && currentUnit.alive) {
+            applyPoisonDamageToUnit(currentUnit);
+        }
+
+        // 再次胜负检查 (中毒可能致死)
+        if (isSideDefeated('player')) { endBattle('enemy'); new_isBusy = false; return; }
+        if (isSideDefeated('enemy')) { endBattle('player'); new_isBusy = false; return; }
+
+        // 4. 【核心】检查额外回合 (连破/再动)
+        if (currentUnit && currentUnit.alive && (currentUnit.extraTurnCount > 0 || currentUnit.extraTurn)) {
+            // 消耗额外回合
+            if (currentUnit.extraTurnCount > 0) currentUnit.extraTurnCount--;
+            else currentUnit.extraTurn = false;
+
+            addBattleLog(`${currentUnit.name} 获得【额外回合】！`);
+            updateBattleUI();
+
+            // 直接进入该单位的行动阶段，不改变 actedSlots，不切换 side
+            if (currentUnit.side === 'player') {
+                bs.phase = 'player_action';
+                new_showPlayerActionUI(currentUnit);
+            } else {
+                bs.phase = 'enemy_action';
+                new_executeAITurn(currentUnit);
+            }
+            
+            new_isBusy = false;
+            return; // 重要：直接返回，不调用 new_nextTurn
+        }
+
+        // 5. 没有额外回合，调度下一个行动者
+        new_isBusy = false;
+        new_nextTurn(); 
+
+    } catch (e) {
+        console.error('[NewBattle] Error in new_afterAction:', e);
+        new_isBusy = false;
+    }
+}
+
+/**
+ * 【新系统】结束本轮
+ * 职责：重置行动记录，处理回合初状态，进入下一轮。
+ */
+function new_endRound() {
+    const bs = battleState;
+    bs.round++;
+    resetActedSlots();
+    addBattleLog(`—— 第 ${bs.round} 轮 ——`);
+    
+    // 处理回合初的状态结算 (解毒、倒计时等)
+    if (typeof processStatusTurns === 'function') {
+        processStatusTurns(bs.firstSide);
+    }
+    
+    updateBattleUI();
+    
+    // 延迟进入下一轮，确保 UI 渲染完成
+    setTimeout(() => {
+        new_nextTurn();
+    }, 100);
+}
+
+/**
+ * 【新系统】执行 AI 行动
+ * 包装原有的 executeAITurn，确保结束后调用 new_afterAction
+ */
+function new_executeAITurn(actor) {
+    // 复用原有的 AI 选择逻辑
+    const action = aiChooseAction(actor);
+
+    if (!action || action.targets.length === 0) {
+        addBattleLog(`${actor.name} 无法行动`);
+        setTimeout(() => {
+            new_afterAction();
+        }, 600);
+        return;
+    }
+
+    // 播放动画并结算
+    bs_animateAction(actor, action, () => {
+        setTimeout(() => {
+            new_afterAction();
+        }, 400);
+    });
+}
+
+/**
+ * 【新系统】显示玩家操作 UI
+ * 包装原有的 showPlayerActionUI，增加自动战斗处理和 DOM 稳定性检查
+ */
+function new_showPlayerActionUI(actor) {
+    // 1. 清理旧 UI
+    hidePlayerActionUI();
+
+    // 2. 自动战斗逻辑
+    if (window.autoBattle && actor && actor.alive) {
+        const action = aiChooseAction(actor);
+        if (action && action.targets.length > 0) {
+            battleState.phase = 'animating';
+            bs_animateAction(actor, action, () => {
+                setTimeout(() => {
+                    new_afterAction();
+                }, 400);
+            });
+            return;
+        } else {
+            console.warn('[NewBattle] AutoBattle failed, fallback to manual.');
+        }
+    }
+
+    // 3. 查找 DOM (增加重试机制)
+    const slot = document.querySelector(`.battle-unit[data-side="${actor.side}"][data-slot="${actor.slotIndex}"]`);
+    if (!slot) {
+        console.error('[NewBattle] DOM slot not found for', actor.name, actor.slotIndex);
+        // 如果找不到，可能是渲染延迟，短暂重试
+        setTimeout(() => new_showPlayerActionUI(actor), 50);
+        return;
+    }
+
+    // 4. 创建面板 (复用原有逻辑，但按钮点击后需确保流程正确)
+    const panel = document.createElement('div');
+    panel.className = 'battle-action-overlay';
+    panel.id = 'battle-action-panel';
+
+    // 普攻按钮
+    const pugongId = actor.skills[0] || 'attack1';
+    const pugongBtn = document.createElement('button');
+    pugongBtn.className = 'action-btn pugong-btn';
+    pugongBtn.textContent = '普攻 ' + getSkillEmoji('pugong', pugongId);
+    pugongBtn.onclick = (e) => {
+        e.stopPropagation();
+        enterTargetSelection(actor, 'pugong', pugongId, 0);
+    };
+    panel.appendChild(pugongBtn);
+
+    // 技能按钮
+    const skillId = actor.skills[1];
+    if (skillId) {
+        const isSealed = actor.sealed || actor.permanentlySealed;
+        const canUseSkill = actor.energy >= 4 && !isSealed;
+        const skillBtn = document.createElement('button');
+        skillBtn.className = 'action-btn skill-btn' + (canUseSkill ? '' : ' disabled');
+        skillBtn.textContent = '技能 ' + getSkillEmoji('skill', skillId);
+        if (canUseSkill) {
+            skillBtn.onclick = (e) => {
+                e.stopPropagation();
+                enterTargetSelection(actor, 'skill', skillId, actor.energy);
+            };
+        } else {
+            skillBtn.onclick = (e) => {
+                e.stopPropagation();
+                toast(isSealed ? '已被封印' : '能量不足', 'warning');
+            };
+        }
+        panel.appendChild(skillBtn);
+    }
+
+    // 必杀按钮
+    const spId = actor.skills[2];
+    if (spId) {
+        const isSealed = actor.sealed || actor.permanentlySealed;
+        const canUseSp = actor.energy >= 8 && !isSealed;
+        const spBtn = document.createElement('button');
+        spBtn.className = 'action-btn spskill-btn' + (canUseSp ? '' : ' disabled');
+        spBtn.textContent = '必杀 ' + getSkillEmoji('spskill', spId);
+        if (canUseSp) {
+            spBtn.onclick = (e) => {
+                e.stopPropagation();
+                enterTargetSelection(actor, 'spskill', spId, actor.energy);
+            };
+        } else {
+            spBtn.onclick = (e) => {
+                e.stopPropagation();
+                toast(isSealed ? '已被封印' : '能量不足', 'warning');
+            };
+        }
+        panel.appendChild(spBtn);
+    }
+
+    slot.appendChild(panel);
+}
+
+/**
+ * 【新系统】玩家执行回合 (目标选择完成后调用)
+ * 替换原有的 executePlayerTurn
+ */
+function new_executePlayerTurn(actor, action) {
+    battleState.phase = 'animating';
+    hidePlayerActionUI();
+
+    bs_animateAction(actor, action, () => {
+        setTimeout(() => {
+            new_afterAction();
+        }, 400);
+    });
 }

@@ -458,7 +458,7 @@ function renderTeamSlot(slotEl, index) {
             return;
         }
         var rank = window.charBagData[instanceId].rank || char.rank;
-        const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+        const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
         const borderColor = RANK_BORDER_COLORS[rank] || '#888';
 
         const img = document.createElement('img');
@@ -638,8 +638,8 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
     if (!char || !instanceData) return;
 
     const saveData = instanceData; // 直接使用实例数据
-    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' };
-    const RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+    const RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
     const TIP_LABELS = { damger: '偏攻', recover: '治疗', balanced: '均衡', defense: '偏防' };
     // const TIP_LABELS = { damage: '偏攻', recover: '治疗', balance: '均衡' };
 
@@ -1285,7 +1285,7 @@ function showCharDetailPopup(charId) {
     nameDiv.className = 'gallery-detail-name';
     nameDiv.textContent = baseChar.name + tupoText;
     // 根据品质设置颜色
-    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', rare: '#44aaff', common: '#88cc88', junk: '#888888', epicfake: '#ffaa44' };
+    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', rare: '#a335ee', common: '#44aaff', junk: '#88cc88', epicfake: '#ffaa44' };
     nameDiv.style.color = rankColors[baseChar.rank] || '#fff';
     dialog.appendChild(nameDiv);
 
@@ -1337,7 +1337,7 @@ function showCharDetailPopup(charId) {
     attrContainer.style.fontSize = '14px';
     attrContainer.style.color = '#ddd';
 
-    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' };
+    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
     const TIP_LABELS = { damage: '伤害系', recover: '治疗系' };
     const TEMPLATE_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
@@ -1477,8 +1477,8 @@ function showCharSelectPopup(slotIndex) {
     if (existing) existing.remove();
 
     const RANK_ORDER = { kami: 1, legend: 2, epic: 3, epicfake: 4, rare: 5, common: 6, junk: 7 };
-    const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' };
+    const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
     const TIP_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
     // 遮罩
@@ -2059,9 +2059,9 @@ function renderBagCharContent(container) {
         legend: '#ff4444',
         epic: '#ff8d8d',
         epicfake: '#ff8800',
-        rare: '#44aaff',
-        common: '#88cc88',
-        junk: '#888888'
+        rare: '#a335ee',
+        common: '#44aaff',
+        junk: '#88cc88'
     };
 
     const scrollDiv = document.createElement('div');
@@ -2211,7 +2211,7 @@ function updateBagCharDetailBar(charInst) {
 
     // charInst 现在包含 instanceId, charId, level 等
     const saveData = window.charBagData[charInst.instanceId];
-    const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' };
+    const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
     const tipLabels = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
     const level = saveData ? saveData.level : 1;
     const rankText = rankLabels[charInst.rank] || charInst.rank;
@@ -2250,7 +2250,7 @@ function updateBagCharDetailBar(charInst) {
 
     // 更新名称
     const nameEl = document.getElementById('bag-detail-char-name');
-    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
     if (nameEl) {
         const tupoText = charInst.tupolevel ? `+${charInst.tupolevel}` : '';
         nameEl.textContent = charInst.name + tupoText;
@@ -2522,25 +2522,25 @@ function renderGalleryView(container) {
     tabsDiv.appendChild(tabDream);
     container.appendChild(tabsDiv);
 
-    // 按品质排序：传说 → 史诗（后续扩展：精品 → 普通 → 废材）
+    // 按品质排序：传说 → 史诗（后续扩展：稀有 → 精品 → 平凡）
     const RANK_ORDER = ['kami', 'legend', 'epic', 'epicfake', 'rare', 'common', 'junk'];
     const RANK_LABELS = {
         kami: '神品',
         legend: '传说',
         epic: '史诗',
         epicfake: '伪史诗',
-        rare: '精品',
-        common: '普通',
-        junk: '废材'
+        rare: '稀有',
+        common: '精品',
+        junk: '平凡'
     };
     const RANK_BORDER_COLORS = {
         kami: '#ffff00',
         legend: '#ff4444',
         epic: '#ff8d8d',
         epicfake: '#ff8800',
-        rare: '#44aaff',
-        common: '#88cc88',
-        junk: '#888888'
+        rare: '#a335ee',
+        common: '#44aaff',
+        junk: '#88cc88'
     };
 
     // 筛选当前阵营的角色
@@ -2718,8 +2718,8 @@ function showCharDetail(_parentContainer, charData) {
     const attrDiv = document.createElement('div');
     attrDiv.className = 'gallery-detail-attr';
 
-    const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' };
-    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
     const tipLabels = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
     // 品质 + 等级（图鉴中显示基础等级 Lv.1）
@@ -2938,7 +2938,7 @@ function getTreasureRankInfo(price) {
     if (price >= 350) return { label: '珍稀', color: '#ff8d8d' };
     if (price >= 250) return { label: '上品', color: '#44aaff' };
     if (price >= 180) return { label: '良品', color: '#88cc88' };
-    return { label: '普通', color: '#888' };
+    return { label: '精品', color: '#888' };
 }
 
 /**
@@ -4047,14 +4047,14 @@ function getCharPrice(rank) {
  * 获取角色品质颜色
  */
 function getRankColor(rank) {
-    return { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' }[rank] || '#888';
+    return { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' }[rank] || '#888';
 }
 
 /**
  * 获取角色品质中文名
  */
 function getRankName(rank) {
-    return { legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' }[rank] || '普通';
+    return { legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' }[rank] || '精品';
 }
 
 /**
@@ -4266,9 +4266,9 @@ function showItemDetail(item) {
 //         'legend': '#ff4444',
 //         'epic': '#ff8d8d',
 //         'epicfake':'#ff8800',
-//         'rare': '#44aaff',
-//         'common': '#88cc88',
-//         'junk': '#888888'
+//         'rare': '#a335ee',
+//         'common': '#44aaff',
+//         'junk': '#88cc88'
 //     };
 //     return colors[rank] || '#fff';
 // }
@@ -4277,14 +4277,14 @@ function showItemDetail(item) {
 function getRankText(rank) {
     const texts = {
         'junk': '废柴',
-        'common': '普通',
+        'common': '精品',
         'rare': '稀有',
         'epicfake': '伪史诗',
         'epic': '史诗',
         'legend': '传说',
         'kami': '神品',
     };
-    return texts[rank] || rank || '普通';
+    return texts[rank] || rank || '精品';
 }
 
 function renderShopView(container) {
@@ -5610,8 +5610,8 @@ function showBagCharDetailPopup(instanceId, charId) {
     // overlay.className = 'ybrpg-confirm-overlay'; // 保持原有类名
     // overlay.id = 'bag-char-detail-overlay';      // <--- 新增：添加ID以便刷新时移除
     const saveData = instData;
-    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' };
-    const RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
+    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+    const RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
     const TIP_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
     const overlay = document.createElement('div');
@@ -5729,8 +5729,8 @@ function showBagCharDetailPopup(instanceId, charId) {
             // 更新等级显示
             const rankEl = dialog.querySelector('.gallery-detail-rank');
             if (rankEl) {
-                const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-                const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' };
+                const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+                const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
                 const rankText = rankLabels[saveData.rank] || saveData.rank;
                 rankEl.innerHTML = `<span style="color:${rankColors[saveData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${newLevel}</span>`;
             }
@@ -5858,8 +5858,8 @@ function showBagCharDetailPopup(instanceId, charId) {
                         }
                         const rankEl = dialog.querySelector('.gallery-detail-rank');
                         if (rankEl) {
-                            const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#44aaff', common: '#88cc88', junk: '#888888' };
-                            const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '精品', common: '普通', junk: '废材' };
+                            const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+                            const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
                             const rankText = rankLabels[saveData.rank] || saveData.rank;
                             rankEl.innerHTML = `<span style="color:${rankColors[saveData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${saveData.level}</span>`;
                         }
@@ -6293,18 +6293,18 @@ function showBagCharDetail(charInfo) {
  */
 function getRankLabel(rank) {
     // const map = {
-    //     'junk': '废材',
+    //     'junk': '平凡',
     //     'common': '普通',
-    //     'rare': '精品(紫)',
+    //     'rare': '稀有(紫)',
     //     'epicfake': '伪史诗(橙)',
     //     'epic': '真史诗(橙)', // 注意：您描述中橙色分伪史诗和真史诗，这里需区分颜色或名称
     //     'legend': '传说(红)',
     //     'kami': '神品(金)'
     // };
     const map = {
-        'junk': '废材',
-        'common': '普通',
-        'rare': '精品',
+        'junk': '平凡',
+        'common': '精品',
+        'rare': '稀有',
         'epicfake': '伪史诗',
         'epic': '真史诗', // 注意：您描述中橙色分伪史诗和真史诗，这里需区分颜色或名称
         'legend': '传说',

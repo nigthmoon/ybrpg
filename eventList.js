@@ -292,7 +292,7 @@ const SPeventList = {
                 name: '平凡试炼',
                 id: 'sp2-1',
                 type: 'battle',
-                text: '通过本关会令主角升品至普通',
+                text: '通过本关会令主角升品至精品',
                 prev: 'sp1-1',
                 gold : 900,
                 enemy: [
@@ -305,7 +305,7 @@ const SPeventList = {
                 name: '精英试炼',
                 id: 'sp2-2',
                 type: 'battle',
-                text: '通过本关会令主角升品至精品',
+                text: '通过本关会令主角升品至稀有',
                 prev: 'sp1-2',
                 gold : 1200,
                 enemy: [
