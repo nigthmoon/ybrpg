@@ -184,8 +184,7 @@ const STANDARD_BREAKTHROUGH_TEMPLATE = [
     {
         level: 0,
         type: 'self_stat_flat',
-        stat: 'atk',
-        value: 100,
+        atk: 100,
         desc: '初始化时攻击+100固定数值'
     },
     // Level 1
@@ -199,8 +198,7 @@ const STANDARD_BREAKTHROUGH_TEMPLATE = [
     {
         level: 2,
         type: 'self_stat_flat',
-        stat: 'def',
-        value: 50,
+        def: 50,
         desc: '初始化时防御+50固定数值'
     },
     // Level 3
@@ -214,8 +212,7 @@ const STANDARD_BREAKTHROUGH_TEMPLATE = [
     {
         level: 4,
         type: 'self_stat_flat',
-        stat: 'hp',
-        value: 200,
+        hp: 200,
         desc: '初始化时血量+200固定数值'
     },
     // Level 5 (角色专有突破buff - 示例：无视防御)
@@ -229,8 +226,9 @@ const STANDARD_BREAKTHROUGH_TEMPLATE = [
     {
         level: 6,
         type: 'self_stat_percent',
-        stats: ['atk', 'def', 'hp'],
-        percent: 0.1,
+        atk: 0.1,
+        def: 0.1,
+        hp: 0.1,
         desc: '初始化时获得10%的攻防血加成'
     },
     // Level 7
@@ -251,8 +249,7 @@ const STANDARD_BREAKTHROUGH_TEMPLATE = [
     {
         level: 9,
         type: 'team_stat_flat',
-        stat: 'atk',
-        value: 200,
+        atk: 200,
         desc: '初始化时全队获得攻击+200固定数值'
     },
     // Level 10 (角色专属buff - 示例：吸血)
@@ -273,8 +270,7 @@ const STANDARD_BREAKTHROUGH_TEMPLATE = [
     {
         level: 12,
         type: 'team_stat_flat',
-        stat: 'def',
-        value: 100,
+        def: 100,
         desc: '初始化时全队获得防御+100固定数值'
     },
     // Level 13 (专属buff - 示例：减伤)
@@ -288,8 +284,7 @@ const STANDARD_BREAKTHROUGH_TEMPLATE = [
     {
         level: 14,
         type: 'team_stat_flat',
-        stat: 'hp',
-        value: 300,
+        hp: 300,
         desc: '初始化时全队获得血量+300固定数值'
     },
     // Level 15
@@ -310,8 +305,9 @@ const STANDARD_BREAKTHROUGH_TEMPLATE = [
     {
         level: 17,
         type: 'team_stat_percent',
-        stats: ['atk', 'def', 'hp'],
-        percent: 0.1,
+        atk: 0.1,
+        def: 0.1,
+        hp: 0.1,
         desc: '初始化时全队获得10%的攻防血加成'
     },
     // Level 18 (专属buff - 示例：控制抗性/反击)
