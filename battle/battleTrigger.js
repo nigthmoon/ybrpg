@@ -1,12 +1,21 @@
 // ====== 夜白旅程 - 纯净战斗核心系统 (整理版) ======
 
 // ====== 1. 全局状态声明 ======
+
+/**@type {battleState}战斗信息 */
 let battleState = null;
+/** ====== 目标选择 ====== */
 let targetSelection = null;
+/**全局锁，防止重入 */
 let isProcessing = false; // 全局锁，防止重入
 
 // ====== 2. 基础工具函数 ======
 
+/**
+ * 
+ * @param {*} msg 战斗信息记录 
+ * @returns 战斗信息记录 
+ */
 function addBattleLog(msg) {
     if (!battleState) return;
     battleState.log.push(msg);
@@ -21,6 +30,10 @@ function addBattleLog(msg) {
     console.log('[Battle]', msg);
 }
 
+/**
+ * 
+ * @returns 战斗画面更新
+ */
 function updateBattleUI() {
     const bs = battleState;
     if (!bs) return;
@@ -62,6 +75,13 @@ function updateBattleUI() {
     });
 }
 
+/**
+ * 
+ * @param {*} unit 目标
+ * @param {*} value 数值
+ * @param {boolean} isHeal 类型，通常治疗为true，显示绿色（以后可能会有其他改动
+ * @returns 显示伤害数字
+ */
 function showDamageNumber(unit, value, isHeal) {
     const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
     if (!slotEl) return;
@@ -80,12 +100,18 @@ function showDamageNumber(unit, value, isHeal) {
     setTimeout(() => float.remove(), 800);
 }
 
+/**
+ * 暂时不清晰，疑似是进入某角色回合或者游戏结算时调用，最终会清除高亮
+ */
 function hidePlayerActionUI() {
     const panel = document.getElementById('battle-action-panel');
     if (panel) panel.remove();
     clearTargetHighlights();
 }
 
+/**
+ * 清除高亮
+ */
 function clearTargetHighlights() {
     document.querySelectorAll('.battle-unit.selectable').forEach(el => {
         el.classList.remove('selectable', 'target-selected');
@@ -93,15 +119,30 @@ function clearTargetHighlights() {
     });
 }
 
+/**
+ * 
+ * @param {string} side 为player或不为player
+ * @returns 判断该阵营的存活角色数
+ */
 function getAliveUnits(side) {
     const units = side === 'player' ? battleState.playerUnits : battleState.enemyUnits;
     return units.filter(u => u && u.alive);
 }
 
+/**
+ * 
+ * @param {string} side 为player或不为player
+ * @returns 判断该阵营是否全灭
+ */
 function isSideDefeated(side) {
     return getAliveUnits(side).length === 0;
 }
 
+/**
+ * 
+ * @param {string} side 为player或不为player
+ * @returns 检索该阵营的首个可未行动角色
+ */
 function findNextActor(side) {
     const bs = battleState;
     const units = side === 'player' ? bs.playerUnits : bs.enemyUnits;
@@ -113,11 +154,19 @@ function findNextActor(side) {
     return null;
 }
 
+/**
+ * 生成等待记录的已行动的角色对象
+ */
 function resetActedSlots() {
     const bs = battleState;
     bs.actedSlots = { player: new Set(), enemy: new Set() };
 }
 
+/**
+ * 
+ * @param {array} array 填入角色组成的数组
+ * @returns 随机重新排序（其他随机选目标会直接调用其前随机数值个角色未目标）
+ */
 function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -128,6 +177,14 @@ function shuffleArray(array) {
 
 // ====== 3. 核心结算模块 ======
 
+/**
+ * 
+ * @param {*} attacker 攻击者
+ * @param {*} defender 被攻击者
+ * @param {*} coefficient 攻击系数
+ * @param {*} extraEnergy 因额外消耗能量导致的技能增伤
+ * @returns 计算最终伤害值
+ */
 function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
     const atk = Number(attacker.atk) || 0;
     const def = Number(defender.def) || 0;
@@ -141,6 +198,14 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
     return Math.max(1, Math.floor(finalDmg));
 }
 
+/**
+ * 
+ * @param {*} target 受伤角色
+ * @param {*} dmg 伤害值
+ * @param {*} attacker 伤害来源
+ * @param {*} callback 后续触发的事件
+ * @returns 结算伤害事件
+ */
 function applyDamage(target, dmg, attacker, callback) {
     if (!target || !target.alive) {
         if (callback) callback();
@@ -173,6 +238,13 @@ function applyDamage(target, dmg, attacker, callback) {
     }
 }
 
+/**
+ * 
+ * @param {*} target 被治疗者
+ * @param {*} healAmount 治疗数值
+ * @param {*} callback 治疗后续事件
+ * @returns 结算治疗事件
+ */
 function applyHeal(target, healAmount, callback) {
     if (!target || !target.alive) {
         if (callback) callback();
@@ -203,6 +275,13 @@ function applyHeal(target, healAmount, callback) {
 
 // ====== 4. 行动执行模块 ======
 
+/**
+ * 
+ * @param {*} actor 执行者
+ * @param {*} targets 目标
+ * @param {*} callback 后续
+ * @returns 执行普攻事件
+ */
 function executePugong(actor, targets, callback) {
     if (!targets || targets.length === 0) {
         if (callback) callback();
@@ -244,6 +323,16 @@ function executePugong(actor, targets, callback) {
     processNextTarget();
 }
 
+/**
+ * 
+ * @param {*} actor 执行者
+ * @param {*} skillType 技能类型（常规技能或者必杀）
+ * @param {*} skillId 技能id
+ * @param {*} targets 目标集体
+ * @param {*} energyCost 能量消耗
+ * @param {*} callback 技能后续
+ * @returns 执行技能事件
+ */
 function executeSkill(actor, skillType, skillId, targets, energyCost, callback) {
     if (!targets || targets.length === 0) {
         if (callback) callback();
@@ -291,17 +380,22 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
 
 // ====== 5. 战斗循环控制 ======
 
+/**
+ * 控制游戏进入下一回合
+ * @returns 控制游戏进入下一回合
+ */
 function nextTurn() {
     if (isProcessing) return;
     
     try {
         isProcessing = true;
+		/**@type {battleState} */
         const bs = battleState;
         if (!bs || bs.phase === 'ended') { isProcessing = false; return; }
-
+		//判断某一方是否团灭决定胜负
         if (isSideDefeated('player')) { endBattle('enemy'); isProcessing = false; return; }
         if (isSideDefeated('enemy')) { endBattle('player'); isProcessing = false; return; }
-
+		/**后手 */
         const secondSide = bs.firstSide === 'player' ? 'enemy' : 'player';
         
         let actor = findNextActor(bs.firstSide);
@@ -325,7 +419,10 @@ function nextTurn() {
 
         if (actor.stunned) {
             addBattleLog(`${actor.name} 眩晕，跳过回合`);
-            setTimeout(() => { isProcessing = false; afterAction(); }, 600);
+            setTimeout(() => { 
+				isProcessing = false; 
+				afterAction(); 
+			}, 600);
             return;
         }
 
@@ -345,6 +442,10 @@ function nextTurn() {
     }
 }
 
+/**
+ * 
+ * @returns 回合结束
+ */
 function afterAction() {
     if (isProcessing) return;
 
@@ -388,6 +489,9 @@ function afterAction() {
     }
 }
 
+/**
+ * 一轮结束进入下一轮
+ */
 function endRound() {
     const bs = battleState;
     bs.round++;
@@ -400,6 +504,11 @@ function endRound() {
     }, 100);
 }
 
+/**
+ * 
+ * @param {*} actor 当前行动角色
+ * @returns ai行动
+ */
 function executeAITurn(actor) {
     const action = aiChooseAction(actor); 
     if (!action || action.targets.length === 0) {
@@ -421,6 +530,12 @@ function executeAITurn(actor) {
     }
 }
 
+/**
+ * 
+ * @param {*} actor 当前行动的角色
+ * @param {*} action 
+ * @returns 玩家行动
+ */
 function executePlayerTurn(actor, action) {
     const bs = battleState;
     if (!bs) return;
@@ -439,6 +554,13 @@ function executePlayerTurn(actor, action) {
     }
 }
 
+/**
+ * 显示战斗介绍并处理战斗开始时的逻辑。
+ * 
+ * 该函数负责初始化战斗状态，触发所有单位的战斗开始被动效果，
+ * 并在完成后进入下一个回合。如果战斗已经开始，则直接延迟进入下一回合。
+ * 
+ */
 function showBattleIntro() {
     const bs = battleState;
     resetActedSlots();
@@ -450,6 +572,11 @@ function showBattleIntro() {
     }, 500);
 }
 
+/**
+ * 结算战斗
+ * @param {string} winner 显示胜者，player为玩家胜，否则玩家败
+ * 
+ */
 function endBattle(winner) {
     const bs = battleState;
     bs.phase = 'ended';
@@ -462,6 +589,12 @@ function endBattle(winner) {
 
 // ====== 6. 玩家操作面板 ======
 
+/**
+ * 
+ * @param {*} skillType 输入技能类型（普通技能或必杀技能）
+ * @param {*} skillId 输入技能的id便于调用
+ * @returns 确认该技能的符号
+ */
 function getSkillEmoji(skillType, skillId) {
     const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
     if (!sData || !sData.target) return '🔥';
@@ -474,6 +607,11 @@ function getSkillEmoji(skillType, skillId) {
     return '🔥';
 }
 
+/**
+ * 
+ * @param {*} actor 当前回合角色
+ * @returns 展示当前角色的行动可选择项
+ */
 function showPlayerActionUI(actor) {
     hidePlayerActionUI(); 
     
@@ -553,6 +691,14 @@ function showPlayerActionUI(actor) {
 
 // ====== 7. 目标选择逻辑 ======
 
+/**
+ * 
+ * @param {*} actor 当前行动角色
+ * @param {*} skillType 技能类型（普攻，技能，必杀）
+ * @param {*} skillId 技能id（以便调用该技能数据）
+ * @param {*} energyCost 能量消耗
+ * @returns 选择普攻或技能后，选择目标
+ */
 function enterTargetSelection(actor, skillType, skillId, energyCost) {
     const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
     if (!sData) return;
@@ -587,6 +733,12 @@ function enterTargetSelection(actor, skillType, skillId, energyCost) {
     highlightSelectableTargets(mode, isRecover, targetSide);
 }
 
+/**
+ * 高亮以显示可操作的目标群体
+ * @param {*} mode 技能模式，一行、一列、单体、全体等
+ * @param {*} isRecover 技能类型（暂时在这个函数里没有调用）
+ * @param {*} targetSide 可选择的目标群体
+ */
 function highlightSelectableTargets(mode, isRecover, targetSide) {
     const aliveUnits = getAliveUnits(targetSide);
     aliveUnits.forEach(u => {
@@ -605,6 +757,11 @@ function highlightSelectableTargets(mode, isRecover, targetSide) {
     });
 }
 
+/**
+ * 多选目标时，支持多选目标
+ * @param {*} target 选择目标
+ * @returns 
+ */
 function onTargetClicked(target) {
     if (!targetSelection) return;
     const ts = targetSelection;
@@ -676,6 +833,11 @@ function onTargetClicked(target) {
 
 // ====== 8. AI 逻辑 ======
 
+/**
+ * ai指挥当前行动角色该做什么决策
+ * @param {*} actor 当前行动角色
+ * @returns 格式为 { type: 'pugong', skillType: 'pugong', skillId: pugongId, targets, energyCost: 0 };
+ */
 function aiChooseAction(actor) {
     const bs = battleState;
     const enemySide = actor.side === 'player' ? 'enemy' : 'player';
@@ -725,6 +887,14 @@ function aiChooseAction(actor) {
     return { type: 'pugong', skillType: 'pugong', skillId: 'attack1', targets: [aliveEnemies[0]], energyCost: 0 };
 }
 
+/**
+ * ai选择目标
+ * @param {*} actor 当前行动角色
+ * @param {*} skillData 该技能的对象
+ * @param {*} enemySide 能量消耗（这里疑似没有调用
+ * @param {*} friendlySide 该角色座位号？这里没有调用
+ * @returns 
+ */
 function aiSelectTargets(actor, skillData, enemySide, friendlySide) {
     let isRecover = false;
     if (skillData.isRecover === true) isRecover = true;
@@ -736,6 +906,14 @@ function aiSelectTargets(actor, skillData, enemySide, friendlySide) {
     return resolveSkillTargets(skillData, actor, targetSide, {isRecover});
 }
 
+/**
+ * 啊？看不懂，疑似根据技能模式补全所有应当被选择的合法目标
+ * @param {*} skillData 技能的对象
+ * @param {*} actor 行动者
+ * @param {*} intendedSide 选取的目标的阵营
+ * @param {*} options 啊？
+ * @returns 疑似根据技能模式补全所有应当被选择的合法目标
+ */
 function resolveSkillTargets(skillData, actor, intendedSide, options) {
     if (!skillData || !skillData.target) return [];
     const mode = skillData.target[0];
@@ -765,19 +943,45 @@ function resolveSkillTargets(skillData, actor, intendedSide, options) {
             return [candidates[0]];
     }
 }
-
+/**
+ * 看不懂
+ * @param {*} candidates 
+ * @param {*} pref 
+ * @param {*} actor 
+ * @param {*} options 
+ * @returns 
+ */
 function selectBestSingleTarget(candidates, pref, actor, options = {}) {
     if (candidates.length === 0) return null;
     if (candidates.length === 1) return candidates[0];
     if (pref === 'random') return candidates[Math.floor(Math.random() * candidates.length)];
     return candidates[0]; // 简化版：默认第一个
 }
+/**
+ * ？
+ * @param {*} candidates 
+ * @param {*} pref 
+ * @param {*} actor 
+ * @returns 
+ */
 
 function selectRowTargetsSmart(candidates, pref, actor) { return [candidates[0]]; }
+/**
+ * ？
+ * @param {*} candidates 
+ * @param {*} pref 
+ * @param {*} actor 
+ * @returns 
+ */
 function selectColumnTargetsSmart(candidates, pref, actor) { return [candidates[0]]; }
 
 // ====== 9. 结算界面 ======
 
+/**
+ * 战斗结算
+ * @param {*} winner 胜者，player或其他
+ * @returns 
+ */
 function showBattleResult(winner) {
     const bs = battleState;
     hidePlayerActionUI();
@@ -844,11 +1048,20 @@ function showBattleResult(winner) {
 
 const BREAKTHROUGH_LIB = window.BREAKTHROUGH_BUFF_LIBRARY || {};
 
-function normalizeBreakthroughData(data) {
+/**
+ * 根据输入的突破信息编译成对应的突破能力对象
+ * @param {*} data 突破能力对象或者待调用的字符串
+ * @param {*} index 该突破能力对应的序号
+ * @returns 编译后的突破对象
+ */
+function normalizeBreakthroughData(data,index) {
     if (data && typeof data === 'object' && !Array.isArray(data)) return data;
     if (typeof data === 'string') {
         const libData = BREAKTHROUGH_LIB[data];
-        if (libData) return JSON.parse(JSON.stringify(libData));
+        if (libData) {
+			libData.level=index;
+			return JSON.parse(JSON.stringify(libData));
+		}
         else {
             console.warn(`[BattleInit] Breakthrough ID '${data}' not found.`);
             return null;
@@ -861,6 +1074,12 @@ function normalizeBreakthroughData(data) {
     return null;
 }
 
+/**
+ * 战斗开始，初始化信息
+ * @param {*} playerTeam 
+ * @param {*} enemyTeam 
+ * @param {*} options 
+ */
 function startBattle(playerTeam, enemyTeam, options = {}) {
     const buildUnit = (data, side, slotIndex) => {
         if (!data || !data.id) return null;
@@ -880,7 +1099,7 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 
         const rawTupoList = data.tupoList || [];
         const tupolevel = data.tupolevel || 0;
-        const normalizedTupoList = rawTupoList.map(item => normalizeBreakthroughData(item));
+        const normalizedTupoList = rawTupoList.map((item,index) => normalizeBreakthroughData(item,index));
         
         let bonusAtk = 0, bonusDef = 0, bonusHp = 0, bonusEnergy = 0;
         let passiveBuffs = [];
@@ -962,11 +1181,18 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
     let firstSide = 'player';
     if (enemySpeSum > playerSpeSum) firstSide = 'enemy';
 
+	/**@type {battleState}战斗信息 */
     battleState = {
-        playerUnits, enemyUnits, firstSide, round: 1,
-        currentTurnIndex: 0, currentTurnSide: null, phase: 'intro',
+        playerUnits,
+		enemyUnits, 
+		firstSide, 
+		round: 1,
+        currentTurnIndex: 0, 
+		currentTurnSide: null, 
+		phase: 'intro',
         actedSlots: { player: new Set(), enemy: new Set() },
-        selectedSkill: null, selectedTargets: [],
+        selectedSkill: null, 
+		selectedTargets: [],
         difficulty: options.difficulty || 'normal',
         eventId: options.eventId || null,
         eventType: options.eventType || 'battle',
@@ -984,6 +1210,10 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
     showBattleIntro();
 }
 
+/**
+ * 根据角色突破等级，初始化这些角色的基本数值
+ * @param {*} units 传入角色数组
+ */
 function applyTeamBreakthroughBuffs(units) {
     let teamFlatBonus = { atk: 0, def: 0, hp: 0 };
     let teamPercentBonus = { atk: 0, def: 0, hp: 0 };
@@ -1028,6 +1258,10 @@ function applyTeamBreakthroughBuffs(units) {
     });
 }
 
+/**
+ * 生成战斗页面
+ * @returns 
+ */
 function renderBattleView() {
     const container = document.getElementById('battle-view');
     if (!container) return;
@@ -1132,6 +1366,13 @@ function renderBattleView() {
     container.style.display = 'flex';
 }
 
+/**
+ * 生成角色实体
+ * @param {*} unit 该角色对象
+ * @param {*} side 阵营
+ * @param {*} slotIndex 序号
+ * @returns 
+ */
 function createUnitSlot(unit, side, slotIndex) {
     const slot = document.createElement('div');
     slot.className = 'battle-unit';
@@ -1188,3 +1429,15 @@ function createUnitSlot(unit, side, slotIndex) {
     slot.appendChild(infoOverlay);
     return slot;
 }
+
+/**
+ * 预想中的真回合循环
+ */
+// function gotoTurn(){
+// 	//游戏开始
+// 	gameStart();
+// 	//此处判断存活角色
+// 	for(var i=0;i<6;i++){
+// 		//此处执行循环
+// 	}
+// }

@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["ESNext", "DOM"],
+    "allowJs": true,
+    "checkJs": false,
+    "jsx": "preserve",
+    "strict": false,
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../../*"]
+    },
+    "typeRoots": [
+      "./typings",
+      // "../../src/typings",
+      // "../../node_modules/@types",
+      // "../../game/**",
+      // "../../game/@codemirror/**"
+    ]
+    //   "types": [
+    //     "extension",
+    //     "get",
+    //     "player",
+    //     "game",
+    //     "player2"
+    //   ]
+  },
+  "include": ["battle/*", "*.js", "typings/**/*"],
+  "exclude": ["node_modules", "audio", "image", "skin"]
+}
