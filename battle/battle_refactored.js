@@ -280,27 +280,45 @@ function applyDamage(target, dmg, attacker, callback, skillContext = {}) {
         return;
     }
 
+    let finalDmg = dmg;
+
+    // ======== 执行目标的受击效果（onHitSelf） ========
+    const defendEffects = getEffectsByTrigger(target, 'onHitSelf');
+    defendEffects.forEach(effect => {
+        if (effect.filter && effect.filter.call(target, attacker, finalDmg)) {
+            const result = effect.content.call(target, attacker, finalDmg);
+            if (typeof result === 'number') {
+                finalDmg = result;
+            }
+        }
+    });
+    // ================================================
+
     // 触发 beforeDamage 事件，允许修改伤害值
     const damageEvent = BattleEvents.emit(BattleEvents.BEFORE_DAMAGE, {
         target,
         attacker,
         baseDamage: dmg,
-        finalDamage: dmg,
+        finalDamage: finalDmg,
         skill: skillContext.skillData || null,
         type: 'damage'
     });
-    let finalDmg = damageEvent.finalDamage;
+    finalDmg = damageEvent.finalDamage;
 
     target.hp -= finalDmg;
     addBattleLog(`${target.name} 受到 ${finalDmg} 点伤害`);
     showDamageNumber(target, finalDmg, false); 
     updateBattleUI();
 
-    // ======== 新增：处理命中效果（onHit） ========
-    if (skillContext.contents && Array.isArray(skillContext.contents)) {
-        processOnHitEffects(target, attacker, skillContext.contents);
-    }
-    // ============================================
+    // ======== 执行攻击者的命中效果（pugongHit / skillHit / spskillHit） ========
+    const trigger = skillContext.trigger || 'pugongHit';
+    const attackEffects = getEffectsByTrigger(attacker, trigger);
+    attackEffects.forEach(effect => {
+        if (effect.filter && effect.filter.call(attacker, target)) {
+            effect.content.call(attacker, target);
+        }
+    });
+    // ================================================================
 
     // 触发 afterDamage 事件（异步）
     BattleEvents.emitAsync(BattleEvents.AFTER_DAMAGE, {
@@ -314,15 +332,42 @@ function applyDamage(target, dmg, attacker, callback, skillContext = {}) {
             target.alive = false;
             addBattleLog(`${target.name} 阵亡！`);
             
-            // ======== 新增：触发亡语效果 ========
-            triggerDeathEffects(target, attacker);
-            // ====================================
-            
+            // ======== 执行自己的亡语效果（dieSelf） ========
+            const deathEffects = getEffectsByTrigger(target, 'dieSelf');
+            deathEffects.forEach(effect => {
+                if (effect.filter && effect.filter.call(target, attacker)) {
+                    effect.content.call(target, attacker);
+                }
+            });
+            // ==============================================
+
+            // ======== 执行全局阵亡效果（dieGlobal） ========
+            const allUnits = [...battleState.playerUnits, ...battleState.enemyUnits];
+            allUnits.forEach(unit => {
+                if (!unit || !unit.alive) return;
+                const globalDeathEffects = getEffectsByTrigger(unit, 'dieGlobal');
+                globalDeathEffects.forEach(effect => {
+                    if (effect.filter && effect.filter.call(unit, target, attacker)) {
+                        effect.content.call(unit, target, attacker);
+                    }
+                });
+            });
+            // ==============================================
+
+            // ======== 执行击杀者的击杀效果（onKill） ========
             if (attacker && attacker.alive) {
+                const killEffects = getEffectsByTrigger(attacker, 'onKill');
+                killEffects.forEach(effect => {
+                    if (effect.filter && effect.filter.call(attacker, target)) {
+                        effect.content.call(attacker, target);
+                    }
+                });
+                
                 attacker.energy = Math.min(8, attacker.energy + 1);
                 addBattleLog(`${attacker.name} 击杀目标，恢复 1 能量`);
             }
-            
+            // ==============================================
+
             updateBattleUI();
             setTimeout(() => {
                 if (callback) callback();
@@ -334,6 +379,7 @@ function applyDamage(target, dmg, attacker, callback, skillContext = {}) {
         }
     });
 }
+
 
 
 
@@ -412,10 +458,6 @@ function executePugong(actor, targets, callback) {
     const isRecover = (sData && sData.isRecover === true);
     const coeff = (sData && sData.coefficient) ? Number(sData.coefficient) : 1.0;
     
-    // ======== 收集普攻自带的 + 突破编译来的 contents ========
-    const contents = collectSkillContents(actor, sData, 'pugong', skillId);
-    // ====================================================
-    
     function processNextTarget() {
         if (index >= targets.length) {
             if (callback) callback();
@@ -429,24 +471,21 @@ function executePugong(actor, targets, callback) {
         }
         
         if (isRecover) {
-            // --- 治疗逻辑 ---
             let healAmt = Math.floor(actor.atk * coeff);
             applyHeal(target, healAmt, processNextTarget);
         } else {
-            // --- 伤害逻辑 ---
             const dmg = calculateDamage(actor, target, coeff, 0);
-            // ======== 传递 contents 给 applyDamage ========
             applyDamage(target, dmg, actor, processNextTarget, {
                 skillData: sData,
-                contents: contents,
+                trigger: 'pugongHit',  // 传递 trigger
                 skillId: skillId
             });
-            // ============================================
         }
     }
 
     processNextTarget();
 }
+
 
 /**
  * 
@@ -475,9 +514,10 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
     const isRecover = (sData && sData.isRecover === true);
     const extraEnergy = Math.max(0, energyCost - 4);
     
-    // ======== 收集技能自带的 + 突破编译来的 contents ========
-    const contents = collectSkillContents(actor, sData, skillType, skillId);
-    // ====================================================
+    // ======== 映射技能类型到 trigger ========
+    const triggerMap = { 'pugong': 'pugongHit', 'skill': 'skillHit', 'spskill': 'spskillHit' };
+    const trigger = triggerMap[skillType] || 'onHit';
+    // =========================================
 
     let index = 0;
     function processNextTarget() {
@@ -500,10 +540,10 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
             applyHeal(target, healAmt, processNextTarget);
         } else {
             const dmg = calculateDamage(actor, target, coeff, extraEnergy);
-            // ======== 传递 contents 给 applyDamage ========
+            // ======== 传递 trigger 给 applyDamage ========
             applyDamage(target, dmg, actor, processNextTarget, {
                 skillData: sData,
-                contents: contents,
+                trigger: trigger,
                 skillId: skillId
             });
             // ============================================
@@ -512,118 +552,7 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
 
     processNextTarget();
 }
-/**
- * 收集技能的所有效果内容（技能自带 + 突破编译来的）
- * @param {*} actor 执行者
- * @param {*} sData 技能数据对象
- * @param {*} skillType 技能类型
- * @param {*} skillId 技能id
- * @returns 合并后的 contents 数组
- */
-function collectSkillContents(actor, sData, skillType, skillId) {
-    const contents = [];
-    
-    // 1. 收集技能自带的 contents
-    if (sData && sData.contents && Array.isArray(sData.contents)) {
-        sData.contents.forEach(c => contents.push(c));
-    }
-    
-    // 2. 收集突破效果中编译到该技能的 contents
-    if (actor.tupoList && Array.isArray(actor.tupoList)) {
-        actor.tupoList.forEach(buff => {
-            if (!buff) return;
-            
-            // 突破效果格式：{ type: 'skill_effect', skillIndex: 0, content: {...}, desc: '...' }
-            if (buff.type === 'skill_effect' && buff.skillIndex !== undefined) {
-                // 判断是否匹配当前技能
-                // skillIndex: 0=普攻, 1=技能, 2=必杀
-                const skillIndexMap = { 'pugong': 0, 'skill': 1, 'spskill': 2 };
-                const expectedIndex = skillIndexMap[skillType];
-                
-                if (buff.skillIndex === expectedIndex && buff.content) {
-                    contents.push({
-                        ...buff.content,
-                        desc: buff.desc || buff.content.desc || ''
-                    });
-                }
-            }
-        });
-    }
-    
-    return contents.length > 0 ? contents : null;
-}
 
-/**
- * 处理技能命中后的效果（每个目标独立判定）
- * @param {*} target 被击中的目标
- * @param {*} attacker 攻击者
- * @param {*} skillData 技能数据对象
- */
-function processOnHitEffects(target, attacker, skillData) {
-    if (!skillData || !skillData.contents) return;
-    
-    skillData.contents.forEach(content => {
-        if (content.type !== 'onHit') return;
-        
-        const chance = content.trigger?.chance || 1;
-        if (Math.random() < chance) {
-            // 执行效果
-            content.effects.forEach(effect => {
-                applyEffect(target, attacker, effect);
-            });
-            addBattleLog(content.desc);
-        }
-    });
-}
-
-/**
- * 应用单个效果
- * @param {*} target 效果目标
- * @param {*} source 效果来源
- * @param {*} effect 效果定义
- */
-function applyEffect(target, source, effect) {
-    switch (effect.type) {
-        case 'stun':
-            target.stunned = true;
-            addBattleLog(`${target.name} 被眩晕${effect.turns || 1}回合`);
-            break;
-        case 'reduceEnergy':
-            target.energy = Math.max(0, target.energy - (effect.amount || 1));
-            addBattleLog(`${target.name} 损失 ${effect.amount || 1} 点能量`);
-            break;
-        case 'seal':
-            target.sealed = true;
-            addBattleLog(`${target.name} 被封印`);
-            break;
-        case 'extraDamage':
-            // 伤害增加，在 calculateDamage 中处理
-            break;
-        // 更多效果类型...
-    }
-    updateBattleUI();
-}
-
-/**
- * 触发角色的亡语效果
- * @param {*} target 阵亡角色
- * @param {*} killer 击杀者
- */
-function triggerDeathEffects(target, killer) {
-    if (!target.effects?.onDeath) return;
-    
-    target.effects.onDeath.forEach(content => {
-        // 执行亡语效果
-        content.effects.forEach(effect => {
-            if (effect.type === 'seal') {
-                if (killer) {
-                    killer.permanentlySealed = true;
-                    addBattleLog(`${target.name} 阵亡时封印了 ${killer.name}`);
-                }
-            }
-        });
-    });
-}
 
 // ====== 5. 战斗循环控制 (明晰化) ======
 
@@ -1504,11 +1433,39 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 		let teamBuffs = [];
 		let teamPercentBuffs = [];
 	
-		// ======== 新增：存储编译后的突破效果 ========
-		let tupoDeathEffects = [];
-		let tupoBeHitEffects = [];
-		let tupoSkillContents = {}; // { 0: [...], 1: [...], 2: [...] } 对应普攻/技能/必杀
-		// ============================================
+		// ======== 存储编译后的效果到 skills 数组 ========
+		const effectSkills = [];
+	
+		// ======== 辅助函数：从技能数据中提取 effect 到 skills ========
+		function extractSkillContentsToSkills(skillType, skillIndex) {
+			const baseSkills = Array.isArray(data.skills) ? data.skills : ['attack1', null, null];
+			const skillId = baseSkills[skillIndex];
+			if (!skillId || typeof skillId !== 'string') return;
+			
+			const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
+			if (!sData || !sData.contents || !Array.isArray(sData.contents)) return;
+			
+			const triggerMap = { 'pugong': 'pugongHit', 'skill': 'skillHit', 'spskill': 'spskillHit' };
+			const trigger = triggerMap[skillType];
+			if (!trigger) return;
+			
+			sData.contents.forEach(content => {
+				if (content.content && typeof content.content === 'function') {
+					effectSkills.push({
+						trigger: trigger,
+						filter: content.filter || function() { return true; },
+						content: content.content,
+						desc: content.desc || ''
+					});
+				}
+			});
+		}
+	
+		// 提取普攻、技能、必杀的效果
+		extractSkillContentsToSkills('pugong', 0);
+		extractSkillContentsToSkills('skill', 1);
+		extractSkillContentsToSkills('spskill', 2);
+		// =========================================================
 	
 		for (let i = 0; i <= tupolevel; i++) {
 			if (!normalizedTupoList[i]) continue;
@@ -1528,36 +1485,87 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			} else if (type === 'team_stat_percent') {
 				teamPercentBuffs.push(buff);
 			}
-			// ======== 新增：编译突破效果类型 ========
+			// ======== 突破效果编译到 skills ========
 			else if (type === 'skill_effect') {
-				// 编译到对应技能的 contents
 				const skillIndex = buff.skillIndex; // 0=普攻, 1=技能, 2=必杀
-				if (skillIndex !== undefined) {
-					if (!tupoSkillContents[skillIndex]) tupoSkillContents[skillIndex] = [];
-					tupoSkillContents[skillIndex].push({
-						type: 'onHit',
-						trigger: { chance: buff.chance || 1 },
-						effects: buff.effects || [],
-						desc: buff.desc || '',
-						source: 'tupo',
-						tupoLevel: i
+				const triggerMap = { 0: 'pugongHit', 1: 'skillHit', 2: 'spskillHit' };
+				const trigger = triggerMap[skillIndex];
+				
+				if (trigger) {
+					effectSkills.push({
+						trigger: trigger,
+						filter: function() { return Math.random() < (buff.chance || 0.2); },
+						content: function(target) {
+							if (buff.effects && Array.isArray(buff.effects)) {
+								buff.effects.forEach(effect => {
+									switch (effect.type) {
+										case 'stun':
+											target.stunned = true;
+											addBattleLog(`${target.name} 被眩晕${effect.turns || 1}回合`);
+											break;
+										case 'reduceEnergy':
+											target.energy = Math.max(0, target.energy - (effect.amount || 1));
+											addBattleLog(`${target.name} 损失 ${effect.amount || 1} 点能量`);
+											break;
+										case 'seal':
+											target.sealed = true;
+											addBattleLog(`${target.name} 被封印`);
+											break;
+										default:
+											console.warn(`[Effect] Unknown effect type: ${effect.type}`);
+									}
+								});
+							}
+							updateBattleUI();
+						}
 					});
 				}
 			} else if (type === 'death_effect') {
-				// 编译到亡语效果
-				tupoDeathEffects.push({
-					effects: buff.effects || [],
-					desc: buff.desc || '',
-					source: 'tupo',
-					tupoLevel: i
+				effectSkills.push({
+					trigger: 'dieSelf',
+					filter: function() { return true; },
+					content: function(killer) {
+						if (buff.effects && Array.isArray(buff.effects)) {
+							buff.effects.forEach(effect => {
+								if (effect.type === 'seal_killer' && killer && killer.alive) {
+									if (effect.permanent) {
+										killer.permanentlySealed = true;
+									} else {
+										killer.sealed = true;
+									}
+									addBattleLog(`${this.name} 阵亡时封印了 ${killer.name}`);
+									updateBattleUI();
+								}
+							});
+						}
+					}
 				});
 			} else if (type === 'behit_effect') {
-				// 编译到受击效果
-				tupoBeHitEffects.push({
-					effects: buff.effects || [],
-					desc: buff.desc || '',
-					source: 'tupo',
-					tupoLevel: i
+				effectSkills.push({
+					trigger: 'onHitSelf',
+					filter: function(attacker, damage) {
+						if (buff.effects && Array.isArray(buff.effects)) {
+							return buff.effects.some(effect => {
+								if (effect.type === 'damage_reduce' && effect.condition === 'self_hp_gt_50') {
+									return this.hp / this.maxHp > 0.5;
+								}
+								return false;
+							});
+						}
+						return false;
+					},
+					content: function(attacker, damage) {
+						if (buff.effects && Array.isArray(buff.effects)) {
+							for (const effect of buff.effects) {
+								if (effect.type === 'damage_reduce') {
+									const reduced = Math.floor(damage * (1 - (effect.value || 0.5)));
+									addBattleLog(`${this.name} 触发减伤，伤害降低 ${Math.floor((effect.value || 0.5) * 100)}%`);
+									return reduced;
+								}
+							}
+						}
+						return damage;
+					}
 				});
 			}
 			// ============================================
@@ -1574,8 +1582,12 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 		finalHp += bonusHp;
 		finalEnergy += bonusEnergy;
 	
-		// 宝物系统暂忽略，保留字段但不触发效果
 		let activeTreasures = [];
+	
+		// ======== 合并技能ID和效果对象 ========
+		const baseSkills = Array.isArray(data.skills) ? [...data.skills] : ['attack1', null, null];
+		const allSkills = [...baseSkills, ...effectSkills];
+		// =====================================
 	
 		const unit = {
 			id: data.id,
@@ -1592,7 +1604,7 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			spe: finalSpe,
 			energy: Math.min(8, finalEnergy),
 			buff: Array.isArray(data.buff) ? [...data.buff] : [],
-			skills: Array.isArray(data.skills) ? [...data.skills] : ['attack1', null, null],
+			skills: allSkills,  // 合并后的 skills
 			alive: true,
 			treasures: activeTreasures,
 			sealed: false,
@@ -1604,19 +1616,14 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			tupolevel: tupolevel,
 			_teamBuffs: teamBuffs,
 			_teamPercentBuffs: teamPercentBuffs,
-			hasAttacked: false,
-			// ======== 新增：存储编译后的突破效果 ========
-			_tupoSkillContents: tupoSkillContents, // 技能命中效果
-			effects: {
-				onDeath: tupoDeathEffects,     // 亡语效果
-				onBeHit: tupoBeHitEffects      // 受击效果
-			}
-			// ============================================
+			hasAttacked: false
 		};
 	
 		if (passiveBuffs.length > 0) unit.buff.push(...passiveBuffs);
 		return unit;
 	};
+	
+	
 	
 
     const playerUnits = playerTeam.map((u, i) => buildUnit(u, 'player', i));
@@ -1657,6 +1664,20 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 
     renderBattleView();
     showBattleIntro();
+}
+/**
+ * 从角色的 skills 中获取指定 trigger 的效果对象
+ * @param {*} actor 角色
+ * @param {string} trigger 触发时机
+ * @returns {Array} 匹配的效果对象数组
+ */
+function getEffectsByTrigger(actor, trigger) {
+    if (!actor || !actor.skills || !Array.isArray(actor.skills)) return [];
+    
+    return actor.skills.filter(skill => {
+        if (typeof skill === 'string') return false; // 跳过技能ID字符串
+        return skill.trigger === trigger;
+    });
 }
 
 /**
