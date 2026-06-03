@@ -1,4 +1,4 @@
-// ====== 夜白旅程 - 纯净战斗核心系统 (整理版) ======
+// ====== 夜白旅程 - 重构战斗核心系统 (事件驱动版) ======
 
 // ====== 1. 全局状态声明 ======
 
@@ -8,6 +8,73 @@ let battleState = null;
 let targetSelection = null;
 /**全局锁，防止重入 */
 let isProcessing = false; // 全局锁，防止重入
+
+// ====== 事件系统 ======
+const BattleEvents = {
+    // 事件类型
+    BEFORE_DAMAGE: 'beforeDamage',
+    AFTER_DAMAGE: 'afterDamage',
+    BEFORE_HEAL: 'beforeHeal',
+    AFTER_HEAL: 'afterHeal',
+    BEFORE_TURN: 'beforeTurn',
+    AFTER_TURN: 'afterTurn',
+    BEFORE_ROUND: 'beforeRound',
+    AFTER_ROUND: 'afterRound',
+    BEFORE_ACTION: 'beforeAction',
+    AFTER_ACTION: 'afterAction',
+    
+    // 监听器存储
+    _listeners: {},
+    
+    // 注册监听器
+    on(eventType, listener) {
+        if (!this._listeners[eventType]) this._listeners[eventType] = [];
+        this._listeners[eventType].push(listener);
+    },
+    
+    // 移除监听器
+    off(eventType, listener) {
+        if (!this._listeners[eventType]) return;
+        const index = this._listeners[eventType].indexOf(listener);
+        if (index >= 0) this._listeners[eventType].splice(index, 1);
+    },
+    
+    // 触发事件（同步，可修改数据）
+    emit(eventType, data) {
+        const listeners = this._listeners[eventType];
+        if (!listeners || listeners.length === 0) return data;
+        // 逐个调用监听器，传递数据
+        let result = data;
+        for (const listener of listeners) {
+            // 监听器可以修改result对象
+            const ret = listener(result);
+            if (ret !== undefined) result = ret;
+        }
+        return result;
+    },
+    
+    // 触发异步事件（不支持修改数据，仅通知）
+    emitAsync(eventType, data, callback) {
+        const listeners = this._listeners[eventType];
+        if (!listeners || listeners.length === 0) {
+            if (callback) callback();
+            return;
+        }
+        let index = 0;
+        const next = () => {
+            if (index >= listeners.length) {
+                if (callback) callback();
+                return;
+            }
+            const listener = listeners[index++];
+            listener(data, next);
+        };
+        next();
+    }
+};
+
+// 导出全局事件对象（方便其他模块访问）
+window.BattleEvents = BattleEvents;
 
 // ====== 2. 基础工具函数 ======
 
@@ -175,7 +242,7 @@ function shuffleArray(array) {
     return array;
 }
 
-// ====== 3. 核心结算模块 ======
+// ====== 3. 核心结算模块 (事件化) ======
 
 /**
  * 
@@ -212,30 +279,49 @@ function applyDamage(target, dmg, attacker, callback) {
         return;
     }
 
-    target.hp -= dmg;
-    addBattleLog(`${target.name} 受到 ${dmg} 点伤害`);
-    showDamageNumber(target, dmg, false); 
+    // 触发 beforeDamage 事件，允许修改伤害值
+    const damageEvent = BattleEvents.emit(BattleEvents.BEFORE_DAMAGE, {
+        target,
+        attacker,
+        baseDamage: dmg,
+        finalDamage: dmg,
+        skill: null, // 可通过扩展传递技能信息
+        type: 'damage'
+    });
+    let finalDmg = damageEvent.finalDamage;
+
+    target.hp -= finalDmg;
+    addBattleLog(`${target.name} 受到 ${finalDmg} 点伤害`);
+    showDamageNumber(target, finalDmg, false); 
     updateBattleUI();
 
-    if (target.hp <= 0) {
-        target.hp = 0;
-        target.alive = false;
-        addBattleLog(`${target.name} 阵亡！`);
-        
-        if (attacker && attacker.alive) {
-            attacker.energy = Math.min(8, attacker.energy + 1);
-            addBattleLog(`${attacker.name} 击杀目标，恢复 1 能量`);
-        }
-        
-        updateBattleUI();
-        setTimeout(() => {
+    // 触发 afterDamage 事件（异步）
+    BattleEvents.emitAsync(BattleEvents.AFTER_DAMAGE, {
+        target,
+        attacker,
+        damage: finalDmg,
+        killed: target.hp <= 0
+    }, () => {
+        if (target.hp <= 0) {
+            target.hp = 0;
+            target.alive = false;
+            addBattleLog(`${target.name} 阵亡！`);
+            
+            if (attacker && attacker.alive) {
+                attacker.energy = Math.min(8, attacker.energy + 1);
+                addBattleLog(`${attacker.name} 击杀目标，恢复 1 能量`);
+            }
+            
+            updateBattleUI();
+            setTimeout(() => {
+                if (callback) callback();
+            }, 500);
+        } else {
+            target.energy = Math.min(8, target.energy + 1);
+            updateBattleUI();
             if (callback) callback();
-        }, 500);
-    } else {
-        target.energy = Math.min(8, target.energy + 1);
-        updateBattleUI();
-        if (callback) callback();
-    }
+        }
+    });
 }
 
 /**
@@ -257,20 +343,35 @@ function applyHeal(target, healAmount, callback) {
         return;
     }
 
+    // 触发 beforeHeal 事件，允许修改治疗量
+    const healEvent = BattleEvents.emit(BattleEvents.BEFORE_HEAL, {
+        target,
+        baseHeal: healAmount,
+        finalHeal: healAmount,
+        type: 'heal'
+    });
+    let finalHeal = healEvent.finalHeal;
+
     const maxHp = Number(target.maxHp) || 1;
     const currentHp = Number(target.hp) || 0;
-    // const actualHeal = Math.min(healAmount, maxHp - currentHp);
     
-    if (healAmount > 0) {
-        target.hp += Math.min(healAmount, maxHp - currentHp);
-        addBattleLog(`${target.name} 恢复了 ${healAmount} 点生命值`);
-        showDamageNumber(target, healAmount, true); 
+    if (finalHeal > 0) {
+        target.hp += Math.min(finalHeal, maxHp - currentHp);
+        addBattleLog(`${target.name} 恢复了 ${finalHeal} 点生命值`);
+        showDamageNumber(target, finalHeal, true); 
         updateBattleUI();
     }
 
-    setTimeout(() => {
-        if (callback) callback();
-    }, 300);
+    // 触发 afterHeal 事件
+    BattleEvents.emitAsync(BattleEvents.AFTER_HEAL, {
+        target,
+        heal: finalHeal
+    }, () => {
+        // setTimeout(() => {
+            if (callback) callback();
+        // }, 300);
+		//取消延迟
+    });
 }
 
 // ====== 4. 行动执行模块 ======
@@ -293,10 +394,10 @@ function executePugong(actor, targets, callback) {
     addBattleLog(`${actor.name} 发动普攻`);
 
     let index = 0;
-	const skillId = actor.skills[0] || 'attack1';
-	const sData = (window.contentList && window.contentList.pugong && window.contentList.pugong[skillId]);
+    const skillId = actor.skills[0] || 'attack1';
+    const sData = (window.contentList && window.contentList.pugong && window.contentList.pugong[skillId]);
     const isRecover = (sData && sData.isRecover === true);
-	const coeff = (sData && sData.coefficient) ? Number(sData.coefficient) : 1.0;
+    const coeff = (sData && sData.coefficient) ? Number(sData.coefficient) : 1.0;
     function processNextTarget() {
         if (index >= targets.length) {
             if (callback) callback();
@@ -308,7 +409,7 @@ function executePugong(actor, targets, callback) {
             processNextTarget();
             return;
         }
-		if (isRecover) {
+        if (isRecover) {
             // --- 治疗逻辑 ---
             let healAmt = Math.floor(actor.atk * coeff);
             // 普攻通常不享受能量增伤，如果需要可以加上: * (1 + extraEnergy * 0.1)
@@ -378,7 +479,7 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
     processNextTarget();
 }
 
-// ====== 5. 战斗循环控制 ======
+// ====== 5. 战斗循环控制 (明晰化) ======
 
 /**
  * 控制游戏进入下一回合
@@ -389,33 +490,16 @@ function nextTurn() {
     
     try {
         isProcessing = true;
-		/**@type {battleState} */
+        /**@type {battleState} */
         const bs = battleState;
         if (!bs || bs.phase === 'ended') { isProcessing = false; return; }
-		//判断某一方是否团灭决定胜负
+        //判断某一方是否团灭决定胜负
         if (isSideDefeated('player')) { endBattle('enemy'); isProcessing = false; return; }
         if (isSideDefeated('enemy')) { endBattle('player'); isProcessing = false; return; }
-		/**后手 */
+        /**后手 */
         const secondSide = bs.firstSide === 'player' ? 'enemy' : 'player';
         
-        // let actor = findNextActor(bs.firstSide);
-        // // 2. 寻找双方可行动角色
-        // const firstActor = findNextActor(bs.firstSide);
-        // const secondActor = findNextActor(secondSide);
-
-        // let isSecondSide = false;
-        // if (!actor) {
-        //     actor = findNextActor(secondSide);
-        //     isSecondSide = true;
-        // }
-
-        // if (!actor) {
-        //     endRound();
-        //     isProcessing = false;
-        //     return;
-        // }
-		
-        // 2. 确定下一个行动方（轮流切换）
+        // 确定下一个行动方（明晰流程：先手方1，后手方1，先手方2，后手方2...）
         let nextSide = null;
         const lastSide = bs.currentTurnSide; // 上一次行动的阵营
         
@@ -434,7 +518,7 @@ function nextTurn() {
             }
         }
         
-        // 3. 寻找下一个行动角色
+        // 寻找下一个行动角色
         let nextActor = findNextActor(nextSide);
         if (!nextActor) {
             // 当前阵营没有可行动角色，尝试另一方（如果之前没有尝试过）
@@ -453,20 +537,31 @@ function nextTurn() {
             }
         }
         
-        // 4. 标记该角色已行动（立即标记，防止重复选取）
+        // 标记该角色已行动（立即标记，防止重复选取）
         bs.actedSlots[nextSide].add(nextActor.slotIndex);
         bs.currentTurnSide = nextSide;
         bs.currentTurnIndex = nextActor.slotIndex;
         
-
+        // 触发 beforeTurn 事件
+        BattleEvents.emit(BattleEvents.BEFORE_TURN, {
+            actor: nextActor,
+            side: nextSide,
+            round: bs.round
+        });
+        
+        // 记录日志明确流程
+        const sideName = nextSide === 'player' ? '我方' : '敌方';
+        const turnNumber = Array.from(bs.actedSlots[nextSide]).length;
+        addBattleLog(`${sideName}第${turnNumber}个角色行动：${nextActor.name}`);
+        
         updateBattleUI();
 
         if (nextActor.stunned) {
             addBattleLog(`${nextActor.name} 眩晕，跳过回合`);
             setTimeout(() => { 
-				isProcessing = false; 
-				afterAction(); 
-			}, 600);
+                isProcessing = false; 
+                afterAction(); 
+            }, 600);
             return;
         }
 
@@ -505,27 +600,33 @@ function afterAction() {
             ? bs.playerUnits[bs.currentTurnIndex]
             : bs.enemyUnits[bs.currentTurnIndex];
 
-        // 检查额外回合
-        if (unit && unit.alive && (unit.extraTurnCount > 0 || unit.extraTurn)) {
-            if (unit.extraTurnCount > 0) unit.extraTurnCount--;
-            else unit.extraTurn = false;
-            
-            addBattleLog(`${unit.name} 获得额外回合！`);
-            updateBattleUI();
-            
-            if (unit.side === 'player') {
-                bs.phase = 'player_action';
-                showPlayerActionUI(unit);
-            } else {
-                bs.phase = 'enemy_action';
-                executeAITurn(unit);
+        // 触发 afterTurn 事件
+        BattleEvents.emitAsync(BattleEvents.AFTER_TURN, {
+            actor: unit,
+            side: bs.currentTurnSide
+        }, () => {
+            // 检查额外回合
+            if (unit && unit.alive && (unit.extraTurnCount > 0 || unit.extraTurn)) {
+                if (unit.extraTurnCount > 0) unit.extraTurnCount--;
+                else unit.extraTurn = false;
+                
+                addBattleLog(`${unit.name} 获得额外回合！`);
+                updateBattleUI();
+                
+                if (unit.side === 'player') {
+                    bs.phase = 'player_action';
+                    showPlayerActionUI(unit);
+                } else {
+                    bs.phase = 'enemy_action';
+                    executeAITurn(unit);
+                }
+                isProcessing = false;
+                return;
             }
-            isProcessing = false;
-            return;
-        }
 
-        isProcessing = false;
-        nextTurn();
+            isProcessing = false;
+            nextTurn();
+        });
 
     } catch (e) {
         console.error('[Loop] Error in afterAction:', e);
@@ -538,14 +639,95 @@ function afterAction() {
  */
 function endRound() {
     const bs = battleState;
+    // 触发 beforeRound 事件
+    BattleEvents.emit(BattleEvents.BEFORE_ROUND, { round: bs.round + 1 });
+    
     bs.round++;
     resetActedSlots();
+    // 重置当前回合信息，确保新一轮从先手方开始
+    bs.currentTurnSide = null;
+    bs.currentTurnIndex = 0;
     addBattleLog(`—— 第 ${bs.round} 轮 ——`);
     updateBattleUI();
     
+    // 触发 afterRound 事件
+    BattleEvents.emitAsync(BattleEvents.AFTER_ROUND, { round: bs.round }, () => {
+        setTimeout(() => {
+            nextTurn();
+        }, 100);
+    });
+}
+
+/**
+ * 劳模函数
+ * @param {*} actor 
+ * @param {*} action 
+ * @param {*} callback 
+ * @returns 
+ */
+function bs_animateAction(actor, action, callback) {
+    const bs = battleState; // 【修复】定义 bs 变量
+    if (!bs) return;
+
+    const skillType = action.type === 'pugong' ? 'pugong' : action.skillType;
+
+    // 先在行动者身上播放光晕
+    const slotEl = document.querySelector(`.battle-unit[data-side="${actor.side}"][data-slot="${actor.slotIndex}"]`);
+    if (slotEl) {
+        const glowClass = skillType === 'spskill' ? 'spskill-glow'
+                        : skillType === 'skill'  ? 'skill-glow'
+                        : 'pugong-glow';
+        const glow = document.createElement('div');
+        glow.className = `action-glow ${glowClass}`;
+        slotEl.appendChild(glow);
+        setTimeout(() => {
+            if (glow.parentNode) glow.remove();
+        }, 600);
+    }
+
+    // 确定技能Emoji特效
+    const effectInfo = getSkillEffectInfo(action);
+
+    // 延迟200ms后，在目标身上播放Emoji特效
     setTimeout(() => {
-        nextTurn();
-    }, 100);
+        const targets = action.targets;
+        if (!targets || targets.length === 0) {
+            if (callback) callback();
+            return;
+        }
+        
+        if (effectInfo.effectClass === 'sword-effect' || effectInfo.effectClass === 'moon-effect') {
+            showSkillEffectOnTargets(targets, effectInfo);
+        } else if (effectInfo.effectClass === 'bolt-effect') {
+            showSkillEffectOnTargets(targets, effectInfo);
+        } else {
+            targets.forEach(t => showSkillEffect(t, effectInfo));
+        }
+    }, 200);
+
+    // 600ms后结算伤害
+    setTimeout(() => {
+        function onActionComplete() {
+            updateBattleUI();
+
+            if (isSideDefeated('player') || isSideDefeated('enemy')) {
+                setTimeout(() => {
+                    if (isSideDefeated('player')) endBattle('enemy');
+                    else endBattle('player');
+                }, 500);
+                return;
+            }
+
+            if (callback) setTimeout(callback, 500);
+        }
+
+        if (action.type === 'pugong') {
+            // console.log('执行普攻了')
+            executePugong(actor, action.targets, onActionComplete);
+        } else {
+            executeSkill(actor, action.skillType, action.skillId, action.targets, action.energyCost, onActionComplete);
+        }
+    }, 600);
 }
 
 /**
@@ -560,18 +742,10 @@ function executeAITurn(actor) {
         setTimeout(() => afterAction(), 600);
         return;
     }
-    
-    battleState.phase = 'animating';
-    
-    if (action.type === 'pugong') {
-        executePugong(actor, action.targets, () => {
-            setTimeout(() => afterAction(), 400);
-        });
-    } else {
-        executeSkill(actor, action.skillType, action.skillId, action.targets, action.energyCost, () => {
-            setTimeout(() => afterAction(), 400);
-        });
-    }
+	hidePlayerActionUI();
+    bs_animateAction(actor, action, () => {
+        setTimeout(() => afterAction(), 400);
+    });
 }
 
 /**
@@ -583,19 +757,10 @@ function executeAITurn(actor) {
 function executePlayerTurn(actor, action) {
     const bs = battleState;
     if (!bs) return;
-
-    bs.phase = 'animating';
-    hidePlayerActionUI();
-    
-    if (action.type === 'pugong') {
-        executePugong(actor, action.targets, () => {
-            setTimeout(() => afterAction(), 400);
-        });
-    } else {
-        executeSkill(actor, action.skillType, action.skillId, action.targets, action.energyCost, () => {
-            setTimeout(() => afterAction(), 400);
-        });
-    }
+	hidePlayerActionUI();
+    bs_animateAction(actor, action, () => {
+        setTimeout(() => afterAction(), 400);
+    });
 }
 
 /**
@@ -1002,23 +1167,64 @@ function selectBestSingleTarget(candidates, pref, actor, options = {}) {
     return candidates[0]; // 简化版：默认第一个
 }
 /**
- * ？
- * @param {*} candidates 
- * @param {*} pref 
- * @param {*} actor 
- * @returns 
+ * 根据选中目标补全同一行的所有存活目标
+ * @param {*} candidates 候选目标列表
+ * @param {*} pref 偏好（如 'first', 'last', 'random'）
+ * @param {*} actor 行动者
+ * @returns 同行所有存活目标
  */
+function selectRowTargetsSmart(candidates, pref, actor) {
+    if (candidates.length === 0) return [];
+    
+    // 根据 pref 选择第一个目标
+    let seedTarget;
+    if (pref === 'random') {
+        seedTarget = candidates[Math.floor(Math.random() * candidates.length)];
+    } else if (pref === 'last') {
+        seedTarget = candidates[candidates.length - 1];
+    } else { // 'first' 或其他
+        seedTarget = candidates[0];
+    }
+    
+    if (!seedTarget) return [];
+    
+    // 确定该目标所在的行（前排行: 0,1,2；后排行: 3,4,5）
+    const rowStart = seedTarget.slotIndex < 3 ? 0 : 3;
+    
+    // 过滤出同一行的所有存活目标
+    const side = seedTarget.side;
+    return candidates.filter(u => u.side === side && u.slotIndex >= rowStart && u.slotIndex < rowStart + 3);
+}
 
-function selectRowTargetsSmart(candidates, pref, actor) { return [candidates[0]]; }
 /**
- * ？
- * @param {*} candidates 
- * @param {*} pref 
- * @param {*} actor 
- * @returns 
+ * 根据选中目标补全同一列的所有存活目标
+ * @param {*} candidates 候选目标列表
+ * @param {*} pref 偏好（如 'first', 'last', 'random'）
+ * @param {*} actor 行动者
+ * @returns 同列所有存活目标
  */
-function selectColumnTargetsSmart(candidates, pref, actor) { return [candidates[0]]; }
-
+function selectColumnTargetsSmart(candidates, pref, actor) {
+    if (candidates.length === 0) return [];
+    
+    // 根据 pref 选择第一个目标
+    let seedTarget;
+    if (pref === 'random') {
+        seedTarget = candidates[Math.floor(Math.random() * candidates.length)];
+    } else if (pref === 'last') {
+        seedTarget = candidates[candidates.length - 1];
+    } else { // 'first' 或其他
+        seedTarget = candidates[0];
+    }
+    
+    if (!seedTarget) return [];
+    
+    // 确定该目标所在的列（0:左列, 1:中列, 2:右列）
+    const col = seedTarget.slotIndex % 3;
+    
+    // 过滤出同一列的所有存活目标
+    const side = seedTarget.side;
+    return candidates.filter(u => u.side === side && u.slotIndex % 3 === col);
+}
 // ====== 9. 结算界面 ======
 
 /**
@@ -1103,9 +1309,9 @@ function normalizeBreakthroughData(data,index) {
     if (typeof data === 'string') {
         const libData = BREAKTHROUGH_LIB[data];
         if (libData) {
-			libData.level=index;
-			return JSON.parse(JSON.stringify(libData));
-		}
+            libData.level=index;
+            return JSON.parse(JSON.stringify(libData));
+        }
         else {
             console.warn(`[BattleInit] Breakthrough ID '${data}' not found.`);
             return null;
@@ -1180,16 +1386,8 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
         finalHp += bonusHp;
         finalEnergy += bonusEnergy;
 
+        // 宝物系统暂忽略，保留字段但不触发效果
         let activeTreasures = [];
-        if (data.treasures && Array.isArray(data.treasures)) {
-            const treasureDefs = window.gameData && window.gameData.getTreasureList();
-            if (treasureDefs) activeTreasures = data.treasures.filter(tid => tid && treasureDefs[tid]);
-        } else {
-            const lookupKey = data.instanceId || data.id;
-            const charTreasures = (window.treasureEquipData && window.treasureEquipData[lookupKey]) || [null, null, null, null, null, null];
-            const treasureDefs = window.gameData && window.gameData.getTreasureList();
-            if (treasureDefs) activeTreasures = charTreasures.filter(tid => tid && treasureDefs[tid]);
-        }
 
         const unit = {
             id: data.id,
@@ -1225,18 +1423,18 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
     let firstSide = 'player';
     if (enemySpeSum > playerSpeSum) firstSide = 'enemy';
 
-	/**@type {battleState}战斗信息 */
+    /**@type {battleState}战斗信息 */
     battleState = {
         playerUnits,
-		enemyUnits, 
-		firstSide, 
-		round: 1,
+        enemyUnits, 
+        firstSide, 
+        round: 1,
         currentTurnIndex: 0, 
-		currentTurnSide: null, 
-		phase: 'intro',
+        currentTurnSide: null, 
+        phase: 'intro',
         actedSlots: { player: new Set(), enemy: new Set() },
         selectedSkill: null, 
-		selectedTargets: [],
+        selectedTargets: [],
         difficulty: options.difficulty || 'normal',
         eventId: options.eventId || null,
         eventType: options.eventType || 'battle',
@@ -1474,6 +1672,76 @@ function createUnitSlot(unit, side, slotIndex) {
     return slot;
 }
 
+/**
+ * 为行/列攻击的所有目标槽位依次播放特效（带延迟）
+ */
+function showSkillEffectOnTargets(targets, effectInfo) {
+    targets.forEach((t, i) => {
+        setTimeout(() => {
+            showSkillEffect(t, effectInfo);
+        }, i * 100);  // 每个目标间隔100ms
+    });
+}
+/**
+ * 在指定角色槽位上播放技能Emoji特效
+ */
+function showSkillEffect(unit, effectInfo) {
+    const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
+    if (!slotEl) return;
+
+    const el = document.createElement('div');
+    el.className = `skill-effect ${effectInfo.effectClass}`;
+    el.textContent = effectInfo.emoji;
+    slotEl.appendChild(el);
+
+    setTimeout(() => el.remove(), 650);
+}
+
+// ====== 技能Emoji特效 ======
+/**
+ * 根据技能的target模式确定特效类型 (修复版 - 支持 isRecover 字段)
+ * @returns {{ emoji: string, effectClass: string, targets: Array }}
+ */
+function getSkillEffectInfo(action) {
+    const skillType = action.type === 'pugong' ? 'pugong' : action.skillType;
+    const skillId = action.type === 'pugong' ? action.skillId : action.skillId;
+    const sData = contentList[skillType] && contentList[skillType][skillId];
+
+    if (!sData || !sData.target) {
+        // fallback: 单体攻击
+        return { emoji: '🔥', effectClass: 'fire-effect' };
+    }
+
+    const targetMode = sData.target[0];
+    const aiPref = sData.target[1];
+    
+    // 【核心修复】优先使用 isRecover 字段，其次检查 content 字符串
+    let isRecover = false;
+    if (sData.isRecover === true) {
+        isRecover = true;
+    }
+
+    if (isRecover) {
+        // if (targetMode === 'one' || targetMode === 'all') {
+        //     return { emoji: '🧪', effectClass: 'heal-effect' };
+        // }
+        // 全体治疗也用药剂
+        return { emoji: '🧪', effectClass: 'heal-effect' };
+    }
+
+    switch (targetMode) {
+        case 'row':
+            if (aiPref === 'last') {
+                return { emoji: '🌙', effectClass: 'moon-effect' };
+            }
+            return { emoji: '⚔️', effectClass: 'sword-effect' };
+        case 'column':
+            return { emoji: '⚡', effectClass: 'bolt-effect' };
+        case 'one':
+        default:
+            return { emoji: '🔥', effectClass: 'fire-effect' };
+    }
+}
 /**
  * 预想中的真回合循环
  */

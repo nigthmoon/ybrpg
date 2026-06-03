@@ -3760,7 +3760,7 @@ function renderChapterEventList(container, chapterKey) {
                         // 战斗胜利金币奖励
                         // const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
                         const isBoss = event.type === 'boss';
-                        const baseGold = event.glod||300;
+                        const baseGold = event.gold||300;
                         const goldScale = baseGold;
                         const goldReward = Math.floor(goldScale);
                         window.gameGold = (window.gameGold || 0) + goldReward;
@@ -3973,7 +3973,7 @@ function renderChapterEventList(container, chapterKey) {
                             // 战斗胜利金币奖励
                             const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
                             const isBoss = event.type === 'boss';
-                            const baseGold = 50 + enemyCount * 30;
+                            const baseGold = event.gold||50 + enemyCount * 30;
                             const goldScale = DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0;
                             const goldReward = Math.floor((isBoss ? baseGold * 2 : baseGold) * goldScale);
                             window.gameGold = (window.gameGold || 0) + goldReward;
