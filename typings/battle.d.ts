@@ -28,16 +28,38 @@ type SkillType = 'pugong' | 'skill' | 'spskill';
 
 /**
  * 效果触发时机
+ * ====== 命中/伤害相关 ======
  * - 'pugongHit': 普攻命中目标时
  * - 'skillHit': 技能命中目标时
  * - 'spskillHit': 必杀命中目标时
  * - 'onHit': 造成伤害时（通用）
  * - 'onHitSelf': 自身受到伤害时
  * - 'onKill': 击杀目标时
+ * 
+ * ====== 阵亡相关 ======
  * - 'dieGlobal': 场上任意角色阵亡时
  * - 'dieSelf': 自身阵亡时
+ * 
+ * ====== 行动生命周期 ======
+ * - 'actionStartSelf': 自身行动开始时（选择行动前）      【新增】
+ * - 'actionEndSelf': 自身行动结束后（进入afterAction前）  【新增】
+ * - 'actionStartGlobal': 场上任意角色行动开始时          【新增】
+ * - 'actionEndGlobal': 场上任意角色行动结束后            【新增】
+ * 
+ * ====== 轮次生命周期 ======
+ * - 'roundStart': 每轮开始时（重置actedSlots后）        【新增】
+ * - 'roundEnd': 每轮结束时（进入下一轮前）               【新增】
  */
-type TriggerType = 'pugongHit' | 'skillHit' | 'spskillHit' | 'onHit' | 'onHitSelf' | 'onKill' | 'dieGlobal' | 'dieSelf';
+type TriggerType = 
+    // 命中/伤害相关
+    | 'pugongHit' | 'skillHit' | 'spskillHit' | 'onHit' | 'onHitSelf' | 'onKill'
+    // 阵亡相关
+    | 'dieGlobal' | 'dieSelf'
+    // 行动生命周期
+    | 'actionStartSelf' | 'actionEndSelf'               // 【新增】
+    | 'actionStartGlobal' | 'actionEndGlobal'            // 【新增】
+    // 轮次生命周期
+    | 'roundStart' | 'roundEnd';                         // 【新增】
 
 /**
  * 目标选择模式
@@ -105,7 +127,7 @@ interface BreakthroughBuff {
 
 /** 单个效果定义 */
 interface Effect {
-    /** 效果类型：'stun' | 'reduceEnergy' | 'seal' | 'seal_killer' | 'damage_reduce' | 'extraDamage' */
+    /** 效果类型：'stun' | 'reduceEnergy' | 'seal' | 'seal_killer' | 'damage_reduce' | 'extraDamage' | 'healSelf' | 'energySelf' */
     type: string;
     /** 持续回合数（眩晕等效果使用） */
     turns?: number;
@@ -536,6 +558,25 @@ declare function getEffectsByTrigger(actor: Unit, trigger: TriggerType): SkillEf
 
 /** 进入下一回合（查找下一个行动角色） */
 declare function nextTurn(): void;
+
+/**
+ * 触发所有存活角色的指定时机效果                         【新增】
+ * @param trigger 触发时机（如 'actionStartGlobal', 'roundStart' 等）
+ * @param context 可选的上下文参数
+ * 
+ * 遍历双方所有存活角色，调用其skills中匹配trigger的效果
+ * 每个效果独立执行 filter 判定和 content 执行
+ */
+declare function triggerGlobalEffect(trigger: TriggerType, ...context: any[]): void;  // 【新增】
+
+/**
+ * 触发指定角色的指定时机效果                             【新增】
+ * @param unit 目标角色
+ * @param trigger 触发时机（如 'actionStartSelf', 'actionEndSelf' 等）
+ * @param context 可选的上下文参数
+ */
+declare function triggerSelfEffect(unit: Unit, trigger: TriggerType, ...context: any[]): void;  // 【新增】
+
 /** 当前行动结束，处理回合后逻辑（额外回合、战斗结束判断等） */
 declare function afterAction(): void;
 /** 结束当前轮次，进入下一轮（重置 actedSlots，轮数+1） */

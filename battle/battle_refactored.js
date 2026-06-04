@@ -327,52 +327,37 @@ function applyDamage(target, dmg, attacker, callback, skillContext = {}) {
         damage: finalDmg,
         killed: target.hp <= 0
     }, () => {
-        if (target.hp <= 0) {
-            target.hp = 0;
-            target.alive = false;
-            addBattleLog(`${target.name} 阵亡！`);
-            
-            // ======== 执行自己的亡语效果（dieSelf） ========
-            const deathEffects = getEffectsByTrigger(target, 'dieSelf');
-            deathEffects.forEach(effect => {
-                if (effect.filter && effect.filter.call(target, attacker)) {
-                    effect.content.call(target, attacker);
-                }
-            });
-            // ==============================================
+        // 在 applyDamage 中，角色阵亡时
+		if (target.hp <= 0) {
+			target.hp = 0;
+			target.alive = false;
+			addBattleLog(`${target.name} 阵亡！`);
 
-            // ======== 执行全局阵亡效果（dieGlobal） ========
-            const allUnits = [...battleState.playerUnits, ...battleState.enemyUnits];
-            allUnits.forEach(unit => {
-                if (!unit || !unit.alive) return;
-                const globalDeathEffects = getEffectsByTrigger(unit, 'dieGlobal');
-                globalDeathEffects.forEach(effect => {
-                    if (effect.filter && effect.filter.call(unit, target, attacker)) {
-                        effect.content.call(unit, target, attacker);
-                    }
-                });
-            });
-            // ==============================================
+			// ======== 使用新增的统一函数触发亡语效果 ========
+			// 触发自身亡语效果
+			triggerSelfEffect(target, 'dieSelf', attacker);
+			// 触发全局阵亡效果
+			triggerGlobalEffect('dieGlobal', target, attacker);
+			// ==============================================
 
-            // ======== 执行击杀者的击杀效果（onKill） ========
-            if (attacker && attacker.alive) {
-                const killEffects = getEffectsByTrigger(attacker, 'onKill');
-                killEffects.forEach(effect => {
-                    if (effect.filter && effect.filter.call(attacker, target)) {
-                        effect.content.call(attacker, target);
-                    }
-                });
-                
-                attacker.energy = Math.min(8, attacker.energy + 1);
-                addBattleLog(`${attacker.name} 击杀目标，恢复 1 能量`);
-            }
-            // ==============================================
+			// 旧的亡语效果触发逻辑可以移除
+			// const deathEffects = getEffectsByTrigger(target, 'dieSelf');
+			// ...
 
-            updateBattleUI();
-            setTimeout(() => {
-                if (callback) callback();
-            }, 500);
-        } else {
+			if (attacker && attacker.alive) {
+				// 触发击杀者的击杀效果
+				triggerSelfEffect(attacker, 'onKill', target);
+				
+				attacker.energy = Math.min(8, attacker.energy + 1);
+				addBattleLog(`${attacker.name} 击杀目标，恢复 1 能量`);
+			}
+
+			updateBattleUI();
+			setTimeout(() => {
+				if (callback) callback();
+			}, 500);
+		}
+		else {
             target.energy = Math.min(8, target.energy + 1);
             updateBattleUI();
             if (callback) callback();
@@ -624,6 +609,12 @@ function nextTurn() {
             round: bs.round
         });
         
+        // ======== 新增：触发全局行动开始效果 ========
+        triggerGlobalEffect('actionStartGlobal', nextActor);
+        // ======== 新增：触发自身行动开始效果 ========
+        triggerSelfEffect(nextActor, 'actionStartSelf');
+        // ==========================================
+        
         // 记录日志明确流程
         const sideName = nextSide === 'player' ? '我方' : '敌方';
         const turnNumber = Array.from(bs.actedSlots[nextSide]).length;
@@ -656,6 +647,7 @@ function nextTurn() {
     }
 }
 
+
 /**
  * 
  * @returns 回合结束
@@ -675,11 +667,23 @@ function afterAction() {
             ? bs.playerUnits[bs.currentTurnIndex]
             : bs.enemyUnits[bs.currentTurnIndex];
 
+        // ======== 新增：触发自身行动结束效果 ========
+        if (unit && unit.alive) {
+            triggerSelfEffect(unit, 'actionEndSelf');
+        }
+        // ==========================================
+
         // 触发 afterTurn 事件
         BattleEvents.emitAsync(BattleEvents.AFTER_TURN, {
             actor: unit,
             side: bs.currentTurnSide
         }, () => {
+            // ======== 新增：触发全局行动结束效果 ========
+            if (unit && unit.alive) {
+                triggerGlobalEffect('actionEndGlobal', unit);
+            }
+            // ==========================================
+
             // 检查额外回合
             if (unit && unit.alive && (unit.extraTurnCount > 0 || unit.extraTurn)) {
                 if (unit.extraTurnCount > 0) unit.extraTurnCount--;
@@ -709,11 +713,17 @@ function afterAction() {
     }
 }
 
+
 /**
  * 一轮结束进入下一轮
  */
 function endRound() {
     const bs = battleState;
+    
+    // ======== 新增：触发轮次结束效果（重置前） ========
+    triggerGlobalEffect('roundEnd', bs.round);
+    // ================================================
+
     // 触发 beforeRound 事件
     BattleEvents.emit(BattleEvents.BEFORE_ROUND, { round: bs.round + 1 });
     
@@ -722,6 +732,11 @@ function endRound() {
     // 重置当前回合信息，确保新一轮从先手方开始
     bs.currentTurnSide = null;
     bs.currentTurnIndex = 0;
+    
+    // ======== 新增：触发轮次开始效果（重置后） ========
+    triggerGlobalEffect('roundStart', bs.round);
+    // ================================================
+
     addBattleLog(`—— 第 ${bs.round} 轮 ——`);
     updateBattleUI();
     
@@ -733,6 +748,7 @@ function endRound() {
     });
 }
 
+
 /**
  * 劳模函数
  * @param {*} actor 
@@ -741,7 +757,7 @@ function endRound() {
  * @returns 
  */
 function bs_animateAction(actor, action, callback) {
-    const bs = battleState; // 【修复】定义 bs 变量
+    const bs = battleState;
     if (!bs) return;
 
     const skillType = action.type === 'pugong' ? 'pugong' : action.skillType;
@@ -762,20 +778,24 @@ function bs_animateAction(actor, action, callback) {
 
     // 确定技能Emoji特效
     const effectInfo = getSkillEffectInfo(action);
+    const targets = action.targets || [];
 
     // 延迟200ms后，在目标身上播放Emoji特效
     setTimeout(() => {
-        const targets = action.targets;
-        if (!targets || targets.length === 0) {
+        if (targets.length === 0) {
             if (callback) callback();
             return;
         }
         
-        if (effectInfo.effectClass === 'sword-effect' || effectInfo.effectClass === 'moon-effect') {
-            showSkillEffectOnTargets(targets, effectInfo);
-        } else if (effectInfo.effectClass === 'bolt-effect') {
+        // 判断是否为行列攻击（多目标且特效适宜行列展示）
+        const isRowOrColumnEffect = ['wind-effect', 'sword-effect', 'lightning-effect'].includes(effectInfo.effectClass);
+        
+        if (isRowOrColumnEffect && targets.length > 1) {
+            // 行列攻击：一次性播放从左到右/从上到下的动画效果
+            // 将特效容器放在第一个目标上，但使其跨越整个行/列
             showSkillEffectOnTargets(targets, effectInfo);
         } else {
+            // 单体攻击或治疗：每个目标独立播放
             targets.forEach(t => showSkillEffect(t, effectInfo));
         }
     }, 200);
@@ -797,13 +817,13 @@ function bs_animateAction(actor, action, callback) {
         }
 
         if (action.type === 'pugong') {
-            // console.log('执行普攻了')
-            executePugong(actor, action.targets, onActionComplete);
+            executePugong(actor, targets, onActionComplete);
         } else {
-            executeSkill(actor, action.skillType, action.skillId, action.targets, action.energyCost, onActionComplete);
+            executeSkill(actor, action.skillType, action.skillId, targets, action.energyCost, onActionComplete);
         }
     }, 600);
 }
+
 
 /**
  * 
@@ -848,6 +868,11 @@ function executePlayerTurn(actor, action) {
 function showBattleIntro() {
     const bs = battleState;
     resetActedSlots();
+    
+    // ======== 新增：触发第一轮开始效果 ========
+    triggerGlobalEffect('roundStart', 1);
+    // ==========================================
+    
     addBattleLog(`—— 第 1 轮 ——`);
     addBattleLog(`${bs.firstSide === 'player' ? '我方' : '敌方'}先手`);
     
@@ -855,7 +880,6 @@ function showBattleIntro() {
         nextTurn();
     }, 500);
 }
-
 /**
  * 结算战斗
  * @param {string} winner 显示胜者，player为玩家胜，否则玩家败
@@ -1681,6 +1705,40 @@ function getEffectsByTrigger(actor, trigger) {
 }
 
 /**
+ * 触发所有存活角色的指定时机效果
+ * @param {string} trigger 触发时机
+ * @param {...any} context 上下文参数
+ */
+function triggerGlobalEffect(trigger, ...context) {
+    const bs = battleState;
+    if (!bs) return;
+    
+    const allUnits = [...bs.playerUnits, ...bs.enemyUnits];
+    allUnits.forEach(unit => {
+        if (!unit || !unit.alive) return;
+        triggerSelfEffect(unit, trigger, ...context);
+    });
+}
+
+/**
+ * 触发指定角色的指定时机效果
+ * @param {*} unit 目标角色
+ * @param {string} trigger 触发时机
+ * @param {...any} context 上下文参数
+ */
+function triggerSelfEffect(unit, trigger, ...context) {
+    if (!unit || !unit.alive) return;
+    
+    const effects = getEffectsByTrigger(unit, trigger);
+    effects.forEach(effect => {
+        if (effect.filter && effect.filter.call(unit, ...context)) {
+            effect.content.call(unit, ...context);
+        }
+    });
+}
+
+
+/**
  * 根据角色突破等级，初始化这些角色的基本数值
  * @param {*} units 传入角色数组
  */
@@ -1925,16 +1983,77 @@ function showSkillEffect(unit, effectInfo) {
     setTimeout(() => el.remove(), 650);
 }
 
+/**
+ * 获取Emoji特效类
+ * @param {*} emoji 
+ * @returns 
+ */
+function getEmojiClass(emoji){
+	switch(emoji){
+		case '🔥'|'fire':
+			return { emoji: '🔥', effectClass: 'fire-effect' };
+			break;
+		case '⚡'|'lightning':
+			return { emoji: '⚡', effectClass: 'lightning-effect' };
+			break;
+		case '🧪'|'heal':
+			return { emoji: '🧪', effectClass: 'heal-effect' };
+			break;
+		case '🌙'|'moon':
+			return { emoji: '🌙', effectClass: 'moon-effect' };
+			break;
+		case '❤️'|'heart':
+			return { emoji: '❤️', effectClass: 'heart-effect' };
+			break;
+		case '💀'|'skull':
+			return { emoji: '💀', effectClass: 'skull-effect' };
+			break;
+		case '💥'|'explosion':
+			return { emoji: '💥', effectClass: 'explosion-effect' };
+			break;
+		case '🌪️'|'wind':
+			return { emoji: '🌪️', effectClass: 'wind-effect' };
+			break;
+		case '⚔️'|'sword':
+			return { emoji: '⚔️', effectClass: 'sword-effect' };
+			break;
+		case '🧊'|'ice':
+			return { emoji: '🧊', effectClass: 'ice-effect' };
+			break;
+		case '💧'|'rain':
+			return { emoji: '💧', effectClass: 'rain-effect' };
+			break;
+		case '❄️'|'snow':
+			return { emoji: '❄️', effectClass: 'snow-effect' };
+			break;
+		case '⭐'|'star':
+			return { emoji: '⭐', effectClass: 'star-effect' };
+			break;
+		case '☄️'|'comet':
+			return { emoji: '☄️', effectClass: 'comet-effect' };
+			break;
+		case '🎵'|'music':
+			return { emoji: '🎵', effectClass: 'music-effect' };
+			break;
+		case '🪨' | 'rock':
+			return { emoji: '🪨', effectClass: 'rock-effect' };
+			break;
+		default:
+			return { emoji: '🔥', effectClass: 'fire-effect' };
+	}
+}
 // ====== 技能Emoji特效 ======
 /**
- * 根据技能的target模式确定特效类型 (修复版 - 支持 isRecover 字段)
- * @returns {{ emoji: string, effectClass: string, targets: Array }}
+ * 根据技能的target模式确定特效类型 (优化版 - 根据目标数量决定特效样式)
+ * @param {*} action 技能对象
+ * @returns {{ emoji: string, effectClass: string }}
  */
 function getSkillEffectInfo(action) {
     const skillType = action.type === 'pugong' ? 'pugong' : action.skillType;
     const skillId = action.type === 'pugong' ? action.skillId : action.skillId;
     const sData = contentList[skillType] && contentList[skillType][skillId];
-
+    
+    if (action.emoji) return getEmojiClass(action.emoji);
     if (!sData || !sData.target) {
         // fallback: 单体攻击
         return { emoji: '🔥', effectClass: 'fire-effect' };
@@ -1942,42 +2061,33 @@ function getSkillEffectInfo(action) {
 
     const targetMode = sData.target[0];
     const aiPref = sData.target[1];
+    const targetCount = action.targets ? action.targets.length : 1;
     
-    // 【核心修复】优先使用 isRecover 字段，其次检查 content 字符串
+    // 优先使用 isRecover 字段
     let isRecover = false;
     if (sData.isRecover === true) {
         isRecover = true;
     }
 
     if (isRecover) {
-        // if (targetMode === 'one' || targetMode === 'all') {
-        //     return { emoji: '🧪', effectClass: 'heal-effect' };
-        // }
-        // 全体治疗也用药剂
         return { emoji: '🧪', effectClass: 'heal-effect' };
     }
 
     switch (targetMode) {
         case 'row':
-            if (aiPref === 'last') {
-                return { emoji: '🌙', effectClass: 'moon-effect' };
+            // 行攻击：如果有多个目标则用 wind（横扫），否则用 sword（单体斩击）
+            if (targetCount >= 2) {
+                return { emoji: '🌪️', effectClass: 'wind-effect' };
             }
             return { emoji: '⚔️', effectClass: 'sword-effect' };
         case 'column':
-            return { emoji: '⚡', effectClass: 'bolt-effect' };
+            // 列攻击：多个目标用 lightning（贯穿），否则也用 lightning（单体穿刺）
+            return { emoji: '⚡', effectClass: 'lightning-effect' };
+        case 'all':
+            // 全体攻击：用 explosion（爆炸）
+            return { emoji: '💥', effectClass: 'explosion-effect' };
         case 'one':
         default:
             return { emoji: '🔥', effectClass: 'fire-effect' };
     }
 }
-/**
- * 预想中的真回合循环
- */
-// function gotoTurn(){
-// 	//游戏开始
-// 	gameStart();
-// 	//此处判断存活角色
-// 	for(var i=0;i<6;i++){
-// 		//此处执行循环
-// 	}
-// }

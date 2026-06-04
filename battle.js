@@ -1632,9 +1632,9 @@ function bs_animateAction(actor, action, callback) {
             return;
         }
         
-        if (effectInfo.effectClass === 'sword-effect' || effectInfo.effectClass === 'moon-effect') {
+        if (effectInfo.effectClass === 'sword-effect' || effectInfo.effectClass === 'wind-effect') {
             showSkillEffectOnTargets(targets, effectInfo);
-        } else if (effectInfo.effectClass === 'bolt-effect') {
+        } else if (effectInfo.effectClass === 'lightning-effect') {
             showSkillEffectOnTargets(targets, effectInfo);
         } else {
             targets.forEach(t => showSkillEffect(t, effectInfo));
@@ -1725,11 +1725,11 @@ function getSkillEffectInfo(action) {
     switch (targetMode) {
         case 'row':
             if (aiPref === 'last') {
-                return { emoji: '🌙', effectClass: 'moon-effect' };
+                return { emoji: '🌪️', effectClass: 'wind-effect' };
             }
             return { emoji: '⚔️', effectClass: 'sword-effect' };
         case 'column':
-            return { emoji: '⚡', effectClass: 'bolt-effect' };
+            return { emoji: '⚡', effectClass: 'lightning-effect' };
         case 'one':
         default:
             return { emoji: '🔥', effectClass: 'fire-effect' };

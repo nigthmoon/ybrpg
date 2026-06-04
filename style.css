@@ -971,7 +971,7 @@ body {
 
 /* ⚔️ 前排行攻击 & 🌙 后排行攻击：从方阵左边横穿该行 */
 .skill-effect.sword-effect,
-.skill-effect.moon-effect {
+.skill-effect.wind-effect {
     left: -10px;
     top: 50%;
     animation: row-slash 0.6s ease-out forwards;
@@ -986,7 +986,7 @@ body {
 }
 
 /* ⚡ 列攻击：从前方贯穿该列最后方 */
-.skill-effect.bolt-effect {
+.skill-effect.lightning-effect {
     left: 50%;
     top: -10px;
     animation: bolt-pierce 0.6s ease-out forwards;
@@ -999,6 +999,206 @@ body {
     70% { opacity: 0.7; transform: translateX(-50%) translateY(70px) scale(0.8); }
     100% { opacity: 0; transform: translateX(-50%) translateY(90px) scale(0.4); }
 }
+
+/* 心：出现在卡片中央，停留少许然后放大，并渐变消失 */
+.skill-effect.heart-effect {
+    left: 50%;
+    top: 50%;
+    animation: heart-center 1s ease-in-out forwards;
+}
+
+@keyframes heart-center {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    30% { opacity: 1; transform: translate(-50%, -50%) scale(0.8); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    80% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.8); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
+}
+
+/* 骷髅头：由大变小，落在卡片中央，停留少许然后消失 */
+.skill-effect.skull-effect {
+    left: 50%;
+    top: 50%;
+    animation: skull-center 1s ease-in-out forwards;
+}
+
+@keyframes skull-center {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.8); }
+    40% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    60% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+}
+
+/* 爆炸：从卡片中间出现并立即放大，然后缩小 */
+.skill-effect.explosion-effect {
+    left: 50%;
+    top: 50%;
+    animation: explosion-center 0.5s ease-out forwards;
+}
+
+@keyframes explosion-center {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.8); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(2.2); }
+    80% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.5); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+}
+
+/* 龙卷风：从卡片左侧移动到右侧（同新月样式） */
+.skill-effect.wind-effect {
+    left: -10px;
+    top: 50%;
+    animation: row-slash 0.6s ease-out forwards;
+}
+
+/* 冰块：从卡片上方砸向卡片中央（同火样式） */
+.skill-effect.ice-effect {
+    left: 50%;
+    top: -10px;
+    animation: fire-drop 0.6s ease-in forwards;
+}
+
+/* 雨滴：从卡片上方砸向卡片中央，同火样式但不弹跳 */
+.skill-effect.rain-effect {
+    left: 50%;
+    top: -10px;
+    animation: rain-drop 0.5s ease-in forwards;
+}
+
+@keyframes rain-drop {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-60px) scale(0.5); }
+    30% { opacity: 1; transform: translateX(-50%) translateY(10px) scale(1); }
+    70% { opacity: 1; transform: translateX(-50%) translateY(12px) scale(0.9); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(15px) scale(0.6); }
+}
+
+/* 雪花：从卡片左上向右下划落 */
+.skill-effect.snow-effect {
+    left: -10px;
+    top: -10px;
+    animation: snow-diagonal 0.7s ease-in forwards;
+}
+
+@keyframes snow-diagonal {
+    0% { opacity: 0; transform: translate(-10px, -10px) scale(0.5); }
+    30% { opacity: 1; transform: translate(20%, 30%) scale(1); }
+    60% { opacity: 1; transform: translate(50%, 60%) scale(0.9); }
+    100% { opacity: 0; transform: translate(120%, 120%) scale(0.5); }
+}
+
+/* 星星：从卡片上方向卡片中央砸落然后星星放大渐变消失 */
+.skill-effect.star-effect {
+    left: 50%;
+    top: -10px;
+    animation: star-fall 0.8s ease-in-out forwards;
+}
+
+@keyframes star-fall {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-60px) scale(0.3); }
+    30% { opacity: 1; transform: translateX(-50%) translateY(10px) scale(0.8); }
+    50% { opacity: 1; transform: translateX(-50%) translateY(5px) scale(1.5); }
+    70% { opacity: 0.8; transform: translateX(-50%) translateY(3px) scale(1.8); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(0) scale(2.5); }
+}
+
+/* 流星：从卡片右上向左下划落 */
+.skill-effect.comet-effect {
+    right: -10px;
+    top: -10px;
+    animation: comet-diagonal 0.7s ease-in forwards;
+}
+
+@keyframes comet-diagonal {
+    0% { opacity: 0; transform: translate(10px, -10px) scale(0.5); }
+    20% { opacity: 1; transform: translate(-20%, 30%) scale(1.1); }
+    50% { opacity: 1; transform: translate(-50%, 60%) scale(1); }
+    80% { opacity: 0.7; transform: translate(-80%, 90%) scale(0.7); }
+    100% { opacity: 0; transform: translate(-120%, 120%) scale(0.3); }
+}
+
+/* 音符：从卡片中央向上弹起，然后散开消失 */
+.skill-effect.music-effect {
+    left: 50%;
+    top: 50%;
+    animation: music-bounce 0.6s ease-in-out forwards;
+}
+
+@keyframes music-bounce {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+    20% { opacity: 1; transform: translate(-50%, -80%) scale(1.2) rotate(-10deg); }
+    40% { opacity: 1; transform: translate(-30%, -100%) scale(1) rotate(5deg); }
+    60% { opacity: 0.8; transform: translate(-60%, -120%) scale(0.8) rotate(-5deg); }
+    80% { opacity: 0.4; transform: translate(-40%, -140%) scale(0.5) rotate(10deg); }
+    100% { opacity: 0; transform: translate(-70%, -160%) scale(0.2) rotate(-10deg); }
+}
+
+/* 岩石：从卡片上方向中央砸落 */
+.skill-effect.rock-effect {
+    left: 50%;
+    top: -10px;
+    animation: rock-fall 0.6s ease-in forwards;
+}
+
+@keyframes rock-fall {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-60px) scale(0.4); }
+    30% { opacity: 1; transform: translateX(-50%) translateY(0px) scale(1.2); }
+    50% { opacity: 1; transform: translateX(-50%) translateY(5px) scale(1); }
+    70% { opacity: 0.8; transform: translateX(-50%) translateY(3px) scale(0.9); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.6); }
+}
+
+/* 新月样式修改：从左侧向右侧画一条向下凹的弧线划过 */
+.skill-effect.moon-effect {
+    left: -10px;
+    top: 30%;
+    animation: moon-arc 0.7s ease-in-out forwards;
+}
+
+@keyframes moon-arc {
+    0% { opacity: 0; transform: translateX(-30px) translateY(0) scale(0.6); }
+    20% { opacity: 1; transform: translateX(0) translateY(20%) scale(1.1); }
+    40% { opacity: 1; transform: translateX(40%) translateY(50%) scale(1); }
+    60% { opacity: 0.8; transform: translateX(80%) translateY(60%) scale(0.8); }
+    100% { opacity: 0; transform: translateX(120%) translateY(70%) scale(0.4); }
+}
+
+/* 🧪 药剂治疗：从角色头顶洒落，旋转闪烁，然后消失 */
+.skill-effect.heal-effect {
+    left: 50%;
+    top: -10px;
+    animation: heal-potion 0.8s ease-in-out forwards;
+}
+
+@keyframes heal-potion {
+    0% { 
+        opacity: 0; 
+        transform: translateX(-50%) translateY(-50px) scale(0.3) rotate(-20deg); 
+    }
+    20% { 
+        opacity: 1; 
+        transform: translateX(-50%) translateY(-10px) scale(1.2) rotate(10deg); 
+    }
+    50% { 
+        opacity: 1; 
+        transform: translateX(-50%) translateY(15px) scale(1.4) rotate(-5deg); 
+    }
+    70% { 
+        opacity: 0.8; 
+        transform: translateX(-50%) translateY(10px) scale(1) rotate(5deg); 
+    }
+    100% { 
+        opacity: 0; 
+        transform: translateX(-50%) translateY(12px) scale(0.5) rotate(0deg); 
+    }
+}
+
+/* 治疗闪光效果 - 可选 */
+.action-glow.heal-glow {
+    box-shadow: inset 0 0 20px 8px rgba(0, 255, 128, 0.5), 0 0 16px 4px rgba(0, 255, 128, 0.3);
+    background: radial-gradient(circle, rgba(0, 255, 128, 0.3) 0%, transparent 70%);
+}
+
 
 /* 🛡️ 无敌特效*/
 .battle-unit.invincible-effect {

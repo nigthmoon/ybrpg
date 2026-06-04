@@ -63,7 +63,13 @@ class GameData {
                     total: 0,
                     owned: 0
                 }
-            }
+            },
+            
+            // ========== 宝物模块（实例化系统） ==========
+            _treasureInventory: {},    // 宝物实例数据 { instanceId: { baseId, equippedBy } }
+            _charBag: {},            // 角色背包数据
+            _treasures: {},          // 旧格式装备槽位（兼容）
+            _treasureBag: {}         // 旧格式宝物背包（兼容）
         };
     }
 
@@ -87,6 +93,9 @@ class GameData {
         if (window.charBagData) {
             this.data._charBag = JSON.parse(JSON.stringify(window.charBagData));
         }
+        if (window.treasureInventory) {
+            this.data._treasureInventory = JSON.parse(JSON.stringify(window.treasureInventory));
+        }
         if (window.treasureEquipData) {
             this.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData));
         }
@@ -94,7 +103,6 @@ class GameData {
             this.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData));
         }
         if (window.playerProgress) {
-            // 将 playerProgress 转换为 stageProgress 格式
             Object.entries(window.playerProgress).forEach(([eventId, completed]) => {
                 if (completed && !this.data.dungeon.completedStages.includes(eventId)) {
                     this.data.dungeon.completedStages.push(eventId);
@@ -117,6 +125,14 @@ class GameData {
         const savedData = localStorage.getItem(key);
         if (savedData) {
             this.data = JSON.parse(savedData);
+            
+            // 恢复宝物实例化数据到 window
+            if (this.data._treasureInventory) {
+                window.treasureInventory = JSON.parse(JSON.stringify(this.data._treasureInventory));
+            } else {
+                window.ensureTreasureInventory();
+            }
+            
             console.log(`[GameData] 已加载槽位 ${slotIndex}`, this.data);
             return this.data;
         }
@@ -197,7 +213,6 @@ class GameData {
             return false;
         }
         this.data.team.members.push(characterId);
-        // 如果没有设置顺序，也同步更新
         if (!this.data.team.order.length) {
             this.data.team.order = [...this.data.team.members];
         }
@@ -349,7 +364,6 @@ class GameData {
             );
         }
         
-        // 记录完成
         if (!this.data.dungeon.completedStages.includes(stageId)) {
             this.data.dungeon.completedStages.push(stageId);
         }
@@ -383,7 +397,7 @@ class GameData {
      * 获取商店物品
      */
     getShopItems(type) {
-        return (type=='normal')?this.data.shop.items:this.data.shop.spitems || [];
+        return (type === 'normal') ? this.data.shop.items : this.data.shop.spitems || [];
     }
 
     /**
@@ -458,143 +472,146 @@ class GameData {
         this.data.handbook.collectionProgress = { total, owned };
     }
 
-    // ==================== 宝物模块 ====================
+    // ==================== 宝物模块（兼容接口） ====================
 
     /**
-     * 宝物定义列表（数据来源于 treasureList.js 中的 TREASURE_DEFS）
-     * 详见 treasureList.js 头部注释
+     * 获取宝物定义列表
      */
     getTreasureList() {
-        return TREASURE_DEFS;
+        return window.TREASURE_DEFS || {};
     }
 
     /**
-     * 获取角色的宝物装备数据
-     * @param {string} charId 角色ID
-     * @returns {Array} 6个槽位的宝物ID数组（null表示空槽）
+     * 获取角色的宝物装备数据（新系统）
+     * @param {string} instanceId 角色实例ID
+     * @returns {Array} 宝物实例ID数组
      */
-    // getCharTreasures(charId) {
-    //     if (!this.data._treasures) this.data._treasures = {};
-    //     if (!this.data._treasures[charId]) {
-    //         this.data._treasures[charId] = [null, null, null, null, null, null];
-    //     }
-    //     return this.data._treasures[charId];
-    // }
     getCharTreasures(instanceId) {
-        if (!this.data._treasures) this.data._treasures = {};
-        if (!this.data._treasures[instanceId]) {
-            this.data._treasures[instanceId] = [null, null, null, null, null, null];
+        if (window.getCharEquippedTreasures) {
+            return window.getCharEquippedTreasures(instanceId);
         }
-        return this.data._treasures[instanceId];
+        return [];
     }
-    
-    /**
-     * 为角色装备宝物
-     * @param {string} charId 角色ID
-     * @param {number} slotIndex 宝物槽位 (0-5)
-     * @param {string|null} treasureId 宝物ID，null表示卸下
-     */
-    // equipTreasure(charId, slotIndex, treasureId) {
-    //     const treasures = this.getCharTreasures(charId);
-    //     treasures[slotIndex] = treasureId;
-    //     console.log(`[Treasure] ${charId} 槽位${slotIndex} ${treasureId ? '装备' + treasureId : '卸下'}`);
-    // }
-    equipTreasure(instanceId, slotIndex, treasureId) {
-        const treasures = this.getCharTreasures(instanceId);
-        treasures[slotIndex] = treasureId;
-        console.log(`[Treasure] ${instanceId} 槽位${slotIndex} ${treasureId ? '装备' + treasureId : '卸下'}`);
-    }
-    
 
     /**
-     * 获取所有已拥有的宝物及其装备状态
-     * @returns {Object} { treasureId: { count, equippedBy: [charId, ...] } }
+     * 为角色装备宝物（新系统）
+     * @param {string} instanceId 角色实例ID
+     * @param {number} slotIndex 宝物槽位
+     * @param {string|null} treasureInstanceId 宝物实例ID
+     */
+    equipTreasure(instanceId, slotIndex, treasureInstanceId) {
+        if (window.equipTreasure) {
+            window.equipTreasure(instanceId, slotIndex, treasureInstanceId);
+        }
+    }
+
+    /**
+     * 获取宝物背包（新系统，转换为旧格式兼容）
+     * @returns {Object} { baseId: { count, equippedBy } }
      */
     getTreasureInventory() {
-        if (!this.data._treasureBag) this.data._treasureBag = {};
-        return this.data._treasureBag;
+        if (window.treasureInventory) {
+            const grouped = {};
+            Object.values(window.treasureInventory).forEach(item => {
+                if (!grouped[item.baseId]) {
+                    grouped[item.baseId] = { count: 0, equippedBy: [] };
+                }
+                grouped[item.baseId].count++;
+                if (item.equippedBy) {
+                    if (!grouped[item.baseId].equippedBy.includes(item.equippedBy)) {
+                        grouped[item.baseId].equippedBy.push(item.equippedBy);
+                    }
+                }
+            });
+            return grouped;
+        }
+        return {};
     }
 
     /**
-     * 添加宝物到背包
-     * @param {string} treasureId 宝物ID
+     * 添加宝物到背包（新系统）
+     * @param {string} baseId 宝物基础ID
      * @param {number} count 数量
      */
-    addTreasure(treasureId, count = 1) {
-        if (!this.data._treasureBag) this.data._treasureBag = {};
-        if (!this.data._treasureBag[treasureId]) {
-            this.data._treasureBag[treasureId] = { count: 0, equippedBy: [] };
+    addTreasure(baseId, count = 1) {
+        if (window.addTreasureInstance) {
+            window.addTreasureInstance(baseId, count);
         }
-        this.data._treasureBag[treasureId].count += count;
-        console.log(`[TreasureBag] 已添加 ${treasureId} x${count}`);
     }
 
     /**
-     * 从背包移除宝物
-     * @param {string} treasureId 宝物ID
+     * 从背包移除宝物（新系统）
+     * @param {string} baseId 宝物基础ID
      * @param {number} count 数量
      */
-    removeTreasure(treasureId, count = 1) {
-        if (!this.data._treasureBag || !this.data._treasureBag[treasureId]) return;
-        this.data._treasureBag[treasureId].count -= count;
-        if (this.data._treasureBag[treasureId].count <= 0) {
-            delete this.data._treasureBag[treasureId];
+    removeTreasure(baseId, count = 1) {
+        if (window.removeTreasureInstance && window.treasureInventory) {
+            const instances = Object.entries(window.treasureInventory)
+                .filter(([, inv]) => inv.baseId === baseId && !inv.equippedBy);
+            for (let i = 0; i < Math.min(count, instances.length); i++) {
+                window.removeTreasureInstance(instances[i][0]);
+            }
         }
-        console.log(`[TreasureBag] 已移除 ${treasureId} x${count}`);
     }
 
     /**
-     * 检查宝物是否可装备（有未装备的数量）
-     * @param {string} treasureId 宝物ID
+     * 检查宝物是否可装备
+     * @param {string} baseId 宝物基础ID
      * @returns {boolean}
      */
-    canEquipTreasure(treasureId) {
-        const bag = this.getTreasureInventory();
-        if (!bag[treasureId]) return false;
-        const equippedCount = bag[treasureId].equippedBy ? bag[treasureId].equippedBy.length : 0;
-        return bag[treasureId].count > equippedCount;
-    }
-
-    /**
-     * 卸下角色的所有宝物（角色离队时调用）
-     * @param {string} charId 角色ID
-     */
-    unequipAllTreasures(charId) {
-        const treasures = this.getCharTreasures(charId);
-        for (let i = 0; i < treasures.length; i++) {
-            treasures[i] = null;
+    canEquipTreasure(baseId) {
+        if (window.treasureInventory) {
+            return Object.values(window.treasureInventory).some(inv => 
+                inv.baseId === baseId && !inv.equippedBy
+            );
         }
-        console.log(`[Treasure] ${charId} 已卸下所有宝物`);
+        return false;
     }
 
     /**
-     * 将源角色的宝物转移给目标角色，然后清空源角色的宝物
-     * @param {string} fromCharId 源角色ID（被换下的角色）
-     * @param {string} toCharId 目标角色ID（换上来的角色）
+     * 卸下角色的所有宝物
+     * @param {string} charInstanceId 角色实例ID
      */
-    transferTreasures(fromCharId, toCharId) {
-        // for (let i = 0; i < fromTreasures.length; i++) {
-        //     toTreasures[i] = fromTreasures[i];
-        //     fromTreasures[i] = null;
-        // }
-        
-        // if (!this.data._treasures) this.data._treasures = {};
-        // if (!this.data._treasures[instanceId]) {
-        //     this.data._treasures[instanceId] = [null, null, null, null, null, null];
-        // }
-        // return this.data._treasures[instanceId];
+    unequipAllTreasures(charInstanceId) {
+        if (window.treasureInventory) {
+            Object.entries(window.treasureInventory).forEach(([instId, data]) => {
+                if (data.equippedBy === charInstanceId) {
+                    data.equippedBy = null;
+                }
+            });
+        }
+    }
 
-        if(!window.treasureEquipData) window.treasureEquipData = {};
-        var tttt = window.treasureEquipData[toCharId]||[null, null, null, null, null, null]
-        window.treasureEquipData[toCharId]= window.treasureEquipData[fromCharId];
-        window.treasureEquipData[fromCharId]= tttt;
-        this.data._treasures[fromCharId]=window.treasureEquipData[fromCharId]
-        this.data._treasures[toCharId]=window.treasureEquipData[toCharId]
-        // for (let i = 0; i < fromTreasures.length; i++) {
-        //     toTreasures[i] = fromTreasures[i];
-        //     fromTreasures[i] = null;
-        // }
-        console.log(`[Treasure] ${fromCharId} 的宝物已转移给 ${toCharId}`);
+    /**
+     * 将源角色的宝物转移给目标角色
+     * @param {string} fromInstanceId 源角色实例ID
+     * @param {string} toInstanceId 目标角色实例ID
+     */
+    transferTreasures(fromInstanceId, toInstanceId) {
+        const fromTreasures = window.getCharEquippedTreasures ? window.getCharEquippedTreasures(fromInstanceId) : [];
+        const toTreasures = window.getCharEquippedTreasures ? window.getCharEquippedTreasures(toInstanceId) : [];
+        
+        // 先卸下所有
+        fromTreasures.forEach(tid => {
+            if (window.treasureInventory[tid]) {
+                window.treasureInventory[tid].equippedBy = null;
+            }
+        });
+        toTreasures.forEach(tid => {
+            if (window.treasureInventory[tid]) {
+                window.treasureInventory[tid].equippedBy = null;
+            }
+        });
+        
+        // 再交换装备
+        fromTreasures.forEach((tid, index) => {
+            if (tid && toTreasures[index]) {
+                window.treasureInventory[tid].equippedBy = toInstanceId;
+                window.treasureInventory[toTreasures[index]].equippedBy = fromInstanceId;
+            }
+        });
+        
+        console.log(`[Treasure] ${fromInstanceId} 的宝物已转移给 ${toInstanceId}`);
     }
 
     // ==================== 数据导出/导入 ====================

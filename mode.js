@@ -179,7 +179,7 @@ function renderTeamView(container) {
             id: 'btn-team-other', 
             text: '突破预览', // 建议修改文字
             action: () => { 
-                showBreakthroughPreviewView(); 
+                showBreakthroughPreviewPopup(); 
             } 
         },
     ];
@@ -199,6 +199,197 @@ function renderTeamView(container) {
     // 记录当前选中的方格索引
     window._selectedSlotIndex = null;
 }
+/**
+ * 显示突破预览弹窗
+ */
+function showBreakthroughPreviewPopup() {
+    // 1. 获取当前选中的角色
+    const selectedIdx = window._selectedSlotIndex;
+    let instanceId = null;
+    
+    if (selectedIdx !== null && selectedIdx !== undefined && window.currentTeam[selectedIdx]) {
+        instanceId = window.currentTeam[selectedIdx];
+    } else if (window.currentTeam && window.currentTeam.length > 0) {
+        instanceId = window.currentTeam.find(id => id);
+    }
+
+    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+        toast('请先在队伍中选择一个角色', 'warning');
+        return;
+    }
+
+    const instData = window.charBagData[instanceId];
+    const charId = instData.charId || instanceId;
+    const baseChar = characterList[charId];
+
+    if (!baseChar) {
+        toast('角色数据异常', 'error');
+        return;
+    }
+
+    // 2. 创建遮罩层
+    const overlay = document.createElement('div');
+    overlay.className = 'ybrpg-confirm-overlay';
+    overlay.id = 'breakthrough-preview-overlay';
+
+    // 3. 创建弹窗容器
+    const popup = document.createElement('div');
+    popup.style.cssText = `
+        background: #1a1a1a;
+        border: 2px solid #ffd700;
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 380px;
+        width: 90%;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        animation: dialogIn 0.2s ease;
+    `;
+
+    // 4. 标题
+    const title = document.createElement('div');
+    title.style.cssText = 'color:#ffd700;font-size:18px;font-weight:bold;text-align:center;margin-bottom:15px;';
+    const currentTupoLevel = instData.tupolevel || 0;
+    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+    title.innerHTML = `${baseChar.name} <span style="color:${rankColors[baseChar.rank] || '#888'};font-size:14px;">突破预览</span>`;
+    popup.appendChild(title);
+
+    // 5. 角色概览
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #333;';
+
+    const charImg = document.createElement('img');
+    charImg.src = `./image/character/${charId}.jpg`;
+    charImg.style.cssText = 'width:48px;height:48px;border-radius:6px;border:2px solid #ffd700;object-fit:cover;';
+    charImg.onerror = function() { this.src = './image/character/default.jpg'; };
+    header.appendChild(charImg);
+
+    const charInfo = document.createElement('div');
+    charInfo.style.cssText = 'flex:1;';
+    
+    const charName = document.createElement('div');
+    charName.style.cssText = 'color:#fff;font-size:15px;font-weight:bold;';
+    const tupoText = currentTupoLevel > 0 ? ` <span style="color:#ffd700;font-size:13px;">+${currentTupoLevel}</span>` : '';
+    charName.innerHTML = baseChar.name + tupoText;
+    charInfo.appendChild(charName);
+
+    const charLevel = document.createElement('div');
+    charLevel.style.cssText = 'color:#aaa;font-size:12px;margin-top:2px;';
+    charLevel.textContent = `当前突破: ${currentTupoLevel} 阶 · 等级: Lv.${instData.level || 1}`;
+    charInfo.appendChild(charLevel);
+
+    header.appendChild(charInfo);
+    popup.appendChild(header);
+
+    // 6. 突破列表滚动区
+    const listContainer = document.createElement('div');
+    listContainer.style.cssText = 'flex:1;overflow-y:auto;padding-right:4px;';
+    listContainer.style.scrollbarWidth = 'thin';
+    listContainer.style.scrollbarColor = '#555 #222';
+
+    // 获取突破配置
+    const tupoList = baseChar.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
+    
+    if (tupoList.length === 0) {
+        const emptyTip = document.createElement('div');
+        emptyTip.style.cssText = 'color:#666;text-align:center;padding:30px;font-size:14px;';
+        emptyTip.textContent = '该角色暂无突破数据';
+        listContainer.appendChild(emptyTip);
+    } else {
+        // 遍历突破列表
+        tupoList.forEach((buff, index) => {
+            const isUnlocked = (index + 1) <= currentTupoLevel;
+            
+            const item = document.createElement('div');
+            item.style.cssText = `
+                background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
+                border: 1px solid ${isUnlocked ? '#d000ff' : '#333'};
+                border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
+                border-radius: 4px;
+                padding: 10px;
+                margin-bottom: 8px;
+                opacity: ${isUnlocked ? 1 : 0.6};
+                transition: all 0.2s;
+                cursor: ${isUnlocked ? 'pointer' : 'default'};
+            `;
+
+            // 标题行
+            const headerRow = document.createElement('div');
+            headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;';
+            
+            const levelTitle = document.createElement('span');
+            levelTitle.style.cssText = `font-weight:bold;font-size:14px;color:${isUnlocked ? '#ffd700' : '#888'};`;
+            levelTitle.textContent = `突破 ${index + 1} 阶`;
+            
+            const statusIcon = document.createElement('span');
+            statusIcon.style.cssText = 'font-size:12px;';
+            statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
+            statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
+
+            headerRow.appendChild(levelTitle);
+            headerRow.appendChild(statusIcon);
+            item.appendChild(headerRow);
+
+            // 描述内容
+            const descDiv = document.createElement('div');
+            descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#666'};`;
+            
+            if (buff.desc) {
+                descDiv.textContent = buff.desc;
+            } else if (buff.type) {
+                let typeDesc = '';
+                if (buff.type === 'self_stat_flat') {
+                    const val = Array.isArray(buff.value) ? buff.value.join('/') : buff.value;
+                    const stat = Array.isArray(buff.stat) ? buff.stat.join('/') : buff.stat;
+                    typeDesc = `永久增加 ${stat}: ${val}`;
+                } else if (buff.type === 'passive_effect') {
+                    typeDesc = `获得被动效果: ${buff.effectId || '未知'}`;
+                } else if (buff.type === 'skill_effect') {
+                    typeDesc = `技能效果增强: ${buff.desc || '未知效果'}`;
+                } else {
+                    typeDesc = `效果类型: ${buff.type}`;
+                }
+                descDiv.textContent = typeDesc;
+            } else {
+                descDiv.textContent = '暂无详细描述';
+            }
+            
+            item.appendChild(descDiv);
+
+            // 已解锁项的悬停效果
+            if (isUnlocked) {
+                item.onmouseover = () => { item.style.background = '#33334a'; };
+                item.onmouseout = () => { item.style.background = '#2a2a3a'; };
+            }
+
+            listContainer.appendChild(item);
+        });
+    }
+
+    popup.appendChild(listContainer);
+
+    // 7. 关闭按钮
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'ybrpg-btn';
+    closeBtn.style.cssText = 'width:100%;margin-top:15px;padding:10px;font-size:14px;';
+    closeBtn.textContent = '关闭';
+    closeBtn.onclick = () => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    };
+    popup.appendChild(closeBtn);
+
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+
+    // 点击遮罩关闭
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        }
+    };
+}
+
 /**
  * 显示突破预览视图 (主入口 - 优化版)
  */
@@ -689,33 +880,49 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
     // 临时方案：假设 gameData 已更新支持 instanceId，或者我们只传 charId 接受共享限制。
     // 此处代码保持原样调用，但需意识到如果 gameData 内部 key 是 charId，则多实例共享宝物。
     // const charTreasures = gameData.getCharTreasures(charId); 
-    const charTreasures = gameData.getCharTreasures(instanceId);
-    for (let i = 0; i < 6; i++) {
-        const tSlot = document.createElement('div');
-        tSlot.className = 'treasure-slot';
-        tSlot.dataset.slotIndex = i;
-        const tId = charTreasures[i];
-        if (tId && treasureDefs[tId]) {
-            const tDef = treasureDefs[tId];
-            tSlot.title = `${tDef.name}: ${tDef.desc}`;
-            if (tDef.icon) {
-                const tImg = document.createElement('img');
-                tImg.src = tDef.icon;
-                tImg.className = 'treasure-slot-icon';
-                tImg.onerror = function () { this.style.display = 'none'; };
-                tSlot.appendChild(tImg);
-            } else {
-                tSlot.textContent = tDef.name.charAt(0);
-            }
-        } else {
-            tSlot.textContent = '+';
-            tSlot.classList.add('empty');
-        }
-        // 点击格子弹出宝物选择
-        // tSlot.onclick = () => showTreasureSelectPopup(charId, i);
-        tSlot.onclick = () => showTreasureSelectPopup(instanceId, i);
-        treasureGrid.appendChild(tSlot);
-    }
+    // 使用新系统的 getCharEquippedTreasures
+	const defs = getTreasureDefs();
+		// 改为（确保返回完整有序数组）：
+	const equippedIds = [];
+	window.ensureCharTreasureSlots();
+	const slots = window.charTreasureSlots[instanceId];
+	for (let i = 0; i < 6; i++) {
+		equippedIds[i] = slots ? slots[i] : null;
+	}
+
+	for (let i = 0; i < 6; i++) {
+		const tSlot = document.createElement('div');
+		tSlot.className = 'treasure-slot';
+		tSlot.dataset.slotIndex = i;
+		
+		const tId = equippedIds[i];
+		if (tId && window.treasureInventory && window.treasureInventory[tId]) {
+			const invData = window.treasureInventory[tId];
+			const tDef = defs[invData.baseId];
+			if (tDef) {
+				tSlot.title = `${tDef.name}: ${tDef.desc || ''}`;
+				if (tDef.icon) {
+					const tImg = document.createElement('img');
+					tImg.src = tDef.icon;
+					tImg.className = 'treasure-slot-icon';
+					tImg.onerror = function() { this.style.display = 'none'; };
+					tSlot.appendChild(tImg);
+				} else {
+					tSlot.textContent = tDef.name.charAt(0);
+				}
+			} else {
+				tSlot.textContent = '+';
+				tSlot.classList.add('empty');
+			}
+		} else {
+			tSlot.textContent = '+';
+			tSlot.classList.add('empty');
+		}
+		
+		tSlot.onclick = () => showTreasureSelectPopup(instanceId, i);
+		treasureGrid.appendChild(tSlot);
+	}
+
     leftDiv.appendChild(treasureGrid);
 
     // 右侧：属性信息
@@ -800,29 +1007,30 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
     highlightTeamSlot(slotIndex);
 }
 
-// ====== 宝物选择弹窗 ======
 /**
- * 宝物选择弹窗（修改版，支持 instanceId）
- * @param {string} instanceId - 角色实例ID
+ * 宝物选择弹窗（适配宝物实例化系统）
+ * @param {string} charInstanceId - 角色实例ID
  * @param {number} slotIndex - 宝物槽位 (0-5)
  */
-function showTreasureSelectPopup(instanceId, slotIndex) {
+function showTreasureSelectPopup(charInstanceId, slotIndex) {
     const existing = document.getElementById('treasure-select-popup');
     if (existing) existing.remove();
 
-    // 从 charBagData 获取角色基本ID（用于显示和操作宝物定义）
-    const instData = window.charBagData && window.charBagData[instanceId];
-    const charId = instData ? instData.charId : instanceId; // 兼容旧数据
+    const instData = window.charBagData && window.charBagData[charInstanceId];
+    const charId = instData ? instData.charId : charInstanceId;
     const char = characterList[charId];
     if (!char) {
         toast('角色数据异常', 'error');
         return;
     }
 
-    const treasureDefs = gameData.getTreasureList();
-    const treasureBag = gameData.getTreasureInventory();
-    // 使用 instanceId 获取当前宝物
-    const currentTreasureId = gameData.getCharTreasures(instanceId)[slotIndex];
+    const defs = getTreasureDefs();
+    const allInstances = getTreasureInstanceList();
+    const equippedIds = getCharEquippedTreasures(charInstanceId);
+    const currentTreasureId = equippedIds[slotIndex] || null;
+	// const equippedIds = window.getCharEquippedTreasures ? window.getCharEquippedTreasures(instanceId) : [];
+	// const currentTreasureId = equippedIds[slotIndex] || null; // 直接索引
+    const currentDef = currentTreasureId ? defs[window.treasureInventory[currentTreasureId]?.baseId] : null;
 
     const overlay = document.createElement('div');
     overlay.className = 'ybrpg-confirm-overlay';
@@ -831,7 +1039,7 @@ function showTreasureSelectPopup(instanceId, slotIndex) {
     const popup = document.createElement('div');
     popup.className = 'treasure-select-popup';
 
-    // 标题（显示角色名和槽位）
+    // 标题
     const title = document.createElement('div');
     title.className = 'treasure-select-title';
     title.textContent = `选择宝物 - ${char.name}`;
@@ -840,149 +1048,108 @@ function showTreasureSelectPopup(instanceId, slotIndex) {
     // 当前槽位信息
     const slotInfo = document.createElement('div');
     slotInfo.className = 'treasure-slot-info';
-    if (currentTreasureId && treasureDefs[currentTreasureId]) {
-        slotInfo.textContent = `当前: ${treasureDefs[currentTreasureId].name}`;
-    } else {
-        slotInfo.textContent = '当前: 空';
-    }
+    slotInfo.textContent = currentDef ? `当前: ${currentDef.name}` : '当前: 空';
     popup.appendChild(slotInfo);
 
-    // 卸下按钮（如果当前有宝物）
+    // 卸下按钮
     if (currentTreasureId) {
         const unequipBtn = document.createElement('button');
         unequipBtn.className = 'treasure-select-btn unequip';
         unequipBtn.textContent = '卸下宝物';
         unequipBtn.onclick = () => {
-            gameData.equipTreasure(instanceId, slotIndex, null);
-            syncTreasureEquipData();
+            equipTreasure(charInstanceId, slotIndex, null);
             overlay.remove();
-            // 刷新角色详情
-            const idx = window._selectedSlotIndex;
-            if (idx !== null && idx !== undefined) {
-                const teamInstId = window.currentTeam[idx];
-                if (teamInstId && window.charBagData && window.charBagData[teamInstId]) {
-                    const teamCharId = window.charBagData[teamInstId].charId;
-                    showTeamCharInfo(idx, teamInstId, teamCharId);
-                }
-            }
+            refreshTreasureUI(charInstanceId);
+            SaveManager.autoSave();
             toast('已卸下宝物', 'success');
         };
         popup.appendChild(unequipBtn);
-        SaveManager.autoSave();
-
     }
 
-    // 宝物列表滚动区
+    // 宝物列表
     const scrollDiv = document.createElement('div');
     scrollDiv.className = 'treasure-select-scroll';
 
-    // 只遍历背包中已有的宝物
-    const treasureIds = Object.keys(treasureBag).filter(tid =>
-        treasureBag[tid] && treasureBag[tid].count > 0 && treasureDefs[tid]
-    );
+    // 只显示未装备且属于该角色或未装备的宝物
+    const available = allInstances.filter(item => {
+        if (item.instanceId === currentTreasureId) return true; // 当前装备的
+        if (item.equippedBy && item.equippedBy !== charInstanceId) return false; // 被其他人装备的
+        return true; // 未装备的
+    });
 
-    treasureIds.forEach(tid => {
-        const tDef = treasureDefs[tid];
-        const isEquipped = tid === currentTreasureId;
+    if (available.length === 0) {
+        const emptyTip = document.createElement('div');
+        emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
+        emptyTip.textContent = '背包中暂无可用宝物';
+        scrollDiv.appendChild(emptyTip);
+    }
 
-        // 检查该角色（通过 instanceId）是否已在其他槽位装备了同样的宝物
-        const charTreasures = gameData.getCharTreasures(instanceId);
-        const alreadyEquippedInOtherSlot = charTreasures.some((t, i) => t === tid && i !== slotIndex);
-
-        // 可装备条件：宝物可装备（有剩余数量）且未在当前槽位或其他槽位装备
-        const remaining = (treasureBag[tid].count || 0) - (treasureBag[tid].equippedBy ? treasureBag[tid].equippedBy.length : 0);
-        const isAvailable = remaining > 0 && !isEquipped && !alreadyEquippedInOtherSlot;
+    available.forEach(item => {
+        const isEquipped = item.instanceId === currentTreasureId;
+        const isEquippedByOther = item.equippedBy && item.equippedBy !== charInstanceId;
 
         const row = document.createElement('div');
-        row.className = 'treasure-select-row' + (isEquipped ? ' current' : '') + (!isAvailable && !isEquipped ? ' unavailable' : '');
+        row.className = 'treasure-select-row' + (isEquipped ? ' current' : '') + (isEquippedByOther ? ' unavailable' : '');
 
         // 图标
         const iconDiv = document.createElement('div');
         iconDiv.className = 'treasure-select-icon';
-        if (tDef.icon) {
+        if (item.icon) {
             const img = document.createElement('img');
-            img.src = tDef.icon;
+            img.src = item.icon;
             img.className = 'treasure-icon-img';
-            img.onerror = function () {
+            img.onerror = function() {
                 this.style.display = 'none';
-                iconDiv.textContent = tDef.name.charAt(0);
+                iconDiv.textContent = item.name.charAt(0);
             };
             iconDiv.appendChild(img);
         } else {
-            iconDiv.textContent = tDef.name.charAt(0);
+            iconDiv.textContent = item.name.charAt(0);
         }
         row.appendChild(iconDiv);
 
-        // 名称和描述
+        // 信息
         const infoDiv = document.createElement('div');
         infoDiv.className = 'treasure-select-info';
         const nameEl = document.createElement('div');
         nameEl.className = 'treasure-select-name';
-        nameEl.textContent = tDef.name + (remaining > 1 ? ` ×${remaining}` : '');
+        nameEl.textContent = item.name;
         infoDiv.appendChild(nameEl);
         const descEl = document.createElement('div');
         descEl.className = 'treasure-select-desc';
-        descEl.textContent = tDef.desc;
+        descEl.textContent = item.desc  || '暂无描述';
         infoDiv.appendChild(descEl);
-
-        // 如果宝物已被其他角色装备，显示装备者名字（注意：equippedBy 现在存储的是 instanceId）
-        if (treasureBag[tid] && treasureBag[tid].equippedBy && treasureBag[tid].equippedBy.length > 0) {
-            const equippedByEl = document.createElement('div');
-            equippedByEl.className = 'treasure-equipped-by';
-            // 转换为可读名称（从 instanceId 获取 charId 再获取名字）
-            const equipperNames = treasureBag[tid].equippedBy.map(instId => {
-                const inst = window.charBagData && window.charBagData[instId];
-                const cCharId = inst ? inst.charId : instId;
-                const cData = characterList[cCharId];
-                return cData ? cData.name : cCharId;
-            });
-            equippedByEl.textContent = `装备者: ${equipperNames.join(', ')}`;
-            infoDiv.appendChild(equippedByEl);
+        if (isEquippedByOther) {
+            const eqInfo = document.createElement('div');
+            eqInfo.className = 'treasure-equipped-by';
+            eqInfo.textContent = '已被其他角色装备';
+            infoDiv.appendChild(eqInfo);
         }
-
         row.appendChild(infoDiv);
 
-        // 选择按钮
-        const selectBtn = document.createElement('button');
-        selectBtn.className = 'treasure-select-btn';
+        // 按钮
+        const btn = document.createElement('button');
+        btn.className = 'treasure-select-btn';
         if (isEquipped) {
-            selectBtn.textContent = '已装备';
-            selectBtn.disabled = true;
-        } else if (isAvailable) {
-            selectBtn.textContent = '装备';
-            selectBtn.onclick = (e) => {
-                e.stopPropagation();
-                gameData.equipTreasure(instanceId, slotIndex, tid);
-                syncTreasureEquipData();
-                overlay.remove();
-                // 刷新角色详情
-                const idx = window._selectedSlotIndex;
-                if (idx !== null && idx !== undefined) {
-                    const teamInstId = window.currentTeam[idx];
-                    if (teamInstId && window.charBagData && window.charBagData[teamInstId]) {
-                        const teamCharId = window.charBagData[teamInstId].charId;
-                        showTeamCharInfo(idx, teamInstId, teamCharId);
-                    }
-                }
-                toast(`已装备【${tDef.name}】`, 'success');
-                SaveManager.autoSave();
-            };
+            btn.textContent = '已装备';
+            btn.disabled = true;
+        } else if (isEquippedByOther) {
+            btn.textContent = '不可用';
+            btn.disabled = true;
         } else {
-            selectBtn.textContent = '不可用';
-            selectBtn.disabled = true;
+            btn.textContent = '装备';
+            btn.onclick = () => {
+                equipTreasure(charInstanceId, slotIndex, item.instanceId);
+                overlay.remove();
+                refreshTreasureUI(charInstanceId);
+                SaveManager.autoSave();
+                toast(`已装备【${item.name}】`, 'success');
+            };
         }
-        row.appendChild(selectBtn);
+        row.appendChild(btn);
 
         scrollDiv.appendChild(row);
     });
-
-    // 如果没有可用宝物
-    if (treasureIds.length === 0) {
-        const emptyTip = document.createElement('div');
-        emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
-        emptyTip.textContent = '背包中暂无宝物';
-        scrollDiv.appendChild(emptyTip);
-    }
 
     popup.appendChild(scrollDiv);
 
@@ -1001,49 +1168,180 @@ function showTreasureSelectPopup(instanceId, slotIndex) {
     };
 }
 
+/**
+ * 刷新宝物UI（包括队伍视图中的宝物显示）
+ * @param {string} charInstanceId - 角色实例ID
+ */
+function refreshTreasureUI(charInstanceId) {
+    // 如果队伍视图正在显示，刷新之
+    const teamView = document.getElementById('team-view');
+    if (teamView && teamView.style.display !== 'none') {
+        const idx = window._selectedSlotIndex;
+        if (idx !== null && idx !== undefined) {
+            const instId = window.currentTeam[idx];
+            if (instId) {
+                const instData = window.charBagData && window.charBagData[instId];
+                const charId = instData ? instData.charId : instId;
+                showTeamCharInfo(idx, instId, charId);
+            }
+        }
+    }
+}
+
+
 
 /**
- * 同步宝物装备数据到 window（供战斗系统读取）
- * 已改为使用 instanceId 作为键
+ * 同步宝物数据（适配新系统）
+ * 主要用于从旧数据格式迁移到宝物实例化系统
  */
 function syncTreasureEquipData() {
-    if (!window.treasureEquipData) window.treasureEquipData = {};
-    if (!window.treasureBagData) window.treasureBagData = {};
-
-    // 从 gameData 同步所有宝物装备数据（此时 _treasures 的键应为 instanceId）
-    window.treasureEquipData = JSON.parse(JSON.stringify(gameData.data._treasures || {}));
-
-    // 获取宝物背包数据
-    const treasureBag = gameData.getTreasureInventory();
-    const treasureDefs = gameData.getTreasureList();
-
-    // 初始化所有宝物的 equippedBy 为空数组
-    Object.keys(treasureDefs).forEach(tid => {
-        if (!treasureBag[tid]) return;
-        treasureBag[tid].equippedBy = [];
-    });
-
-    // 遍历所有角色的装备（键为 instanceId），记录装备者
-    Object.keys(window.treasureEquipData).forEach(instId => {
-        const treasures = window.treasureEquipData[instId];
-        if (!treasures) return;
-        treasures.forEach(tid => {
-            if (!tid) return;
-            if (!treasureBag[tid]) {
-                treasureBag[tid] = { count: 0, equippedBy: [] };
-            }
-            if (!treasureBag[tid].equippedBy) {
-                treasureBag[tid].equippedBy = [];
-            }
-            // 存储 instanceId 而不是 charId
-            if (!treasureBag[tid].equippedBy.includes(instId)) {
-                treasureBag[tid].equippedBy.push(instId);
+    // 如果已经安装了新系统，且已有宝物实例数据，则不需要做额外同步
+    if (window.treasureInventory && Object.keys(window.treasureInventory).length > 0) {
+        return;
+    }
+    
+    // 初始化新系统
+    window.ensureTreasureInventory();
+    
+    // ====== 1. 从旧格式 window.treasureBagData 迁移 ======
+    if (window.treasureBagData && Object.keys(window.treasureBagData).length > 0) {
+        console.log('[宝物迁移] 检测到旧格式 window.treasureBagData，正在迁移...');
+        
+        // 旧格式: { treasureBaseId: { count: number, equippedBy: [charInstanceId, ...] } }
+        Object.entries(window.treasureBagData).forEach(([baseId, data]) => {
+            if (!data || !data.count) return;
+            
+            // 创建指定数量的实例
+            for (let i = 0; i < data.count; i++) {
+                const instanceId = window.generateTreasureInstanceId(baseId);
+                const equippedBy = (data.equippedBy && data.equippedBy.length > i) 
+                    ? data.equippedBy[i] 
+                    : null;
+                    
+                window.treasureInventory[instanceId] = {
+                    baseId: baseId,
+                    equippedBy: equippedBy
+                };
             }
         });
-    });
-
-    window.treasureBagData = JSON.parse(JSON.stringify(treasureBag));
+        
+        // 清除旧数据，避免重复迁移
+        window.treasureBagData = {};
+        console.log('[宝物迁移] 从 window.treasureBagData 迁移完成');
+    }
+    
+    // ====== 2. 从 gameData.data._treasureBag 迁移 ======
+    if (gameData && gameData.data && gameData.data._treasureBag) {
+        const oldBag = gameData.data._treasureBag;
+        if (Object.keys(oldBag).length > 0) {
+            console.log('[宝物迁移] 检测到 gameData.data._treasureBag，正在迁移...');
+            
+            // 旧格式: { treasureBaseId: { count: number, equippedBy: [charInstanceId, ...] } }
+            Object.entries(oldBag).forEach(([baseId, data]) => {
+                if (!data || !data.count) return;
+                
+                // 创建指定数量的实例
+                for (let i = 0; i < data.count; i++) {
+                    const instanceId = window.generateTreasureInstanceId(baseId);
+                    const equippedBy = (data.equippedBy && data.equippedBy.length > i) 
+                        ? data.equippedBy[i] 
+                        : null;
+                        
+                    // 如果 window.treasureInventory 中已有该实例，跳过
+                    if (window.treasureInventory[instanceId]) continue;
+                    
+                    window.treasureInventory[instanceId] = {
+                        baseId: baseId,
+                        equippedBy: equippedBy
+                    };
+                }
+            });
+            
+            // 清除旧数据，避免重复迁移
+            delete gameData.data._treasureBag;
+            console.log('[宝物迁移] 从 gameData.data._treasureBag 迁移完成');
+        }
+    }
+    
+    // ====== 3. 从 gameData.data._treasures（旧装备槽位数据）迁移 ======
+    if (gameData && gameData.data && gameData.data._treasures) {
+        const oldTreasures = gameData.data._treasures;
+        if (Object.keys(oldTreasures).length > 0) {
+            console.log('[宝物迁移] 检测到旧装备槽位数据 gameData.data._treasures，正在迁移...');
+            
+            // 旧格式: { charInstanceId: [treasureBaseId, null, ...] }  // 6个槽位
+            Object.entries(oldTreasures).forEach(([charInstId, slotArray]) => {
+                if (!Array.isArray(slotArray)) return;
+                
+                slotArray.forEach((treasureBaseId, slotIndex) => {
+                    if (!treasureBaseId) return;
+                    
+                    // 查找是否有未装备的同名宝物实例
+                    const available = Object.entries(window.treasureInventory || {}).find(
+                        ([, inv]) => inv.baseId === treasureBaseId && !inv.equippedBy
+                    );
+                    
+                    if (available) {
+                        // 直接为角色装备该实例
+                        window.treasureInventory[available[0]].equippedBy = charInstId;
+                    } else {
+                        // 如果没有可用实例，创建一个新实例并装备
+                        const instanceId = window.generateTreasureInstanceId(treasureBaseId);
+                        window.treasureInventory[instanceId] = {
+                            baseId: treasureBaseId,
+                            equippedBy: charInstId
+                        };
+                    }
+                });
+            });
+            
+            // 清除旧数据
+            delete gameData.data._treasures;
+            console.log('[宝物迁移] 从旧装备槽位数据迁移完成');
+        }
+    }
+    
+    // ====== 4. 从 window.treasureEquipData（旧装备槽位数据）迁移 ======
+    if (window.treasureEquipData && Object.keys(window.treasureEquipData).length > 0) {
+        console.log('[宝物迁移] 检测到旧格式 window.treasureEquipData，正在迁移...');
+        
+        // 旧格式: { charInstanceId: [treasureBaseId, null, ...] }
+        Object.entries(window.treasureEquipData).forEach(([charInstId, slotArray]) => {
+            if (!Array.isArray(slotArray)) return;
+            
+            slotArray.forEach((treasureBaseId, slotIndex) => {
+                if (!treasureBaseId) return;
+                
+                // 查找是否有未装备的同名宝物实例
+                const available = Object.entries(window.treasureInventory || {}).find(
+                    ([, inv]) => inv.baseId === treasureBaseId && !inv.equippedBy
+                );
+                
+                if (available) {
+                    window.treasureInventory[available[0]].equippedBy = charInstId;
+                } else {
+                    // 创建新实例并装备
+                    const instanceId = window.generateTreasureInstanceId(treasureBaseId);
+                    window.treasureInventory[instanceId] = {
+                        baseId: treasureBaseId,
+                        equippedBy: charInstId
+                    };
+                }
+            });
+        });
+        
+        // 清除旧数据
+        window.treasureEquipData = {};
+        console.log('[宝物迁移] 从 window.treasureEquipData 迁移完成');
+    }
+    
+    // ====== 5. 如果完全没有旧数据，确保有空的宝物背包 ======
+    if (!window.treasureInventory || Object.keys(window.treasureInventory).length === 0) {
+        window.treasureInventory = {};
+        console.log('[宝物迁移] 未检测到旧数据，初始化空宝物背包');
+    }
 }
+
 
 
 // 高亮选中的方格
@@ -3492,8 +3790,8 @@ function renderDungeonView(container, selectedChapterKey = null) {
 // 新增: 难度缩放配置
 const DIFFICULTY_SCALE = {
     normal: { hp: 1.0, atk: 1.0, def: 1.0, gold: 1.0, name: '普通', buffs: [], treasures: [], },
-    nightmare: { hp: 1.5, atk: 1.3, def: 1.3, gold: 1.5, name: '噩梦', buffs: [], treasures: ['luoshen'], },
-    hell: { hp: 2.0, atk: 1.6, def: 1.6, gold: 2.0, name: '地狱', buffs: [], treasures: ['luoshen', 'shelie'], }
+    nightmare: { hp: 1.5, atk: 1.3, def: 1.3, gold: 1.5, name: '噩梦', buffs: [], treasures: [], },
+    hell: { hp: 2.0, atk: 1.6, def: 1.6, gold: 2.0, name: '地狱', buffs: [], treasures: [], }
 };
 // 根据难度获取事件数据（支持噩梦和地狱难度）
 function getEventForDifficulty(chapterKey, eventId, difficulty) {
@@ -4607,20 +4905,16 @@ function buyevent(item) {
 
         }
     }
-    else if (item.type === 'treasure') {
-        for (var i = 0; i < (item.number || 1); i++) {
-            // 宝物购买逻辑
-            if (typeof gameData.addTreasure === 'function') {
-                gameData.addTreasure(item.id, 1);
-                syncTreasureEquipData();
-                toast(`购买了宝物【${item.name}】`, 'success');
-            } else {
-                // 如果没有 gameData 接口，暂时仅提示
-                toast('宝物系统暂未实装', 'info');
-            }
-
-        }
-    }
+	
+	else if (item.type === 'treasure') {
+		// 新逻辑：创建宝物实例
+		const ids = addTreasureInstance(item.id, item.number || 1);
+		if (ids.length > 0) {
+			toast(`购买了宝物【${item.name}】×${ids.length}`, 'success');
+		} else {
+			toast('宝物系统异常', 'error');
+		}
+	}
 
     // 4. 扣除金币 (只扣一次)
     window.gameGold -= item.price;
@@ -4899,6 +5193,20 @@ function initNewGame() {
     window.treasureBagData = {}; // 宝物背包数据
     window.autoBattle = false;
 
+    // 初始化宝物背包
+    window.ensureTreasureInventory();
+	// 在 initNewGame 函数中，初始化队伍数据后：
+	window.initCharTreasureSlots = function() {
+		window.charTreasureSlots = window.charTreasureSlots || {};
+		// 为每个有实例的角色初始化6个空槽位
+		if (window.charBagData) {
+			Object.keys(window.charBagData).forEach(instId => {
+				if (!window.charTreasureSlots[instId]) {
+					window.charTreasureSlots[instId] = [null, null, null, null, null, null];
+				}
+			});
+		}
+	};
     // 开局福利：随机获得1名武将
     const allCharIds = Object.keys(characterList);
     const shuffledAll = [...allCharIds].sort(() => Math.random() - 0.5);
@@ -5054,43 +5362,50 @@ const SaveManager = {
 
     // 保存到指定槽位（同步 GameData 和 window 变量）
     saveToSlot(slot) {
-        // 确保 gameData.data 完整
-        if (!gameData.data || !gameData.data.team) {
-            gameData.data = gameData.getDefaultData();
-        }
-        // 同步 GameData 数据
-        gameData.data.team.members = (window.currentTeam || []).filter(Boolean);
-        gameData.data.bag.gold = window.gameGold || 1000;
-        gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData || {}));
-        gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
-        gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
-        gameData.data.baseInfo.saveName = `存档${slot}`;
-        gameData.data.baseInfo.saveTime = new Date().toISOString();
-
-        // 保存到 localStorage（索引0留给自动存档，手动存档从索引1开始）
-        gameData.save(slot);
-
-        // 同时保存 window 变量（兼容性）
-        const compatData = {
-            playerProgress: window.playerProgress || {},
-            currentTeam: window.currentTeam || [null, null, null, null, null, null],
-            currentDifficulty: window.currentDifficulty || 'normal',
-            shopMode: window.shopMode || 'normal',
-            shopData: window.shopData || { items: [], refreshCost: 50 },
-            gameGold: window.gameGold || 1000,
-            charBagData: window.charBagData || {},
-            treasureEquipData: window.treasureEquipData || {},
-            treasureBagData: window.treasureBagData || {},
-            autoBattle: window.autoBattle || false,
-            saveTime: new Date().toLocaleString(),
-            saveName: `存档${slot}`
-        };
-        localStorage.setItem(`ybrpg_save_${slot}`, JSON.stringify(compatData));
-
-        console.log(`已保存到槽位${slot}`);
-        return compatData;
-    },
-
+		// 确保 gameData.data 完整
+		if (!gameData.data || !gameData.data.team) {
+			gameData.data = gameData.getDefaultData();
+		}
+		// 同步 GameData 数据
+		gameData.data.team.members = (window.currentTeam || []).filter(Boolean);
+		gameData.data.bag.gold = window.gameGold || 1000;
+		// ========== 修复这一行 ==========
+		gameData.data._treasureInventory = JSON.parse(JSON.stringify(window.treasureInventory || {}));
+		// =================================
+		gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData || {}));
+		gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
+		gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
+		gameData.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));
+		gameData.data.baseInfo.saveName = `存档${slot}`;
+		gameData.data.baseInfo.saveTime = new Date().toISOString();
+	
+		// 保存到 localStorage
+		gameData.save(slot);
+		
+		// 同时保存 window 变量（兼容性）
+		const compatData = {
+			playerProgress: window.playerProgress || {},
+			currentTeam: window.currentTeam || [null, null, null, null, null, null],
+			currentDifficulty: window.currentDifficulty || 'normal',
+			shopMode: window.shopMode || 'normal',
+			shopData: window.shopData || { items: [], refreshCost: 50 },
+			gameGold: window.gameGold || 1000,
+			charTreasureSlots: window.charTreasureSlots || {},
+			
+			charBagData: window.charBagData || {},
+			treasureEquipData: window.treasureEquipData || {},
+			treasureBagData: window.treasureBagData || {},
+			autoBattle: window.autoBattle || false,
+			saveTime: new Date().toLocaleString(),
+			saveName: `存档${slot}`,
+			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {}))
+		};
+		localStorage.setItem(`ybrpg_save_${slot}`, JSON.stringify(compatData));
+		
+		console.log(`已保存到槽位${slot}`);
+		return compatData;
+	},
+	
     // 从指定槽位读取（同步到 GameData 和 window）
     loadFromSlot(slot) {
         // 使用 GameData 加载（索引0留给自动存档，手动存档从索引1开始）
@@ -5098,13 +5413,12 @@ const SaveManager = {
 
         // ========== 新增：迁移旧版宝物数据 ==========
         migrateTreasuresToInstanceId();  // 在 window 变量恢复前迁移
-
-        // 兼容旧格式或加载失败时使用 window 变量
-        const compatKey = `ybrpg_save_${slot}`;
-        const compatData = localStorage.getItem(compatKey);
-
-        if (compatData) {
-            const parsed = JSON.parse(compatData);
+		
+		const compatKey = `ybrpg_save_${slot}`;
+		const compatData = localStorage.getItem(compatKey);
+	
+		if (compatData) {
+			const parsed = JSON.parse(compatData);
 
             // 迁移逻辑：检查 charBagData 是否需要从 charId-key 迁移到 instanceId-key
             let charBag = parsed.charBagData || {};
@@ -5142,14 +5456,42 @@ const SaveManager = {
             window.shopData = parsed.shopData || { items: [], refreshCost: 50 };
             window.gameGold = parsed.gameGold || 1000;
             window.charBagData = charBag;
+			
+			window.charTreasureSlots = (data && data._charTreasureSlots) || parsed.charTreasureSlots || {};
             window.treasureEquipData = parsed.treasureEquipData || {};
             window.treasureBagData = parsed.treasureBagData || {};
             window.autoBattle = parsed.autoBattle || false;
+
             // 同步 window 变量回 gameData 内存
             gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData));
             gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData));
             gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData));
-        } else if (data) {
+			
+			// ========== 在解析完所有数据后，添加这一段 ==========
+			// 恢复宝物实例化数据
+			if (parsed._treasureInventory) {
+				window.treasureInventory = JSON.parse(JSON.stringify(parsed._treasureInventory));
+			} else {
+				// 如果没有新格式数据，尝试从旧格式迁移
+				window.ensureTreasureInventory();
+				// 如果有旧格式数据，执行迁移
+				if (parsed.treasureBagData && Object.keys(parsed.treasureBagData).length > 0) {
+					Object.entries(parsed.treasureBagData).forEach(([baseId, data]) => {
+						if (!data || !data.count) return;
+						for (let i = 0; i < data.count; i++) {
+							const instanceId = window.generateTreasureInstanceId(baseId);
+							const equippedBy = (data.equippedBy && data.equippedBy.length > i) 
+								? data.equippedBy[i] 
+								: null;
+							window.treasureInventory[instanceId] = {
+								baseId: baseId,
+								equippedBy: equippedBy
+							};
+						}
+					});
+				}
+			}
+		} else if (data) {
             // 如果只有 GameData 格式，从 GameData 恢复 window 变量
             window.currentTeam = [...(data.team?.members || []), ...Array(6).fill(null)].slice(0, 6);
             window.gameGold = data.bag?.gold || 1000;
@@ -5163,7 +5505,6 @@ const SaveManager = {
             const defaults = gameData.getDefaultData();
             gameData.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
         }
-
         // ========== 新增：同步宝物数据到 window ==========
         syncTreasureEquipData();
 
@@ -5217,21 +5558,25 @@ const SaveManager = {
         gameData.save(0);
 
         // 同时保存兼容格式
-        const compatData = {
-            playerProgress: window.playerProgress || {},
-            currentTeam: window.currentTeam || [null, null, null, null, null, null],
-            currentDifficulty: window.currentDifficulty || 'normal',
-            shopMode: window.shopMode || 'normal',
-            shopData: window.shopData || { items: [], refreshCost: 50 },
-            gameGold: window.gameGold || 1000,
-            charBagData: window.charBagData || {},
-            treasureEquipData: window.treasureEquipData || {},
-            treasureBagData: window.treasureBagData || {},
-            autoBattle: window.autoBattle || false,
-            saveTime: new Date().toLocaleString(),
-            saveName: '自动存档'
-        };
-        localStorage.setItem(SaveManager.AUTO_KEY, JSON.stringify(compatData));
+		const compatData = {
+			playerProgress: window.playerProgress || {},
+			currentTeam: window.currentTeam || [null, null, null, null, null, null],
+			currentDifficulty: window.currentDifficulty || 'normal',
+			shopMode: window.shopMode || 'normal',
+			shopData: window.shopData || { items: [], refreshCost: 50 },
+			gameGold: window.gameGold || 1000,
+			charBagData: window.charBagData || {},
+			treasureEquipData: window.treasureEquipData || {},
+			treasureBagData: window.treasureBagData || {},
+			autoBattle: window.autoBattle || false,
+			saveTime: new Date().toLocaleString(),
+			saveName: '自动存档',
+			// ========== 添加这一行 ==========
+			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {}))
+			// =============================
+		};
+		localStorage.setItem(SaveManager.AUTO_KEY, JSON.stringify(compatData));
+        
 
         console.log('[自动存档] 已保存');
     },
@@ -5254,8 +5599,8 @@ const SaveManager = {
             const compatKey = SaveManager.AUTO_KEY;
             const compatData = localStorage.getItem(compatKey);
             if (compatData) {
-                const parsed = JSON.parse(compatData);
-
+				const parsed = JSON.parse(compatData);
+				
                 // 迁移逻辑同 loadFromSlot
                 let charBag = parsed.charBagData || {};
                 if (charBag && typeof charBag === 'object') {
@@ -5295,14 +5640,37 @@ const SaveManager = {
                 window.treasureEquipData = parsed.treasureEquipData || {};
                 window.treasureBagData = parsed.treasureBagData || {};
                 window.autoBattle = parsed.autoBattle || false;
+				// ========== 在解析完所有数据后，添加这一段 ==========
+				// 恢复宝物实例化数据
+				if (parsed._treasureInventory) {
+					window.treasureInventory = JSON.parse(JSON.stringify(parsed._treasureInventory));
+				} else {
+					window.ensureTreasureInventory();
+					// 如果有旧格式数据，执行迁移
+					if (parsed.treasureBagData && Object.keys(parsed.treasureBagData).length > 0) {
+						Object.entries(parsed.treasureBagData).forEach(([baseId, data]) => {
+							if (!data || !data.count) return;
+							for (let i = 0; i < data.count; i++) {
+								const instanceId = window.generateTreasureInstanceId(baseId);
+								const equippedBy = (data.equippedBy && data.equippedBy.length > i) 
+									? data.equippedBy[i] 
+									: null;
+								window.treasureInventory[instanceId] = {
+									baseId: baseId,
+									equippedBy: equippedBy
+								};
+							}
+						});
+					}
+				}
             } else {
-                window.currentTeam = [...(data.team?.members || []), ...Array(6).fill(null)].slice(0, 6);
-                window.gameGold = data.bag?.gold || 1000;
-                window.charBagData = data._charBag || {};
-                window.treasureEquipData = data._treasures || {};
-                window.treasureBagData = data._treasureBag || {};
-                window.autoBattle = parsed.autoBattle || false;
-            }
+				window.currentTeam = [...(data.team?.members || []), ...Array(6).fill(null)].slice(0, 6);
+				window.gameGold = data.bag?.gold || 1000;
+				window.charBagData = data._charBag || {};
+				window.treasureEquipData = data._treasures || {};
+				window.treasureBagData = data._treasureBag || {};
+				window.autoBattle = window.autoBattle || false;  // ✅ 使用 window.autoBattle 保持原值
+			}
 
             // 同步到 gameData 内存（确保结构完整）
             const defaults = gameData.getDefaultData();
@@ -7032,6 +7400,293 @@ function syncTeamTupoLists() {
         // SaveManager.autoSave(); 
     }
 }
+
+
+
+
+
+
+
+// ====== 宝物实例化系统（重写） ======
+
+/**
+ * 获取宝物定义列表（从 TREASURE_DEFS）
+ */
+window.getTreasureDefs = function() {
+    return window.TREASURE_DEFS || TREASURE_DEFS || {};
+};
+
+/**
+ * 生成宝物实例ID
+ * @param {string} baseId - 宝物基础ID
+ */
+window.generateTreasureInstanceId = function(baseId) {
+    return `${baseId}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+};
+
+/**
+ * 初始化宝物背包（如果不存在）
+ */
+window.ensureTreasureInventory = function() {
+    if (!window.treasureInventory) {
+        window.treasureInventory = {}; // 键: instanceId, 值: { baseId, equippedBy: null | instanceId }
+    }
+};
+
+/**
+ * 获取所有宝物实例列表
+ * @returns {Array} 宝物实例数组 [{ instanceId, baseId, ...defProps }]
+ */
+window.getTreasureInstanceList = function() {
+    ensureTreasureInventory();
+    const defs = getTreasureDefs();
+    return Object.entries(window.treasureInventory).map(([instanceId, data]) => {
+        const def = defs[data.baseId];
+        return def ? { instanceId, baseId: data.baseId, ...def, equippedBy: data.equippedBy } : null;
+    }).filter(Boolean);
+};
+
+/**
+ * 获取指定角色的已装备宝物列表（有序，按槽位索引）
+ * @param {string} instanceId - 角色实例ID
+ * @returns {Array} 宝物实例ID数组，长度可能不足6
+ */
+window.getCharEquippedTreasures = function(instanceId) {
+    window.ensureCharTreasureSlots(); // 确保数据结构存在
+    const slots = window.charTreasureSlots[instanceId];
+    return slots ? [...slots] : [null, null, null, null, null, null];
+};
+
+/**
+ * 确保 charTreasureSlots 数据结构存在
+ */
+window.ensureCharTreasureSlots = function() {
+    if (!window.charTreasureSlots) {
+        window.charTreasureSlots = {};
+    }
+    // 为每个有实例的角色初始化6个空槽位
+    if (window.charBagData) {
+        Object.keys(window.charBagData).forEach(instId => {
+            if (!window.charTreasureSlots[instId]) {
+                window.charTreasureSlots[instId] = [null, null, null, null, null, null];
+            }
+        });
+    }
+};
+
+/**
+ * 为角色装备/卸下宝物（修复版）
+ * @param {string} charInstanceId - 角色实例ID
+ * @param {number} slotIndex - 宝物槽位 (0-5)
+ * @param {string|null} treasureInstanceId - 宝物实例ID，传 null 为卸下
+ */
+window.equipTreasure = function(charInstanceId, slotIndex, treasureInstanceId) {
+    window.ensureTreasureInventory();
+    window.ensureCharTreasureSlots();
+
+    // 1. 校验参数
+    if (slotIndex < 0 || slotIndex > 5) {
+        console.warn(`无效的宝物槽位索引: ${slotIndex}`);
+        return;
+    }
+
+    // 2. 【关键修复】直接操作槽位
+    const currentSlots = window.charTreasureSlots[charInstanceId];
+    if (!currentSlots) {
+        console.warn(`角色实例 ${charInstanceId} 没有初始化宝物槽位`);
+        return;
+    }
+
+    // 3. 如果该槽位已有宝物，先卸下它（清除 equippedBy）
+    const oldTreasureId = currentSlots[slotIndex];
+    if (oldTreasureId && window.treasureInventory[oldTreasureId]) {
+        window.treasureInventory[oldTreasureId].equippedBy = null;
+    }
+
+    // 4. 装备新宝物
+    if (treasureInstanceId) {
+        const newTreasureData = window.treasureInventory[treasureInstanceId];
+        if (!newTreasureData) {
+            console.warn(`宝物实例 ${treasureInstanceId} 不存在`);
+            return;
+        }
+        // 如果新宝物之前被装备在别人身上，先卸下它
+        if (newTreasureData.equippedBy && newTreasureData.equippedBy !== charInstanceId) {
+            const oldOwnerSlots = window.charTreasureSlots[newTreasureData.equippedBy];
+            if (oldOwnerSlots) {
+                const oldIndex = oldOwnerSlots.indexOf(treasureInstanceId);
+                if (oldIndex !== -1) {
+                    oldOwnerSlots[oldIndex] = null;
+                }
+            }
+        }
+        // 设置新宝物的主人
+        newTreasureData.equippedBy = charInstanceId;
+    }
+
+    // 5. 更新槽位
+    currentSlots[slotIndex] = treasureInstanceId;
+
+    // 6. 更新 window.treasureInventory 中旧宝物的 equippedBy 为 null
+    // 注意：步骤3已经处理了旧宝物，步骤4处理了新宝物的旧主人
+    // 但是需要额外处理：如果新宝物 == 旧宝物（同一宝物被重新装备到同一槽位）
+    if (oldTreasureId === treasureInstanceId) {
+        // 如果相同，实际上没有变化，不用处理
+    } else {
+        // 如果新宝物之前装备在当前角色的其他槽位上，需要清除那个槽位
+        if (treasureInstanceId) {
+            const otherIndex = currentSlots.indexOf(treasureInstanceId);
+            if (otherIndex !== -1 && otherIndex !== slotIndex) {
+                currentSlots[otherIndex] = null;
+            }
+        }
+    }
+
+    // 7. 自动保存
+    if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+        SaveManager.autoSave();
+    }
+};
+
+/**
+ * 添加宝物到背包（创建实例）
+ * @param {string} baseId - 宝物基础ID (如 'lianpo')
+ * @param {number} count - 数量，默认1
+ * @returns {string[]} 创建的实例ID数组
+ */
+window.addTreasureInstance = function(baseId, count = 1) {
+    ensureTreasureInventory();
+    const defs = getTreasureDefs();
+    if (!defs[baseId]) {
+        console.warn(`宝物 ${baseId} 定义不存在`);
+        return [];
+    }
+    
+    const createdIds = [];
+    for (let i = 0; i < count; i++) {
+        const instanceId = generateTreasureInstanceId(baseId);
+        window.treasureInventory[instanceId] = {
+            baseId: baseId,
+            equippedBy: null
+        };
+        createdIds.push(instanceId);
+    }
+    return createdIds;
+};
+
+/**
+ * 移除宝物实例
+ * @param {string} instanceId - 宝物实例ID
+ */
+window.removeTreasureInstance = function(instanceId) {
+    ensureTreasureInventory();
+    if (window.treasureInventory[instanceId]) {
+        delete window.treasureInventory[instanceId];
+        return true;
+    }
+    return false;
+};
+
+/**
+ * 获取宝物的属性加成（用于战斗时合并）
+ * @param {string} instanceId - 宝物实例ID
+ * @returns {Object} { atk: 0, def: 0, hp: 0, spe: 0 }
+ */
+window.getTreasureStats = function(instanceId) {
+    ensureTreasureInventory();
+    const data = window.treasureInventory[instanceId];
+    if (!data) return { atk: 0, def: 0, hp: 0, spe: 0 };
+    
+    const defs = getTreasureDefs();
+    const def = defs[data.baseId];
+    if (!def) return { atk: 0, def: 0, hp: 0, spe: 0 };
+    
+    return {
+        atk: def.atk || 0,
+        def: def.def || 0,
+        hp: def.hp || 0,
+        spe: def.spe || 0
+    };
+};
+
+/**
+ * 合并宝物属性到角色属性（战斗前调用）
+ * @param {Object} unit - 角色对象（包含 instanceId）
+ */
+window.applyTreasureStatsToUnit = function(unit) {
+    if (!unit || !unit.instanceId) return;
+    
+    const equippedTreasureIds = getCharEquippedTreasures(unit.instanceId);
+    let totalAtk = 0, totalDef = 0, totalHp = 0, totalSpe = 0;
+    
+    equippedTreasureIds.forEach(tid => {
+        const stats = getTreasureStats(tid);
+        totalAtk += stats.atk;
+        totalDef += stats.def;
+        totalHp += stats.hp;
+        totalSpe += stats.spe;
+    });
+    
+    // 应用加成（注意：这些是固定值加成，不是百分比）
+    unit.atk = (unit.atk || 0) + totalAtk;
+    unit.def = (unit.def || 0) + totalDef;
+    unit.hp = (unit.hp || 0) + totalHp;
+    unit.spe = (unit.spe || 0) + totalSpe;
+    
+    // 确保最大血量同步
+    unit.maxHp = unit.hp;
+    
+    return unit;
+};
+
+/**
+ * 更新 buildPlayerTeamForBattle 以应用宝物属性
+ */
+window.originalBuildPlayerTeamForBattle = window.buildPlayerTeamForBattle;
+window.buildPlayerTeamForBattle = function() {
+    const team = (window.originalBuildPlayerTeamForBattle || function() {
+        return (window.currentTeam || []).map(instanceId => {
+            const instData = window.charBagData && window.charBagData[instanceId];
+            if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] };
+            const charId = instData.charId || instanceId;
+            const base = characterList[charId];
+            return {
+                id: charId,
+                instanceId: instanceId,
+                name: base ? base.name : charId,
+                hp: instData.hp || (base ? base.hp : 0),
+                atk: instData.atk || (base ? base.atk : 0),
+                def: instData.def || (base ? base.def : 0),
+                spe: instData.spe || (base ? base.spe : 0),
+                skills: instData.skills || (base ? base.skills : []),
+                buff: instData.buff || [],
+                rank: instData.rank || (base ? base.rank : 'common'),
+                tupolevel: instData.tupolevel || 0,
+                tupoList: instData.tupoList || (base ? base.tupoList : []),
+            };
+        });
+    })();
+    
+    // 应用宝物属性加成
+    team.forEach(unit => {
+        if (unit && unit.instanceId) {
+            applyTreasureStatsToUnit(unit);
+        }
+    });
+    
+    return team;
+};
+
+
+
+
+
+
+
+
+
+
+
 /**
  * 
  * 1  初始化时攻击+100固定数值
