@@ -2080,7 +2080,9 @@ function renderBagView(container) {
     container.innerHTML = '';
 
 
-
+	// 在 renderBagView 函数开头添加
+	const defs = window.getTreasureDefs();
+	window.ensureCharTreasureSlots();
     // 当前选中的子标签
     if (!window.bagTab) window.bagTab = 'char';
 
@@ -2217,22 +2219,56 @@ function renderBagView(container) {
         // 右侧：出售按钮
         const btnsDiv = document.createElement('div');
         btnsDiv.className = 'bag-detail-btns';
-        const sellBtn = document.createElement('button');
-        sellBtn.className = 'bag-detail-action-btn';
-        sellBtn.textContent = '出售';
-        sellBtn.onclick = () => {
-            const tid = detailBar.dataset.treasureId;
-            if (!tid) return;
-            const tDef = gameData.getTreasureList()[tid];
-            if (!tDef) return;
-            const sellPrice = Math.floor((tDef.price || 100) * 0.5);
-            gameData.removeTreasure(tid, 1);
-            window.gameGold = (window.gameGold || 0) + sellPrice;
-            toast(`出售【${tDef.name}】，获得 ${sellPrice} 金币`, 'success');
-            // 刷新背包视图
-            const bagContainer = document.querySelector('.bag-view') || container;
-            renderBagView(bagContainer);
-        };
+        // 右侧：出售按钮（适配独立实例）
+		const sellBtn = document.createElement('button');
+		sellBtn.className = 'bag-detail-action-btn';
+		sellBtn.textContent = '出售';
+		sellBtn.onclick = () => {
+			const treasureInstanceId = detailBar.dataset.treasureInstanceId;
+			const baseId = detailBar.dataset.baseId || detailBar.dataset.treasureId;
+			
+			if (!treasureInstanceId || !baseId) {
+				toast('请先选择要出售的宝物', 'warning');
+				return;
+			}
+
+			// 检查是否被装备
+			const ownerInfo = null;
+			for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
+				if (slots.includes(treasureInstanceId)) {
+					toast('该宝物已被装备，请先卸下再出售', 'warning');
+					return;
+				}
+			}
+
+			// 获取宝物定义
+			const tDef = defs[baseId] || gameData.getTreasureList()[baseId];
+			if (!tDef) {
+				toast('宝物数据异常', 'error');
+				return;
+			}
+
+			// 计算出售价格
+			const sellPrice = Math.floor((tDef.price || 100) * 0.5);
+
+			// 确认对话框
+			confirmDialog(`确定要出售【${tDef.name}】吗？\n获得 ${sellPrice} 金币`, () => {
+				// 执行出售：移除宝物实例
+				window.removeTreasureInstance(treasureInstanceId);
+				
+				// 增加金币
+				window.gameGold = (window.gameGold || 0) + sellPrice;
+				
+				toast(`出售【${tDef.name}】，获得 ${sellPrice} 金币`, 'success');
+				
+				// 刷新背包视图
+				const bagContainer = document.querySelector('.bag-view') || container;
+				renderBagView(bagContainer);
+				
+				SaveManager.autoSave();
+			});
+		};
+
         btnsDiv.appendChild(sellBtn);
         detailBar.appendChild(btnsDiv);
     } else {
@@ -2282,10 +2318,24 @@ function renderBagView(container) {
     container.appendChild(detailBar);
 }
 
-// 渲染装备背包内容（宝物浏览）
+/**
+ * 渲染装备背包内容（宝物浏览 - 独立实例版）
+ * 每个宝物实例独立显示，不再按 baseId 堆叠
+ */
 function renderBagEquipContent(container) {
-    const treasureDefs = gameData.getTreasureList();
-    const treasureBag = gameData.getTreasureInventory();
+    const defs = getTreasureDefs();
+    const allInstances = getTreasureInstanceList(); // 获取所有宝物实例（独立）
+    window.ensureCharTreasureSlots();
+
+    // 构建装备者查询表
+    const treasureOwnerMap = {};
+    for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
+        slots.forEach((tId, sIdx) => {
+            if (tId) {
+                treasureOwnerMap[tId] = { ownerId, slotIndex: sIdx };
+            }
+        });
+    }
 
     const scrollDiv = document.createElement('div');
     scrollDiv.className = 'bag-char-scroll';
@@ -2293,93 +2343,139 @@ function renderBagEquipContent(container) {
     const grid = document.createElement('div');
     grid.className = 'gallery-grid';
 
-    // 获取拥有的宝物
-    const ownedTreasureIds = Object.keys(treasureBag).filter(tid => treasureBag[tid] && treasureBag[tid].count > 0 && treasureDefs[tid]);
-
-    for (const tid of ownedTreasureIds) {
-        const tDef = treasureDefs[tid];
-        const bagItem = treasureBag[tid];
-
-        const card = document.createElement('div');
-        card.className = 'gallery-char-card equipbag-treasure-card';
-        card.dataset.treasureId = tid;
-
-        // 图标
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'gallery-char-icon equipbag-icon';
-
-        if (tDef.icon) {
-            const img = document.createElement('img');
-            img.className = 'gallery-char-img equipbag-icon-img';
-            img.src = tDef.icon;
-            img.alt = tDef.name;
-            img.onerror = function () {
-                this.style.display = 'none';
-                const fallback = document.createElement('div');
-                fallback.className = 'gallery-char-placeholder';
-                fallback.textContent = tDef.emoji || tDef.name.charAt(0);
-                this.parentNode.appendChild(fallback);
-            };
-            iconDiv.appendChild(img);
-        } else {
-            const placeholder = document.createElement('div');
-            placeholder.className = 'gallery-char-placeholder';
-            placeholder.textContent = tDef.emoji || tDef.name.charAt(0);
-            iconDiv.appendChild(placeholder);
-        }
-        card.appendChild(iconDiv);
-
-        // 名称
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'gallery-char-name';
-        nameDiv.textContent = tDef.name;
-        card.appendChild(nameDiv);
-
-        // 数量角标
-        if (bagItem.count > 1) {
-            const countBadge = document.createElement('div');
-            countBadge.className = 'equipbag-count-badge';
-            countBadge.textContent = `x${bagItem.count}`;
-            card.appendChild(countBadge);
-        }
-
-        // 已装备标记
-        if (bagItem.equippedBy && bagItem.equippedBy.length > 0) {
-            const eqBadge = document.createElement('div');
-            eqBadge.className = 'equipbag-equipped-badge';
-            eqBadge.textContent = '装';
-            card.appendChild(eqBadge);
-        }
-
-        // 点击选中宝物，显示到底部详情横框
-        card.onclick = () => {
-            updateBagEquipDetailBar(tid, tDef, bagItem);
-            document.querySelectorAll('.equipbag-treasure-card.selected').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-        };
-
-        grid.appendChild(card);
-    }
-
-    if (ownedTreasureIds.length === 0) {
+    // 如果没有宝物
+    if (allInstances.length === 0) {
         const emptyTip = document.createElement('div');
         emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
         emptyTip.textContent = '暂无宝物';
         grid.appendChild(emptyTip);
     }
 
+    // 遍历所有宝物实例，每个独立展示
+    allInstances.forEach(item => {
+        const ownerInfo = treasureOwnerMap[item.instanceId];
+        const isEquipped = !!ownerInfo;
+
+        // 获取装备者信息
+        let ownerName = null;
+        if (isEquipped) {
+            const ownerInst = window.charBagData && window.charBagData[ownerInfo.ownerId];
+            const ownerCharId = ownerInst ? ownerInst.charId : ownerInfo.ownerId;
+            const ownerChar = characterList[ownerCharId];
+            ownerName = ownerChar ? ownerChar.name : ownerInfo.ownerId;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'gallery-char-card equipbag-treasure-card';
+        card.dataset.treasureInstanceId = item.instanceId;
+        card.dataset.baseId = item.baseId;
+        card.dataset.equipped = isEquipped ? 'true' : 'false';
+        card.dataset.ownerName = ownerName || '';
+
+        // 图标
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'gallery-char-icon equipbag-icon';
+        iconDiv.style.position = 'relative'; // 用于绝对定位标签
+
+        if (item.icon) {
+            const img = document.createElement('img');
+            img.className = 'gallery-char-img equipbag-icon-img';
+            img.src = item.icon;
+            img.alt = item.name;
+            img.onerror = function () {
+                this.style.display = 'none';
+                const fallback = document.createElement('div');
+                fallback.className = 'gallery-char-placeholder';
+                fallback.textContent = item.emoji || item.name.charAt(0);
+                this.parentNode.appendChild(fallback);
+            };
+            iconDiv.appendChild(img);
+        } else {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'gallery-char-placeholder';
+            placeholder.textContent = item.emoji || item.name.charAt(0);
+            iconDiv.appendChild(placeholder);
+        }
+
+        // 已装备标记（角标）
+        if (isEquipped) {
+            const eqBadge = document.createElement('div');
+            eqBadge.className = 'equipbag-equipped-badge';
+            eqBadge.textContent = '装';
+            // 调整样式
+            eqBadge.style.cssText = `
+                position: absolute;
+                top: 2px;
+                right: 2px;
+                background: #ffd700;
+                color: #000;
+                font-size: 10px;
+                padding: 1px 4px;
+                border-radius: 3px;
+                font-weight: bold;
+                z-index: 2;
+            `;
+            iconDiv.appendChild(eqBadge);
+        }
+
+        card.appendChild(iconDiv);
+
+        // 名称
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'gallery-char-name';
+        nameDiv.textContent = item.name;
+        if (isEquipped) {
+            nameDiv.style.color = '#ffd700';
+        }
+        card.appendChild(nameDiv);
+
+        // 装备者信息（在名称下方显示）
+        if (isEquipped && ownerName) {
+            const ownerDiv = document.createElement('div');
+            ownerDiv.style.cssText = 'font-size:10px;color:#aaa;margin-top:2px;text-align:center;';
+            ownerDiv.textContent = `→ ${ownerName}`;
+            card.appendChild(ownerDiv);
+        }
+
+        // 数量不再需要（每个实例独立）
+        // 移除 countBadge 相关代码
+
+        // 点击选中宝物，显示到底部详情横框
+        card.onclick = () => {
+            // 构建一个兼容旧格式的 bagItem 对象
+            const bagItem = {
+                count: 1,
+                equippedBy: isEquipped ? [ownerInfo.ownerId] : []
+            };
+            updateBagEquipDetailBar(item.baseId, item, bagItem);
+            document.querySelectorAll('.equipbag-treasure-card.selected').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            
+            // 保存当前选中的宝物实例ID
+            detailBar.dataset.treasureInstanceId = item.instanceId;
+        };
+
+        grid.appendChild(card);
+    });
+
     scrollDiv.appendChild(grid);
     container.appendChild(scrollDiv);
 }
 
-// 更新底部宝物详情横框
-function updateBagEquipDetailBar(tid, tDef, bagItem) {
+
+/**
+ * 更新底部宝物详情横框（适配独立实例版）
+ */
+function updateBagEquipDetailBar(baseId, tDef, bagItem) {
     const detailBar = document.getElementById('bag-detail-bar');
     if (!detailBar) return;
 
-    const remaining = bagItem.count - (bagItem.equippedBy ? bagItem.equippedBy.length : 0);
+    // 注意：bagItem 是从 renderBagEquipContent 传入的兼容对象
+    // 实际出售时需要使用 detailBar.dataset.treasureInstanceId 作为实例ID
+    const treasureInstanceId = detailBar.dataset.treasureInstanceId;
 
-    detailBar.dataset.treasureId = tid;
+    detailBar.dataset.treasureId = baseId;
+    detailBar.dataset.baseId = baseId;
     detailBar.classList.add('equip-selected');
 
     // 更新图标
@@ -2416,17 +2512,28 @@ function updateBagEquipDetailBar(tid, tDef, bagItem) {
     const descEl = document.getElementById('bag-detail-equip-desc');
     if (descEl) {
         let descText = tDef.desc || '';
-        descText += ` | 持有:${bagItem.count} 可用:${remaining}`;
+        descText += ` | 持有: 1 可用: ${bagItem.count - (bagItem.equippedBy ? bagItem.equippedBy.length : 0)}`;
         if (bagItem.equippedBy && bagItem.equippedBy.length > 0) {
-            const equipperNames = bagItem.equippedBy.map(cid => {
-                const cData = characterList[cid];
-                return cData ? cData.name : cid;
+            const equipperNames = bagItem.equippedBy.map(instId => {
+                // 从 charTreasureSlots 反查角色名
+                let ownerName = null;
+                for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
+                    if (slots.includes(treasureInstanceId)) {
+                        const ownerInst = window.charBagData && window.charBagData[ownerId];
+                        const ownerCharId = ownerInst ? ownerInst.charId : ownerId;
+                        const ownerChar = characterList[ownerCharId];
+                        ownerName = ownerChar ? ownerChar.name : ownerId;
+                        break;
+                    }
+                }
+                return ownerName || '未知角色';
             });
             descText += ` | 装备者:${equipperNames.join(', ')}`;
         }
         descEl.textContent = descText;
     }
 }
+
 
 // 渲染武将背包内容
 function renderBagCharContent(container) {
@@ -5454,6 +5561,12 @@ const SaveManager = {
 		gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData || {}));
 		gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
 		gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
+		// 确保 charTreasureSlots 已初始化
+		if (typeof window.ensureCharTreasureSlots === 'function') {
+			window.ensureCharTreasureSlots();
+		}
+		
+		// 同步到 GameData
 		gameData.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));
 		gameData.data.baseInfo.saveName = `存档${slot}`;
 		gameData.data.baseInfo.saveTime = new Date().toISOString();
@@ -5536,7 +5649,7 @@ const SaveManager = {
             window.gameGold = parsed.gameGold || 1000;
             window.charBagData = charBag;
 			
-			window.charTreasureSlots = (data && data._charTreasureSlots) || parsed.charTreasureSlots || {};
+			// window.charTreasureSlots = (data && data._charTreasureSlots) || parsed.charTreasureSlots || {};
             window.treasureEquipData = parsed.treasureEquipData || {};
             window.treasureBagData = parsed.treasureBagData || {};
             window.autoBattle = parsed.autoBattle || false;
@@ -5570,6 +5683,11 @@ const SaveManager = {
 					});
 				}
 			}
+			// 关键修复：恢复宝物槽位数据
+			window.charTreasureSlots = parsed.charTreasureSlots || {};
+			if (parsed._charTreasureSlots) {
+				window.charTreasureSlots = JSON.parse(JSON.stringify(parsed._charTreasureSlots));
+			}
 		} else if (data) {
             // 如果只有 GameData 格式，从 GameData 恢复 window 变量
             window.currentTeam = [...(data.team?.members || []), ...Array(6).fill(null)].slice(0, 6);
@@ -5584,6 +5702,7 @@ const SaveManager = {
             const defaults = gameData.getDefaultData();
             gameData.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
         }
+		
         // ========== 新增：同步宝物数据到 window ==========
         syncTreasureEquipData();
 
@@ -5623,7 +5742,10 @@ const SaveManager = {
                 }
             } catch (e) { /* 忽略解析错误 */ }
         }
-
+		// 确保数据最新
+		if (typeof window.ensureCharTreasureSlots === 'function') {
+			window.ensureCharTreasureSlots();
+		}
         // 同步 GameData 数据
         gameData.data.team.members = (window.currentTeam || []).filter(Boolean);
         gameData.data.bag.gold = window.gameGold || 1000;
@@ -5650,9 +5772,10 @@ const SaveManager = {
 			autoBattle: window.autoBattle || false,
 			saveTime: new Date().toLocaleString(),
 			saveName: '自动存档',
-			// ========== 添加这一行 ==========
-			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {}))
-			// =============================
+			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
+			// ========== 新增这一行 ==========
+			charTreasureSlots: window.charTreasureSlots || {}  // 保存宝物槽位数据
+			// ==============================
 		};
 		localStorage.setItem(SaveManager.AUTO_KEY, JSON.stringify(compatData));
         
@@ -5742,6 +5865,21 @@ const SaveManager = {
 						});
 					}
 				}
+				// ... 您现有的恢复代码（恢复 playerProgress, currentTeam 等）...
+				
+				// ========== 新增：恢复宝物槽位数据 ==========
+				window.charTreasureSlots = parsed.charTreasureSlots || {};
+				
+				// 如果 gameData 中也有，也同步一下
+				if (gameData.data && gameData.data._charTreasureSlots) {
+					window.charTreasureSlots = JSON.parse(JSON.stringify(gameData.data._charTreasureSlots));
+				}
+				
+				// 确保数据结构完整
+				if (typeof window.ensureCharTreasureSlots === 'function') {
+					window.ensureCharTreasureSlots();
+				}
+				// ==========================================
             } else {
 				window.currentTeam = [...(data.team?.members || []), ...Array(6).fill(null)].slice(0, 6);
 				window.gameGold = data.bag?.gold || 1000;
