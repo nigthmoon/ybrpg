@@ -3498,26 +3498,48 @@ function renderTreasureGalleryView(container) {
     titleDiv.textContent = '宝物图鉴';
     container.appendChild(titleDiv);
 
-    // 统计
-    const treasureDefs = gameData.getTreasureList();
-    const treasureIds = Object.keys(treasureDefs);
-    const ownedBag = window.treasureBagData || {};
-    const ownedCount = Object.keys(ownedBag).length;
-
+	const treasureDefs = gameData.getTreasureList();
+	const treasureIds = Object.keys(treasureDefs);
+	
+	// 从实例化系统中获取拥有的宝物
+	const ownedTreasureBaseIds = new Set();
+	if (window.treasureInventory) {
+		Object.values(window.treasureInventory).forEach(inv => {
+			if (inv && inv.baseId) {
+				ownedTreasureBaseIds.add(inv.baseId);
+			}
+		});
+	}
+	// 兼容旧格式
+	if (window.treasureBagData) {
+		Object.keys(window.treasureBagData).forEach(baseId => {
+			if (window.treasureBagData[baseId] && window.treasureBagData[baseId].count > 0) {
+				ownedTreasureBaseIds.add(baseId);
+			}
+		});
+	}
+	const ownedCount = ownedTreasureBaseIds.size;
+	
     const statDiv = document.createElement('div');
     statDiv.style.cssText = 'text-align:center;color:#aaa;font-size:12px;margin-bottom:10px;';
     statDiv.textContent = `已收集 ${ownedCount} / ${treasureIds.length}`;
     container.appendChild(statDiv);
 
     // 按触发时点分类
-    const TYPE_ORDER = ['passive', 'on_turn_start', 'on_pugong', 'on_hit', 'on_skill', 'on_damage_dealt', 'on_kill', 'on_any_death', 'on_death'];
-    const grouped = {};
-    for (const tid of treasureIds) {
-        const tDef = treasureDefs[tid];
-        const type = tDef.type || 'other';
-        if (!grouped[type]) grouped[type] = [];
-        grouped[type].push({ id: tid, ...tDef });
-    }
+    // 按触发时点分类
+	const TYPE_ORDER = ['passive', 'on_turn_start', 'on_pugong', 'on_hit', 'on_skill', 'on_damage_dealt', 'on_kill', 'on_any_death', 'on_death', 'other'];
+	const VALID_TYPES = new Set(TYPE_ORDER);
+	const grouped = {};
+	for (const tid of treasureIds) {
+		const tDef = treasureDefs[tid];
+		// 如果 type 为空或不在有效类型中，则归入 'other'
+		let type = tDef.type;
+		if (!type || !VALID_TYPES.has(type)) {
+			type = 'other';
+		}
+		if (!grouped[type]) grouped[type] = [];
+		grouped[type].push({ id: tid, ...tDef });
+	}
 
     // 滚动容器
     const scrollDiv = document.createElement('div');
@@ -3526,11 +3548,12 @@ function renderTreasureGalleryView(container) {
     for (const typeKey of TYPE_ORDER) {
         if (!grouped[typeKey] || grouped[typeKey].length === 0) continue;
 
-        // 类型标题
         const sectionTitle = document.createElement('div');
-        sectionTitle.className = 'gallery-section-title';
-        sectionTitle.textContent = TREASURE_TYPE_LABELS[typeKey] || typeKey;
-        sectionTitle.style.borderLeftColor = '#c0a060';
+		sectionTitle.className = 'gallery-section-title';
+		// 处理 'other' 的中文显示
+		const typeLabel = typeKey === 'other' ? '其他' : (TREASURE_TYPE_LABELS[typeKey] || typeKey);
+		sectionTitle.textContent = typeLabel;
+		sectionTitle.style.borderLeftColor = '#c0a060';
         scrollDiv.appendChild(sectionTitle);
 
         // 宝物网格
@@ -3538,7 +3561,7 @@ function renderTreasureGalleryView(container) {
         grid.className = 'gallery-grid';
 
         for (const t of grouped[typeKey]) {
-            const isOwned = ownedBag[t.id] && ownedBag[t.id].count > 0;
+            const isOwned = ownedTreasureBaseIds.has(t.id);
             const rankInfo = getTreasureRankInfo(t.price || 0);
 
             const card = document.createElement('div');
@@ -3669,30 +3692,22 @@ function showTreasureGalleryDetail(tDef, isOwned, rankInfo) {
         priceRow.innerHTML = `<span class="attr-label">售价</span><span class="attr-value" style="color:#ffcc00">${tDef.price || 0} 金</span>`;
         attrDiv.appendChild(priceRow);
 
-        // 持有数量
-        const bag = window.treasureBagData || {};
-        const count = bag[tDef.id] ? bag[tDef.id].count : 0;
+        // 持有数量 - 从实例化系统获取
+		let count = 0;
+		if (window.treasureInventory) {
+			count = Object.values(window.treasureInventory).filter(inv => inv && inv.baseId === tDef.id).length;
+		}
+		// 兼容旧格式
+		if (window.treasureBagData && window.treasureBagData[tDef.id]) {
+			count += window.treasureBagData[tDef.id].count || 0;
+		}
+
         const countRow = document.createElement('div');
         countRow.className = 'gallery-detail-attr-row';
         countRow.innerHTML = `<span class="attr-label">持有</span><span class="attr-value">${count}</span>`;
         attrDiv.appendChild(countRow);
 
-        // 装备者
-        if (bag[tDef.id] && bag[tDef.id].equippedBy && bag[tDef.id].equippedBy.length > 0) {
-            const equipNames = bag[tDef.id].equippedBy.map(instId => {
-                // 1. 从 charBagData 中通过实例ID获取实例数据
-                const instData = window.charBagData && window.charBagData[instId];
-                // 2. 获取基础角色ID
-                const charId = instData ? instData.charId : instId;
-                // 3. 从 characterList 中获取角色定义以显示名字
-                const cData = characterList[charId];
-                return cData ? cData.name : charId;
-            });
-            const eqRow = document.createElement('div');
-            eqRow.className = 'gallery-detail-attr-row';
-            eqRow.innerHTML = `<span class="attr-label">装备者</span><span class="attr-value" style="color:#ffa500;font-size:11px;">${equipNames.join(', ')}</span>`;
-            attrDiv.appendChild(eqRow);
-        }
+        
     } else {
         const lockDiv = document.createElement('div');
         lockDiv.style.cssText = 'color:#666;font-size:13px;text-align:center;margin-top:20px;';
@@ -4288,11 +4303,45 @@ function renderChapterEventList(container, chapterKey) {
                     goldReward: event.gold || 0, 
                     goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
                     onWin: () => {
-                        if (!window.playerProgress) window.playerProgress = {};
-                        if (!window.playerProgress[checkEventId]) {
-                            window.playerProgress[checkEventId] = true;
-                            breakthroughMainCharacter();
-                        }
+						if (!window.playerProgress) window.playerProgress = {};
+						if (!window.playerProgress[checkEventId]) {
+							window.playerProgress[checkEventId] = true;
+							
+							// 判断是主角突破秘境还是升阶秘境
+							if (chapterKey === 'spEvent1') {
+								// 主角升阶秘境 - 根据关卡ID提取突破等级
+								// sp1-1 到 sp1-20，提取数字部分作为目标突破等级
+								const match = eventId.match(/sp1-(\d+)/);
+								if (match) {
+									const targetTupoLevel = parseInt(match[1]);
+									breakthroughMainCharacter(targetTupoLevel);
+									toast(`主角突破至 ${targetTupoLevel} 阶！`, 'success');
+								} else {
+									// 默认突破1次
+									breakthroughMainCharacter();
+								}
+							} else if (chapterKey === 'spEvent2') {
+								// 主角蜕变秘境 - 根据关卡ID确定目标品质
+								const rankMap = {
+									'sp2-1': 'common',     // 平凡试炼 -> 精品
+									'sp2-2': 'rare',       // 精英试炼 -> 稀有
+									'sp2-3': 'epicfake',   // 史诗试炼 -> 伪史诗
+									'sp2-4': 'epic',       // 真史诗试炼 -> 真史诗
+									'sp2-5': 'legend',     // 传说试炼 -> 传说
+									'sp2-6': 'kami'        // 真神秘境 -> 神品
+								};
+								
+								const targetRank = rankMap[eventId];
+								if (targetRank) {
+									promoteMainCharacter(targetRank);
+									toast(`主角品质提升至【${getRankLabel(targetRank)}】！`, 'success');
+								} else {
+									// 默认执行升阶检查
+									promoteMainCharacter();
+								}
+							}
+						}
+					
                         // 战斗胜利金币奖励
                         // const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
                         const isBoss = event.type === 'boss';
@@ -6394,141 +6443,186 @@ function showBagCharDetailPopup(instanceId, charId) {
     closeBtn.textContent = '关闭';
     closeBtn.onclick = () => overlay.remove();
     btnRow.appendChild(closeBtn);
-    // --- 👇 在此处插入突破按钮逻辑 (带二次确认) 👇 ---
-    if (instanceId) {
-        // 1. 获取突破信息以判断状态
+     // --- 👇 突破/升阶按钮逻辑 (解耦版) 👇 ---
+	 if (instanceId) {
         const currentTupo = instData.tupolevel || 0;
-        // 在 showBagCharDetailPopup 中找到构建突破按钮的部分
-        // 获取突破信息
-        const breakInfo = getBreakthroughInfo(char, currentTupo);
+        const currentRank = instData.rank || char.rank || 'common';
+        
+        // 获取突破信息和升阶信息
+		let breakInfo = getBreakthroughInfo(char, currentTupo);
+        let needPromotion = needUpgrade(saveData);
+
+        const promotionInfo = getPromotionInfo(currentTupo, currentRank);
+        
+        // 创建突破/升阶按钮
         const breakthroughBtn = document.createElement('button');
         breakthroughBtn.className = 'ybrpg-btn';
         breakthroughBtn.id = 'breakthrough-btn';
         breakthroughBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;flex:1;';
         
-        {
-            function changeBreakthroughBtn(breakthroughBtn){
-                if(breakInfo.maxed){
-                    breakthroughBtn.textContent = '已突破至极限';
-                    breakthroughBtn.disabled = true;
-                    breakthroughBtn.style.opacity = '0.6';
-                }
-                else if(needUpgrade(saveData)){
-                    breakthroughBtn.textContent = `升阶`;
-                    breakthroughBtn.style.background = '#ffaa00';
-                }
-                else{
-                    breakthroughBtn.textContent = `突破`;
-                    breakthroughBtn.style.background = '#44aaff';
-                }
+        // 更新按钮状态的函数
+        function updateBtnState() {
+            if (breakInfo.maxed) {
+                breakthroughBtn.textContent = '已突破至极限';
+                breakthroughBtn.disabled = true;
+                breakthroughBtn.style.opacity = '0.6';
+                breakthroughBtn.style.background = '#555';
+            } else if (needPromotion) {
+                breakthroughBtn.textContent = `升阶`;//至【${getRankLabel(needPromotion)}】
+                breakthroughBtn.style.background = '#ffaa00';
+                breakthroughBtn.style.color = '#000';
+                breakthroughBtn.disabled = false;
+            } else {
+                breakthroughBtn.textContent = `突破 `;//(消耗${breakInfo.cost}个同名)
+                breakthroughBtn.style.background = '#44aaff';
+                breakthroughBtn.style.color = '#fff';
+                breakthroughBtn.disabled = false;
             }
-            function tupoCostText(saveData){ 
-                const currentTupo = instData.tupolevel || 0;
-                const breakInfo = getBreakthroughInfo(saveData, currentTupo);
-                if(breakInfo.maxed){
-                    return '已经突破至极限！'
-                }
-                else if(needUpgrade(saveData)){
-                    const targetRankLabel = getRankLabel(needUpgrade(saveData));
-                    return `确定要将【${char.name}】升阶至【${targetRankLabel}】吗\n将消耗 ${cost} 个同名角色作为材料`;
-                }
-                else{
-                    const cost = breakInfo.cost;
-                    console.log('cost', breakInfo.cost)
-                    return `确定要突破【${char.name}】吗？\n将消耗 ${cost} 个同名角色作为材料。`
-                }
-            }
-            // --- 普通突破状态 ---
-            // breakthroughBtn.textContent = `突破`;
-            // breakthroughBtn.style.background = '#44aaff';
-            changeBreakthroughBtn(breakthroughBtn)
-            breakthroughBtn.onclick = () => {
-
-                const cost = breakInfo.cost;
-                // 计算可用材料
+        }
+        
+        // 获取消耗文本（分离升阶和突破的说明）
+        function getConfirmText() {
+            if (needPromotion) {
+                const targetRankLabel = getRankLabel(needPromotion);
                 const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
                     if (id === instanceId) return false;
                     const inst = window.charBagData[id];
                     return inst && (inst.charId === charId || id === charId);
                 });
                 const availableCount = availableFodderIds.length;
-
-                if (availableCount < cost) {
-                    toast(`材料不足！需要 ${cost} 个同名角色，当前可用: ${availableCount}`, 'error');
+                return `确定要将【${char.name}】升阶至【${targetRankLabel}】吗？\n` +
+                       `当前突破等级: ${currentTupo}阶\n` +
+                       `可用同名材料: ${availableCount}个`;
+            } else {
+                const cost = breakInfo.cost;
+                const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
+                    if (id === instanceId) return false;
+                    const inst = window.charBagData[id];
+                    return inst && (inst.charId === charId || id === charId);
+                });
+                const availableCount = availableFodderIds.length;
+                return `确定要突破【${char.name}】吗？\n` +
+                       `当前突破等级: ${currentTupo}阶 → 目标: ${currentTupo + 1}阶\n` +
+                       `消耗: ${cost}个同名角色 (可用: ${availableCount}个)`;
+            }
+        }
+        
+        // 初始化按钮状态
+        updateBtnState();
+        
+        // 按钮点击事件
+        breakthroughBtn.onclick = () => {
+            // 检查材料是否足够
+            const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
+                if (id === instanceId) return false;
+                const inst = window.charBagData[id];
+                return inst && (inst.charId === charId || id === charId);
+            });
+            const availableCount = availableFodderIds.length;
+            
+            if (needPromotion) {
+                // 升阶逻辑
+                const promotionCost = Math.floor(currentTupo / 4) + 1;
+                if (availableCount < promotionCost) {
+                    toast(`升阶材料不足！需要 ${promotionCost} 个同名角色，当前可用: ${availableCount}`, 'error');
                     return;
                 }
-
-                confirmDialog(tupoCostText(saveData), () => {
-                    const result = breakthroughCharacterInstance(instanceId);
+                
+                confirmDialog(getConfirmText(), () => {
+                    // 先执行突破（升阶前需要先消耗材料）
+                    const beforeTupo = instData.tupolevel || 0;
+                    
+                    // 执行升阶
+                    const result = promoteCharacterRank(instanceId);
                     if (result.success) {
                         toast(result.message, 'success');
-                        const currentOverlay = document.getElementById('bag-char-detail-overlay');
-                        if (currentOverlay) {
-                            const dialog = currentOverlay.querySelector('.gallery-detail-dialog');
-                            if (dialog) {
-                                // 2. 重新渲染弹窗内容
-                                // 为了简单起见，我们清空 dialog 并重新调用构建逻辑
-                                // 注意：这需要我们将构建 dialog 内容的逻辑提取出来，或者简单地重新赋值 innerHTML
-
-                                // 由于 showBagCharDetailPopup 逻辑较长，我们采用“重新生成并替换”的策略
-                                // 先保存滚动位置
-                                const scrollTop = dialog.scrollTop;
-
-                                // 清空当前内容
-                                dialog.innerHTML = '';
-
-                                // 重新构建内容 (这里需要复制 showBagCharDetailPopup 中构建 dialog 的核心代码)
-                                // 为了避免代码重复，建议你将 showBagCharDetailPopup 中从 "const dialog = ..." 开始到 "dialog.appendChild(btnRow)" 之前的代码提取为一个函数 buildCharDetailContent(charInfo, instanceId)
-
-                                // 临时方案：直接重新调用 showBagCharDetailPopup，但先移除旧的 overlay
-                                // 为了减少闪烁，我们可以先隐藏 overlay
-                                currentOverlay.style.visibility = 'hidden';
-
-                                // 移除旧 overlay
-                                currentOverlay.remove();
-
-                                // 立即创建新的 (由于 JS 执行很快，且图片有缓存，闪烁会非常轻微)
-                                showBagCharDetailPopup(instanceId, charId);
-                                updateCharacterSP();
-                                // 如果希望完全无闪烁，需要实现上述的局部更新逻辑
-                            }
-                        }
-                        const rankEl = dialog.querySelector('.gallery-detail-rank');
-                        if (rankEl) {
-                            const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-                            const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
-                            const rankText = rankLabels[saveData.rank] || saveData.rank;
-                            rankEl.innerHTML = `<span style="color:${rankColors[saveData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${saveData.level}</span>`;
-                        }
-                        const tupoEl = dialog.querySelector('.gallery-detail-name');
-                        if (tupoEl) {
-                            const tupoTextx = saveData.tupolevel ? `+${saveData.tupolevel}` : '';
-                            tupoEl.textContent = saveData.name + tupoTextx;
-                        }
-                        var breakthroughBtn = document.getElementById('breakthrough-btn');
-                        changeBreakthroughBtn(breakthroughBtn)
-                        updateCharacterSP();
-                        // 刷新背包视图背景
-                        if (typeof renderBagView === 'function') {
-                            const bagView = document.getElementById('bag-view');
-                            if (bagView) renderBagView(bagView);
-                        }
+                        // 刷新弹窗
+                        refreshDetailPopup();
                     } else {
                         toast(result.message, 'error');
                     }
                 });
-            };
-        }
-
-        dialog.appendChild(breakthroughBtn);
-
-        // ... 后文代码 ...
-
-        // 将突破按钮添加到按钮行
+            } else {
+                // 突破逻辑
+                const cost = breakInfo.cost;
+                if (availableCount < cost) {
+                    toast(`突破材料不足！需要 ${cost} 个同名角色，当前可用: ${availableCount}`, 'error');
+                    return;
+                }
+                if (breakInfo.maxed) {
+                    toast('已达到最大突破等级', 'warning');
+                    return;
+                }
+                
+                confirmDialog(getConfirmText(), () => {
+                    const result = breakthroughCharacterInstance(instanceId);
+                    if (result.success) {
+                        toast(result.message, 'success');
+                        // 刷新弹窗
+                        refreshDetailPopup();
+                    } else {
+                        toast(result.message, 'error');
+                    }
+                });
+            }
+        };
+		// 刷新弹窗内容的函数
+		function refreshDetailPopup() {
+			// 重新获取最新的实例数据
+			const latestInstData = window.charBagData && window.charBagData[instanceId];
+			if (!latestInstData) return;
+			
+			// 更新 saveData 引用
+			saveData.tupolevel = latestInstData.tupolevel || 0;
+			saveData.rank = latestInstData.rank || char.rank || 'common';
+			saveData.level = latestInstData.level || 1;
+			saveData.hp = latestInstData.hp;
+			saveData.atk = latestInstData.atk;
+			saveData.def = latestInstData.def;
+			saveData.spe = latestInstData.spe;
+			
+			// 更新等级显示
+			const rankEl = dialog.querySelector('.gallery-detail-rank');
+			if (rankEl) {
+				const rankText = RANK_LABELS[saveData.rank] || saveData.rank;
+				rankEl.innerHTML = `<span style="color:${RANK_COLORS[saveData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${saveData.level}</span>`;
+			}
+			// 更新角色名
+			const nameEl = dialog.querySelector('.gallery-detail-name');
+			if (nameEl) {
+				const tupoTextx = saveData.tupolevel ? `+${saveData.tupolevel}` : '';
+				nameEl.textContent = saveData.name + tupoTextx;
+			}
+			// 更新四维属性
+			const attrRows = dialog.querySelectorAll('.gallery-detail-attr-row .attr-value');
+			const newValues = [saveData.hp, saveData.atk, saveData.def, saveData.spe];
+			attrRows.forEach((el, i) => {
+				if (i < newValues.length) el.textContent = newValues[i];
+			});
+			
+			// 重新获取突破信息和升阶信息
+			const newCurrentTupo = saveData.tupolevel || 0;
+			const newCurrentRank = saveData.rank || char.rank || 'common';
+			breakInfo = getBreakthroughInfo(char, newCurrentTupo);
+			needPromotion = needUpgrade(saveData);
+			
+			// 更新按钮状态
+			updateBtnState();
+			
+			// 刷新背包视图
+			if (typeof renderBagView === 'function') {
+				const bagView = document.getElementById('bag-view');
+				if (bagView) renderBagView(bagView);
+			}
+		}
+		
+        
+        // 将按钮添加到按钮行
         if (btnRow) {
             btnRow.appendChild(breakthroughBtn);
         }
     }
+    // --- 👆 突破/升阶按钮逻辑结束 👆 ---
     // --- 👆 插入结束 👆 ---
     dialog.appendChild(btnRow);
 
@@ -6539,34 +6633,22 @@ function showBagCharDetailPopup(instanceId, charId) {
         if (e.target === overlay) overlay.remove();
     };
 }
-function needUpgrade(breakInfo) {
-    var rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
-    var needRank;
-    // switch(breakInfo.tupolevel){
-    //     // case 4:needRank = 'epicfake';break;
-    //     // case 8:needRank = 'epic';break;
-    //     // case 12:needRank = 'legend';break;
-    //     // case 16:needRank = 'kami';break;
-    //     // default:break;
-    // }
-    if (breakInfo.tupolevel) {
-        if (breakInfo.tupolevel == 0) needRank = 'common'
-        if (breakInfo.tupolevel == 2) needRank = 'rare'
-        if (breakInfo.tupolevel == 4) needRank = 'epicfake'
-        if (breakInfo.tupolevel == 8) needRank = 'epic'
-        if (breakInfo.tupolevel == 12) needRank = 'legend'
-        if (breakInfo.tupolevel == 16) needRank = 'kami'
-    }
-    // console.log(
-    //     breakInfo,
-    //     needRank,
-    //     breakInfo.rank,
-    //     rankList.indexOf(needRank),
-    //     rankList.indexOf(breakInfo.rank)
-    // )
-    if (needRank && rankList.indexOf(needRank) > rankList.indexOf(breakInfo.rank)) return needRank;
-    return false
+/**
+ * 检查角色是否需要升阶
+ * @param {Object} character - 角色实例数据
+ * @returns {string|false} 如果需要升阶，返回目标品质；否则返回 false
+ */
+function needUpgrade(character) {
+    const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
+    const tupolevel = character.tupolevel || 0;
+    const currentRank = character.rank || 'common';
+    
+    const promotionInfo = getPromotionInfo(tupolevel, currentRank);
+    if (!promotionInfo) return false;
+    
+    return promotionInfo.targetRank;
 }
+
 /** 辅助函数：构建技能片段 */
 function buildSkillSection(label, sData, color) {
     const section = document.createElement('div');
@@ -6951,179 +7033,28 @@ function getRankLabel(rank) {
 }
 
 /**
- * 获取突破信息
- * @param {Object} character - 角色对象，需包含 rank (当前品质)
- * @param {number} currentBreakthrough - 当前突破等级 (0-20)
- * @returns {Object} { cost: number, needPromotion: boolean, nextRank: string|null, maxed: boolean, promotionTarget: string|null }
+ * 获取突破消耗信息（不再涉及升阶判断）
+ * @param {Object} character - 角色对象
+ * @param {number} currentBreakthrough - 当前突破等级
+ * @returns {Object} { cost: number, maxed: boolean }
  */
 function getBreakthroughInfo(character, currentBreakthrough) {
-    // 1. 定义品质列表 (顺序从低到高)
-    const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
-    let tupoxxxx = character.tupolevel || currentBreakthrough||0;
+    const tupoxxxx = character.tupolevel || currentBreakthrough || 0;
+    
     // 如果已满级
     if (tupoxxxx >= 20) {
-        return { cost: 0, needPromotion: false, nextRank: null, maxed: true, promotionTarget: null };
+        return { cost: 0, maxed: true };
     }
-
-    let cost = 0;
-    let needPromotion = false;
-    let nextRank = null; // 升阶后的目标品质
-
-    // // 获取角色当前品质的索引
-    const currentRank = character.rank || 'common';
-    const currentRankIndex = rankList.indexOf(currentRank);
-
-    var bool = needUpgrade(character)
-    // 定义各阶段的门槛品质和消耗
-    // 阶段划分：
-    // 0-4阶: 目标是进入伪史诗(epicfake)领域。门槛在4阶满时。
-    // 5-8阶: 目标是进入真史诗(epic)领域。门槛在8阶满时。
-    // 9-12阶: 目标是进入传说(legend)领域。门槛在12阶满时。
-    // 13-16阶: 目标是进入神品(kami)领域。门槛在16阶满时。
-    // 17-20阶: 神品内部突破。
     
-    if (tupoxxxx < 4) {
-        // 普通突破阶段 1
-        cost = 1;
-        if (tupoxxxx === 1) { 
-            const targetRank = 'common';
-            const targetIndex = rankList.indexOf(targetRank);
-            // 门槛 1: 准备进入 5-8 阶段
-            // 目标品质: epicfake (伪史诗)
-            // const targetRank = 'epicfake';
-            // const targetIndex = rankList.indexOf(targetRank);
+    // 突破消耗：每4阶增加1个材料
+    const cost = Math.floor(tupoxxxx / 4) + 1;
     
-            // 如果当前品质低于目标品质，则需要升阶
-            if (currentRankIndex < targetIndex) {
-                // needPromotion = true;
-                nextRank = targetRank;
-                // cost = 1; // 升阶操作本身可能不消耗本体，或者消耗特殊材料，这里暂设0，由UI决定显示
-            }
-        }
-        // 突破等级为2阶时 (即从1阶突破到2阶，或者当前是1阶准备突破)
-        else if (tupoxxxx === 2) {
-            const targetRank = 'rare';
-            const targetIndex = rankList.indexOf(targetRank);
-            // 门槛 1: 准备进入 5-8 阶段
-            // 目标品质: epicfake (伪史诗)
-            // const targetRank = 'epicfake';
-            // const targetIndex = rankList.indexOf(targetRank);
-    
-            // 如果当前品质低于目标品质，则需要升阶
-            if (currentRankIndex < targetIndex) {
-                // needPromotion = true;
-                nextRank = targetRank;
-                // cost = 1; // 升阶操作本身可能不消耗本体，或者消耗特殊材料，这里暂设0，由UI决定显示
-            }
-        }
-        // 【新增】突破时自动提升品质逻辑
-        // 注意：这里假设 currentBreakthrough 是突破前的当前阶数
-        // 如果 currentBreakthrough 代表的是“即将突破到的阶数”，逻辑需要相应调整（通常突破函数传入的是当前状态）
-        
-        // const instData = character;
-        // if (instData) {
-        //     // 突破等级为1阶时 (即从0阶突破到1阶，或者当前是0阶准备突破)
-        //     // 假设 currentBreakthrough 是当前已拥有的突破等级
-            
-        //     // 如果需要更多阶数的品质提升，可以继续添加 else if
-            
-        //     // 【重要】确保存档数据同步更新
-        //     // 如果 gameData 或其他地方有缓存 rank，也需要在那里更新
-        //     // 这里直接修改了 window.charBagData 中的引用对象
-        // }
-    }
-    else if (currentBreakthrough === 4) {
-        // 门槛 1: 准备进入 5-8 阶段
-        // 目标品质: epicfake (伪史诗)
-        const targetRank = 'epicfake';
-        const targetIndex = rankList.indexOf(targetRank);
-
-        // 如果当前品质低于目标品质，则需要升阶
-        if (currentRankIndex < targetIndex) {
-            // needPromotion = true;
-            nextRank = targetRank;
-            cost = 2; // 升阶操作本身可能不消耗本体，或者消耗特殊材料，这里暂设0，由UI决定显示
-        } else {
-            // 品质已足够，直接进行下一次突破 (4->5)
-            // needPromotion = false;
-            cost = 2; 
-        }
-    }
-    else if (currentBreakthrough >= 5 && currentBreakthrough < 8) {
-        // 普通突破阶段 2
-        cost = 2;
-        // needPromotion = false;
-    }
-    else if (currentBreakthrough === 8) {
-        // 门槛 2: 准备进入 9-12 阶段
-        // 目标品质: epic (真史诗)
-        const targetRank = 'epic';
-        const targetIndex = rankList.indexOf(targetRank);
-
-        if (currentRankIndex < targetIndex) {
-            // needPromotion = true;
-            nextRank = targetRank;
-            cost = 3;
-        } else {
-            // needPromotion = false;
-            cost = 3; // 8->9 消耗 2
-        }
-    }
-    else if (currentBreakthrough >= 9 && currentBreakthrough < 12) {
-        // 普通突破阶段 3
-        cost = 3;
-        // needPromotion = false;
-    }
-    else if (currentBreakthrough === 12) {
-        // 门槛 3: 准备进入 13-16 阶段
-        // 目标品质: legend (传说)
-        const targetRank = 'legend';
-        const targetIndex = rankList.indexOf(targetRank);
-
-        if (currentRankIndex < targetIndex) {
-            // needPromotion = true;
-            nextRank = targetRank;
-            cost = 4;
-        } else {
-            // needPromotion = false;
-            cost = 4; // 12->13 消耗 3
-        }
-    }
-    else if (currentBreakthrough >= 13 && currentBreakthrough < 16) {
-        // 普通突破阶段 4
-        cost = 4;
-        // needPromotion = false;
-    }
-    else if (currentBreakthrough === 16) {
-        // 门槛 4: 准备进入 17-20 阶段
-        // 目标品质: kami (神品)
-        const targetRank = 'kami';
-        const targetIndex = rankList.indexOf(targetRank);
-
-        if (currentRankIndex < targetIndex) {
-            // needPromotion = true;
-            nextRank = targetRank;
-            cost = 5;
-        } else {
-            // needPromotion = false;
-            cost = 5; // 16->17 消耗 4
-        }
-    }
-    else if (currentBreakthrough >= 17 && currentBreakthrough < 20) {
-        // 普通突破阶段 5
-        cost = 5;
-        // needPromotion = false;
-    }
-
     return {
-        cost,
-        // needPromotion, 
-        nextRank,
-        maxed: false,
-        promotionTarget: nextRank, // 额外字段，方便UI显示
-        ...character
+        cost: character.charId === 'zhujue' ? 0 : cost,
+        maxed: false
     };
 }
+
 
 /**
  * 获取角色当前四维属性
@@ -7347,9 +7278,9 @@ function upgradeCharacterInstance(instanceId, levelsToAdd = 1) {
 }
 
 /**
- * 角色实例突破/升阶函数
+ * 角色实例突破函数（只提升突破等级，不处理升阶）
  * @param {string} targetInstId - 要突破的目标角色实例ID
- * @returns {Object} { success: boolean, message: string, isPromotion: boolean }
+ * @returns {Object} { success: boolean, message: string }
  */
 function breakthroughCharacterInstance(targetInstId) {
     // 1. 基础校验
@@ -7368,67 +7299,20 @@ function breakthroughCharacterInstance(targetInstId) {
     // 获取当前突破阶数，默认为 0
     const currentTupoLevel = targetInst.tupolevel || 0;
 
-    // 2. 获取突破规则
-    const breakInfo = getBreakthroughInfo(baseChar, currentTupoLevel);
-
     // 检查是否已满级
-    if (breakInfo.maxed) {
-        return { success: false, message: '角色已达到最大突破阶数' };
+    if (currentTupoLevel >= 20) {
+        return { success: false, message: '角色已达到最大突破阶数（20阶）' };
     }
 
-    const cost = targetInst.charId=='zhujue'?0:breakInfo.cost;
-    const needPromotion = breakInfo.needPromotion;
-    const nextRank = breakInfo.nextRank;
+    // 计算突破消耗（只消耗同名角色，不涉及升阶）
+    const cost = targetInst.charId === 'zhujue' ? 0 : (Math.floor(currentTupoLevel / 4) + 1);
 
-    // --- 分支 A: 需要升阶 (Promotion) ---
-    if (needUpgrade(targetInst)) {
-        // 升阶逻辑：
-        // 1. 检查是否有足够的升阶材料 (例如：突破石、特定道具等)
-        //    这里假设升阶不需要消耗同名角色本体，而是消耗一种通用道具 "breakthrough_stone"
-        //    如果你的设计是升阶也消耗本体，请修改此处的校验逻辑
-
-        const stoneCost = 1; // 假设每次升阶消耗1个突破石
-        const hasStone = (window.gameItems && window.gameItems['breakthrough_stone']) ? window.gameItems['breakthrough_stone'] >= stoneCost : true; // 如果没有道具系统，默认true
-
-        if (!hasStone) {
-            return { success: false, message: `升阶需要 ${stoneCost} 个【突破石】，材料不足！` };
-        }
-
-        // 2. 执行升阶
-        // 扣除升阶材料
-        if (window.gameItems && window.gameItems['breakthrough_stone']) {
-            window.gameItems['breakthrough_stone'] -= stoneCost;
-        }
-
-        // 改变角色品质
-        targetInst.rank = nextRank;
-
-        // 注意：升阶通常不增加 tupolevel，或者增加1但不消耗本体。
-        // 这里假设升阶只是改变品质，tupolevel 保持不变，或者你可以选择 tupolevel++
-        // 如果升阶后 tupolevel 不变，那么下次点击突破时，currentTupoLevel 还是同一个值，但 rank 变了，getBreakthroughInfo 会返回 needPromotion=false
-
-        // 重新计算属性 (因为 rank 变了，基础属性会变)
-        if (typeof updateCharacterSP === 'function') {
-            updateCharacterSP(targetInst);
-        }
-
-        SaveManager.autoSave();
-
-        return {
-            success: true,
-            message: `升阶成功！品质提升至【${getRankLabel(nextRank)}】`,
-            isPromotion: true
-        };
-    }
-
-    // --- 分支 B: 普通突破 (Breakthrough) ---
-
-    // 1. 资源校验：检查是否有足够的同名角色本体
+    // 资源校验
     const allInstIds = Object.keys(window.charBagData);
     const fodderCandidates = allInstIds.filter(id => {
-        if (id === targetInstId) return false; // 不能消耗自己
+        if (id === targetInstId) return false;
         const inst = window.charBagData[id];
-        return inst && (inst.charId === charId || id === charId); // 必须是同角色
+        return inst && (inst.charId === charId || id === charId);
     });
 
     if (fodderCandidates.length < cost) {
@@ -7438,55 +7322,133 @@ function breakthroughCharacterInstance(targetInstId) {
         };
     }
 
-    // 2. 执行消耗：移除作为材料的实例
+    // 执行消耗：移除作为材料的实例
     for (let i = 0; i < cost; i++) {
         const fodderId = fodderCandidates[i];
-        // 如果该实例在队伍中，需要先移除队伍引用
         if (window.currentTeam && window.currentTeam.includes(fodderId)) {
             window.currentTeam = window.currentTeam.filter(id => id !== fodderId);
         }
-        // 删除实例
         delete window.charBagData[fodderId];
-        // 清理宝物数据
         if (window.treasureEquipData && window.treasureEquipData[fodderId]) {
             delete window.treasureEquipData[fodderId];
         }
     }
 
-    // 3. 提升突破阶数
+    // 提升突破阶数
     targetInst.tupolevel = currentTupoLevel + 1;
 
-    // 4. 重新计算属性
+    // 重新计算属性
     if (typeof updateCharacterSP === 'function') {
         updateCharacterSP(targetInst);
     }
 
-    // 5. 保存
     SaveManager.autoSave();
 
     return {
         success: true,
         message: `突破成功！当前阶数: ${targetInst.tupolevel}`,
-        isPromotion: false
+        newTupoLevel: targetInst.tupolevel
+    };
+}
+
+
+/**
+ * 检查角色在当前突破等级下是否需要升阶
+ * @param {number} tupolevel - 当前突破等级
+ * @param {string} currentRank - 当前品质
+ * @returns {Object|null} 如果需要升阶，返回目标品质和升阶消耗；否则返回 null
+ */
+function getPromotionInfo(tupolevel, currentRank) {
+    const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
+    const currentRankIndex = rankList.indexOf(currentRank);
+    
+    // 定义各阶数对应的目标品质
+    const promotionMap = {
+        2: 'rare',
+        4: 'epicfake',
+        8: 'epic',
+        12: 'legend',
+        16: 'kami'
+    };
+    
+    const targetRank = promotionMap[tupolevel];
+    if (!targetRank) return null;
+    
+    const targetRankIndex = rankList.indexOf(targetRank);
+    if (currentRankIndex >= targetRankIndex) return null; // 品质已经足够，不需要升阶
+    
+    return {
+        targetRank: targetRank,
+        cost: Math.floor(tupolevel / 4) + 1, // 升阶消耗：根据阶数递增
+        stoneCost: 1 // 突破石消耗（可按需调整）
     };
 }
 
 /**
- * 主角突破函数
+ * 角色升阶函数（只改变品质，不改变突破等级）
+ * @param {string} targetInstId - 目标角色实例ID
+ * @returns {Object} { success: boolean, message: string }
  */
-function breakthroughMainCharacter() {
+function promoteCharacterRank(targetInstId) {
+    if (!targetInstId || !window.charBagData || !window.charBagData[targetInstId]) {
+        return { success: false, message: '无效的目标实例' };
+    }
+
+    const targetInst = window.charBagData[targetInstId];
+    const charId = targetInst.charId || targetInstId;
+    const baseChar = characterList[charId];
+
+    if (!baseChar) {
+        return { success: false, message: '未找到角色基础数据' };
+    }
+
+    const currentTupoLevel = targetInst.tupolevel || 0;
+    const currentRank = targetInst.rank || baseChar.rank || 'common';
     
-    // const mainChar = getMainCharacterInstance();
-    // if (!mainChar) {
-    //     toast('未找到主角', 'error');
-    //     return;
-    // }
-    // const mainInstId =mainChar;
-    // breakthroughCharacterInstance(mainInstId)
-    // const instData = window.charBagData[mainInstId];
-    // const baseChar = characterList['zhujue'];
-    const mainCharId = 'zhujue'; // 确保这里与 initNewGame 中的 ID 一致
-    if (!window.charBagData) return;
+    // 获取升阶信息
+    const promotionInfo = getPromotionInfo(currentTupoLevel, currentRank);
+    if (!promotionInfo) {
+        return { success: false, message: '当前突破等级无需升阶或已达到最高品质' };
+    }
+
+    // 校验资源：突破石
+    const hasStone = (window.gameItems && window.gameItems['breakthrough_stone']) 
+        ? window.gameItems['breakthrough_stone'] >= (promotionInfo.stoneCost || 0) 
+        : true; // 如果没有道具系统，默认true
+    
+    if (!hasStone) {
+        return { success: false, message: `升阶需要 ${promotionInfo.stoneCost} 个【突破石】，材料不足！` };
+    }
+
+    // 扣除突破石
+    if (window.gameItems && window.gameItems['breakthrough_stone']) {
+        window.gameItems['breakthrough_stone'] -= promotionInfo.stoneCost || 0;
+    }
+
+    // 改变品质
+    targetInst.rank = promotionInfo.targetRank;
+
+    // 重新计算属性
+    if (typeof updateCharacterSP === 'function') {
+        updateCharacterSP(targetInst);
+    }
+
+    SaveManager.autoSave();
+
+    return {
+        success: true,
+        message: `升阶成功！品质提升至【${getRankLabel(promotionInfo.targetRank)}】`,
+        targetRank: promotionInfo.targetRank
+    };
+}
+
+/**
+ * 主角突破函数（提升突破等级到指定阶数）
+ * @param {number} targetTupoLevel - 目标突破等级，如果低于当前等级则不执行
+ */
+function breakthroughMainCharacter(targetTupoLevel) {
+    const mainCharId = 'zhujue';
+    if (!window.charBagData) return false;
 
     // 1. 找到主角的 Instance ID
     const mainInstId = Object.keys(window.charBagData).find(id =>
@@ -7494,23 +7456,48 @@ function breakthroughMainCharacter() {
     );
 
     if (!mainInstId) {
-        console.warn('未找到主角实例，无法升级');
-        return;
+        console.warn('未找到主角实例，无法突破');
+        return false;
     }
-    breakthroughCharacterInstance(mainInstId)
+
     const instData = window.charBagData[mainInstId];
+    const currentTupoLevel = instData.tupolevel || 0;
+    
+    // 2. 参数校验：如果目标等级低于或等于当前等级，则不执行
+    if (targetTupoLevel !== undefined && targetTupoLevel !== null) {
+        if (targetTupoLevel <= currentTupoLevel) {
+            console.log(`主角当前突破等级(${currentTupoLevel})已达到或超过目标(${targetTupoLevel})，无需突破`);
+            return true; // 返回 true 表示无需操作但未出错
+        }
+        if (targetTupoLevel > 20) {
+            console.warn('目标突破等级不能超过20');
+            toast('目标突破等级不能超过20', 'warning');
+            return false;
+        }
+    }
+
+    // 3. 计算需要突破的次数
+    let breakCount = 0;
+    if (targetTupoLevel !== undefined && targetTupoLevel !== null) {
+        breakCount = targetTupoLevel - currentTupoLevel;
+    } else {
+        breakCount = 1; // 默认突破1次
+    }
+
+    // 4. 执行多次突破
+    for (let i = 0; i < breakCount; i++) {
+        const result = breakthroughCharacterInstance(mainInstId);
+        if (!result.success) {
+            console.warn(`主角第${i + 1}次突破失败:`, result.message);
+            return false;
+        }
+    }
+
+    // 5. 更新属性
     const baseChar = characterList[mainCharId];
+    if (!baseChar || !instData) return false;
 
-    if (!baseChar || !instData) return;
-
-    // 2. 提升等级
-    // const oldLevel = instData.level || 1;
-    // instData.level = oldLevel + 1;
-    // const oldTupoLevel = instData.tupolevel || 0;
-    // instData.tupolevel = oldTupoLevel + 1;
-    // breakthroughCharacterInstance(mainInstId)
     if (typeof updateCharacterSP === 'function') {
-        // 确保基础字段存在
         instData.rank = instData.rank || baseChar.rank;
         instData.template = instData.template || baseChar.template;
 
@@ -7521,10 +7508,132 @@ function breakthroughMainCharacter() {
             instData.def = updatedStats.def;
             instData.spe = updatedStats.spe;
             instData.maxHp = updatedStats.hp;
-            instData.currentHp = updatedStats.hp; // 升级回满血
+            instData.currentHp = updatedStats.hp;
         }
     } else {
-        // 备用方案：简单线性成长
+        // 备用方案
+        const growthRate = 0.1;
+        instData.hp = Math.floor((instData.hp || baseChar.hp) * (1 + growthRate * breakCount));
+        instData.atk = Math.floor((instData.atk || baseChar.atk) * (1 + growthRate * breakCount));
+        instData.def = Math.floor((instData.def || baseChar.def) * (1 + growthRate * breakCount));
+        instData.spe = Math.floor((instData.spe || baseChar.spe) * (1 + growthRate * breakCount));
+        instData.maxHp = instData.hp;
+        instData.currentHp = instData.hp;
+    }
+
+    // 6. 刷新界面
+    refreshAllTeamSlots();
+
+    // 7. 自动保存
+    SaveManager.autoSave();
+    
+    console.log(`主角突破成功！从 ${currentTupoLevel} 阶突破至 ${instData.tupolevel || currentTupoLevel + breakCount} 阶`);
+    return true;
+}
+
+
+/**
+ * 主角升阶函数（提升品质到指定品质）
+ * @param {string} targetRank - 目标品质，如果当前品质已达到或超过则不执行
+ *                            可选值: 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'
+ */
+function promoteMainCharacter(targetRank) {
+    const mainCharId = 'zhujue';
+    if (!window.charBagData) return false;
+
+    // 1. 找到主角的 Instance ID
+    const mainInstId = Object.keys(window.charBagData).find(id =>
+        window.charBagData[id].charId === mainCharId
+    );
+
+    if (!mainInstId) {
+        console.warn('未找到主角实例，无法升阶');
+        return false;
+    }
+
+    const instData = window.charBagData[mainInstId];
+    const currentRank = instData.rank || 'common';
+    
+    // 2. 品质排序表
+    const rankOrder = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
+    const currentRankIndex = rankOrder.indexOf(currentRank);
+    
+    // 3. 参数校验
+    if (targetRank) {
+        const targetRankIndex = rankOrder.indexOf(targetRank);
+        if (targetRankIndex === -1) {
+            console.warn(`无效的目标品质: ${targetRank}`);
+            toast(`无效的目标品质: ${targetRank}`, 'error');
+            return false;
+        }
+        
+        // 如果目标品质低于或等于当前品质，则不执行
+        if (targetRankIndex <= currentRankIndex) {
+            console.log(`主角当前品质(${getRankLabel(currentRank)})已达到或超过目标(${getRankLabel(targetRank)})，无需升阶`);
+            return true; // 返回 true 表示无需操作但未出错
+        }
+    }
+
+    // 4. 获取当前突破等级，检查升阶条件
+    const currentTupoLevel = instData.tupolevel || 0;
+    
+    // 5. 如果指定了目标品质，可能需要多次升阶
+    // 从当前品质开始，逐级提升到目标品质
+    let currentEffectiveRank = currentRank;
+    let promoted = false;
+    
+    while (true) {
+        // 检查当前是否可以升阶
+        const promotionInfo = getPromotionInfo(currentTupoLevel, currentEffectiveRank);
+        if (!promotionInfo) {
+            // 无法继续升阶（可能突破等级不够）
+            break;
+        }
+        
+        // 如果指定了目标品质，检查是否已达到或超过
+        if (targetRank) {
+            const effectiveRankIndex = rankOrder.indexOf(promotionInfo.targetRank);
+            const targetRankIndex = rankOrder.indexOf(targetRank);
+            if (effectiveRankIndex > targetRankIndex) {
+                // 已经达到或超过目标品质
+                break;
+            }
+        }
+        
+        // 执行升阶
+        const result = promoteCharacterRank(mainInstId);
+        if (!result.success) {
+            console.warn('主角升阶失败:', result.message);
+            break;
+        }
+        
+        currentEffectiveRank = result.targetRank || currentEffectiveRank;
+        promoted = true;
+    }
+
+    if (!promoted) {
+        console.log('主角无需升阶或升阶条件不满足');
+        return false;
+    }
+
+    // 6. 更新属性
+    const baseChar = characterList[mainCharId];
+    if (!baseChar || !instData) return true;
+
+    if (typeof updateCharacterSP === 'function') {
+        instData.rank = instData.rank || baseChar.rank;
+        instData.template = instData.template || baseChar.template;
+
+        const updatedStats = updateCharacterSP(instData);
+        if (updatedStats) {
+            instData.hp = updatedStats.hp;
+            instData.atk = updatedStats.atk;
+            instData.def = updatedStats.def;
+            instData.spe = updatedStats.spe;
+            instData.maxHp = updatedStats.hp;
+            instData.currentHp = updatedStats.hp;
+        }
+    } else {
         const growthRate = 0.1;
         instData.hp = Math.floor((instData.hp || baseChar.hp) * (1 + growthRate));
         instData.atk = Math.floor((instData.atk || baseChar.atk) * (1 + growthRate));
@@ -7533,12 +7642,18 @@ function breakthroughMainCharacter() {
         instData.maxHp = instData.hp;
         instData.currentHp = instData.hp;
     }
-    // 4. 刷新界面
+
+    // 7. 刷新界面
     refreshAllTeamSlots();
 
-    // 5. 自动保存
+    // 8. 自动保存
     SaveManager.autoSave();
+
+    console.log(`主角升阶成功！当前品质: ${getRankLabel(instData.rank)}`);
+    return true;
 }
+
+
 /**
  * 获取主角的完整实例对象
  * @returns {Object|null} 主角的实例数据对象，如果未找到则返回 null
@@ -7957,95 +8072,6 @@ window.buildPlayerTeamForBattle = function() {
 };
 
 
-/**
- * 检查角色在当前突破等级下是否需要升阶
- * @param {number} tupolevel - 当前突破等级
- * @param {string} currentRank - 当前品质
- * @returns {Object|null} 如果需要升阶，返回目标品质和升阶消耗；否则返回 null
- */
-function getPromotionInfo(tupolevel, currentRank) {
-    const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
-    const currentRankIndex = rankList.indexOf(currentRank);
-    
-    // 定义各阶数对应的目标品质
-    const promotionMap = {
-        2: 'rare',
-        4: 'epicfake',
-        8: 'epic',
-        12: 'legend',
-        16: 'kami'
-    };
-    
-    const targetRank = promotionMap[tupolevel];
-    if (!targetRank) return null;
-    
-    const targetRankIndex = rankList.indexOf(targetRank);
-    if (currentRankIndex >= targetRankIndex) return null; // 品质已经足够，不需要升阶
-    
-    return {
-        targetRank: targetRank,
-        cost: Math.floor(tupolevel / 4) + 1, // 升阶消耗：根据阶数递增
-        stoneCost: 1 // 突破石消耗（可按需调整）
-    };
-}
-
-/**
- * 角色升阶函数（只改变品质，不改变突破等级）
- * @param {string} targetInstId - 目标角色实例ID
- * @returns {Object} { success: boolean, message: string }
- */
-function promoteCharacterRank(targetInstId) {
-    if (!targetInstId || !window.charBagData || !window.charBagData[targetInstId]) {
-        return { success: false, message: '无效的目标实例' };
-    }
-
-    const targetInst = window.charBagData[targetInstId];
-    const charId = targetInst.charId || targetInstId;
-    const baseChar = characterList[charId];
-
-    if (!baseChar) {
-        return { success: false, message: '未找到角色基础数据' };
-    }
-
-    const currentTupoLevel = targetInst.tupolevel || 0;
-    const currentRank = targetInst.rank || baseChar.rank || 'common';
-    
-    // 获取升阶信息
-    const promotionInfo = getPromotionInfo(currentTupoLevel, currentRank);
-    if (!promotionInfo) {
-        return { success: false, message: '当前突破等级无需升阶或已达到最高品质' };
-    }
-
-    // 校验资源：突破石
-    const hasStone = (window.gameItems && window.gameItems['breakthrough_stone']) 
-        ? window.gameItems['breakthrough_stone'] >= (promotionInfo.stoneCost || 0) 
-        : true; // 如果没有道具系统，默认true
-    
-    if (!hasStone) {
-        return { success: false, message: `升阶需要 ${promotionInfo.stoneCost} 个【突破石】，材料不足！` };
-    }
-
-    // 扣除突破石
-    if (window.gameItems && window.gameItems['breakthrough_stone']) {
-        window.gameItems['breakthrough_stone'] -= promotionInfo.stoneCost || 0;
-    }
-
-    // 改变品质
-    targetInst.rank = promotionInfo.targetRank;
-
-    // 重新计算属性
-    if (typeof updateCharacterSP === 'function') {
-        updateCharacterSP(targetInst);
-    }
-
-    SaveManager.autoSave();
-
-    return {
-        success: true,
-        message: `升阶成功！品质提升至【${getRankLabel(promotionInfo.targetRank)}】`,
-        targetRank: promotionInfo.targetRank
-    };
-}
 
 
 
