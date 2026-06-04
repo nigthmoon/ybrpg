@@ -985,19 +985,41 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
     tipEl.textContent = TIP_LABELS[char.template] || '';
     attrDiv.appendChild(tipEl);
 
-    // 四维属性
-    const attrs = [
-        { label: '生命', value: saveData ? saveData.hp : char.hp, icon: '❤' },
-        { label: '攻击', value: saveData ? saveData.atk : char.atk, icon: '⚔' },
-        { label: '防御', value: saveData ? saveData.def : char.def, icon: '🛡' },
-        { label: '速度', value: saveData ? saveData.spe : char.spe, icon: '💨' },
-    ];
-    attrs.forEach(a => {
-        const row = document.createElement('div');
-        row.className = 'team-info-attr-row';
-        row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${a.value}</span>`;
-        attrDiv.appendChild(row);
-    });
+    // 修改位置：showTeamCharInfo 函数内，四维属性显示部分
+
+	// 原有的 attrs 数组构造代码
+	// const attrs = [
+	//     { label: '生命', value: saveData ? saveData.hp : char.hp, icon: '❤' },
+	//     { label: '攻击', value: saveData ? saveData.atk : char.atk, icon: '⚔' },
+	//     { label: '防御', value: saveData ? saveData.def : char.def, icon: '🛡' },
+	//     { label: '速度', value: saveData ? saveData.spe : char.spe, icon: '💨' },
+	// ];
+
+	// ======== 替换为如下代码 ========
+
+	// 计算最终属性（含突破和宝物加成）
+	const finalStats = calculateInstanceFinalStats(instanceId);
+
+	const attrs = [
+		{ label: '生命', value: finalStats.totalHp, base: finalStats.baseHp, bonus: finalStats.breakthroughBonus.hp + finalStats.treasureBonus.hp, icon: '❤' },
+		{ label: '攻击', value: finalStats.totalAtk, base: finalStats.baseAtk, bonus: finalStats.breakthroughBonus.atk + finalStats.treasureBonus.atk, icon: '⚔' },
+		{ label: '防御', value: finalStats.totalDef, base: finalStats.baseDef, bonus: finalStats.breakthroughBonus.def + finalStats.treasureBonus.def, icon: '🛡' },
+		{ label: '速度', value: finalStats.totalSpe, base: finalStats.baseSpe, bonus: finalStats.breakthroughBonus.spe + finalStats.treasureBonus.spe, icon: '💨' },
+	];
+
+	attrs.forEach(a => {
+		const row = document.createElement('div');
+		row.className = 'team-info-attr-row';
+		
+		let displayText = `${a.value}`;
+		if (a.bonus > 0) {
+			displayText += ` <span style="color:#44ff88;font-size:11px;">(+${a.bonus})</span>`;
+		}
+		
+		row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${displayText}</span>`;
+		attrDiv.appendChild(row);
+	});
+
 
     // 技能详细描述
     const skillIds = char.skills || [];
@@ -2146,6 +2168,14 @@ function showCharSelectPopup(slotIndex) {
 
 function renderBagView(container) {
     container.innerHTML = '';
+	// 【修改】优先从存档中获取，如果存档有值，则使用存档值，否则默认为 'char'
+	const savedTab = window.playerProgress?.bagTab || window.bagTab || 'char';
+	if (!window.bagTab) {
+		window.bagTab = savedTab;
+	} else {
+		// 如果已存在，但为了保险，与存档同步
+		window.bagTab = savedTab;
+	}
 
 
 	// 在 renderBagView 函数开头添加
@@ -2284,9 +2314,34 @@ function renderBagView(container) {
         infoDiv.appendChild(descEl);
         detailBar.appendChild(infoDiv);
 
-        // 右侧：出售按钮
-        const btnsDiv = document.createElement('div');
-        btnsDiv.className = 'bag-detail-btns';
+        // 右侧：按钮组
+		const btnsDiv = document.createElement('div');
+		btnsDiv.className = 'bag-detail-btns';
+		btnsDiv.style.display = 'flex'; // 确保是flex布局
+		btnsDiv.style.gap = '5px';
+
+		// 【新增】培养按钮
+		const trainBtn = document.createElement('button');
+		trainBtn.className = 'bag-detail-action-btn';
+		trainBtn.textContent = '培养';
+		trainBtn.onclick = () => {
+			const treasureInstanceId = detailBar.dataset.treasureInstanceId;
+			if (!treasureInstanceId) {
+				toast('请先选择要培养的宝物', 'warning');
+				return;
+			}
+			const defs = window.getTreasureDefs();
+			const baseId = detailBar.dataset.baseId || detailBar.dataset.treasureId;
+			const tDef = defs[baseId];
+			if (!tDef) {
+				toast('宝物数据异常', 'error');
+				return;
+			}
+			// 调用培养（升级）弹窗，不传角色ID，表示在背包界面操作
+			showTreasureUpgradePopup(treasureInstanceId, null, null);
+		};
+		btnsDiv.appendChild(trainBtn);
+
         // 右侧：出售按钮（适配独立实例）
 		const sellBtn = document.createElement('button');
 		sellBtn.className = 'bag-detail-action-btn';
@@ -2559,25 +2614,32 @@ function renderBagEquipContent(container) {
         // 移除 countBadge 相关代码
 
         // 点击选中宝物，显示到底部详情横框
-        card.onclick = () => {
+        // 修改位置：renderBagEquipContent 函数中，card.onclick 事件
+
+		card.onclick = () => {
+			// 关键：这里将 item.instanceId 存到 detailBar.dataset 中
+			const detailBarEl = document.getElementById('bag-detail-bar');
+			if (detailBarEl) {
+				detailBarEl.dataset.treasureInstanceId = item.instanceId; // 存储实例ID
+			}
+
 			const bagItem = {
 				count: 1,
 				equippedBy: isEquipped ? [ownerInfo.ownerId] : []
 			};
+			// 传参时，确保 tDef 是当前的 item
 			updateBagEquipDetailBar(item.baseId, item, bagItem);
+			
+			// 高亮
 			document.querySelectorAll('.equipbag-treasure-card.selected').forEach(c => c.classList.remove('selected'));
 			card.classList.add('selected');
-			
-			const detailBarEl = document.getElementById('bag-detail-bar');
-			if (detailBarEl) {
-				detailBarEl.dataset.treasureInstanceId = item.instanceId;
-			}
 		};
+
 		
 		// 双击宝物卡片显示升级浮窗
-		card.ondblclick = () => {
-			showTreasureUpgradePopup(item.instanceId, isEquipped ? ownerInfo.ownerId : null);
-		};
+		// card.ondblclick = () => {
+		// 	showTreasureUpgradePopup(item.instanceId, isEquipped ? ownerInfo.ownerId : null);
+		// };
 		
 
         grid.appendChild(card);
@@ -2603,6 +2665,14 @@ function updateBagEquipDetailBar(baseId, tDef, bagItem) {
     detailBar.dataset.baseId = baseId;
     detailBar.classList.add('equip-selected');
 
+    // 【修改】从宝物实例中获取等级
+    let treasureLevel = 1;
+    if (treasureInstanceId && window.treasureInventory) {
+        const invData = window.treasureInventory[treasureInstanceId];
+        if (invData && invData.level) {
+            treasureLevel = invData.level;
+        }
+    }
     // 更新图标
     const iconDiv = document.getElementById('bag-detail-equip-icon');
     if (iconDiv) {
@@ -2629,16 +2699,18 @@ function updateBagEquipDetailBar(baseId, tDef, bagItem) {
     // 更新名称
     const nameEl = document.getElementById('bag-detail-equip-name');
     if (nameEl) {
-        nameEl.textContent = tDef.name;
+        // 【修改】名称后显示等级
+        nameEl.textContent = `${tDef.name} Lv.${treasureLevel}`;
         nameEl.style.color = '#ffd700';
     }
 
     // 更新描述
     const descEl = document.getElementById('bag-detail-equip-desc');
     if (descEl) {
-		const treasureLevel = window.treasureInventory[treasureInstanceId]?.level || 1;
-		let descText = tDef.desc || '';
-		descText += ` | Lv.${treasureLevel} | 持有: 1 可用: ${bagItem.count - (bagItem.equippedBy ? bagItem.equippedBy.length : 0)}`;
+        let descText = tDef.desc || '';
+        // 【修改】这里不再单独显示等级，因为名称里已经显示了
+        // descText += ` | 持有: 1`;
+        
         
         if (bagItem.equippedBy && bagItem.equippedBy.length > 0) {
             const equipperNames = bagItem.equippedBy.map(instId => {
@@ -5787,7 +5859,12 @@ const SaveManager = {
 	
 		if (compatData) {
 			const parsed = JSON.parse(compatData);
-
+			// 【新增】恢复背包Tab
+			if (parsed.playerPreferences?.bagTab) {
+				window.bagTab = parsed.playerPreferences.bagTab;
+			} else {
+				window.bagTab = 'char';
+			}
             // 迁移逻辑：检查 charBagData 是否需要从 charId-key 迁移到 instanceId-key
             let charBag = parsed.charBagData || {};
             if (charBag && typeof charBag === 'object') {
@@ -5871,6 +5948,8 @@ const SaveManager = {
             window.charBagData = data._charBag || {};
             window.treasureEquipData = data._treasures || {};
             window.treasureBagData = data._treasureBag || {};
+			 // 【新增】
+			 window.bagTab = data._playerPreferences?.bagTab || 'char';
         }
 
         // 确保 gameData 内存与存档数据一致
@@ -5902,6 +5981,11 @@ const SaveManager = {
         if (!gameData.data || !gameData.data.team) {
             gameData.data = gameData.getDefaultData();
         }
+		// 【新增】保存当前的背包Tab状态
+		if (!gameData.data._playerPreferences) {
+			gameData.data._playerPreferences = {};
+		}
+		gameData.data._playerPreferences.bagTab = window.bagTab || 'char';
 
         // 迁移旧数据：如果索引0存的是手动存档（旧逻辑），迁移到索引1
         const slot0Raw = localStorage.getItem(`${gameData.STORAGE_KEY}_0`);
@@ -5950,8 +6034,12 @@ const SaveManager = {
 			saveName: '自动存档',
 			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
 			// ========== 新增这一行 ==========
-			charTreasureSlots: window.charTreasureSlots || {}  // 保存宝物槽位数据
+			charTreasureSlots: window.charTreasureSlots || {},  // 保存宝物槽位数据
 			// ==============================
+			// 【新增】
+			playerPreferences: {
+				bagTab: window.bagTab || 'char'
+			}
 		};
 		localStorage.setItem(SaveManager.AUTO_KEY, JSON.stringify(compatData));
         
@@ -5979,6 +6067,13 @@ const SaveManager = {
             if (compatData) {
 				const parsed = JSON.parse(compatData);
 				
+				// 【新增】恢复背包Tab
+				if (parsed.playerPreferences?.bagTab) {
+					window.bagTab = parsed.playerPreferences.bagTab;
+				} else {
+					window.bagTab = 'char'; // 默认值
+				}
+
                 // 迁移逻辑同 loadFromSlot
                 let charBag = parsed.charBagData || {};
                 if (charBag && typeof charBag === 'object') {
@@ -6063,6 +6158,9 @@ const SaveManager = {
 				window.treasureEquipData = data._treasures || {};
 				window.treasureBagData = data._treasureBag || {};
 				window.autoBattle = window.autoBattle || false;  // ✅ 使用 window.autoBattle 保持原值
+						
+				// 【新增】
+				window.bagTab = data._playerPreferences?.bagTab || 'char';
 			}
 
             // 同步到 gameData 内存（确保结构完整）
@@ -6438,18 +6536,41 @@ function showBagCharDetailPopup(instanceId, charId) {
     tipDiv.textContent = TIP_LABELS[charT.template] || '';
     attrDiv.appendChild(tipDiv);
 
-    const attrs = [
-        { label: '生命', value: saveData.hp },
-        { label: '攻击', value: saveData.atk },
-        { label: '防御', value: saveData.def },
-        { label: '速度', value: saveData.spe },
-    ];
-    attrs.forEach(a => {
-        const row = document.createElement('div');
-        row.className = 'gallery-detail-attr-row';
-        row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${a.value}</span>`;
-        attrDiv.appendChild(row);
-    });
+    // 修改位置：showBagCharDetailPopup 函数内，属性显示部分
+
+	// 原有的 attrs 数组
+	// const attrs = [
+	//     { label: '生命', value: saveData.hp },
+	//     { label: '攻击', value: saveData.atk },
+	//     { label: '防御', value: saveData.def },
+	//     { label: '速度', value: saveData.spe },
+	// ];
+
+	// ======== 替换为如下代码 ========
+
+	// 计算最终属性
+	const finalStats = calculateInstanceFinalStats(instanceId);
+
+	const attrs = [
+		{ label: '生命', value: finalStats.totalHp, base: finalStats.baseHp, bonus: finalStats.breakthroughBonus.hp + finalStats.treasureBonus.hp },
+		{ label: '攻击', value: finalStats.totalAtk, base: finalStats.baseAtk, bonus: finalStats.breakthroughBonus.atk + finalStats.treasureBonus.atk },
+		{ label: '防御', value: finalStats.totalDef, base: finalStats.baseDef, bonus: finalStats.breakthroughBonus.def + finalStats.treasureBonus.def },
+		{ label: '速度', value: finalStats.totalSpe, base: finalStats.baseSpe, bonus: finalStats.breakthroughBonus.spe + finalStats.treasureBonus.spe },
+	];
+
+	attrs.forEach(a => {
+		const row = document.createElement('div');
+		row.className = 'gallery-detail-attr-row';
+		
+		let displayText = `${a.value}`;
+		if (a.bonus > 0) {
+			displayText += ` <span style="color:#44ff88;font-size:11px;">(+${a.bonus})</span>`;
+		}
+		
+		row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${displayText}</span>`;
+		attrDiv.appendChild(row);
+	});
+
 
     topDiv.appendChild(attrDiv);
     dialog.appendChild(topDiv);
@@ -8198,7 +8319,7 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
     }
     
     const stats = getTreasureStatsWithLevel(treasureInstanceId);
-    const currentLevel = stats.level;
+    var currentLevel = stats.level;
     const baseId = stats.baseId;
     const defs = getTreasureDefs();
     const def = defs[baseId];
@@ -8209,10 +8330,10 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
     }
     
     // 检查是否已达到最大等级
-    if (currentLevel >= 10) {
-        toast('该宝物已达到最高等级', 'warning');
-        return;
-    }
+    // if (currentLevel >= 10) {
+    //     toast('该宝物已达到最高等级', 'warning');
+    //     return;
+    // }
     
     // 查找同名宝物实例（作为升级材料）
     // 查找同名宝物实例（作为升级材料）
@@ -8288,15 +8409,16 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
     
     const nameLevel = document.createElement('div');
     nameLevel.style.cssText = 'flex:1;';
-    nameLevel.innerHTML = `
-        <div style="font-size:16px;font-weight:bold;color:#fff;">${def.name}</div>
-        <div style="font-size:13px;color:#ffd700;">Lv.${currentLevel}/10</div>
-    `;
+	nameLevel.innerHTML = `
+		<div style="font-size:16px;font-weight:bold;color:#fff;">${def.name}</div>
+		<div style="font-size:13px;color:#ffd700;" data-level-display>Lv.${currentLevel}/10</div>
+	`;
     headerRow.appendChild(nameLevel);
     infoSection.appendChild(headerRow);
     
     // 属性展示
     const attrRow = document.createElement('div');
+	attrRow.setAttribute('data-attr-display', 'true');
     attrRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;';
     
     const baseAtk = def.atk || 0;
@@ -8318,6 +8440,30 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
     }
     
     infoSection.appendChild(attrRow);
+	// ==============================
+    // 【添加位置】在这里插入宝物对角色总加成的显示
+    // ==============================
+    if (charInstanceId) {
+        const charStats = calculateInstanceFinalStats(charInstanceId);
+        const bonusInfo = document.createElement('div');
+        bonusInfo.style.cssText = 'font-size:11px;color:#aaa;margin-top:8px;padding-top:6px;border-top:1px solid #444;';
+        
+        // 只显示有加成的属性
+        let bonusParts = [];
+        if (charStats.treasureBonus.atk > 0) bonusParts.push(`攻击+${charStats.treasureBonus.atk}`);
+        if (charStats.treasureBonus.def > 0) bonusParts.push(`防御+${charStats.treasureBonus.def}`);
+        if (charStats.treasureBonus.hp > 0) bonusParts.push(`生命+${charStats.treasureBonus.hp}`);
+        if (charStats.treasureBonus.spe > 0) bonusParts.push(`速度+${charStats.treasureBonus.spe}`);
+        
+        if (bonusParts.length > 0) {
+            bonusInfo.innerHTML = `对角色加成: ${bonusParts.join(' · ')}`;
+        } else {
+            bonusInfo.innerHTML = `当前宝物无属性加成`;
+        }
+        
+        infoSection.appendChild(bonusInfo);
+    }
+    // ==============================
     popup.appendChild(infoSection);
     
     // 材料信息
@@ -8330,6 +8476,7 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
     materialSection.appendChild(materialTitle);
     
     const materialCount = document.createElement('div');
+	materialCount.setAttribute('data-material-count', 'true');
     const needCount = currentLevel; // 升到下一级需要当前等级数量的同名宝物
     materialCount.style.cssText = 'font-size:13px;color:#ddd;';
     materialCount.innerHTML = `需要: <span style="color:#ffd700;">${needCount}</span> 个 · 可用: <span style="color:${fodderCount >= needCount ? '#44ff88' : '#ff4444'};">${fodderCount}</span> 个`;
@@ -8349,14 +8496,16 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
     if (currentLevel < 10) {
         const previewSection = document.createElement('div');
         previewSection.style.cssText = 'background:#2a2a3a;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #ffd700;';
-        
-        const previewTitle = document.createElement('div');
-        previewTitle.style.cssText = 'font-size:14px;color:#ffd700;margin-bottom:6px;';
-        previewTitle.textContent = `升级至 Lv.${currentLevel + 1} 预览`;
+        // 在创建 previewTitle 时：
+		const previewTitle = document.createElement('div');
+		previewTitle.setAttribute('data-preview-title', 'true');
+		previewTitle.style.cssText = 'font-size:14px;color:#ffd700;margin-bottom:6px;';
+		previewTitle.textContent = `升级至 Lv.${currentLevel + 1} 预览`;
         previewSection.appendChild(previewTitle);
         
         const multiplier = currentLevel + 1;
         const previewContent = document.createElement('div');
+		previewContent.setAttribute('data-preview-section', 'true');
         previewContent.style.cssText = 'font-size:12px;color:#ccc;line-height:1.6;';
         
         let previewText = '';
@@ -8391,56 +8540,152 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 		}
 	}
 
+	// 升级按钮点击事件（替换原来的全部 onclick 逻辑）
 	upgradeBtn.onclick = () => {
-		if (currentLevel >= 10) {
+		// ===== 每次点击时重新读取最新数据 =====
+		const latestTreasureData = window.treasureInventory[treasureInstanceId];
+		if (!latestTreasureData) {
+			toast('宝物数据异常', 'error');
+			return;
+		}
+		
+		const latestLevel = latestTreasureData.level || 1;
+		
+		if (latestLevel >= 10) {
 			toast('宝物已达到最高等级', 'warning');
+			// 更新按钮状态
+			upgradeBtn.textContent = '已满级';
+			upgradeBtn.disabled = true;
+			upgradeBtn.style.opacity = '0.5';
 			return;
 		}
 		
-		if (fodderCount < needCount) {
-			toast(`材料不足！需要 ${needCount} 个同名宝物，当前可用: ${fodderCount}`, 'error');
+		// ===== 重新计算可用材料 =====
+		const freshFodderIds = Object.keys(window.treasureInventory).filter(id => {
+			if (id === treasureInstanceId) return false;
+			const inv = window.treasureInventory[id];
+			if (!inv || inv.baseId !== baseId) return false;
+			
+			// 排除已被装备的
+			for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
+				if (slots && slots.includes(id)) {
+					return false;
+				}
+			}
+			
+			// 排除已升级过的
+			if (inv.level && inv.level > 1) {
+				return false;
+			}
+			
+			return true;
+		});
+		
+		const freshFodderCount = freshFodderIds.length;
+		const requiredCount = latestLevel; // 升到下一级需要当前等级数量的同名宝物
+		
+		if (freshFodderCount < requiredCount) {
+			toast(`材料不足！需要 ${requiredCount} 个同名宝物，当前可用: ${freshFodderCount}`, 'error');
 			return;
 		}
 		
-		// 执行升级
-		// 执行升级
-		confirmDialog(`确定消耗 ${needCount} 个【${def.name}】升级宝物至 Lv.${currentLevel + 1} 吗？`, () => {
-			// 消耗材料
-			for (let i = 0; i < needCount; i++) {
-				const fodderId = fodderInstanceIds[i];
+		// ===== 确认弹窗 =====
+		confirmDialog(
+			`确定消耗 ${requiredCount} 个【${def.name}】升级宝物至 Lv.${latestLevel + 1} 吗？\n可用材料: ${freshFodderCount} 个`,
+			() => {
+				// 确认后再次检查（防止在确认过程中数据变化）
+				const confirmTreasureData = window.treasureInventory[treasureInstanceId];
+				if (!confirmTreasureData) {
+					toast('宝物数据异常', 'error');
+					return;
+				}
 				
-				// 如果材料宝物被装备在其他角色身上，需要先卸下
-				for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
-					const slotIdx = slots.indexOf(fodderId);
-					if (slotIdx !== -1) {
-						slots[slotIdx] = null;
-						break;
+				const confirmLevel = confirmTreasureData.level || 1;
+				if (confirmLevel >= 10) {
+					toast('宝物已达到最高等级', 'warning');
+					return;
+				}
+				
+				// 重新计算可用材料
+				const confirmFodderIds = Object.keys(window.treasureInventory).filter(id => {
+					if (id === treasureInstanceId) return false;
+					const inv = window.treasureInventory[id];
+					if (!inv || inv.baseId !== baseId) return false;
+					
+					for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
+						if (slots && slots.includes(id)) {
+							return false;
+						}
+					}
+					
+					if (inv.level && inv.level > 1) {
+						return false;
+					}
+					
+					return true;
+				});
+				
+				const confirmFodderCount = confirmFodderIds.length;
+				const confirmRequiredCount = confirmLevel;
+				
+				if (confirmFodderCount < confirmRequiredCount) {
+					toast(`材料不足！需要 ${confirmRequiredCount} 个同名宝物，当前可用: ${confirmFodderCount}`, 'error');
+					return;
+				}
+				
+				// ===== 消耗材料 =====
+				for (let i = 0; i < confirmRequiredCount; i++) {
+					const fodderId = confirmFodderIds[i];
+					
+					// 如果材料宝物被装备在其他角色身上，需要先卸下
+					for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
+						const slotIdx = slots.indexOf(fodderId);
+						if (slotIdx !== -1) {
+							slots[slotIdx] = null;
+							break;
+						}
+					}
+					
+					delete window.treasureInventory[fodderId];
+				}
+				
+				// ===== 提升等级 =====
+				const newLevel = confirmLevel + 1;
+				window.treasureInventory[treasureInstanceId].level = newLevel;
+				
+				// ===== 刷新弹窗内容 =====
+				refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, newLevel, upgradeBtn, charInstanceId);
+				
+				// 找到 toast 调用前，添加：
+				if (charInstanceId) {
+					// 刷新阵容详情
+					if (window._selectedSlotIndex !== undefined && window.currentTeam) {
+						const currentInstId = window.currentTeam[window._selectedSlotIndex];
+						if (currentInstId && currentInstId === charInstanceId) {
+							const instData = window.charBagData && window.charBagData[charInstanceId];
+							if (instData) {
+								const charId = instData.charId || charInstanceId;
+								showTeamCharInfo(window._selectedSlotIndex, charInstanceId, charId);
+							}
+						}
+					}
+					
+					// 刷新队伍格子
+					const teamIndex = window.currentTeam ? window.currentTeam.indexOf(charInstanceId) : -1;
+					if (teamIndex !== -1) {
+						refreshTeamSlot(teamIndex);
 					}
 				}
 				
-				// 删除材料宝物实例
-				delete window.treasureInventory[fodderId];
+				// ===== 更新局部变量（用于下次点击时的初始校验） =====
+				currentLevel = newLevel;
+				
+				toast(`【${def.name}】升级成功！当前 Lv.${newLevel}`, 'success');
+				SaveManager.autoSave();
 			}
-			
-			// 提升等级
-			window.treasureInventory[treasureInstanceId].level = (window.treasureInventory[treasureInstanceId].level || 1) + 1;
-			
-			// 刷新UI
-			if (charInstanceId) {
-				refreshTreasureUI(charInstanceId);
-			}
-			
-			// 只移除当前升级浮窗，不移除可能存在的其他浮窗
-			const upgradeOverlay = document.getElementById('treasure-upgrade-overlay');
-			if (upgradeOverlay && upgradeOverlay.parentNode) {
-				upgradeOverlay.parentNode.removeChild(upgradeOverlay);
-			}
-			
-			toast(`【${def.name}】升级成功！当前 Lv.${window.treasureInventory[treasureInstanceId].level}`, 'success');
-			SaveManager.autoSave();
-		});
-
+		);
 	};
+
 	btnRow.appendChild(upgradeBtn);
 
 	// 替换宝物按钮（仅阵容界面调用时显示）
@@ -8485,119 +8730,278 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 }
 
 
-
-
-
-
+/**
+ * 刷新宝物升级弹窗的UI
+ */
+function refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, currentLevel, upgradeBtn, charInstanceId) {
+    if (!popup) return;
+    
+    // 1. 更新等级显示
+    const levelDisplay = popup.querySelector('[data-level-display]');
+    if (levelDisplay) {
+        levelDisplay.textContent = `Lv.${currentLevel}/10`;
+    }
+    
+    // 2. 更新属性预览（当前属性 → 下一级属性）
+    const attrRow = popup.querySelector('[data-attr-display]');
+    if (attrRow) {
+        const baseAtk = def.atk || 0;
+        const baseDef = def.def || 0;
+        const baseHp = def.hp || 0;
+        const baseSpe = def.spe || 0;
+        
+        let attrsHTML = '';
+        const nextMultiplier = currentLevel + 1;
+        if (baseAtk > 0) attrsHTML += `<div style="color:#ff4444;">攻击: ${baseAtk} → ${baseAtk * nextMultiplier}</div>`;
+        if (baseDef > 0) attrsHTML += `<div style="color:#88cc88;">防御: ${baseDef} → ${baseDef * nextMultiplier}</div>`;
+        if (baseHp > 0) attrsHTML += `<div style="color:#44aaff;">生命: ${baseHp} → ${baseHp * nextMultiplier}</div>`;
+        if (baseSpe > 0) attrsHTML += `<div style="color:#ffff44;">速度: ${baseSpe} → ${baseSpe * nextMultiplier}</div>`;
+        attrRow.innerHTML = attrsHTML;
+    }
+    
+    // 3. 更新材料信息
+    const materialCount = popup.querySelector('[data-material-count]');
+    if (materialCount) {
+        const newFodderCount = Object.keys(window.treasureInventory).filter(id => {
+            if (id === treasureInstanceId) return false;
+            const inv = window.treasureInventory[id];
+            if (!inv || inv.baseId !== baseId) return false;
+            
+            for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
+                if (slots && slots.includes(id)) {
+                    return false;
+                }
+            }
+            
+            if (inv.level && inv.level > 1) {
+                return false;
+            }
+            
+            return true;
+        }).length;
+        
+        const nextNeedCount = currentLevel; // 升到下一级需要当前等级数量
+        const isSufficient = newFodderCount >= nextNeedCount;
+        materialCount.innerHTML = `需要: <span style="color:#ffd700;">${nextNeedCount}</span> 个 · 可用: <span style="color:${isSufficient ? '#44ff88' : '#ff4444'};">${newFodderCount}</span> 个`;
+        
+        // 更新或添加材料不足提示
+        let shortageTip = popup.querySelector('[data-shortage-tip]');
+        if (!isSufficient) {
+            if (!shortageTip) {
+                shortageTip = document.createElement('div');
+                shortageTip.setAttribute('data-shortage-tip', 'true');
+                shortageTip.style.cssText = 'font-size:11px;color:#ff6666;margin-top:4px;';
+                materialCount.parentElement.appendChild(shortageTip);
+            }
+            shortageTip.textContent = `材料不足，还需 ${nextNeedCount - newFodderCount} 个同名宝物`;
+        } else {
+            if (shortageTip) {
+                shortageTip.remove();
+            }
+        }
+    }
+    
+    // 4. 更新预览区
+    const previewSection = popup.querySelector('[data-preview-section]');
+    if (previewSection) {
+        if (currentLevel < 10) {
+            const multiplier = currentLevel + 1;
+            let previewText = '';
+            if (def.atk > 0) previewText += `攻击: ${def.atk} → ${def.atk * multiplier}\n`;
+            if (def.def > 0) previewText += `防御: ${def.def} → ${def.def * multiplier}\n`;
+            if (def.hp > 0) previewText += `生命: ${def.hp} → ${def.hp * multiplier}\n`;
+            if (def.spe > 0) previewText += `速度: ${def.spe} → ${def.spe * multiplier}\n`;
+            previewSection.textContent = previewText;
+            
+            // 更新预览标题
+            const previewTitle = previewSection.parentElement?.querySelector('[data-preview-title]');
+            if (previewTitle) {
+                previewTitle.textContent = `升级至 Lv.${currentLevel + 1} 预览`;
+            }
+        } else {
+            // 满级时隐藏预览区
+            previewSection.parentElement?.remove();
+        }
+    }
+    
+    // 5. 更新升级按钮
+    if (upgradeBtn) {
+        if (currentLevel >= 10) {
+            upgradeBtn.textContent = '已满级';
+            upgradeBtn.disabled = true;
+            upgradeBtn.style.opacity = '0.5';
+        } else {
+            const newFodderCount = Object.keys(window.treasureInventory).filter(id => {
+                if (id === treasureInstanceId) return false;
+                const inv = window.treasureInventory[id];
+                if (!inv || inv.baseId !== baseId) return false;
+                
+                for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
+                    if (slots && slots.includes(id)) {
+                        return false;
+                    }
+                }
+                
+                if (inv.level && inv.level > 1) {
+                    return false;
+                }
+                
+                return true;
+            }).length;
+            
+            const nextNeedCount = currentLevel;
+            if (newFodderCount < nextNeedCount) {
+                upgradeBtn.textContent = `升级材料不足`;
+                upgradeBtn.disabled = true;
+                upgradeBtn.style.opacity = '0.5';
+            } else {
+                upgradeBtn.textContent = `升级`;
+                upgradeBtn.disabled = false;
+                upgradeBtn.style.opacity = '1';
+                upgradeBtn.style.cursor = 'pointer';
+            }
+        }
+    }
+    // ===== 【新增】更新宝物对角色总加成显示 =====
+    if (charInstanceId) {
+        const charStats = calculateInstanceFinalStats(charInstanceId);
+        const bonusInfo = popup.querySelector('[data-char-treasure-bonus]');
+		bonusInfo.setAttribute('data-char-treasure-bonus', 'true');
+		bonusInfo.style.cssText = 'font-size:11px;color:#aaa;margin-top:8px;padding-top:6px;border-top:1px solid #444;';
+        if (bonusInfo) {
+            let bonusParts = [];
+            if (charStats.treasureBonus.atk > 0) bonusParts.push(`攻击+${charStats.treasureBonus.atk}`);
+            if (charStats.treasureBonus.def > 0) bonusParts.push(`防御+${charStats.treasureBonus.def}`);
+            if (charStats.treasureBonus.hp > 0) bonusParts.push(`生命+${charStats.treasureBonus.hp}`);
+            if (charStats.treasureBonus.spe > 0) bonusParts.push(`速度+${charStats.treasureBonus.spe}`);
+            
+            if (bonusParts.length > 0) {
+                bonusInfo.innerHTML = `对角色加成: ${bonusParts.join(' · ')}`;
+            } else {
+                bonusInfo.innerHTML = `当前宝物无属性加成`;
+            }
+        }
+    }
+}
 
 
 
 /**
- * 
- * 1  初始化时攻击+100固定数值
- * 2  初始能量+1
- * 3  初始化时防御+50固定数值
- * 4  初始能量+1
- * 5  初始化时血量+200固定数值
- * 6  角色专有突破buff---------------------
- * 7  初始化时获得10%的攻防血加成（百分比加成在固定数值之后，多个生效的百分比加算）
- * 8  初始能量+1
- * 9  角色专属buff-------------------------
- * 10 初始化时全队获得攻击+200固定数值
- * 11 角色专属buff-------------------------
- * 12 初始能量+1
- * 13 初始化时全队获得防御+100固定数值
- * 14 专属buff-------------------------
- * 15 初始化时全队获得血量+300固定数值
- * 16 初始能量+1
- * 17 专属buff-------------------------
- * 18 初始化时全队获得10%的攻防血加成（百分比加成在固定数值之后，多个生效的百分比加算）
- * 19 专属buff-------------------------
- * 20 初始能量+1
- * 
- * 
- * buff库持续更新
- * [
- * （多个增伤或减伤加算）增伤减伤按照最终伤害乘算
- * 
- * 获得10%增伤
- * 获得20%增伤
- * 获得30%增伤
- * 获得10%减伤
- * 获得20%减伤
- * 获得30%减伤
- * 普攻后吸血50%
- * 普攻后吸血75%
- * 普攻后吸血100%
- * 亡语，每局游戏限一次，恢复生命值至攻击力*100%
- * 亡语，令所有敌人降低能量2
- * 亡语，令所有敌人降低能量全部
- * 亡语，令所有队友恢复生命为自身攻击力*100%
- * 亡语，令所有队友恢复2能量
- * 亡语，对所有敌人造成攻击力*100%真实伤害
- * 普攻时，无视对方50%防御力（伤害系专属）
- * 普攻时，无视对方80%防御力（伤害系专属）
- * 普攻时，无视对方全部防御力（伤害系专属）
- * 技能时，无视对方50%防御力（伤害系专属）
- * 技能时，无视对方80%防御力（伤害系专属）
- * 技能时，无视对方全部防御力（伤害系专属）
- * 所有伤害无视对方30%防御力（伤害系专属）
- * 所有伤害无视对方60%防御力（伤害系专属）
- * 所有伤害无视对方全部防御力（伤害系专属）
- * （原则上每名角色至多配置一个无视防御力的效果，如果凑巧出现多个，同类型只生效数值最大的，不同类型则加算）
- * （如，普攻无视50%，所有无视30%，那么就是普攻无视80%）
- * 使用技能后，30%几率封印目标一回合（伤害系专属）
- * 使用技能后，60%几率封印目标一回合（伤害系专属）
- * 使用技能后，100%几率封印目标一回合（伤害系专属）
- * 使用技能后，20%几率减少目标1能量（伤害系专属）
- * 使用技能后，50%几率减少目标1能量（伤害系专属）
- * 使用技能后，80%几率减少目标1能量（伤害系专属）
- * 使用技能后，20%几率减少目标2能量（伤害系专属）
- * 使用技能后，50%几率减少目标2能量（伤害系专属）
- * 普攻时，20%几率令目标降低1能量（伤害系专属）
- * 普攻时，50%几率令目标降低1能量（伤害系专属）
- * 普攻时，80%几率令目标降低1能量（伤害系专属）
- * 普攻时，20%几率令目标眩晕1回合（伤害系专属）
- * 普攻时，50%几率令目标眩晕1回合（伤害系专属）
- * 使用技能后，20%几率令目标眩晕1回合（伤害系专属）
- * 使用技能后，50%几率令目标眩晕1回合（伤害系专属）
- * 普攻时，20%几率令目标永久中毒，系数为攻击力5%（可叠加）（伤害系专属）
- * 普攻时，50%几率令目标永久中毒，系数为攻击力5%（可叠加）（伤害系专属）
- * 普攻时，100%几率令目标永久中毒，系数为攻击力5%（可叠加）（伤害系专属）
- * 使用技能后，20%几率令目标永久中毒，系数为攻击力10%（可叠加）（伤害系专属）
- * 使用技能后，50%几率令目标永久中毒，系数为攻击力10%（可叠加）（伤害系专属）
- * 使用技能后，110%几率令目标永久中毒，系数为攻击力10%（可叠加）（伤害系专属）
- * （概念解释：中毒，每次行动结束后，失去当前毒素的生命力，因此死亡不触发亡语）
- * 进入战斗的首次普攻或技能伤害增加50%
- * 进入战斗的首次受到普攻或技能伤害减少75%
- * 受到普攻或技能伤害，50%几率令全体队友增加1能量
- * 受到普攻或技能伤害时，25%几率减少来源1能量
- * 受到普攻或技能伤害时，50%几率减少来源1能量
- * 受到普攻或技能伤害时，自身增加1能量
- * 受到普攻或技能伤害时，10%几率令目标眩晕1回合
- * 受到普攻或技能伤害时，20%几率令目标眩晕1回合
- * 受到普攻或技能伤害时，20%几率令来源中毒，系数为攻击力5%（可叠加）
- * 受到普攻或技能伤害时，50%几率令来源中毒，系数为攻击力5%（可叠加）
- * 受到普攻或技能伤害时，100%几率令来源中毒，系数为攻击力5%（可叠加）
- * 普攻时，25%增加全队1能量
- * 普攻时，令能量最低的一名队友增加1能量
- * 治疗量增加10%（治疗系专属）
- * 治疗量增加25%（治疗系专属）
- * 治疗量增加50%（治疗系专属）
- * 普攻时，令被治疗目标增加1能量（治疗系专属）
- * 技能时，令被治疗目标增加1能量（治疗系专属）
- * 技能时，令被治疗目标增加1能量（治疗系专属）
- * 技能时，解除被治疗目标的负面效果（包括封印，眩晕，中毒等）（治疗系专属）
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * ]
+ * 计算角色实例的最终总属性（基础 + 突破加成 + 宝物加成）
+ * @param {string} instanceId - 角色实例ID
+ * @returns {Object} { baseHp, baseAtk, baseDef, baseSpe, totalHp, totalAtk, totalDef, totalSpe, breakthroughBonus, treasureBonus }
  */
+function calculateInstanceFinalStats(instanceId) {
+    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+        return {
+            baseHp: 0, baseAtk: 0, baseDef: 0, baseSpe: 0,
+            totalHp: 0, totalAtk: 0, totalDef: 0, totalSpe: 0,
+            breakthroughBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
+            treasureBonus: { hp: 0, atk: 0, def: 0, spe: 0 }
+        };
+    }
+
+    const instData = window.charBagData[instanceId];
+    const charId = instData.charId || instanceId;
+    const baseChar = window.characterList && window.characterList[charId];
+    
+    if (!baseChar) {
+        return {
+            baseHp: instData.hp || 0, baseAtk: instData.atk || 0, baseDef: instData.def || 0, baseSpe: instData.spe || 0,
+            totalHp: instData.hp || 0, totalAtk: instData.atk || 0, totalDef: instData.def || 0, totalSpe: instData.spe || 0,
+            breakthroughBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
+            treasureBonus: { hp: 0, atk: 0, def: 0, spe: 0 }
+        };
+    }
+
+    // ==== 1. 获取基础属性（等级 + 模板 + 品质） ====
+    let baseHp, baseAtk, baseDef, baseSpe;
+    
+    if (typeof updateCharacterSP === 'function') {
+        const compiled = updateCharacterSP(instData);
+        if (compiled) {
+            baseHp = compiled.hp || instData.hp || 0;
+            baseAtk = compiled.atk || instData.atk || 0;
+            baseDef = compiled.def || instData.def || 0;
+            baseSpe = compiled.spe || instData.spe || 0;
+        } else {
+            baseHp = instData.hp || 0;
+            baseAtk = instData.atk || 0;
+            baseDef = instData.def || 0;
+            baseSpe = instData.spe || 0;
+        }
+    } else {
+        baseHp = instData.hp || 0;
+        baseAtk = instData.atk || 0;
+        baseDef = instData.def || 0;
+        baseSpe = instData.spe || 0;
+    }
+
+    // ==== 2. 计算突破加成 ====
+    const tupolevel = instData.tupolevel || 0;
+    const tupoList = instData.tupoList || baseChar.tupoList || [];
+    let breakHp = 0, breakAtk = 0, breakDef = 0, breakSpe = 0;
+    
+    for (let i = 0; i < tupolevel; i++) {
+        const buff = tupoList[i];
+        if (!buff) continue;
+        
+        // 处理字符串引用的突破库
+        let resolvedBuff = buff;
+        if (typeof buff === 'string') {
+            const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+            resolvedBuff = lib[buff];
+        }
+        
+        if (!resolvedBuff) continue;
+        
+        if (resolvedBuff.type === 'self_stat_flat') {
+            if (resolvedBuff.hp) breakHp += Number(resolvedBuff.hp);
+            if (resolvedBuff.atk) breakAtk += Number(resolvedBuff.atk);
+            if (resolvedBuff.def) breakDef += Number(resolvedBuff.def);
+            if (resolvedBuff.spe) breakSpe += Number(resolvedBuff.spe);
+        }
+    }
+
+    // ==== 3. 计算宝物加成 ====
+    let tresHp = 0, tresAtk = 0, tresDef = 0, tresSpe = 0;
+    
+    // 从 charTreasureSlots 获取装备的宝物
+    if (window.charTreasureSlots && window.charTreasureSlots[instanceId]) {
+        const slots = window.charTreasureSlots[instanceId];
+        slots.forEach(treasureId => {
+            if (!treasureId) return;
+            const stats = window.getTreasureStats ? window.getTreasureStats(treasureId) : { hp: 0, atk: 0, def: 0, spe: 0 };
+            tresHp += stats.hp || 0;
+            tresAtk += stats.atk || 0;
+            tresDef += stats.def || 0;
+            tresSpe += stats.spe || 0;
+        });
+    }
+
+    return {
+        baseHp, baseAtk, baseDef, baseSpe,
+        totalHp: baseHp + breakHp + tresHp,
+        totalAtk: baseAtk + breakAtk + tresAtk,
+        totalDef: baseDef + breakDef + tresDef,
+        totalSpe: baseSpe + breakSpe + tresSpe,
+        breakthroughBonus: { hp: breakHp, atk: breakAtk, def: breakDef, spe: breakSpe },
+        treasureBonus: { hp: tresHp, atk: tresAtk, def: tresDef, spe: tresSpe }
+    };
+}
+
+/**
+ * 格式化属性显示文本（基础值 + 总加成）
+ * @param {number} totalValue - 总属性值
+ * @param {number} baseValue - 基础属性值
+ * @param {number} bonusValue - 加成值
+ * @returns {string} 格式化后的HTML文本
+ */
+function formatAttributeDisplay(totalValue, baseValue, bonusValue) {
+    let text = `${totalValue}`;
+    if (bonusValue > 0) {
+        text += ` <span style="color:#44ff88;font-size:11px;">(+${bonusValue})</span>`;
+    }
+    return text;
+}
+
