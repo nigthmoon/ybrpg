@@ -3165,6 +3165,12 @@ function renderSettingsView(container) {
 	groupDiv.appendChild(saveBtn);
 
 	container.appendChild(groupDiv);
+
+	
+	const versionInfo = document.createElement('div');
+	versionInfo.style.cssText = 'color:#888;font-size:12px;margin-top:20px;text-align:center;';
+	versionInfo.textContent = `版本: ${window.GAME_VERSION || 'v1.0'}`;
+	container.appendChild(versionInfo);
 }
 
 // 新增: 渲染角色图鉴视图
@@ -5608,7 +5614,7 @@ function showMainView() {
 		versionDiv.style.color = '#888';
 		versionDiv.style.fontSize = '12px';
 		versionDiv.style.marginTop = '20px';
-		versionDiv.textContent = '独立版 v1.0';
+		versionDiv.textContent = `独立版 ${window.GAME_VERSION || 'v1.0'}`;
 		mainView.appendChild(versionDiv);
 	}
 }
@@ -5814,16 +5820,23 @@ const SaveManager = {
 			window.ensureCharTreasureSlots();
 		}
 
-		// 同步到 GameData
+		// ===== 【新增】保存宝物槽位数据和背包Tab =====
 		gameData.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));
+		if (!gameData.data._playerPreferences) {
+			gameData.data._playerPreferences = {};
+		}
+		gameData.data._playerPreferences.bagTab = window.bagTab || 'char';
+		// ============================================
+		// 同步到 GameData
 		gameData.data.baseInfo.saveName = `存档${slot}`;
 		gameData.data.baseInfo.saveTime = new Date().toISOString();
 
 		// 保存到 localStorage
 		gameData.save(slot);
 
-		// 同时保存 window 变量（兼容性）
+		// 兼容格式也加上
 		const compatData = {
+			gameVersion: window.GAME_VERSION || 'v1.0',  // 【新增】
 			playerProgress: window.playerProgress || {},
 			currentTeam: window.currentTeam || [null, null, null, null, null, null],
 			currentDifficulty: window.currentDifficulty || 'normal',
@@ -5831,20 +5844,21 @@ const SaveManager = {
 			shopData: window.shopData || { items: [], refreshCost: 50 },
 			gameGold: window.gameGold || 1000,
 			charTreasureSlots: window.charTreasureSlots || {},
-
 			charBagData: window.charBagData || {},
 			treasureEquipData: window.treasureEquipData || {},
 			treasureBagData: window.treasureBagData || {},
 			autoBattle: window.autoBattle || false,
 			saveTime: new Date().toLocaleString(),
 			saveName: `存档${slot}`,
-			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {}))
+			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
+			playerPreferences: {  // 【新增】
+				bagTab: window.bagTab || 'char'
+			}
 		};
 		localStorage.setItem(`ybrpg_save_${slot}`, JSON.stringify(compatData));
-
-		console.log(`已保存到槽位${slot}`);
-		return compatData;
-	},
+			console.log(`已保存到槽位${slot}`);
+			return compatData;
+		},
 
 	// 从指定槽位读取（同步到 GameData 和 window）
 	loadFromSlot(slot) {
@@ -5859,6 +5873,22 @@ const SaveManager = {
 
 		if (compatData) {
 			const parsed = JSON.parse(compatData);
+			// ===== 【新增】版本兼容性检查 =====
+			const saveVersion = parsed.gameVersion;
+			const compatibility = checkSaveCompatibility(saveVersion);
+			
+			if (!compatibility.compatible) {
+				console.warn(`[存档加载] ${compatibility.message}`);
+				// 可以在这里处理不兼容情况，比如显示警告
+				if (compatibility.message) {
+					setTimeout(() => {
+						toast(compatibility.message, 'warning');
+					}, 500);
+				}
+			} else if (compatibility.message) {
+				console.log(`[存档加载] ${compatibility.message}`);
+			}
+			
 			// 【新增】恢复背包Tab
 			if (parsed.playerPreferences?.bagTab) {
 				window.bagTab = parsed.playerPreferences.bagTab;
@@ -6006,20 +6036,24 @@ const SaveManager = {
 		if (typeof window.ensureCharTreasureSlots === 'function') {
 			window.ensureCharTreasureSlots();
 		}
+			
 		// 同步 GameData 数据
 		gameData.data.team.members = (window.currentTeam || []).filter(Boolean);
 		gameData.data.bag.gold = window.gameGold || 1000;
+		gameData.data._treasureInventory = JSON.parse(JSON.stringify(window.treasureInventory || {}));  // 【新增】
 		gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData || {}));
 		gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
 		gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
+		gameData.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));  // 【新增】
 		gameData.data.baseInfo.saveName = '自动存档';
 		gameData.data.baseInfo.saveTime = new Date().toISOString();
 
-		// 保存到 GameData 的专用自动存档槽位（索引0）
 		gameData.save(0);
 
-		// 同时保存兼容格式
+		
+		// 兼容格式
 		const compatData = {
+			gameVersion: window.GAME_VERSION || 'v1.0',  // 【新增】
 			playerProgress: window.playerProgress || {},
 			currentTeam: window.currentTeam || [null, null, null, null, null, null],
 			currentDifficulty: window.currentDifficulty || 'normal',
@@ -6033,16 +6067,12 @@ const SaveManager = {
 			saveTime: new Date().toLocaleString(),
 			saveName: '自动存档',
 			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
-			// ========== 新增这一行 ==========
-			charTreasureSlots: window.charTreasureSlots || {},  // 保存宝物槽位数据
-			// ==============================
-			// 【新增】
+			charTreasureSlots: window.charTreasureSlots || {},
 			playerPreferences: {
 				bagTab: window.bagTab || 'char'
 			}
 		};
 		localStorage.setItem(SaveManager.AUTO_KEY, JSON.stringify(compatData));
-
 
 		console.log('[自动存档] 已保存');
 	},
@@ -6067,6 +6097,21 @@ const SaveManager = {
 			if (compatData) {
 				const parsed = JSON.parse(compatData);
 
+				// ===== 【新增】版本兼容性检查 =====
+				const saveVersion = parsed.gameVersion;
+				const compatibility = checkSaveCompatibility(saveVersion);
+				
+				if (!compatibility.compatible) {
+					console.warn(`[存档加载] ${compatibility.message}`);
+					// 可以在这里处理不兼容情况，比如显示警告
+					if (compatibility.message) {
+						setTimeout(() => {
+							toast(compatibility.message, 'warning');
+						}, 500);
+					}
+				} else if (compatibility.message) {
+					console.log(`[存档加载] ${compatibility.message}`);
+				}
 				// 【新增】恢复背包Tab
 				if (parsed.playerPreferences?.bagTab) {
 					window.bagTab = parsed.playerPreferences.bagTab;
@@ -6157,7 +6202,7 @@ const SaveManager = {
 				window.charBagData = data._charBag || {};
 				window.treasureEquipData = data._treasures || {};
 				window.treasureBagData = data._treasureBag || {};
-				window.autoBattle = window.autoBattle || false;  // ✅ 使用 window.autoBattle 保持原值
+				window.autoBattle = parsed.autoBattle || false;  // ✅ 使用 window.autoBattle 保持原值
 
 				// 【新增】
 				window.bagTab = data._playerPreferences?.bagTab || 'char';
@@ -6350,6 +6395,13 @@ function renderSaveView(container, fromGame = true) {
 			timeDiv.textContent = save.data.saveTime || '未知时间';
 			infoDiv.appendChild(timeDiv);
 
+			// ===== 【新增】版本号显示 =====
+			const versionEl = document.createElement('div');
+			versionEl.className = 'save-version';
+			versionEl.style.cssText = 'font-size:10px;color:#666;margin-top:2px;';
+			versionEl.textContent = `版本: ${save.data.gameVersion || '旧版'}`;
+			infoDiv.appendChild(versionEl);
+			// =============================
 			saveSlot.appendChild(infoDiv);
 
 			// 读取按钮
@@ -9005,3 +9057,71 @@ function formatAttributeDisplay(totalValue, baseValue, bonusValue) {
 	return text;
 }
 
+/**
+ * 比较两个版本号
+ * @param {string} v1 - 版本号1，如 "v2.3.1"
+ * @param {string} v2 - 版本号2，如 "v2.3.1"
+ * @returns {number} -1: v1 < v2, 0: v1 === v2, 1: v1 > v2
+ */
+function compareVersions(v1, v2) {
+    if (!v1 || !v2) return 0;
+    
+    // 移除 'v' 前缀
+    const cleanV1 = v1.replace(/^v/, '');
+    const cleanV2 = v2.replace(/^v/, '');
+    
+    const parts1 = cleanV1.split('.').map(Number);
+    const parts2 = cleanV2.split('.').map(Number);
+    
+    const maxLen = Math.max(parts1.length, parts2.length);
+    
+    for (let i = 0; i < maxLen; i++) {
+        const p1 = parts1[i] || 0;
+        const p2 = parts2[i] || 0;
+        
+        if (p1 < p2) return -1;
+        if (p1 > p2) return 1;
+    }
+    
+    return 0;
+}
+
+/**
+ * 检查存档版本是否与当前版本兼容
+ * @param {string} saveVersion - 存档中的版本号
+ * @param {Object} [options] - 选项
+ * @param {boolean} [options.warnOnNewer=false] - 存档版本比当前版本新时是否警告
+ * @returns {Object} { compatible: boolean, message: string }
+ */
+function checkSaveCompatibility(saveVersion) {
+    const currentVersion = window.GAME_VERSION || 'v1.0';
+    
+    if (!saveVersion) {
+        return {
+            compatible: true, // 旧存档没有版本号，视为兼容
+            message: '旧版存档，建议重新保存以更新版本信息'
+        };
+    }
+    
+    const result = compareVersions(saveVersion, currentVersion);
+    
+    if (result > 0) {
+        // 存档版本比当前版本新（理论上不应该发生）
+        return {
+            compatible: false,
+            message: `存档版本(${saveVersion})高于当前版本(${currentVersion})，可能不兼容`
+        };
+    } else if (result < 0) {
+        // 存档版本比当前版本旧
+        return {
+            compatible: true,
+            message: `旧版存档(${saveVersion})，将升级至当前版本(${currentVersion})`
+        };
+    } else {
+        // 版本相同
+        return {
+            compatible: true,
+            message: ''
+        };
+    }
+}
