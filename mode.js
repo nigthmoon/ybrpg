@@ -901,6 +901,8 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			const tDef = defs[invData.baseId];
 			if (tDef) {
 				tSlot.title = `${tDef.name}: ${tDef.desc || ''}`;
+				tSlot.style.position = 'relative';
+				
 				if (tDef.icon) {
 					const tImg = document.createElement('img');
 					tImg.src = tDef.icon;
@@ -910,6 +912,28 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 				} else {
 					tSlot.textContent = tDef.name.charAt(0);
 				}
+				
+				// 等级标签（右下角）
+				const treasureLevel = window.treasureInventory[tId]?.level || 1;
+				if (treasureLevel > 1) {
+					const levelBadge = document.createElement('div');
+					levelBadge.style.cssText = `
+						position: absolute;
+						bottom: 1px;
+						right: 1px;
+						background: rgba(0, 0, 0, 0.8);
+						color: #ffd700;
+						font-size: 8px;
+						padding: 0 2px;
+						border-radius: 2px;
+						font-weight: bold;
+						z-index: 2;
+						line-height: 12px;
+						pointer-events: none;
+					`;
+					levelBadge.textContent = `Lv.${treasureLevel}`;
+					tSlot.appendChild(levelBadge);
+				}
 			} else {
 				tSlot.textContent = '+';
 				tSlot.classList.add('empty');
@@ -918,8 +942,19 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			tSlot.textContent = '+';
 			tSlot.classList.add('empty');
 		}
+
 		
-		tSlot.onclick = () => showTreasureSelectPopup(instanceId, i);
+		tSlot.onclick = () => {
+			const tId = equippedIds[i];
+			if (tId) {
+				// 该槽位有宝物 -> 弹出升级浮窗（内置替换功能）
+				showTreasureUpgradePopup(tId, instanceId, i);
+			} else {
+				// 空槽位 -> 弹出选择浮窗
+				showTreasureSelectPopup(instanceId, i);
+			}
+		};
+		
 		treasureGrid.appendChild(tSlot);
 	}
 
@@ -1113,13 +1148,26 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
         };
     });
 
-    // 排序：当前槽位的 → 空闲 → 装备在自己其他槽位的 → 装备在其他角色身上的
-    displayList.sort((a, b) => {
-        if (a.isSelfEquipped) return -1;
-        if (b.isSelfEquipped) return 1;
-        const order = { free: 0, self: 1, other: 2 };
-        return (order[a.status] || 3) - (order[b.status] || 3);
-    });
+    // 排序：当前槽位的 → 当前角色已装备的（高等级优先）→ 空闲（高等级优先）→ 其他角色装备的
+	displayList.sort((a, b) => {
+		if (a.isSelfEquipped) return -1;
+		if (b.isSelfEquipped) return 1;
+		
+		// 当前角色已装备的排前面
+		if (a.status === 'self' && b.status !== 'self') return -1;
+		if (a.status !== 'self' && b.status === 'self') return 1;
+		
+		// 空闲的排中间
+		if (a.status === 'free' && b.status !== 'free') return -1;
+		if (a.status !== 'free' && b.status === 'free') return 1;
+		
+		// 同状态按等级排序（高等级优先）
+		const aLevel = window.treasureInventory[a.instanceId]?.level || 1;
+		const bLevel = window.treasureInventory[b.instanceId]?.level || 1;
+		if (bLevel !== aLevel) return bLevel - aLevel;
+		
+		return 0;
+	});
 
     if (displayList.length === 0) {
         const emptyTip = document.createElement('div');
@@ -1132,6 +1180,12 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
         const row = document.createElement('div');
         row.className = 'treasure-select-row';
 
+		const nameEl = document.createElement('div');
+		nameEl.className = 'treasure-select-name';
+		const itemLevel = window.treasureInventory[item.instanceId]?.level || 1;
+		nameEl.innerHTML = `${item.name} <span style="color:#ffd700;font-size:11px;">Lv.${itemLevel}</span>`;
+        
+		
         // 根据不同状态添加类名
         if (item.isSelfEquipped) {
             row.classList.add('current');
@@ -1160,9 +1214,6 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
         const infoDiv = document.createElement('div');
         infoDiv.className = 'treasure-select-info';
         
-        const nameEl = document.createElement('div');
-        nameEl.className = 'treasure-select-name';
-        nameEl.textContent = item.name;
         
         // ==== 需求1 & 2：显示装备状态标签 ====
         if (item.isSelfEquipped) {
@@ -1990,56 +2041,73 @@ function showCharSelectPopup(slotIndex) {
         selectBtn.className = 'char-select-btn';
         selectBtn.textContent = '选择';
         selectBtn.onclick = (e) => {
-            e.stopPropagation();
-            
-            const existIdx = window.currentTeam.indexOf(charInst.instanceId);
-            const oldInstanceId = window.currentTeam[slotIndex];
-
-            // 1. 处理队伍数据交换
-            if (existIdx !== -1) {
-                window.currentTeam[existIdx] = oldInstanceId;
-            } else if (oldInstanceId) {
-                // 转移宝物
-                if (typeof gameData.transferTreasures === 'function') {
-                    gameData.transferTreasures(oldInstanceId, charInst.instanceId);
-                }
-            }
-
-            // 2. 设置新角色
-            window.currentTeam[slotIndex] = charInst.instanceId;
-            
-            // 3. 更新选中状态
-            window._selectedSlotIndex = slotIndex;
-
-            // 4. 【关键修改】使用 setTimeout 延迟刷新，确保数据已完全写入且当前点击事件处理完毕
-            // 这样可以避免与弹窗关闭、DOM 移除等操作发生竞争
-            setTimeout(() => {
-                // A. 刷新网格中的单个槽位（显示头像、名字等）
-                refreshTeamSlot(slotIndex);
-                
-                // B. 如果存在被交换出去的旧槽位，也刷新它
-                if (existIdx !== -1 && existIdx !== slotIndex) {
-                    refreshTeamSlot(existIdx);
-                }
-
-                // C. 刷新详情区域
-                const newInstanceId = window.currentTeam[slotIndex];
-                if (newInstanceId && window.charBagData && window.charBagData[newInstanceId]) {
-                    const newInstanceData = window.charBagData[newInstanceId];
-                    const newCharId = newInstanceData.charId || newInstanceId;
-                    
-                    // 强制调用详情刷新
-                    showTeamCharInfo(slotIndex, newInstanceId, newCharId);
-                }
-                
-                // D. 自动保存
-                SaveManager.autoSave();
-            }, 0);
-
-            // 5. 提示与关闭弹窗
-            toast(`${charInst.name} (Lv.${charInst.level}) 已上阵`, 'success');
-            overlay.remove();
-        };
+			e.stopPropagation();
+			
+			const existIdx = window.currentTeam.indexOf(charInst.instanceId);
+			const oldInstanceId = window.currentTeam[slotIndex];
+		
+			// 1. 处理宝物继承逻辑（使用新的 charTreasureSlots 系统）
+			if (oldInstanceId) {
+				// 确保宝物槽位数据已初始化
+				if (typeof window.ensureCharTreasureSlots === 'function') {
+					window.ensureCharTreasureSlots();
+				}
+				
+				// 获取旧角色的宝物槽位
+				const oldSlots = window.charTreasureSlots[oldInstanceId] || [null, null, null, null, null, null];
+				
+				// 如果新角色还没有宝物槽位，初始化
+				if (!window.charTreasureSlots[charInst.instanceId]) {
+					window.charTreasureSlots[charInst.instanceId] = [null, null, null, null, null, null];
+				}
+				
+				// 将旧角色的宝物转移到新角色
+				window.charTreasureSlots[charInst.instanceId] = [...oldSlots];
+				
+				// 清空旧角色的宝物槽位
+				window.charTreasureSlots[oldInstanceId] = [null, null, null, null, null, null];
+			}
+		
+			// 2. 处理队伍数据交换
+			if (existIdx !== -1) {
+				window.currentTeam[existIdx] = oldInstanceId;
+			}
+		
+			// 3. 设置新角色
+			window.currentTeam[slotIndex] = charInst.instanceId;
+			
+			// 4. 更新选中状态
+			window._selectedSlotIndex = slotIndex;
+		
+			// 5. 延迟刷新
+			setTimeout(() => {
+				// A. 刷新网格中的单个槽位（显示头像、名字等）
+				refreshTeamSlot(slotIndex);
+				
+				// B. 如果存在被交换出去的旧槽位，也刷新它
+				if (existIdx !== -1 && existIdx !== slotIndex) {
+					refreshTeamSlot(existIdx);
+				}
+		
+				// C. 刷新详情区域
+				const newInstanceId = window.currentTeam[slotIndex];
+				if (newInstanceId && window.charBagData && window.charBagData[newInstanceId]) {
+					const newInstanceData = window.charBagData[newInstanceId];
+					const newCharId = newInstanceData.charId || newInstanceId;
+					
+					// 强制调用详情刷新
+					showTeamCharInfo(slotIndex, newInstanceId, newCharId);
+				}
+				
+				// D. 自动保存
+				SaveManager.autoSave();
+			}, 0);
+		
+			// 6. 提示与关闭弹窗
+			toast(`${charInst.name} (Lv.${charInst.level}) 已上阵`, 'success');
+			overlay.remove();
+		};
+		
         // var num = window._selectedSlotIndex;
         //     const instanceId = window.currentTeam[num];
         //     const instanceData = window.charBagData[instanceId];
@@ -2478,10 +2546,11 @@ function renderBagEquipContent(container) {
 
 		card.appendChild(iconDiv);
 
-		// 名称（不再变色）
+		// 名称（不再变色），显示等级
 		const nameDiv = document.createElement('div');
 		nameDiv.className = 'gallery-char-name';
-		nameDiv.textContent = item.name;
+		const treasureLevel = window.treasureInventory[item.instanceId]?.level || 1;
+		nameDiv.innerHTML = `${item.name} <span style="color:#ffd700;font-size:10px;">Lv.${treasureLevel}</span>`;
 		card.appendChild(nameDiv);
 
 
@@ -2491,21 +2560,25 @@ function renderBagEquipContent(container) {
 
         // 点击选中宝物，显示到底部详情横框
         card.onclick = () => {
-            // 构建一个兼容旧格式的 bagItem 对象
-            const bagItem = {
-                count: 1,
-                equippedBy: isEquipped ? [ownerInfo.ownerId] : []
-            };
-            updateBagEquipDetailBar(item.baseId, item, bagItem);
-            document.querySelectorAll('.equipbag-treasure-card.selected').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            
-            // 获取 detailBar 元素并保存当前选中的宝物实例ID
+			const bagItem = {
+				count: 1,
+				equippedBy: isEquipped ? [ownerInfo.ownerId] : []
+			};
+			updateBagEquipDetailBar(item.baseId, item, bagItem);
+			document.querySelectorAll('.equipbag-treasure-card.selected').forEach(c => c.classList.remove('selected'));
+			card.classList.add('selected');
+			
 			const detailBarEl = document.getElementById('bag-detail-bar');
 			if (detailBarEl) {
 				detailBarEl.dataset.treasureInstanceId = item.instanceId;
 			}
-        };
+		};
+		
+		// 双击宝物卡片显示升级浮窗
+		card.ondblclick = () => {
+			showTreasureUpgradePopup(item.instanceId, isEquipped ? ownerInfo.ownerId : null);
+		};
+		
 
         grid.appendChild(card);
     });
@@ -2563,8 +2636,10 @@ function updateBagEquipDetailBar(baseId, tDef, bagItem) {
     // 更新描述
     const descEl = document.getElementById('bag-detail-equip-desc');
     if (descEl) {
-        let descText = tDef.desc || '';
-        descText += ` | 持有: 1 可用: ${bagItem.count - (bagItem.equippedBy ? bagItem.equippedBy.length : 0)}`;
+		const treasureLevel = window.treasureInventory[treasureInstanceId]?.level || 1;
+		let descText = tDef.desc || '';
+		descText += ` | Lv.${treasureLevel} | 持有: 1 可用: ${bagItem.count - (bagItem.equippedBy ? bagItem.equippedBy.length : 0)}`;
+        
         if (bagItem.equippedBy && bagItem.equippedBy.length > 0) {
             const equipperNames = bagItem.equippedBy.map(instId => {
                 // 从 charTreasureSlots 反查角色名
@@ -7954,13 +8029,14 @@ window.addTreasureInstance = function(baseId, count = 1) {
     for (let i = 0; i < count; i++) {
         const instanceId = generateTreasureInstanceId(baseId);
         window.treasureInventory[instanceId] = {
-            baseId: baseId
-            // equippedBy 已移除 - 宝物不再知道自己被谁装备
+            baseId: baseId,
+            level: 1 // 新增：初始等级为1
         };
         createdIds.push(instanceId);
     }
     return createdIds;
 };
+
 
 
 /**
@@ -7990,13 +8066,17 @@ window.getTreasureStats = function(instanceId) {
     const def = defs[data.baseId];
     if (!def) return { atk: 0, def: 0, hp: 0, spe: 0 };
     
+    const level = data.level || 1;
+    const multiplier = level; // 等级倍数
+    
     return {
-        atk: def.atk || 0,
-        def: def.def || 0,
-        hp: def.hp || 0,
-        spe: def.spe || 0
+        atk: (def.atk || 0) * multiplier,
+        def: (def.def || 0) * multiplier,
+        hp: (def.hp || 0) * multiplier,
+        spe: (def.spe || 0) * multiplier
     };
 };
+
 
 /**
  * 合并宝物属性到角色属性（战斗前调用）
@@ -8071,6 +8151,338 @@ window.buildPlayerTeamForBattle = function() {
     return team;
 };
 
+// ====== 宝物升级系统 ======
+
+/**
+ * 获取宝物实例的当前数值（考虑等级加成）
+ * @param {string} instanceId - 宝物实例ID
+ * @returns {Object} { atk, def, hp, spe, desc }
+ */
+function getTreasureStatsWithLevel(instanceId) {
+    const data = window.treasureInventory[instanceId];
+    if (!data) return { atk: 0, def: 0, hp: 0, spe: 0, desc: '' };
+    
+    const defs = getTreasureDefs();
+    const def = defs[data.baseId];
+    if (!def) return { atk: 0, def: 0, hp: 0, spe: 0, desc: '' };
+    
+    const level = data.level || 1;
+    const multiplier = level; // 1级=1倍, 2级=2倍, ... 10级=10倍
+    
+    return {
+        atk: (def.atk || 0) * multiplier,
+        def: (def.def || 0) * multiplier,
+        hp: (def.hp || 0) * multiplier,
+        spe: (def.spe || 0) * multiplier,
+        desc: def.desc || '',
+        name: def.name || '',
+        icon: def.icon || '',
+        baseId: data.baseId,
+        level: level,
+        maxLevel: 10
+    };
+}
+
+/**
+ * 显示宝物升级浮窗
+ * @param {string} treasureInstanceId - 要升级的宝物实例ID
+ * @param {string} charInstanceId - 所属角色实例ID（可选，阵容中调用时传入）
+ */
+function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slotIndex = null) {
+
+    // 检查宝物是否存在
+    const treasureData = window.treasureInventory[treasureInstanceId];
+    if (!treasureData) {
+        toast('宝物数据异常', 'error');
+        return;
+    }
+    
+    const stats = getTreasureStatsWithLevel(treasureInstanceId);
+    const currentLevel = stats.level;
+    const baseId = stats.baseId;
+    const defs = getTreasureDefs();
+    const def = defs[baseId];
+    
+    if (!def) {
+        toast('宝物定义缺失', 'error');
+        return;
+    }
+    
+    // 检查是否已达到最大等级
+    if (currentLevel >= 10) {
+        toast('该宝物已达到最高等级', 'warning');
+        return;
+    }
+    
+    // 查找同名宝物实例（作为升级材料）
+    // 查找同名宝物实例（作为升级材料）
+	// 规则：排除自身、排除已被装备的、排除已升级过的（等级>1）
+	const fodderInstanceIds = Object.keys(window.treasureInventory).filter(id => {
+		if (id === treasureInstanceId) return false; // 排除自身
+		const inv = window.treasureInventory[id];
+		if (!inv || inv.baseId !== baseId) return false; // 必须是同名宝物
+		
+		// 排除已被装备的宝物
+		if (window.charTreasureSlots) {
+			for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
+				if (slots && slots.includes(id)) {
+					return false; // 已被其他角色装备
+				}
+			}
+		}
+		
+		// 排除已升级过的宝物（等级>1）
+		if (inv.level && inv.level > 1) {
+			return false; // 已升级过的宝物不能作为材料
+		}
+		
+		return true;
+	});
+
+	// 计算可用材料数量
+	const fodderCount = fodderInstanceIds.length;
+
+    
+    
+    // 创建遮罩层
+    const overlay = document.createElement('div');
+    overlay.className = 'ybrpg-confirm-overlay';
+    overlay.id = 'treasure-upgrade-overlay';
+    
+    // 创建弹窗
+    const popup = document.createElement('div');
+    popup.style.cssText = `
+        background: #1a1a1a;
+        border: 2px solid #ffd700;
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 360px;
+        width: 90%;
+        display: flex;
+        flex-direction: column;
+        animation: dialogIn 0.2s ease;
+        color: #fff;
+    `;
+    
+    // 标题
+    const title = document.createElement('div');
+    title.style.cssText = 'color:#ffd700;font-size:18px;font-weight:bold;text-align:center;margin-bottom:15px;';
+    title.textContent = `宝物升级 - ${def.name}`;
+    popup.appendChild(title);
+    
+    // 当前宝物信息
+    const infoSection = document.createElement('div');
+    infoSection.style.cssText = 'background:#2a2a2a;border-radius:8px;padding:12px;margin-bottom:12px;';
+    
+    // 宝物图标和名称
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
+    
+    if (def.icon) {
+        const icon = document.createElement('img');
+        icon.src = def.icon;
+        icon.style.cssText = 'width:40px;height:40px;object-fit:contain;border-radius:4px;';
+        icon.onerror = function() { this.style.display = 'none'; };
+        headerRow.appendChild(icon);
+    }
+    
+    const nameLevel = document.createElement('div');
+    nameLevel.style.cssText = 'flex:1;';
+    nameLevel.innerHTML = `
+        <div style="font-size:16px;font-weight:bold;color:#fff;">${def.name}</div>
+        <div style="font-size:13px;color:#ffd700;">Lv.${currentLevel}/10</div>
+    `;
+    headerRow.appendChild(nameLevel);
+    infoSection.appendChild(headerRow);
+    
+    // 属性展示
+    const attrRow = document.createElement('div');
+    attrRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;';
+    
+    const baseAtk = def.atk || 0;
+    const baseDef = def.def || 0;
+    const baseHp = def.hp || 0;
+    const baseSpe = def.spe || 0;
+    
+    if (baseAtk > 0) {
+        attrRow.innerHTML += `<div style="color:#ff4444;">攻击: ${baseAtk} → ${baseAtk * (currentLevel + 1)}</div>`;
+    }
+    if (baseDef > 0) {
+        attrRow.innerHTML += `<div style="color:#88cc88;">防御: ${baseDef} → ${baseDef * (currentLevel + 1)}</div>`;
+    }
+    if (baseHp > 0) {
+        attrRow.innerHTML += `<div style="color:#44aaff;">生命: ${baseHp} → ${baseHp * (currentLevel + 1)}</div>`;
+    }
+    if (baseSpe > 0) {
+        attrRow.innerHTML += `<div style="color:#ffff44;">速度: ${baseSpe} → ${baseSpe * (currentLevel + 1)}</div>`;
+    }
+    
+    infoSection.appendChild(attrRow);
+    popup.appendChild(infoSection);
+    
+    // 材料信息
+    const materialSection = document.createElement('div');
+    materialSection.style.cssText = 'background:#2a2a2a;border-radius:8px;padding:12px;margin-bottom:12px;';
+    
+    const materialTitle = document.createElement('div');
+    materialTitle.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:6px;';
+    materialTitle.textContent = '升级材料（同名宝物）';
+    materialSection.appendChild(materialTitle);
+    
+    const materialCount = document.createElement('div');
+    const needCount = currentLevel; // 升到下一级需要当前等级数量的同名宝物
+    materialCount.style.cssText = 'font-size:13px;color:#ddd;';
+    materialCount.innerHTML = `需要: <span style="color:#ffd700;">${needCount}</span> 个 · 可用: <span style="color:${fodderCount >= needCount ? '#44ff88' : '#ff4444'};">${fodderCount}</span> 个`;
+    materialSection.appendChild(materialCount);
+    
+    // 如果可用材料不足，显示提示
+    if (fodderCount < needCount) {
+        const shortageTip = document.createElement('div');
+        shortageTip.style.cssText = 'font-size:11px;color:#ff6666;margin-top:4px;';
+        shortageTip.textContent = `材料不足，还需 ${needCount - fodderCount} 个同名宝物`;
+        materialSection.appendChild(shortageTip);
+    }
+    
+    popup.appendChild(materialSection);
+    
+    // 下一级预览
+    if (currentLevel < 10) {
+        const previewSection = document.createElement('div');
+        previewSection.style.cssText = 'background:#2a2a3a;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #ffd700;';
+        
+        const previewTitle = document.createElement('div');
+        previewTitle.style.cssText = 'font-size:14px;color:#ffd700;margin-bottom:6px;';
+        previewTitle.textContent = `升级至 Lv.${currentLevel + 1} 预览`;
+        previewSection.appendChild(previewTitle);
+        
+        const multiplier = currentLevel + 1;
+        const previewContent = document.createElement('div');
+        previewContent.style.cssText = 'font-size:12px;color:#ccc;line-height:1.6;';
+        
+        let previewText = '';
+        if (baseAtk > 0) previewText += `攻击: ${baseAtk} → ${baseAtk * multiplier}\n`;
+        if (baseDef > 0) previewText += `防御: ${baseDef} → ${baseDef * multiplier}\n`;
+        if (baseHp > 0) previewText += `生命: ${baseHp} → ${baseHp * multiplier}\n`;
+        if (baseSpe > 0) previewText += `速度: ${baseSpe} → ${baseSpe * multiplier}\n`;
+        
+        previewContent.textContent = previewText;
+        previewSection.appendChild(previewContent);
+        popup.appendChild(previewSection);
+    }
+    
+    // 按钮区域
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap;';
+
+	// 升级按钮
+	const upgradeBtn = document.createElement('button');
+	upgradeBtn.className = 'ybrpg-btn';
+	upgradeBtn.style.cssText = 'width:auto;padding:8px 20px;font-size:14px;flex:1;min-width:80px;';
+	upgradeBtn.textContent = '升级';
+
+	if (fodderCount < needCount || currentLevel >= 10) {
+		upgradeBtn.disabled = true;
+		upgradeBtn.style.opacity = '0.5';
+		upgradeBtn.style.cursor = 'not-allowed';
+		if (currentLevel >= 10) {
+			upgradeBtn.textContent = '已满级';
+		} else {
+			upgradeBtn.textContent = `材料不足(${fodderCount}/${needCount})`;
+		}
+	}
+
+	upgradeBtn.onclick = () => {
+		if (currentLevel >= 10) {
+			toast('宝物已达到最高等级', 'warning');
+			return;
+		}
+		
+		if (fodderCount < needCount) {
+			toast(`材料不足！需要 ${needCount} 个同名宝物，当前可用: ${fodderCount}`, 'error');
+			return;
+		}
+		
+		// 执行升级
+		// 执行升级
+		confirmDialog(`确定消耗 ${needCount} 个【${def.name}】升级宝物至 Lv.${currentLevel + 1} 吗？`, () => {
+			// 消耗材料
+			for (let i = 0; i < needCount; i++) {
+				const fodderId = fodderInstanceIds[i];
+				
+				// 如果材料宝物被装备在其他角色身上，需要先卸下
+				for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
+					const slotIdx = slots.indexOf(fodderId);
+					if (slotIdx !== -1) {
+						slots[slotIdx] = null;
+						break;
+					}
+				}
+				
+				// 删除材料宝物实例
+				delete window.treasureInventory[fodderId];
+			}
+			
+			// 提升等级
+			window.treasureInventory[treasureInstanceId].level = (window.treasureInventory[treasureInstanceId].level || 1) + 1;
+			
+			// 刷新UI
+			if (charInstanceId) {
+				refreshTreasureUI(charInstanceId);
+			}
+			
+			// 只移除当前升级浮窗，不移除可能存在的其他浮窗
+			const upgradeOverlay = document.getElementById('treasure-upgrade-overlay');
+			if (upgradeOverlay && upgradeOverlay.parentNode) {
+				upgradeOverlay.parentNode.removeChild(upgradeOverlay);
+			}
+			
+			toast(`【${def.name}】升级成功！当前 Lv.${window.treasureInventory[treasureInstanceId].level}`, 'success');
+			SaveManager.autoSave();
+		});
+
+	};
+	btnRow.appendChild(upgradeBtn);
+
+	// 替换宝物按钮（仅阵容界面调用时显示）
+	if (charInstanceId && slotIndex !== null) {
+		const replaceBtn = document.createElement('button');
+		replaceBtn.className = 'ybrpg-btn';
+		replaceBtn.style.cssText = 'width:auto;padding:8px 20px;font-size:14px;flex:1;min-width:80px;background:#44aaff;';
+		replaceBtn.textContent = '替换宝物';
+		replaceBtn.onclick = () => {
+			overlay.remove();
+			showTreasureSelectPopup(charInstanceId, slotIndex);
+		};
+		btnRow.appendChild(replaceBtn);
+	}
+
+	// 关闭按钮
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-btn';
+	closeBtn.style.cssText = 'width:auto;padding:8px 20px;font-size:14px;flex:1;min-width:80px;';
+	closeBtn.textContent = '关闭';
+	closeBtn.onclick = () => {
+		const upgradeOverlay = document.getElementById('treasure-upgrade-overlay');
+		if (upgradeOverlay && upgradeOverlay.parentNode) {
+			upgradeOverlay.parentNode.removeChild(upgradeOverlay);
+		}
+	};
+	btnRow.appendChild(closeBtn);
+
+    popup.appendChild(btnRow);
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
+    
+    overlay.onclick = (e) => {
+		if (e.target === overlay) {
+			const upgradeOverlay = document.getElementById('treasure-upgrade-overlay');
+			if (upgradeOverlay && upgradeOverlay.parentNode) {
+				upgradeOverlay.parentNode.removeChild(upgradeOverlay);
+			}
+		}
+	};
+	
+}
 
 
 
