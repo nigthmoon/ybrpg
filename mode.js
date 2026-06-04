@@ -2351,6 +2351,19 @@ function renderBagEquipContent(container) {
         grid.appendChild(emptyTip);
     }
 
+	allInstances.sort((a, b) => {
+		const aOwnerInfo = treasureOwnerMap[a.instanceId];
+		const bOwnerInfo = treasureOwnerMap[b.instanceId];
+		const aIsEquipped = !!aOwnerInfo;
+		const bIsEquipped = !!bOwnerInfo;
+		
+		// 已装备的排前面
+		if (aIsEquipped && !bIsEquipped) return -1;
+		if (!aIsEquipped && bIsEquipped) return 1;
+		
+		// 如果都没装备或都装备了，按宝物名称排序（可选）
+		return (a.name || '').localeCompare(b.name || '');
+	});
     // 遍历所有宝物实例，每个独立展示
     allInstances.forEach(item => {
         const ownerInfo = treasureOwnerMap[item.instanceId];
@@ -2373,69 +2386,105 @@ function renderBagEquipContent(container) {
         card.dataset.ownerName = ownerName || '';
 
         // 图标
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'gallery-char-icon equipbag-icon';
-        iconDiv.style.position = 'relative'; // 用于绝对定位标签
+        // 图标
+		const iconDiv = document.createElement('div');
+		iconDiv.className = 'gallery-char-icon equipbag-icon';
+		iconDiv.style.position = 'relative'; // 用于绝对定位标签
 
-        if (item.icon) {
-            const img = document.createElement('img');
-            img.className = 'gallery-char-img equipbag-icon-img';
-            img.src = item.icon;
-            img.alt = item.name;
-            img.onerror = function () {
-                this.style.display = 'none';
-                const fallback = document.createElement('div');
-                fallback.className = 'gallery-char-placeholder';
-                fallback.textContent = item.emoji || item.name.charAt(0);
-                this.parentNode.appendChild(fallback);
-            };
-            iconDiv.appendChild(img);
-        } else {
-            const placeholder = document.createElement('div');
-            placeholder.className = 'gallery-char-placeholder';
-            placeholder.textContent = item.emoji || item.name.charAt(0);
-            iconDiv.appendChild(placeholder);
-        }
+		if (item.icon) {
+			const img = document.createElement('img');
+			img.className = 'gallery-char-img equipbag-icon-img';
+			img.src = item.icon;
+			img.alt = item.name;
+			img.onerror = function () {
+				this.style.display = 'none';
+				const fallback = document.createElement('div');
+				fallback.className = 'gallery-char-placeholder';
+				fallback.textContent = item.emoji || item.name.charAt(0);
+				this.parentNode.appendChild(fallback);
+			};
+			iconDiv.appendChild(img);
+		} else {
+			const placeholder = document.createElement('div');
+			placeholder.className = 'gallery-char-placeholder';
+			placeholder.textContent = item.emoji || item.name.charAt(0);
+			iconDiv.appendChild(placeholder);
+		}
 
-        // 已装备标记（角标）
-        if (isEquipped) {
-            const eqBadge = document.createElement('div');
-            eqBadge.className = 'equipbag-equipped-badge';
-            eqBadge.textContent = '装';
-            // 调整样式
-            eqBadge.style.cssText = `
-                position: absolute;
-                top: 2px;
-                right: 2px;
-                background: #ffd700;
-                color: #000;
-                font-size: 10px;
-                padding: 1px 4px;
-                border-radius: 3px;
-                font-weight: bold;
-                z-index: 2;
-            `;
-            iconDiv.appendChild(eqBadge);
-        }
+		// 已装备标记 - "装"字（右上角）
+		if (isEquipped) {
+			const eqBadge = document.createElement('div');
+			eqBadge.className = 'equipbag-equipped-badge';
+			eqBadge.textContent = '装';
+			eqBadge.style.cssText = `
+				position: absolute;
+				top: 2px;
+				right: 2px;
+				background: #ffd700;
+				color: #000;
+				font-size: 10px;
+				padding: 1px 4px;
+				border-radius: 3px;
+				font-weight: bold;
+				z-index: 2;
+			`;
+			iconDiv.appendChild(eqBadge);
+		}
 
-        card.appendChild(iconDiv);
+		// 装备者信息（左下角）
+		if (isEquipped && ownerName) {
+			// 获取装备者的实例数据，以获取品质和突破等级
+			const ownerInstanceData = window.charBagData && window.charBagData[ownerInfo.ownerId];
+			const ownerCharId = ownerInstanceData ? ownerInstanceData.charId : ownerInfo.ownerId;
+			const ownerCharData = characterList[ownerCharId];
+			
+			// 获取品质颜色
+			const rankColors = { 
+				kami: '#ffff00', 
+				legend: '#ff4444', 
+				epic: '#ff8d8d', 
+				epicfake: '#ff8800', 
+				rare: '#a335ee', 
+				common: '#44aaff', 
+				junk: '#88cc88' 
+			};
+			const ownerRank = ownerInstanceData ? ownerInstanceData.rank : (ownerCharData ? ownerCharData.rank : 'common');
+			const ownerColor = rankColors[ownerRank] || '#aaa';
+			
+			// 获取突破等级
+			const ownerTupoLevel = ownerInstanceData ? (ownerInstanceData.tupolevel || 0) : 0;
+			const tupoSuffix = ownerTupoLevel > 0 ? ` +${ownerTupoLevel}` : '';
+			
+			const ownerBadge = document.createElement('div');
+			ownerBadge.style.cssText = `
+				position: absolute;
+				bottom: 2px;
+				left: 2px;
+				background: rgba(0, 0, 0, 0.7);
+				color: ${ownerColor};
+				font-size: 10px;
+				padding: 1px 4px;
+				border-radius: 3px;
+				font-weight: bold;
+				z-index: 2;
+				white-space: nowrap;
+				max-width: calc(100% - 4px);
+				overflow: hidden;
+				text-overflow: ellipsis;
+			`;
+			ownerBadge.textContent = `${ownerName}${tupoSuffix}`;
+			iconDiv.appendChild(ownerBadge);
+		}
 
-        // 名称
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'gallery-char-name';
-        nameDiv.textContent = item.name;
-        if (isEquipped) {
-            nameDiv.style.color = '#ffd700';
-        }
-        card.appendChild(nameDiv);
+		card.appendChild(iconDiv);
 
-        // 装备者信息（在名称下方显示）
-        if (isEquipped && ownerName) {
-            const ownerDiv = document.createElement('div');
-            ownerDiv.style.cssText = 'font-size:10px;color:#aaa;margin-top:2px;text-align:center;';
-            ownerDiv.textContent = `→ ${ownerName}`;
-            card.appendChild(ownerDiv);
-        }
+		// 名称（不再变色）
+		const nameDiv = document.createElement('div');
+		nameDiv.className = 'gallery-char-name';
+		nameDiv.textContent = item.name;
+		card.appendChild(nameDiv);
+
+
 
         // 数量不再需要（每个实例独立）
         // 移除 countBadge 相关代码
@@ -2451,8 +2500,11 @@ function renderBagEquipContent(container) {
             document.querySelectorAll('.equipbag-treasure-card.selected').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
             
-            // 保存当前选中的宝物实例ID
-            detailBar.dataset.treasureInstanceId = item.instanceId;
+            // 获取 detailBar 元素并保存当前选中的宝物实例ID
+			const detailBarEl = document.getElementById('bag-detail-bar');
+			if (detailBarEl) {
+				detailBarEl.dataset.treasureInstanceId = item.instanceId;
+			}
         };
 
         grid.appendChild(card);
@@ -7905,7 +7957,95 @@ window.buildPlayerTeamForBattle = function() {
 };
 
 
+/**
+ * 检查角色在当前突破等级下是否需要升阶
+ * @param {number} tupolevel - 当前突破等级
+ * @param {string} currentRank - 当前品质
+ * @returns {Object|null} 如果需要升阶，返回目标品质和升阶消耗；否则返回 null
+ */
+function getPromotionInfo(tupolevel, currentRank) {
+    const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
+    const currentRankIndex = rankList.indexOf(currentRank);
+    
+    // 定义各阶数对应的目标品质
+    const promotionMap = {
+        2: 'rare',
+        4: 'epicfake',
+        8: 'epic',
+        12: 'legend',
+        16: 'kami'
+    };
+    
+    const targetRank = promotionMap[tupolevel];
+    if (!targetRank) return null;
+    
+    const targetRankIndex = rankList.indexOf(targetRank);
+    if (currentRankIndex >= targetRankIndex) return null; // 品质已经足够，不需要升阶
+    
+    return {
+        targetRank: targetRank,
+        cost: Math.floor(tupolevel / 4) + 1, // 升阶消耗：根据阶数递增
+        stoneCost: 1 // 突破石消耗（可按需调整）
+    };
+}
 
+/**
+ * 角色升阶函数（只改变品质，不改变突破等级）
+ * @param {string} targetInstId - 目标角色实例ID
+ * @returns {Object} { success: boolean, message: string }
+ */
+function promoteCharacterRank(targetInstId) {
+    if (!targetInstId || !window.charBagData || !window.charBagData[targetInstId]) {
+        return { success: false, message: '无效的目标实例' };
+    }
+
+    const targetInst = window.charBagData[targetInstId];
+    const charId = targetInst.charId || targetInstId;
+    const baseChar = characterList[charId];
+
+    if (!baseChar) {
+        return { success: false, message: '未找到角色基础数据' };
+    }
+
+    const currentTupoLevel = targetInst.tupolevel || 0;
+    const currentRank = targetInst.rank || baseChar.rank || 'common';
+    
+    // 获取升阶信息
+    const promotionInfo = getPromotionInfo(currentTupoLevel, currentRank);
+    if (!promotionInfo) {
+        return { success: false, message: '当前突破等级无需升阶或已达到最高品质' };
+    }
+
+    // 校验资源：突破石
+    const hasStone = (window.gameItems && window.gameItems['breakthrough_stone']) 
+        ? window.gameItems['breakthrough_stone'] >= (promotionInfo.stoneCost || 0) 
+        : true; // 如果没有道具系统，默认true
+    
+    if (!hasStone) {
+        return { success: false, message: `升阶需要 ${promotionInfo.stoneCost} 个【突破石】，材料不足！` };
+    }
+
+    // 扣除突破石
+    if (window.gameItems && window.gameItems['breakthrough_stone']) {
+        window.gameItems['breakthrough_stone'] -= promotionInfo.stoneCost || 0;
+    }
+
+    // 改变品质
+    targetInst.rank = promotionInfo.targetRank;
+
+    // 重新计算属性
+    if (typeof updateCharacterSP === 'function') {
+        updateCharacterSP(targetInst);
+    }
+
+    SaveManager.autoSave();
+
+    return {
+        success: true,
+        message: `升阶成功！品质提升至【${getRankLabel(promotionInfo.targetRank)}】`,
+        targetRank: promotionInfo.targetRank
+    };
+}
 
 
 
