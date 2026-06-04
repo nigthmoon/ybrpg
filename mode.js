@@ -4,18 +4,18 @@
  * @returns {number} 主角的槽位索引，如果不在队伍中返回 -1
  */
 function getMainCharacterSlotIndex() {
-    if (!window.currentTeam || !window.charBagData) return -1;
+	if (!window.currentTeam || !window.charBagData) return -1;
 
-    for (let i = 0; i < window.currentTeam.length; i++) {
-        const instId = window.currentTeam[i];
-        if (instId && window.charBagData[instId]) {
-            // 假设主角的基础ID是 'zhujue'，请根据实际情况修改
-            if (window.charBagData[instId].charId === 'zhujue') {
-                return i;
-            }
-        }
-    }
-    return -1;
+	for (let i = 0; i < window.currentTeam.length; i++) {
+		const instId = window.currentTeam[i];
+		if (instId && window.charBagData[instId]) {
+			// 假设主角的基础ID是 'zhujue'，请根据实际情况修改
+			if (window.charBagData[instId].charId === 'zhujue') {
+				return i;
+			}
+		}
+	}
+	return -1;
 }
 
 /**
@@ -25,24 +25,24 @@ function getMainCharacterSlotIndex() {
  * @param {number} duration 显示时长(ms)，默认 1500
  */
 function toast(message, type = 'info', duration = 1500) {
-    let container = document.querySelector('.ybrpg-toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.className = 'ybrpg-toast-container';
-        container.style.zIndex = '20000';  // 高优先级，覆盖所有弹窗
-        document.body.appendChild(container);
-    }
+	let container = document.querySelector('.ybrpg-toast-container');
+	if (!container) {
+		container = document.createElement('div');
+		container.className = 'ybrpg-toast-container';
+		container.style.zIndex = '20000';  // 高优先级，覆盖所有弹窗
+		document.body.appendChild(container);
+	}
 
-    const toastEl = document.createElement('div');
-    toastEl.className = `ybrpg-toast ${type}`;
-    toastEl.textContent = message;
-    container.appendChild(toastEl);
+	const toastEl = document.createElement('div');
+	toastEl.className = `ybrpg-toast ${type}`;
+	toastEl.textContent = message;
+	container.appendChild(toastEl);
 
-    setTimeout(() => {
-        if (toastEl.parentNode) {
-            toastEl.parentNode.removeChild(toastEl);
-        }
-    }, duration + 800);
+	setTimeout(() => {
+		if (toastEl.parentNode) {
+			toastEl.parentNode.removeChild(toastEl);
+		}
+	}, duration + 800);
 }
 
 
@@ -53,15 +53,15 @@ function toast(message, type = 'info', duration = 1500) {
  * @param {Function} onCancel 取消回调（可选）
  */
 function confirmDialog(message, onConfirm, onCancel) {
-    // 创建遮罩层
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
+	// 创建遮罩层
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
 
-    // 创建对话框
-    const dialog = document.createElement('div');
-    dialog.className = 'ybrpg-confirm-dialog';
+	// 创建对话框
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
 
-    dialog.innerHTML = `
+	dialog.innerHTML = `
         <div class="ybrpg-confirm-message">${message}</div>
         <div class="ybrpg-confirm-buttons">
             <button class="ybrpg-confirm-btn cancel">取消</button>
@@ -69,35 +69,35 @@ function confirmDialog(message, onConfirm, onCancel) {
         </div>
     `;
 
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
 
-    // 关闭函数
-    const close = () => {
-        if (overlay.parentNode) {
-            overlay.parentNode.removeChild(overlay);
-        }
-    };
+	// 关闭函数
+	const close = () => {
+		if (overlay.parentNode) {
+			overlay.parentNode.removeChild(overlay);
+		}
+	};
 
-    // 取消按钮
-    dialog.querySelector('.cancel').onclick = () => {
-        close();
-        if (onCancel) onCancel();
-    };
+	// 取消按钮
+	dialog.querySelector('.cancel').onclick = () => {
+		close();
+		if (onCancel) onCancel();
+	};
 
-    // 确认按钮
-    dialog.querySelector('.confirm').onclick = () => {
-        close();
-        if (onConfirm) onConfirm();
-    };
+	// 确认按钮
+	dialog.querySelector('.confirm').onclick = () => {
+		close();
+		if (onConfirm) onConfirm();
+	};
 
-    // 点击遮罩也可关闭
-    overlay.onclick = (e) => {
-        if (e.target === overlay) {
-            close();
-            if (onCancel) onCancel();
-        }
-    };
+	// 点击遮罩也可关闭
+	overlay.onclick = (e) => {
+		if (e.target === overlay) {
+			close();
+			if (onCancel) onCancel();
+		}
+	};
 }
 
 /**
@@ -106,17 +106,17 @@ function confirmDialog(message, onConfirm, onCancel) {
  * @returns {string} 唯一实例ID
  */
 function generateInstanceId(charId) {
-    return `${charId}_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+	return `${charId}_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
 }
 
 function showteam() {
-    const teamView = document.getElementById('team-view');
-    // 每次都重新渲染，以更新状态
-    renderTeamView(teamView);
+	const teamView = document.getElementById('team-view');
+	// 每次都重新渲染，以更新状态
+	renderTeamView(teamView);
 
-    const mainView = document.getElementById('main-view');
-    if (mainView) mainView.style.display = 'none';
-    if (teamView) teamView.style.display = 'flex';
+	const mainView = document.getElementById('main-view');
+	if (mainView) mainView.style.display = 'none';
+	if (teamView) teamView.style.display = 'flex';
 }
 
 
@@ -132,109 +132,109 @@ function showteam() {
  * @returns {void}
  */
 function renderTeamView(container) {
-    container.innerHTML = '';
+	container.innerHTML = '';
 
-    // 创建网格容器
-    const gridDiv = document.createElement('div');
-    gridDiv.className = 'team-grid';
-    gridDiv.id = 'team-grid';
+	// 创建网格容器
+	const gridDiv = document.createElement('div');
+	gridDiv.className = 'team-grid';
+	gridDiv.id = 'team-grid';
 
-    // 创建6个方格
-    for (let i = 0; i < 6; i++) {
-        const slot = document.createElement('div');
-        slot.className = 'team-slot';
-        slot.dataset.slotIndex = i;
-        slot.draggable = true;
-        renderTeamSlot(slot, i);
-        // 点击方格
-        slot.addEventListener('click', () => onTeamSlotClick(i));
-        // 桌面端拖拽事件
-        slot.addEventListener('dragstart', (e) => onSlotDragStart(e, i));
-        slot.addEventListener('dragover', (e) => onSlotDragOver(e));
-        slot.addEventListener('dragenter', (e) => onSlotDragEnter(e, i));
-        slot.addEventListener('dragleave', (e) => onSlotDragLeave(e));
-        slot.addEventListener('drop', (e) => onSlotDrop(e, i));
-        slot.addEventListener('dragend', (e) => onSlotDragEnd(e));
-        // 移动端触摸拖拽事件
-        slot.addEventListener('touchstart', (e) => onSlotTouchStart(e, i), { passive: false });
-        slot.addEventListener('touchmove', (e) => onSlotTouchMove(e), { passive: false });
-        slot.addEventListener('touchend', (e) => onSlotTouchEnd(e));
-        gridDiv.appendChild(slot);
-    }
+	// 创建6个方格
+	for (let i = 0; i < 6; i++) {
+		const slot = document.createElement('div');
+		slot.className = 'team-slot';
+		slot.dataset.slotIndex = i;
+		slot.draggable = true;
+		renderTeamSlot(slot, i);
+		// 点击方格
+		slot.addEventListener('click', () => onTeamSlotClick(i));
+		// 桌面端拖拽事件
+		slot.addEventListener('dragstart', (e) => onSlotDragStart(e, i));
+		slot.addEventListener('dragover', (e) => onSlotDragOver(e));
+		slot.addEventListener('dragenter', (e) => onSlotDragEnter(e, i));
+		slot.addEventListener('dragleave', (e) => onSlotDragLeave(e));
+		slot.addEventListener('drop', (e) => onSlotDrop(e, i));
+		slot.addEventListener('dragend', (e) => onSlotDragEnd(e));
+		// 移动端触摸拖拽事件
+		slot.addEventListener('touchstart', (e) => onSlotTouchStart(e, i), { passive: false });
+		slot.addEventListener('touchmove', (e) => onSlotTouchMove(e), { passive: false });
+		slot.addEventListener('touchend', (e) => onSlotTouchEnd(e));
+		gridDiv.appendChild(slot);
+	}
 
-    // 中部区域：武将详情或空白
-    const infoDiv = document.createElement('div');
-    infoDiv.id = 'team-info-area';
-    infoDiv.className = 'team-info-area';
+	// 中部区域：武将详情或空白
+	const infoDiv = document.createElement('div');
+	infoDiv.id = 'team-info-area';
+	infoDiv.className = 'team-info-area';
 
-    // 底部导航栏：更换 / 培养 / 其他
-    const navDiv = document.createElement('div');
-    navDiv.className = 'team-footer';
-    navDiv.id = 'team-nav';
+	// 底部导航栏：更换 / 培养 / 其他
+	const navDiv = document.createElement('div');
+	navDiv.className = 'team-footer';
+	navDiv.id = 'team-nav';
 
-    const navBtns = [
-        { id: 'btn-team-change', text: '更换', action: () => onTeamNavChange() },
-        { id: 'btn-team-train', text: '培养', action: () => onTeamNavTrain() },
-        { 
-            id: 'btn-team-other', 
-            text: '突破预览', // 建议修改文字
-            action: () => { 
-                showBreakthroughPreviewPopup(); 
-            } 
-        },
-    ];
-    navBtns.forEach(cfg => {
-        const btn = document.createElement('button');
-        btn.className = 'ybrpg-team-btn';
-        btn.id = cfg.id;
-        btn.textContent = cfg.text;
-        btn.onclick = cfg.action;
-        navDiv.appendChild(btn);
-    });
+	const navBtns = [
+		{ id: 'btn-team-change', text: '更换', action: () => onTeamNavChange() },
+		{ id: 'btn-team-train', text: '培养', action: () => onTeamNavTrain() },
+		{
+			id: 'btn-team-other',
+			text: '突破预览', // 建议修改文字
+			action: () => {
+				showBreakthroughPreviewPopup();
+			}
+		},
+	];
+	navBtns.forEach(cfg => {
+		const btn = document.createElement('button');
+		btn.className = 'ybrpg-team-btn';
+		btn.id = cfg.id;
+		btn.textContent = cfg.text;
+		btn.onclick = cfg.action;
+		navDiv.appendChild(btn);
+	});
 
-    container.appendChild(gridDiv);
-    container.appendChild(infoDiv);
-    container.appendChild(navDiv);
+	container.appendChild(gridDiv);
+	container.appendChild(infoDiv);
+	container.appendChild(navDiv);
 
-    // 记录当前选中的方格索引
-    window._selectedSlotIndex = null;
+	// 记录当前选中的方格索引
+	window._selectedSlotIndex = null;
 }
 /**
  * 显示突破预览弹窗
  */
 function showBreakthroughPreviewPopup() {
-    // 1. 获取当前选中的角色
-    const selectedIdx = window._selectedSlotIndex;
-    let instanceId = null;
-    
-    if (selectedIdx !== null && selectedIdx !== undefined && window.currentTeam[selectedIdx]) {
-        instanceId = window.currentTeam[selectedIdx];
-    } else if (window.currentTeam && window.currentTeam.length > 0) {
-        instanceId = window.currentTeam.find(id => id);
-    }
+	// 1. 获取当前选中的角色
+	const selectedIdx = window._selectedSlotIndex;
+	let instanceId = null;
 
-    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-        toast('请先在队伍中选择一个角色', 'warning');
-        return;
-    }
+	if (selectedIdx !== null && selectedIdx !== undefined && window.currentTeam[selectedIdx]) {
+		instanceId = window.currentTeam[selectedIdx];
+	} else if (window.currentTeam && window.currentTeam.length > 0) {
+		instanceId = window.currentTeam.find(id => id);
+	}
 
-    const instData = window.charBagData[instanceId];
-    const charId = instData.charId || instanceId;
-    const baseChar = characterList[charId];
+	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+		toast('请先在队伍中选择一个角色', 'warning');
+		return;
+	}
 
-    if (!baseChar) {
-        toast('角色数据异常', 'error');
-        return;
-    }
+	const instData = window.charBagData[instanceId];
+	const charId = instData.charId || instanceId;
+	const baseChar = characterList[charId];
 
-    // 2. 创建遮罩层
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
-    overlay.id = 'breakthrough-preview-overlay';
+	if (!baseChar) {
+		toast('角色数据异常', 'error');
+		return;
+	}
 
-    // 3. 创建弹窗容器
-    const popup = document.createElement('div');
-    popup.style.cssText = `
+	// 2. 创建遮罩层
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.id = 'breakthrough-preview-overlay';
+
+	// 3. 创建弹窗容器
+	const popup = document.createElement('div');
+	popup.style.cssText = `
         background: #1a1a1a;
         border: 2px solid #ffd700;
         border-radius: 12px;
@@ -247,62 +247,62 @@ function showBreakthroughPreviewPopup() {
         animation: dialogIn 0.2s ease;
     `;
 
-    // 4. 标题
-    const title = document.createElement('div');
-    title.style.cssText = 'color:#ffd700;font-size:18px;font-weight:bold;text-align:center;margin-bottom:15px;';
-    const currentTupoLevel = instData.tupolevel || 0;
-    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-    title.innerHTML = `${baseChar.name} <span style="color:${rankColors[baseChar.rank] || '#888'};font-size:14px;">突破预览</span>`;
-    popup.appendChild(title);
+	// 4. 标题
+	const title = document.createElement('div');
+	title.style.cssText = 'color:#ffd700;font-size:18px;font-weight:bold;text-align:center;margin-bottom:15px;';
+	const currentTupoLevel = instData.tupolevel || 0;
+	const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+	title.innerHTML = `${baseChar.name} <span style="color:${rankColors[baseChar.rank] || '#888'};font-size:14px;">突破预览</span>`;
+	popup.appendChild(title);
 
-    // 5. 角色概览
-    const header = document.createElement('div');
-    header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #333;';
+	// 5. 角色概览
+	const header = document.createElement('div');
+	header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #333;';
 
-    const charImg = document.createElement('img');
-    charImg.src = `./image/character/${charId}.jpg`;
-    charImg.style.cssText = 'width:48px;height:48px;border-radius:6px;border:2px solid #ffd700;object-fit:cover;';
-    charImg.onerror = function() { this.src = './image/character/default.jpg'; };
-    header.appendChild(charImg);
+	const charImg = document.createElement('img');
+	charImg.src = `./image/character/${charId}.jpg`;
+	charImg.style.cssText = 'width:48px;height:48px;border-radius:6px;border:2px solid #ffd700;object-fit:cover;';
+	charImg.onerror = function () { this.src = './image/character/default.jpg'; };
+	header.appendChild(charImg);
 
-    const charInfo = document.createElement('div');
-    charInfo.style.cssText = 'flex:1;';
-    
-    const charName = document.createElement('div');
-    charName.style.cssText = 'color:#fff;font-size:15px;font-weight:bold;';
-    const tupoText = currentTupoLevel > 0 ? ` <span style="color:#ffd700;font-size:13px;">+${currentTupoLevel}</span>` : '';
-    charName.innerHTML = baseChar.name + tupoText;
-    charInfo.appendChild(charName);
+	const charInfo = document.createElement('div');
+	charInfo.style.cssText = 'flex:1;';
 
-    const charLevel = document.createElement('div');
-    charLevel.style.cssText = 'color:#aaa;font-size:12px;margin-top:2px;';
-    charLevel.textContent = `当前突破: ${currentTupoLevel} 阶 · 等级: Lv.${instData.level || 1}`;
-    charInfo.appendChild(charLevel);
+	const charName = document.createElement('div');
+	charName.style.cssText = 'color:#fff;font-size:15px;font-weight:bold;';
+	const tupoText = currentTupoLevel > 0 ? ` <span style="color:#ffd700;font-size:13px;">+${currentTupoLevel}</span>` : '';
+	charName.innerHTML = baseChar.name + tupoText;
+	charInfo.appendChild(charName);
 
-    header.appendChild(charInfo);
-    popup.appendChild(header);
+	const charLevel = document.createElement('div');
+	charLevel.style.cssText = 'color:#aaa;font-size:12px;margin-top:2px;';
+	charLevel.textContent = `当前突破: ${currentTupoLevel} 阶 · 等级: Lv.${instData.level || 1}`;
+	charInfo.appendChild(charLevel);
 
-    // 6. 突破列表滚动区
-    const listContainer = document.createElement('div');
-    listContainer.style.cssText = 'flex:1;overflow-y:auto;padding-right:4px;';
-    listContainer.style.scrollbarWidth = 'thin';
-    listContainer.style.scrollbarColor = '#555 #222';
+	header.appendChild(charInfo);
+	popup.appendChild(header);
 
-    // 获取突破配置
-    const tupoList = baseChar.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
-    
-    if (tupoList.length === 0) {
-        const emptyTip = document.createElement('div');
-        emptyTip.style.cssText = 'color:#666;text-align:center;padding:30px;font-size:14px;';
-        emptyTip.textContent = '该角色暂无突破数据';
-        listContainer.appendChild(emptyTip);
-    } else {
-        // 遍历突破列表
-        tupoList.forEach((buff, index) => {
-            const isUnlocked = (index + 1) <= currentTupoLevel;
-            
-            const item = document.createElement('div');
-            item.style.cssText = `
+	// 6. 突破列表滚动区
+	const listContainer = document.createElement('div');
+	listContainer.style.cssText = 'flex:1;overflow-y:auto;padding-right:4px;';
+	listContainer.style.scrollbarWidth = 'thin';
+	listContainer.style.scrollbarColor = '#555 #222';
+
+	// 获取突破配置
+	const tupoList = baseChar.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
+
+	if (tupoList.length === 0) {
+		const emptyTip = document.createElement('div');
+		emptyTip.style.cssText = 'color:#666;text-align:center;padding:30px;font-size:14px;';
+		emptyTip.textContent = '该角色暂无突破数据';
+		listContainer.appendChild(emptyTip);
+	} else {
+		// 遍历突破列表
+		tupoList.forEach((buff, index) => {
+			const isUnlocked = (index + 1) <= currentTupoLevel;
+
+			const item = document.createElement('div');
+			item.style.cssText = `
                 background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
                 border: 1px solid ${isUnlocked ? '#d000ff' : '#333'};
                 border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
@@ -314,108 +314,108 @@ function showBreakthroughPreviewPopup() {
                 cursor: ${isUnlocked ? 'pointer' : 'default'};
             `;
 
-            // 标题行
-            const headerRow = document.createElement('div');
-            headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;';
-            
-            const levelTitle = document.createElement('span');
-            levelTitle.style.cssText = `font-weight:bold;font-size:14px;color:${isUnlocked ? '#ffd700' : '#888'};`;
-            levelTitle.textContent = `突破 ${index + 1} 阶`;
-            
-            const statusIcon = document.createElement('span');
-            statusIcon.style.cssText = 'font-size:12px;';
-            statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
-            statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
+			// 标题行
+			const headerRow = document.createElement('div');
+			headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;';
 
-            headerRow.appendChild(levelTitle);
-            headerRow.appendChild(statusIcon);
-            item.appendChild(headerRow);
+			const levelTitle = document.createElement('span');
+			levelTitle.style.cssText = `font-weight:bold;font-size:14px;color:${isUnlocked ? '#ffd700' : '#888'};`;
+			levelTitle.textContent = `突破 ${index + 1} 阶`;
 
-            // 描述内容
-            const descDiv = document.createElement('div');
-            descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#666'};`;
-            
-            if (buff.desc) {
-                descDiv.textContent = buff.desc;
-            } else if (buff.type) {
-                let typeDesc = '';
-                if (buff.type === 'self_stat_flat') {
-                    const val = Array.isArray(buff.value) ? buff.value.join('/') : buff.value;
-                    const stat = Array.isArray(buff.stat) ? buff.stat.join('/') : buff.stat;
-                    typeDesc = `永久增加 ${stat}: ${val}`;
-                } else if (buff.type === 'passive_effect') {
-                    typeDesc = `获得被动效果: ${buff.effectId || '未知'}`;
-                } else if (buff.type === 'skill_effect') {
-                    typeDesc = `技能效果增强: ${buff.desc || '未知效果'}`;
-                } else {
-                    typeDesc = `效果类型: ${buff.type}`;
-                }
-                descDiv.textContent = typeDesc;
-            } else {
-                descDiv.textContent = '暂无详细描述';
-            }
-            
-            item.appendChild(descDiv);
+			const statusIcon = document.createElement('span');
+			statusIcon.style.cssText = 'font-size:12px;';
+			statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
+			statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
 
-            // 已解锁项的悬停效果
-            if (isUnlocked) {
-                item.onmouseover = () => { item.style.background = '#33334a'; };
-                item.onmouseout = () => { item.style.background = '#2a2a3a'; };
-            }
+			headerRow.appendChild(levelTitle);
+			headerRow.appendChild(statusIcon);
+			item.appendChild(headerRow);
 
-            listContainer.appendChild(item);
-        });
-    }
+			// 描述内容
+			const descDiv = document.createElement('div');
+			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#666'};`;
 
-    popup.appendChild(listContainer);
+			if (buff.desc) {
+				descDiv.textContent = buff.desc;
+			} else if (buff.type) {
+				let typeDesc = '';
+				if (buff.type === 'self_stat_flat') {
+					const val = Array.isArray(buff.value) ? buff.value.join('/') : buff.value;
+					const stat = Array.isArray(buff.stat) ? buff.stat.join('/') : buff.stat;
+					typeDesc = `永久增加 ${stat}: ${val}`;
+				} else if (buff.type === 'passive_effect') {
+					typeDesc = `获得被动效果: ${buff.effectId || '未知'}`;
+				} else if (buff.type === 'skill_effect') {
+					typeDesc = `技能效果增强: ${buff.desc || '未知效果'}`;
+				} else {
+					typeDesc = `效果类型: ${buff.type}`;
+				}
+				descDiv.textContent = typeDesc;
+			} else {
+				descDiv.textContent = '暂无详细描述';
+			}
 
-    // 7. 关闭按钮
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'ybrpg-btn';
-    closeBtn.style.cssText = 'width:100%;margin-top:15px;padding:10px;font-size:14px;';
-    closeBtn.textContent = '关闭';
-    closeBtn.onclick = () => {
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    };
-    popup.appendChild(closeBtn);
+			item.appendChild(descDiv);
 
-    overlay.appendChild(popup);
-    document.body.appendChild(overlay);
+			// 已解锁项的悬停效果
+			if (isUnlocked) {
+				item.onmouseover = () => { item.style.background = '#33334a'; };
+				item.onmouseout = () => { item.style.background = '#2a2a3a'; };
+			}
 
-    // 点击遮罩关闭
-    overlay.onclick = (e) => {
-        if (e.target === overlay) {
-            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        }
-    };
+			listContainer.appendChild(item);
+		});
+	}
+
+	popup.appendChild(listContainer);
+
+	// 7. 关闭按钮
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-btn';
+	closeBtn.style.cssText = 'width:100%;margin-top:15px;padding:10px;font-size:14px;';
+	closeBtn.textContent = '关闭';
+	closeBtn.onclick = () => {
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+	};
+	popup.appendChild(closeBtn);
+
+	overlay.appendChild(popup);
+	document.body.appendChild(overlay);
+
+	// 点击遮罩关闭
+	overlay.onclick = (e) => {
+		if (e.target === overlay) {
+			if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		}
+	};
 }
 
 /**
  * 显示突破预览视图 (主入口 - 优化版)
  */
 function showBreakthroughPreviewView() {
-    // 1. 隐藏底部导航栏
-    const bottomBar = document.querySelector('.ybrpg-bottom-bar');
-    if (bottomBar) {
-        bottomBar.style.display = 'none';
-    }
-    // 1. 隐藏其他视图
-    hideOtherViews('breakthrough-preview-view');
+	// 1. 隐藏底部导航栏
+	const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+	if (bottomBar) {
+		bottomBar.style.display = 'none';
+	}
+	// 1. 隐藏其他视图
+	hideOtherViews('breakthrough-preview-view');
 
-    // 2. 查找或创建容器
-    let view = document.getElementById('breakthrough-preview-view');
-    
-    // 如果不存在，则动态创建整个视图结构
-    if (!view) {
-        view = createBreakthroughPreviewDOM();
-        document.getElementById('ybrpg-root').appendChild(view);
-    }
+	// 2. 查找或创建容器
+	let view = document.getElementById('breakthrough-preview-view');
 
-    // 3. 显示视图
-    view.style.display = 'flex';
-    
-    // 4. 渲染数据
-    renderBreakthroughContent();
+	// 如果不存在，则动态创建整个视图结构
+	if (!view) {
+		view = createBreakthroughPreviewDOM();
+		document.getElementById('ybrpg-root').appendChild(view);
+	}
+
+	// 3. 显示视图
+	view.style.display = 'flex';
+
+	// 4. 渲染数据
+	renderBreakthroughContent();
 }
 
 /**
@@ -423,144 +423,144 @@ function showBreakthroughPreviewView() {
  * @returns {HTMLElement} 创建的视图容器
  */
 function createBreakthroughPreviewDOM() {
-    const view = document.createElement('div');
-    view.id = 'breakthrough-preview-view';
-    // 基础布局样式
-    view.style.cssText = 'display:none; width:100%; height:100%; flex-direction:column; align-items:center; padding-top:20px; overflow:hidden; background:#1a1a1a;';
+	const view = document.createElement('div');
+	view.id = 'breakthrough-preview-view';
+	// 基础布局样式
+	view.style.cssText = 'display:none; width:100%; height:100%; flex-direction:column; align-items:center; padding-top:20px; overflow:hidden; background:#1a1a1a;';
 
-    // --- 标题 ---
-    const title = document.createElement('h2');
-    title.textContent = '突破能力图鉴';
-    title.style.cssText = 'color:#ffd700; margin-bottom:15px; text-shadow:0 0 10px rgba(255,215,0,0.5); font-size:20px;';
-    view.appendChild(title);
+	// --- 标题 ---
+	const title = document.createElement('h2');
+	title.textContent = '突破能力图鉴';
+	title.style.cssText = 'color:#ffd700; margin-bottom:15px; text-shadow:0 0 10px rgba(255,215,0,0.5); font-size:20px;';
+	view.appendChild(title);
 
-    // --- 主体内容区 (仿 team-info-area 风格，但用于展示突破列表) ---
-    const contentArea = document.createElement('div');
-    contentArea.id = 'breakthrough-content-area';
-    contentArea.style.cssText = 'width:95%; max-width:400px; flex:1; display:flex; flex-direction:column; background:#222; border-radius:8px; border:1px solid #444; overflow:hidden; margin-bottom:15px;';
+	// --- 主体内容区 (仿 team-info-area 风格，但用于展示突破列表) ---
+	const contentArea = document.createElement('div');
+	contentArea.id = 'breakthrough-content-area';
+	contentArea.style.cssText = 'width:95%; max-width:400px; flex:1; display:flex; flex-direction:column; background:#222; border-radius:8px; border:1px solid #444; overflow:hidden; margin-bottom:15px;';
 
-    // 1. 顶部角色概览栏 (固定不滚动)
-    const headerBar = document.createElement('div');
-    headerBar.id = 'breakthrough-header';
-    headerBar.style.cssText = 'display:flex; align-items:center; padding:10px; background:#2a2a2a; border-bottom:1px solid #444; flex-shrink:0;';
-    
-    const charImg = document.createElement('img');
-    charImg.id = 'bp-char-img';
-    charImg.style.cssText = 'width:50px; height:50px; border-radius:4px; border:1px solid #ffd700; object-fit:cover; margin-right:10px;';
-    charImg.src = './image/character/default.jpg';
-    
-    const charInfo = document.createElement('div');
-    charInfo.style.cssText = 'flex:1;';
-    
-    const charName = document.createElement('div');
-    charName.id = 'bp-char-name';
-    charName.style.cssText = 'color:#fff; font-weight:bold; font-size:16px;';
-    charName.textContent = '未选择角色';
-    
-    const charLevel = document.createElement('div');
-    charLevel.id = 'bp-char-level';
-    charLevel.style.cssText = 'color:#aaa; font-size:12px; margin-top:2px;';
-    charLevel.textContent = '突破等级: 0';
+	// 1. 顶部角色概览栏 (固定不滚动)
+	const headerBar = document.createElement('div');
+	headerBar.id = 'breakthrough-header';
+	headerBar.style.cssText = 'display:flex; align-items:center; padding:10px; background:#2a2a2a; border-bottom:1px solid #444; flex-shrink:0;';
 
-    charInfo.appendChild(charName);
-    charInfo.appendChild(charLevel);
-    headerBar.appendChild(charImg);
-    headerBar.appendChild(charInfo);
-    contentArea.appendChild(headerBar);
+	const charImg = document.createElement('img');
+	charImg.id = 'bp-char-img';
+	charImg.style.cssText = 'width:50px; height:50px; border-radius:4px; border:1px solid #ffd700; object-fit:cover; margin-right:10px;';
+	charImg.src = './image/character/default.jpg';
 
-    // 2. 突破列表滚动区
-    const listContainer = document.createElement('div');
-    listContainer.id = 'bp-list-container';
-    listContainer.style.cssText = 'flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:10px;';
-    
-    // 自定义滚动条样式 (可选，通过JS注入style标签或inline)
-    listContainer.style.scrollbarWidth = 'thin';
-    listContainer.style.scrollbarColor = '#555 #222';
+	const charInfo = document.createElement('div');
+	charInfo.style.cssText = 'flex:1;';
 
-    contentArea.appendChild(listContainer);
-    view.appendChild(contentArea);
-    // --- 返回按钮 ---
-    const backBtn = document.createElement('button');
-    backBtn.className = 'ybrpg-back-btn';
-    backBtn.textContent = '返回队伍';
-    backBtn.onclick = () => {
-        // 1. 隐藏当前突破预览视图
-        view.style.display = 'none';
+	const charName = document.createElement('div');
+	charName.id = 'bp-char-name';
+	charName.style.cssText = 'color:#fff; font-weight:bold; font-size:16px;';
+	charName.textContent = '未选择角色';
 
-        // 2. 恢复底部导航栏
-        const bottomBar = document.querySelector('.ybrpg-bottom-bar');
-        if (bottomBar) {
-            bottomBar.style.display = 'flex';
-        }
+	const charLevel = document.createElement('div');
+	charLevel.id = 'bp-char-level';
+	charLevel.style.cssText = 'color:#aaa; font-size:12px; margin-top:2px;';
+	charLevel.textContent = '突破等级: 0';
 
-        // 3. 切换回队伍视图
-        const teamView = document.getElementById('team-view');
-        if (teamView) {
-            hideOtherViews('team-view');
-            teamView.style.display = 'flex';
-        }
-    };
-    view.appendChild(backBtn);
-    return view;
+	charInfo.appendChild(charName);
+	charInfo.appendChild(charLevel);
+	headerBar.appendChild(charImg);
+	headerBar.appendChild(charInfo);
+	contentArea.appendChild(headerBar);
+
+	// 2. 突破列表滚动区
+	const listContainer = document.createElement('div');
+	listContainer.id = 'bp-list-container';
+	listContainer.style.cssText = 'flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:10px;';
+
+	// 自定义滚动条样式 (可选，通过JS注入style标签或inline)
+	listContainer.style.scrollbarWidth = 'thin';
+	listContainer.style.scrollbarColor = '#555 #222';
+
+	contentArea.appendChild(listContainer);
+	view.appendChild(contentArea);
+	// --- 返回按钮 ---
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-back-btn';
+	backBtn.textContent = '返回队伍';
+	backBtn.onclick = () => {
+		// 1. 隐藏当前突破预览视图
+		view.style.display = 'none';
+
+		// 2. 恢复底部导航栏
+		const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+		if (bottomBar) {
+			bottomBar.style.display = 'flex';
+		}
+
+		// 3. 切换回队伍视图
+		const teamView = document.getElementById('team-view');
+		if (teamView) {
+			hideOtherViews('team-view');
+			teamView.style.display = 'flex';
+		}
+	};
+	view.appendChild(backBtn);
+	return view;
 }
 
 /**
  * 渲染突破预览内容 (根据当前选中的角色)
  */
 function renderBreakthroughContent() {
-    // 1. 获取当前选中的角色实例 ID
-    let instanceId = null;
-    const selectedIdx = window._selectedSlotIndex;
-    
-    if (selectedIdx !== null && selectedIdx !== undefined && window.currentTeam[selectedIdx]) {
-        instanceId = window.currentTeam[selectedIdx];
-    } else if (window.currentTeam && window.currentTeam.length > 0) {
-        instanceId = window.currentTeam.find(id => id);
-    }
+	// 1. 获取当前选中的角色实例 ID
+	let instanceId = null;
+	const selectedIdx = window._selectedSlotIndex;
 
-    const listContainer = document.getElementById('bp-list-container');
-    const charImg = document.getElementById('bp-char-img');
-    const charName = document.getElementById('bp-char-name');
-    const charLevel = document.getElementById('bp-char-level');
+	if (selectedIdx !== null && selectedIdx !== undefined && window.currentTeam[selectedIdx]) {
+		instanceId = window.currentTeam[selectedIdx];
+	} else if (window.currentTeam && window.currentTeam.length > 0) {
+		instanceId = window.currentTeam.find(id => id);
+	}
 
-    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-        if(charName) charName.textContent = '无可用角色';
-        if(listContainer) listContainer.innerHTML = '<div style="color:#666;text-align:center;margin-top:20px;">请先在队伍中选择一个角色</div>';
-        return;
-    }
+	const listContainer = document.getElementById('bp-list-container');
+	const charImg = document.getElementById('bp-char-img');
+	const charName = document.getElementById('bp-char-name');
+	const charLevel = document.getElementById('bp-char-level');
 
-    const instData = window.charBagData[instanceId];
-    const charId = instData.charId || instanceId;
-    const baseChar = characterList[charId];
+	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+		if (charName) charName.textContent = '无可用角色';
+		if (listContainer) listContainer.innerHTML = '<div style="color:#666;text-align:center;margin-top:20px;">请先在队伍中选择一个角色</div>';
+		return;
+	}
 
-    if (!baseChar) return;
+	const instData = window.charBagData[instanceId];
+	const charId = instData.charId || instanceId;
+	const baseChar = characterList[charId];
 
-    // 2. 更新顶部概览
-    charImg.src = `./image/character/${charId}.jpg`;
-    charImg.onerror = function() { this.src = './image/character/default.jpg'; };
-    charName.textContent = baseChar.name;
-    
-    const currentTupoLevel = instData.tupolevel || 0;
-    charLevel.textContent = `当前突破: ${currentTupoLevel} 阶`;
+	if (!baseChar) return;
 
-    // 3. 获取突破配置并渲染列表
-    // 优先使用角色自带的 tupoList，否则使用全局模板
-    const tupoList = baseChar.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
-    
-    listContainer.innerHTML = ''; // 清空旧数据
+	// 2. 更新顶部概览
+	charImg.src = `./image/character/${charId}.jpg`;
+	charImg.onerror = function () { this.src = './image/character/default.jpg'; };
+	charName.textContent = baseChar.name;
 
-    if (!tupoList || tupoList.length === 0) {
-        listContainer.innerHTML = '<div style="color:#666;text-align:center;margin-top:20px;">该角色暂无突破数据</div>';
-        return;
-    }
+	const currentTupoLevel = instData.tupolevel || 0;
+	charLevel.textContent = `当前突破: ${currentTupoLevel} 阶`;
 
-    // 遍历突破列表
-    tupoList.forEach((buff, index) => {
-        const isUnlocked = index+1 <= currentTupoLevel;
-        
-        const item = document.createElement('div');
-        // 样式：已解锁亮色背景，未解锁暗色背景
-        item.style.cssText = `
+	// 3. 获取突破配置并渲染列表
+	// 优先使用角色自带的 tupoList，否则使用全局模板
+	const tupoList = baseChar.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
+
+	listContainer.innerHTML = ''; // 清空旧数据
+
+	if (!tupoList || tupoList.length === 0) {
+		listContainer.innerHTML = '<div style="color:#666;text-align:center;margin-top:20px;">该角色暂无突破数据</div>';
+		return;
+	}
+
+	// 遍历突破列表
+	tupoList.forEach((buff, index) => {
+		const isUnlocked = index + 1 <= currentTupoLevel;
+
+		const item = document.createElement('div');
+		// 样式：已解锁亮色背景，未解锁暗色背景
+		item.style.cssText = `
             background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'}; 
             border: 1px solid ${isUnlocked ? '#d000ff' : '#333'}; 
             border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
@@ -570,57 +570,57 @@ function renderBreakthroughContent() {
             transition: all 0.2s;
         `;
 
-        // 标题行：突破等级 + 状态图标
-        const headerRow = document.createElement('div');
-        headerRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;';
-        
-        const levelTitle = document.createElement('span');
-        levelTitle.style.cssText = `font-weight:bold; font-size:14px; color:${isUnlocked ? '#ffd700' : '#888'};`;
-        // 索引0对应人类理解的"第一阶"或"突破 I"
-        levelTitle.textContent = `突破 ${index + 1} 阶`;
-        
-        const statusIcon = document.createElement('span');
-        statusIcon.style.cssText = 'font-size:12px;';
-        statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
-        statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
+		// 标题行：突破等级 + 状态图标
+		const headerRow = document.createElement('div');
+		headerRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;';
 
-        headerRow.appendChild(levelTitle);
-        headerRow.appendChild(statusIcon);
-        item.appendChild(headerRow);
+		const levelTitle = document.createElement('span');
+		levelTitle.style.cssText = `font-weight:bold; font-size:14px; color:${isUnlocked ? '#ffd700' : '#888'};`;
+		// 索引0对应人类理解的"第一阶"或"突破 I"
+		levelTitle.textContent = `突破 ${index + 1} 阶`;
 
-        // 描述内容
-        const descDiv = document.createElement('div');
-        descDiv.style.cssText = `font-size:13px; line-height:1.4; color:${isUnlocked ? '#ddd' : '#666'};`;
-        
-        if (buff.desc) {
-            descDiv.textContent = buff.desc;
-        } else if (buff.type) {
-            // 如果没有描述，尝试根据类型生成简单描述
-            let typeDesc = '';
-            if (buff.type === 'self_stat_flat') {
-                const val = Array.isArray(buff.value) ? buff.value.join('/') : buff.value;
-                const stat = Array.isArray(buff.stat) ? buff.stat.join('/') : buff.stat;
-                typeDesc = `永久增加 ${stat}: ${val}`;
-            } else if (buff.type === 'passive_effect') {
-                typeDesc = `获得被动效果: ${buff.effectId || '未知'}`;
-            } else {
-                typeDesc = `效果类型: ${buff.type}`;
-            }
-            descDiv.textContent = typeDesc;
-        } else {
-            descDiv.textContent = '暂无详细描述';
-        }
-        
-        item.appendChild(descDiv);
+		const statusIcon = document.createElement('span');
+		statusIcon.style.cssText = 'font-size:12px;';
+		statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
+		statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
 
-        // 如果是已解锁，可以加一点 hover 效果
-        if (isUnlocked) {
-            item.onmouseover = () => { item.style.background = '#33334a'; };
-            item.onmouseout = () => { item.style.background = '#2a2a3a'; };
-        }
+		headerRow.appendChild(levelTitle);
+		headerRow.appendChild(statusIcon);
+		item.appendChild(headerRow);
 
-        listContainer.appendChild(item);
-    });
+		// 描述内容
+		const descDiv = document.createElement('div');
+		descDiv.style.cssText = `font-size:13px; line-height:1.4; color:${isUnlocked ? '#ddd' : '#666'};`;
+
+		if (buff.desc) {
+			descDiv.textContent = buff.desc;
+		} else if (buff.type) {
+			// 如果没有描述，尝试根据类型生成简单描述
+			let typeDesc = '';
+			if (buff.type === 'self_stat_flat') {
+				const val = Array.isArray(buff.value) ? buff.value.join('/') : buff.value;
+				const stat = Array.isArray(buff.stat) ? buff.stat.join('/') : buff.stat;
+				typeDesc = `永久增加 ${stat}: ${val}`;
+			} else if (buff.type === 'passive_effect') {
+				typeDesc = `获得被动效果: ${buff.effectId || '未知'}`;
+			} else {
+				typeDesc = `效果类型: ${buff.type}`;
+			}
+			descDiv.textContent = typeDesc;
+		} else {
+			descDiv.textContent = '暂无详细描述';
+		}
+
+		item.appendChild(descDiv);
+
+		// 如果是已解锁，可以加一点 hover 效果
+		if (isUnlocked) {
+			item.onmouseover = () => { item.style.background = '#33334a'; };
+			item.onmouseout = () => { item.style.background = '#2a2a3a'; };
+		}
+
+		listContainer.appendChild(item);
+	});
 }
 /**
  * 渲染单个布阵方格的内容
@@ -628,181 +628,181 @@ function renderBreakthroughContent() {
  * @param {number} index - 当前方格在队伍数组中的索引位置
  */
 function renderTeamSlot(slotEl, index) {
-    slotEl.innerHTML = '';
+	slotEl.innerHTML = '';
 
-    // 【修改】动态判断当前渲染的格子是否是主角
-    const mainCharIndex = getMainCharacterSlotIndex();
-    const isMainCharacterSlot = (index === mainCharIndex);
+	// 【修改】动态判断当前渲染的格子是否是主角
+	const mainCharIndex = getMainCharacterSlotIndex();
+	const isMainCharacterSlot = (index === mainCharIndex);
 
-    // 修改：currentTeam 现在存储的是 instanceId
-    const instanceId = window.currentTeam[index];
+	// 修改：currentTeam 现在存储的是 instanceId
+	const instanceId = window.currentTeam[index];
 
-    if (instanceId && window.charBagData && window.charBagData[instanceId]) {
-        const instanceData = window.charBagData[instanceId];
-        const charId = instanceData.charId || instanceId; // 兼容旧数据
-        // const char = characterList[charId];
-        const char = instanceData;
+	if (instanceId && window.charBagData && window.charBagData[instanceId]) {
+		const instanceData = window.charBagData[instanceId];
+		const charId = instanceData.charId || instanceId; // 兼容旧数据
+		// const char = characterList[charId];
+		const char = instanceData;
 
-        if (!char) {
-            slotEl.style.borderColor = '#f00';
-            slotEl.textContent = 'Err';
-            return;
-        }
-        var rank = window.charBagData[instanceId].rank || char.rank;
-        const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-        const borderColor = RANK_BORDER_COLORS[rank] || '#888';
+		if (!char) {
+			slotEl.style.borderColor = '#f00';
+			slotEl.textContent = 'Err';
+			return;
+		}
+		var rank = window.charBagData[instanceId].rank || char.rank;
+		const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+		const borderColor = RANK_BORDER_COLORS[rank] || '#888';
 
-        const img = document.createElement('img');
-        img.src = `./image/character/${charId}.jpg`;
-        img.alt = char.name;
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px;pointer-events:none;';
+		const img = document.createElement('img');
+		img.src = `./image/character/${charId}.jpg`;
+		img.alt = char.name;
+		img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px;pointer-events:none;';
 
-        img.onerror = function () {
-            this.onerror = function () {
-                this.style.display = 'none';
-                const p = document.createElement('div');
-                p.style.cssText = 'color:#aaa;font-size:14px;display:flex;justify-content:center;align-items:center;width:100%;height:100%;';
-                p.textContent = char.name;
-                this.parentNode.appendChild(p);
-            };
-            this.src = `./image/character/${charId}.webp`;
-        };
+		img.onerror = function () {
+			this.onerror = function () {
+				this.style.display = 'none';
+				const p = document.createElement('div');
+				p.style.cssText = 'color:#aaa;font-size:14px;display:flex;justify-content:center;align-items:center;width:100%;height:100%;';
+				p.textContent = char.name;
+				this.parentNode.appendChild(p);
+			};
+			this.src = `./image/character/${charId}.webp`;
+		};
 
-        slotEl.style.borderColor = borderColor;
-        slotEl.style.overflow = 'hidden';
-        slotEl.appendChild(img);
+		slotEl.style.borderColor = borderColor;
+		slotEl.style.overflow = 'hidden';
+		slotEl.appendChild(img);
 
-        // 名字标签
-        const nameTag = document.createElement('div');
-        nameTag.className = 'team-slot-name';
-        const tupoText = char.tupolevel ? `+${char.tupolevel}` : '';
-        const levelText = char.level ? `Lv.${char.level}` : '';
-        nameTag.textContent = char.name + tupoText;
-        slotEl.appendChild(nameTag);
+		// 名字标签
+		const nameTag = document.createElement('div');
+		nameTag.className = 'team-slot-name';
+		const tupoText = char.tupolevel ? `+${char.tupolevel}` : '';
+		const levelText = char.level ? `Lv.${char.level}` : '';
+		nameTag.textContent = char.name + tupoText;
+		slotEl.appendChild(nameTag);
 
-        // // 【新增】如果是主角，添加“主”字标记
-        // if (isMainCharacterSlot) {
-        //     const mainTag = document.createElement('div');
-        //     mainTag.style.cssText = 'position:absolute;top:2px;left:2px;background:rgba(255,215,0,0.8);color:#000;font-size:10px;padding:1px 4px;border-radius:2px;font-weight:bold;z-index:2;';
-        //     mainTag.textContent = '主';
-        //     slotEl.appendChild(mainTag);
+		// // 【新增】如果是主角，添加“主”字标记
+		// if (isMainCharacterSlot) {
+		//     const mainTag = document.createElement('div');
+		//     mainTag.style.cssText = 'position:absolute;top:2px;left:2px;background:rgba(255,215,0,0.8);color:#000;font-size:10px;padding:1px 4px;border-radius:2px;font-weight:bold;z-index:2;';
+		//     mainTag.textContent = '主';
+		//     slotEl.appendChild(mainTag);
 
-        //     // 【关键】主角不可拖拽
-        //     slotEl.draggable = false;
-        //     slotEl.style.cursor = 'default';
-        // } else {
-        //     slotEl.draggable = true;
-        // }
+		//     // 【关键】主角不可拖拽
+		//     slotEl.draggable = false;
+		//     slotEl.style.cursor = 'default';
+		// } else {
+		//     slotEl.draggable = true;
+		// }
 
-    } else {
-        // 渲染空位状态
-        slotEl.style.borderColor = '#444';
+	} else {
+		// 渲染空位状态
+		slotEl.style.borderColor = '#444';
 
-        // // 【新增】如果主角位为空（理论上不应发生，但做防御处理），显示固定提示
-        // if (isMainCharacterSlot) {
-        //      const emptyText = document.createElement('span');
-        //      emptyText.style.cssText = 'color:#ffd700;font-size:12px;pointer-events:none;';
-        //      emptyText.textContent = '主角';
-        //      slotEl.appendChild(emptyText);
-        //      slotEl.draggable = false;
-        // } else {
-        const emptyText = document.createElement('span');
-        emptyText.style.cssText = 'color:#555;font-size:12px;pointer-events:none;';
-        emptyText.textContent = '空位';
-        slotEl.appendChild(emptyText);
-        //     slotEl.draggable = true;
-        // }
-    }
+		// // 【新增】如果主角位为空（理论上不应发生，但做防御处理），显示固定提示
+		// if (isMainCharacterSlot) {
+		//      const emptyText = document.createElement('span');
+		//      emptyText.style.cssText = 'color:#ffd700;font-size:12px;pointer-events:none;';
+		//      emptyText.textContent = '主角';
+		//      slotEl.appendChild(emptyText);
+		//      slotEl.draggable = false;
+		// } else {
+		const emptyText = document.createElement('span');
+		emptyText.style.cssText = 'color:#555;font-size:12px;pointer-events:none;';
+		emptyText.textContent = '空位';
+		slotEl.appendChild(emptyText);
+		//     slotEl.draggable = true;
+		// }
+	}
 }
 
 // 刷新单个方格
 function refreshTeamSlot(index) {
-    const gridDiv = document.getElementById('team-grid');
-    if (!gridDiv) return;
-    const slotEl = gridDiv.children[index];
-    if (slotEl) renderTeamSlot(slotEl, index);
+	const gridDiv = document.getElementById('team-grid');
+	if (!gridDiv) return;
+	const slotEl = gridDiv.children[index];
+	if (slotEl) renderTeamSlot(slotEl, index);
 }
 
 // 刷新所有方格
 function refreshAllTeamSlots() {
-    const gridDiv = document.getElementById('team-grid');
-    if (!gridDiv) return;
-    for (let i = 0; i < 6; i++) {
-        const slotEl = gridDiv.children[i];
-        if (slotEl) renderTeamSlot(slotEl, i);
-    }
+	const gridDiv = document.getElementById('team-grid');
+	if (!gridDiv) return;
+	for (let i = 0; i < 6; i++) {
+		const slotEl = gridDiv.children[i];
+		if (slotEl) renderTeamSlot(slotEl, i);
+	}
 }
 
 // ========== 布阵交互逻辑 ==========
 
 // 点击方格
 function onTeamSlotClick(index) {
-    // // 【新增】如果点击的是主角槽位，直接提示，不执行后续逻辑
-    // if (index === 0) {
-    //     toast('主角位置固定，敬请期待更多互动功能', 'info');
-    //     // 依然可以显示详情，但不允许更换
-    //     window._selectedSlotIndex = index;
-    //     const instanceId = window.currentTeam[index];
-    //     if (instanceId && window.charBagData && window.charBagData[instanceId]) {
-    //         const instanceData = window.charBagData[instanceId];
-    //         const charId = instanceData.charId || instanceId;
-    //         showTeamCharInfo(index, instanceId, charId);
-    //     }
-    //     return;
-    // }
+	// // 【新增】如果点击的是主角槽位，直接提示，不执行后续逻辑
+	// if (index === 0) {
+	//     toast('主角位置固定，敬请期待更多互动功能', 'info');
+	//     // 依然可以显示详情，但不允许更换
+	//     window._selectedSlotIndex = index;
+	//     const instanceId = window.currentTeam[index];
+	//     if (instanceId && window.charBagData && window.charBagData[instanceId]) {
+	//         const instanceData = window.charBagData[instanceId];
+	//         const charId = instanceData.charId || instanceId;
+	//         showTeamCharInfo(index, instanceId, charId);
+	//     }
+	//     return;
+	// }
 
-    window._selectedSlotIndex = index;
-    // 修改：获取 instanceId
-    const instanceId = window.currentTeam[index];
+	window._selectedSlotIndex = index;
+	// 修改：获取 instanceId
+	const instanceId = window.currentTeam[index];
 
-    if (instanceId && window.charBagData && window.charBagData[instanceId]) {
-        const instanceData = window.charBagData[instanceId];
-        const charId = instanceData.charId || instanceId;
-        // 已有武将，在下方展示详情
-        showTeamCharInfo(index, instanceId, charId);
-    } else {
-        // 空位，展示选将浮窗
-        showCharSelectPopup(index);
-    }
+	if (instanceId && window.charBagData && window.charBagData[instanceId]) {
+		const instanceData = window.charBagData[instanceId];
+		const charId = instanceData.charId || instanceId;
+		// 已有武将，在下方展示详情
+		showTeamCharInfo(index, instanceId, charId);
+	} else {
+		// 空位，展示选将浮窗
+		showCharSelectPopup(index);
+	}
 }
 
 // 底部导航-更换
 function onTeamNavChange() {
-    const idx = window._selectedSlotIndex;
-    if (idx === null || idx === undefined) {
-        toast('请先选择一个方格', 'warning');
-        return;
-    }
-    // 【修改】动态获取主角位置，禁止更换主角
-    const mainCharIndex = getMainCharacterSlotIndex();
-    if (idx === mainCharIndex) {
-        toast('主角无法更换，敬请期待', 'warning');
-        return;
-    }
-    showCharSelectPopup(idx);
+	const idx = window._selectedSlotIndex;
+	if (idx === null || idx === undefined) {
+		toast('请先选择一个方格', 'warning');
+		return;
+	}
+	// 【修改】动态获取主角位置，禁止更换主角
+	const mainCharIndex = getMainCharacterSlotIndex();
+	if (idx === mainCharIndex) {
+		toast('主角无法更换，敬请期待', 'warning');
+		return;
+	}
+	showCharSelectPopup(idx);
 }
 
 // 底部导航-培养
 function onTeamNavTrain() {
-    const idx = window._selectedSlotIndex;
-    if (idx === null || idx === undefined) {
-        toast('请先选择一个方格', 'warning');
-        return;
-    }
-    const instanceId = window.currentTeam[idx];
-    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-        toast('当前方格为空', 'warning');
-        return;
-    }
-    const instData = window.charBagData[instanceId];
-    const charId = instData.charId || instanceId;
-    const char = characterList[charId];
-    if (!char) {
-        toast('角色数据异常', 'error');
-        return;
-    }
-    // 调用背包中的角色详情弹窗（带升级功能）
-    showBagCharDetailPopup(instanceId, charId);
+	const idx = window._selectedSlotIndex;
+	if (idx === null || idx === undefined) {
+		toast('请先选择一个方格', 'warning');
+		return;
+	}
+	const instanceId = window.currentTeam[idx];
+	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+		toast('当前方格为空', 'warning');
+		return;
+	}
+	const instData = window.charBagData[instanceId];
+	const charId = instData.charId || instanceId;
+	const char = characterList[charId];
+	if (!char) {
+		toast('角色数据异常', 'error');
+		return;
+	}
+	// 调用背包中的角色详情弹窗（带升级功能）
+	showBagCharDetailPopup(instanceId, charId);
 }
 
 
@@ -817,72 +817,72 @@ function onTeamNavTrain() {
  * @returns {void}
  */
 function showTeamCharInfo(slotIndex, instanceId, charId) {
-    const infoArea = document.getElementById('team-info-area');
-    if (!infoArea) return;
-    infoArea.innerHTML = '';
+	const infoArea = document.getElementById('team-info-area');
+	if (!infoArea) return;
+	infoArea.innerHTML = '';
 
-    // 修改：从 instanceData 获取存档数据
-    const instanceData = window.charBagData[instanceId];
-    // const char = characterList[charId];
-    const char = instanceData;
+	// 修改：从 instanceData 获取存档数据
+	const instanceData = window.charBagData[instanceId];
+	// const char = characterList[charId];
+	const char = instanceData;
 
-    if (!char || !instanceData) return;
+	if (!char || !instanceData) return;
 
-    const saveData = instanceData; // 直接使用实例数据
-    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
-    const RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-    const TIP_LABELS = { damger: '偏攻', recover: '治疗', balanced: '均衡', defense: '偏防' };
-    // const TIP_LABELS = { damage: '偏攻', recover: '治疗', balance: '均衡' };
+	const saveData = instanceData; // 直接使用实例数据
+	const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+	const RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+	const TIP_LABELS = { damger: '偏攻', recover: '治疗', balanced: '均衡', defense: '偏防' };
+	// const TIP_LABELS = { damage: '偏攻', recover: '治疗', balance: '均衡' };
 
-    // 左侧：武将图片 + 宝物格阵
-    const leftDiv = document.createElement('div');
-    leftDiv.className = 'team-info-left';
+	// 左侧：武将图片 + 宝物格阵
+	const leftDiv = document.createElement('div');
+	leftDiv.className = 'team-info-left';
 
-    const imgDiv = document.createElement('div');
-    imgDiv.className = 'team-info-img-container';
-    const img = document.createElement('img');
-    img.className = 'team-info-img';
-    img.src = `./image/character/${charId}.jpg`;
-    img.alt = char.name;
-    img.onerror = function () {
-        this.onerror = function () {
-            this.style.display = 'none';
-            const p = document.createElement('div');
-            p.className = 'gallery-char-placeholder';
-            p.style.width = '120px';
-            p.style.height = '150px';
-            p.style.fontSize = '36px';
-            p.textContent = char.name.charAt(0);
-            this.parentNode.appendChild(p);
-        };
-        this.src = `./image/character/${charId}.webp`;
-    };
-    imgDiv.appendChild(img);
-    imgDiv.onclick = () => showFullImage(charId, char.name);
-    leftDiv.appendChild(imgDiv);
+	const imgDiv = document.createElement('div');
+	imgDiv.className = 'team-info-img-container';
+	const img = document.createElement('img');
+	img.className = 'team-info-img';
+	img.src = `./image/character/${charId}.jpg`;
+	img.alt = char.name;
+	img.onerror = function () {
+		this.onerror = function () {
+			this.style.display = 'none';
+			const p = document.createElement('div');
+			p.className = 'gallery-char-placeholder';
+			p.style.width = '120px';
+			p.style.height = '150px';
+			p.style.fontSize = '36px';
+			p.textContent = char.name.charAt(0);
+			this.parentNode.appendChild(p);
+		};
+		this.src = `./image/character/${charId}.webp`;
+	};
+	imgDiv.appendChild(img);
+	imgDiv.onclick = () => showFullImage(charId, char.name);
+	leftDiv.appendChild(imgDiv);
 
-    // 宝物格阵（3×2，2列×3行）
-    // 注意：宝物装备逻辑也需要适配 instanceId，这里暂时假设 gameData 内部处理了 instanceId 映射
-    // 如果 gameData 仍基于 charId，则需要修改 gameData 或在此处做转换。
-    // 鉴于 gameData 封装在黑盒中，我们假设 syncTreasureEquipData 和 gameData 能够处理 instanceId 或者我们暂时沿用 charId 作为宝物挂载点（这会导致同角色不同实例共享宝物，如需隔离需大改 gameData）。
-    // *为了最小化改动，此处暂时沿用 charId 进行宝物查询，但需注意同角色多实例共享宝物的局限性*
-    const treasureLabel = document.createElement('div');
-    treasureLabel.className = 'treasure-grid-label';
-    treasureLabel.textContent = '宝物';
-    leftDiv.appendChild(treasureLabel);
+	// 宝物格阵（3×2，2列×3行）
+	// 注意：宝物装备逻辑也需要适配 instanceId，这里暂时假设 gameData 内部处理了 instanceId 映射
+	// 如果 gameData 仍基于 charId，则需要修改 gameData 或在此处做转换。
+	// 鉴于 gameData 封装在黑盒中，我们假设 syncTreasureEquipData 和 gameData 能够处理 instanceId 或者我们暂时沿用 charId 作为宝物挂载点（这会导致同角色不同实例共享宝物，如需隔离需大改 gameData）。
+	// *为了最小化改动，此处暂时沿用 charId 进行宝物查询，但需注意同角色多实例共享宝物的局限性*
+	const treasureLabel = document.createElement('div');
+	treasureLabel.className = 'treasure-grid-label';
+	treasureLabel.textContent = '宝物';
+	leftDiv.appendChild(treasureLabel);
 
-    const treasureGrid = document.createElement('div');
-    treasureGrid.className = 'treasure-grid';
-    const treasureDefs = gameData.getTreasureList();
-    // 修改：传入 instanceId 或 charId? 
-    // 如果 gameData 不支持 instanceId，这里传 charId 会导致所有同名角色共享宝物。
-    // 理想情况：gameData.equipTreasure(instanceId, ...)
-    // 临时方案：假设 gameData 已更新支持 instanceId，或者我们只传 charId 接受共享限制。
-    // 此处代码保持原样调用，但需意识到如果 gameData 内部 key 是 charId，则多实例共享宝物。
-    // const charTreasures = gameData.getCharTreasures(charId); 
-    // 使用新系统的 getCharEquippedTreasures
+	const treasureGrid = document.createElement('div');
+	treasureGrid.className = 'treasure-grid';
+	const treasureDefs = gameData.getTreasureList();
+	// 修改：传入 instanceId 或 charId? 
+	// 如果 gameData 不支持 instanceId，这里传 charId 会导致所有同名角色共享宝物。
+	// 理想情况：gameData.equipTreasure(instanceId, ...)
+	// 临时方案：假设 gameData 已更新支持 instanceId，或者我们只传 charId 接受共享限制。
+	// 此处代码保持原样调用，但需意识到如果 gameData 内部 key 是 charId，则多实例共享宝物。
+	// const charTreasures = gameData.getCharTreasures(charId); 
+	// 使用新系统的 getCharEquippedTreasures
 	const defs = getTreasureDefs();
-		// 改为（确保返回完整有序数组）：
+	// 改为（确保返回完整有序数组）：
 	const equippedIds = [];
 	window.ensureCharTreasureSlots();
 	const slots = window.charTreasureSlots[instanceId];
@@ -894,7 +894,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 		const tSlot = document.createElement('div');
 		tSlot.className = 'treasure-slot';
 		tSlot.dataset.slotIndex = i;
-		
+
 		const tId = equippedIds[i];
 		if (tId && window.treasureInventory && window.treasureInventory[tId]) {
 			const invData = window.treasureInventory[tId];
@@ -902,17 +902,17 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			if (tDef) {
 				tSlot.title = `${tDef.name}: ${tDef.desc || ''}`;
 				tSlot.style.position = 'relative';
-				
+
 				if (tDef.icon) {
 					const tImg = document.createElement('img');
 					tImg.src = tDef.icon;
 					tImg.className = 'treasure-slot-icon';
-					tImg.onerror = function() { this.style.display = 'none'; };
+					tImg.onerror = function () { this.style.display = 'none'; };
 					tSlot.appendChild(tImg);
 				} else {
 					tSlot.textContent = tDef.name.charAt(0);
 				}
-				
+
 				// 等级标签（右下角）
 				const treasureLevel = window.treasureInventory[tId]?.level || 1;
 				if (treasureLevel > 1) {
@@ -943,7 +943,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			tSlot.classList.add('empty');
 		}
 
-		
+
 		tSlot.onclick = () => {
 			const tId = equippedIds[i];
 			if (tId) {
@@ -954,38 +954,38 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 				showTreasureSelectPopup(instanceId, i);
 			}
 		};
-		
+
 		treasureGrid.appendChild(tSlot);
 	}
 
-    leftDiv.appendChild(treasureGrid);
+	leftDiv.appendChild(treasureGrid);
 
-    // 右侧：属性信息
-    const attrDiv = document.createElement('div');
-    attrDiv.className = 'team-info-attr';
+	// 右侧：属性信息
+	const attrDiv = document.createElement('div');
+	attrDiv.className = 'team-info-attr';
 
-    // 名称
-    const tupoText = saveData && saveData.tupolevel ? `+${saveData.tupolevel}  ` : '';
-    const nameEl = document.createElement('div');
-    nameEl.className = 'team-info-name';
-    nameEl.textContent = char.name + tupoText;
-    attrDiv.appendChild(nameEl);
+	// 名称
+	const tupoText = saveData && saveData.tupolevel ? `+${saveData.tupolevel}  ` : '';
+	const nameEl = document.createElement('div');
+	nameEl.className = 'team-info-name';
+	nameEl.textContent = char.name + tupoText;
+	attrDiv.appendChild(nameEl);
 
-    // 品质 + 等级
-    const rankEl = document.createElement('div');
-    rankEl.className = 'team-info-rank';
-    const rankText = RANK_LABELS[char.rank] || char.rank;
-    const levelText = saveData ? `Lv.${saveData.level}` : 'Lv.1';
-    rankEl.innerHTML = `<span style="color:${RANK_COLORS[char.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:12px;margin-left:6px">${levelText}</span>`;
-    attrDiv.appendChild(rankEl);
+	// 品质 + 等级
+	const rankEl = document.createElement('div');
+	rankEl.className = 'team-info-rank';
+	const rankText = RANK_LABELS[char.rank] || char.rank;
+	const levelText = saveData ? `Lv.${saveData.level}` : 'Lv.1';
+	rankEl.innerHTML = `<span style="color:${RANK_COLORS[char.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:12px;margin-left:6px">${levelText}</span>`;
+	attrDiv.appendChild(rankEl);
 
-    // 类型
-    const tipEl = document.createElement('div');
-    tipEl.className = 'team-info-tip';
-    tipEl.textContent = TIP_LABELS[char.template] || '';
-    attrDiv.appendChild(tipEl);
+	// 类型
+	const tipEl = document.createElement('div');
+	tipEl.className = 'team-info-tip';
+	tipEl.textContent = TIP_LABELS[char.template] || '';
+	attrDiv.appendChild(tipEl);
 
-    // 修改位置：showTeamCharInfo 函数内，四维属性显示部分
+	// 修改位置：showTeamCharInfo 函数内，四维属性显示部分
 
 	// 原有的 attrs 数组构造代码
 	// const attrs = [
@@ -1010,58 +1010,58 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 	attrs.forEach(a => {
 		const row = document.createElement('div');
 		row.className = 'team-info-attr-row';
-		
+
 		let displayText = `${a.value}`;
 		if (a.bonus > 0) {
 			displayText += ` <span style="color:#44ff88;font-size:11px;">(+${a.bonus})</span>`;
 		}
-		
+
 		row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${displayText}</span>`;
 		attrDiv.appendChild(row);
 	});
 
 
-    // 技能详细描述
-    const skillIds = char.skills || [];
-    const skillSections = [
-        { key: 0, type: 'pugong', label: '普攻', color: '#5ba8ff' },
-        { key: 1, type: 'skill', label: '技能', color: '#ff8c00' },
-        { key: 2, type: 'spskill', label: '必杀', color: '#ffd700' },
-    ];
-    for (const sec of skillSections) {
-        const sId = skillIds[sec.key];
-        const sData = sId && contentList[sec.type] && contentList[sec.type][sId];
-        if (!sData) continue;
+	// 技能详细描述
+	const skillIds = char.skills || [];
+	const skillSections = [
+		{ key: 0, type: 'pugong', label: '普攻', color: '#5ba8ff' },
+		{ key: 1, type: 'skill', label: '技能', color: '#ff8c00' },
+		{ key: 2, type: 'spskill', label: '必杀', color: '#ffd700' },
+	];
+	for (const sec of skillSections) {
+		const sId = skillIds[sec.key];
+		const sData = sId && contentList[sec.type] && contentList[sec.type][sId];
+		if (!sData) continue;
 
-        const sectionDiv = document.createElement('div');
-        sectionDiv.className = 'team-info-skill-section';
+		const sectionDiv = document.createElement('div');
+		sectionDiv.className = 'team-info-skill-section';
 
-        const headerRow = document.createElement('div');
-        headerRow.className = 'team-info-skill-row';
-        headerRow.innerHTML = `<span class="skill-label" style="color:${sec.color}">${sec.label}</span><span class="skill-name">${sData.name}</span>`;
-        sectionDiv.appendChild(headerRow);
+		const headerRow = document.createElement('div');
+		headerRow.className = 'team-info-skill-row';
+		headerRow.innerHTML = `<span class="skill-label" style="color:${sec.color}">${sec.label}</span><span class="skill-name">${sData.name}</span>`;
+		sectionDiv.appendChild(headerRow);
 
-        if (sData.intro) {
-            const introEl = document.createElement('div');
-            introEl.className = 'team-info-skill-desc';
-            introEl.textContent = sData.intro;
-            sectionDiv.appendChild(introEl);
-        }
-        if (sData.ai_intro) {
-            const aiEl = document.createElement('div');
-            aiEl.className = 'team-info-skill-ai';
-            aiEl.textContent = 'AI倾向：' + sData.ai_intro;
-            sectionDiv.appendChild(aiEl);
-        }
+		if (sData.intro) {
+			const introEl = document.createElement('div');
+			introEl.className = 'team-info-skill-desc';
+			introEl.textContent = sData.intro;
+			sectionDiv.appendChild(introEl);
+		}
+		if (sData.ai_intro) {
+			const aiEl = document.createElement('div');
+			aiEl.className = 'team-info-skill-ai';
+			aiEl.textContent = 'AI倾向：' + sData.ai_intro;
+			sectionDiv.appendChild(aiEl);
+		}
 
-        attrDiv.appendChild(sectionDiv);
-    }
+		attrDiv.appendChild(sectionDiv);
+	}
 
-    infoArea.appendChild(leftDiv);
-    infoArea.appendChild(attrDiv);
+	infoArea.appendChild(leftDiv);
+	infoArea.appendChild(attrDiv);
 
-    // 高亮选中方格
-    highlightTeamSlot(slotIndex);
+	// 高亮选中方格
+	highlightTeamSlot(slotIndex);
 }
 
 /**
@@ -1071,251 +1071,251 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
  * @param {number} slotIndex - 宝物槽位 (0-5)
  */
 function showTreasureSelectPopup(charInstanceId, slotIndex) {
-    const existing = document.getElementById('treasure-select-popup');
-    if (existing) existing.remove();
+	const existing = document.getElementById('treasure-select-popup');
+	if (existing) existing.remove();
 
-    const instData = window.charBagData && window.charBagData[charInstanceId];
-    const charId = instData ? instData.charId : charInstanceId;
-    const char = characterList[charId];
-    if (!char) {
-        toast('角色数据异常', 'error');
-        return;
-    }
+	const instData = window.charBagData && window.charBagData[charInstanceId];
+	const charId = instData ? instData.charId : charInstanceId;
+	const char = characterList[charId];
+	if (!char) {
+		toast('角色数据异常', 'error');
+		return;
+	}
 
-    const defs = getTreasureDefs();
-    const allInstances = getTreasureInstanceList(); // 从 treasureInventory 获取所有宝物实例
-    window.ensureCharTreasureSlots();
+	const defs = getTreasureDefs();
+	const allInstances = getTreasureInstanceList(); // 从 treasureInventory 获取所有宝物实例
+	window.ensureCharTreasureSlots();
 
-    // 获取当前角色槽位中的宝物
-    const currentSlots = window.charTreasureSlots[charInstanceId] || [null, null, null, null, null, null];
-    const currentTreasureId = currentSlots[slotIndex] || null;
-    const currentDef = currentTreasureId ? defs[window.treasureInventory[currentTreasureId]?.baseId] : null;
+	// 获取当前角色槽位中的宝物
+	const currentSlots = window.charTreasureSlots[charInstanceId] || [null, null, null, null, null, null];
+	const currentTreasureId = currentSlots[slotIndex] || null;
+	const currentDef = currentTreasureId ? defs[window.treasureInventory[currentTreasureId]?.baseId] : null;
 
-    // --- 构建快速查询表：宝物实例ID → { 装备者角色ID, 装备槽位索引 } ---
-    const treasureOwnerMap = {};
-    for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
-        slots.forEach((tId, sIdx) => {
-            if (tId) {
-                treasureOwnerMap[tId] = { ownerId, slotIndex: sIdx };
-            }
-        });
-    }
+	// --- 构建快速查询表：宝物实例ID → { 装备者角色ID, 装备槽位索引 } ---
+	const treasureOwnerMap = {};
+	for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
+		slots.forEach((tId, sIdx) => {
+			if (tId) {
+				treasureOwnerMap[tId] = { ownerId, slotIndex: sIdx };
+			}
+		});
+	}
 
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
-    overlay.id = 'treasure-select-popup';
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.id = 'treasure-select-popup';
 
-    const popup = document.createElement('div');
-    popup.className = 'treasure-select-popup';
+	const popup = document.createElement('div');
+	popup.className = 'treasure-select-popup';
 
-    // 标题
-    const title = document.createElement('div');
-    title.className = 'treasure-select-title';
-    title.textContent = `选择宝物 - ${char.name}`;
-    popup.appendChild(title);
+	// 标题
+	const title = document.createElement('div');
+	title.className = 'treasure-select-title';
+	title.textContent = `选择宝物 - ${char.name}`;
+	popup.appendChild(title);
 
-    // 当前槽位信息
-    const slotInfo = document.createElement('div');
-    slotInfo.className = 'treasure-slot-info';
-    slotInfo.textContent = currentDef ? `当前: ${currentDef.name}` : '当前: 空';
-    popup.appendChild(slotInfo);
+	// 当前槽位信息
+	const slotInfo = document.createElement('div');
+	slotInfo.className = 'treasure-slot-info';
+	slotInfo.textContent = currentDef ? `当前: ${currentDef.name}` : '当前: 空';
+	popup.appendChild(slotInfo);
 
-    // 卸下按钮
-    if (currentTreasureId) {
-        const unequipBtn = document.createElement('button');
-        unequipBtn.className = 'treasure-select-btn unequip';
-        unequipBtn.textContent = '卸下宝物';
-        unequipBtn.onclick = () => {
-            equipTreasure(charInstanceId, slotIndex, null);
-            overlay.remove();
-            refreshTreasureUI(charInstanceId);
-            SaveManager.autoSave();
-            toast('已卸下宝物', 'success');
-        };
-        popup.appendChild(unequipBtn);
-    }
+	// 卸下按钮
+	if (currentTreasureId) {
+		const unequipBtn = document.createElement('button');
+		unequipBtn.className = 'treasure-select-btn unequip';
+		unequipBtn.textContent = '卸下宝物';
+		unequipBtn.onclick = () => {
+			equipTreasure(charInstanceId, slotIndex, null);
+			overlay.remove();
+			refreshTreasureUI(charInstanceId);
+			SaveManager.autoSave();
+			toast('已卸下宝物', 'success');
+		};
+		popup.appendChild(unequipBtn);
+	}
 
-    // 宝物列表
-    const scrollDiv = document.createElement('div');
-    scrollDiv.className = 'treasure-select-scroll';
+	// 宝物列表
+	const scrollDiv = document.createElement('div');
+	scrollDiv.className = 'treasure-select-scroll';
 
-    // 构建显示列表
-    const displayList = allInstances.map(item => {
-        const ownerInfo = treasureOwnerMap[item.instanceId];
-        let status = 'free'; // 空闲
-        let ownerName = null;
-        let ownerSlotIndex = -1;
+	// 构建显示列表
+	const displayList = allInstances.map(item => {
+		const ownerInfo = treasureOwnerMap[item.instanceId];
+		let status = 'free'; // 空闲
+		let ownerName = null;
+		let ownerSlotIndex = -1;
 
-        if (ownerInfo) {
-            if (ownerInfo.ownerId === charInstanceId) {
-                status = 'self'; // 装备在自己身上
-                ownerSlotIndex = ownerInfo.slotIndex;
-            } else {
-                status = 'other'; // 装备在其他角色身上
-                // 获取装备者名字
-                const ownerInst = window.charBagData && window.charBagData[ownerInfo.ownerId];
-                const ownerCharId = ownerInst ? ownerInst.charId : ownerInfo.ownerId;
-                const ownerChar = characterList[ownerCharId];
-                ownerName = ownerChar ? ownerChar.name : ownerInfo.ownerId;
-                ownerSlotIndex = ownerInfo.slotIndex;
-            }
-        }
+		if (ownerInfo) {
+			if (ownerInfo.ownerId === charInstanceId) {
+				status = 'self'; // 装备在自己身上
+				ownerSlotIndex = ownerInfo.slotIndex;
+			} else {
+				status = 'other'; // 装备在其他角色身上
+				// 获取装备者名字
+				const ownerInst = window.charBagData && window.charBagData[ownerInfo.ownerId];
+				const ownerCharId = ownerInst ? ownerInst.charId : ownerInfo.ownerId;
+				const ownerChar = characterList[ownerCharId];
+				ownerName = ownerChar ? ownerChar.name : ownerInfo.ownerId;
+				ownerSlotIndex = ownerInfo.slotIndex;
+			}
+		}
 
-        return {
-            ...item,
-            status,
-            ownerName,
-            ownerSlotIndex,
-            isSelfEquipped: (item.instanceId === currentTreasureId), // 当前槽位
-        };
-    });
+		return {
+			...item,
+			status,
+			ownerName,
+			ownerSlotIndex,
+			isSelfEquipped: (item.instanceId === currentTreasureId), // 当前槽位
+		};
+	});
 
-    // 排序：当前槽位的 → 当前角色已装备的（高等级优先）→ 空闲（高等级优先）→ 其他角色装备的
+	// 排序：当前槽位的 → 当前角色已装备的（高等级优先）→ 空闲（高等级优先）→ 其他角色装备的
 	displayList.sort((a, b) => {
 		if (a.isSelfEquipped) return -1;
 		if (b.isSelfEquipped) return 1;
-		
+
 		// 当前角色已装备的排前面
 		if (a.status === 'self' && b.status !== 'self') return -1;
 		if (a.status !== 'self' && b.status === 'self') return 1;
-		
+
 		// 空闲的排中间
 		if (a.status === 'free' && b.status !== 'free') return -1;
 		if (a.status !== 'free' && b.status === 'free') return 1;
-		
+
 		// 同状态按等级排序（高等级优先）
 		const aLevel = window.treasureInventory[a.instanceId]?.level || 1;
 		const bLevel = window.treasureInventory[b.instanceId]?.level || 1;
 		if (bLevel !== aLevel) return bLevel - aLevel;
-		
+
 		return 0;
 	});
 
-    if (displayList.length === 0) {
-        const emptyTip = document.createElement('div');
-        emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
-        emptyTip.textContent = '背包中暂无宝物';
-        scrollDiv.appendChild(emptyTip);
-    }
+	if (displayList.length === 0) {
+		const emptyTip = document.createElement('div');
+		emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
+		emptyTip.textContent = '背包中暂无宝物';
+		scrollDiv.appendChild(emptyTip);
+	}
 
-    displayList.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'treasure-select-row';
+	displayList.forEach(item => {
+		const row = document.createElement('div');
+		row.className = 'treasure-select-row';
 
 		const nameEl = document.createElement('div');
 		nameEl.className = 'treasure-select-name';
 		const itemLevel = window.treasureInventory[item.instanceId]?.level || 1;
 		nameEl.innerHTML = `${item.name} <span style="color:#ffd700;font-size:11px;">Lv.${itemLevel}</span>`;
-        
-		
-        // 根据不同状态添加类名
-        if (item.isSelfEquipped) {
-            row.classList.add('current');
-        } else if (item.status === 'other') {
-            row.classList.add('unavailable');
-        }
 
-        // 图标
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'treasure-select-icon';
-        if (item.icon) {
-            const img = document.createElement('img');
-            img.src = item.icon;
-            img.className = 'treasure-icon-img';
-            img.onerror = function() {
-                this.style.display = 'none';
-                iconDiv.textContent = item.name.charAt(0);
-            };
-            iconDiv.appendChild(img);
-        } else {
-            iconDiv.textContent = item.name.charAt(0);
-        }
-        row.appendChild(iconDiv);
 
-        // 信息
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'treasure-select-info';
-        
-        
-        // ==== 需求1 & 2：显示装备状态标签 ====
-        if (item.isSelfEquipped) {
-            // 当前槽位的宝物 - 金色高亮
-            nameEl.innerHTML += ` <span style="color:#ffd700;font-size:11px;">【已装备 - 当前槽位】</span>`;
-        } else if (item.status === 'self') {
-            // 装备在自己其他槽位的宝物 - 灰色提示
-            nameEl.innerHTML += ` <span style="color:#aaa;font-size:11px;">已装备（槽位${item.ownerSlotIndex + 1}）</span>`;
-        } else if (item.status === 'other') {
-            // 被其他角色装备的宝物 - 红色提示，显示装备者名字
-            nameEl.innerHTML += ` <span style="color:#ff6666;font-size:11px;">已装备（${item.ownerName}）</span>`;
-        }
+		// 根据不同状态添加类名
+		if (item.isSelfEquipped) {
+			row.classList.add('current');
+		} else if (item.status === 'other') {
+			row.classList.add('unavailable');
+		}
 
-        infoDiv.appendChild(nameEl);
-        
-        const descEl = document.createElement('div');
-        descEl.className = 'treasure-select-desc';
-        descEl.textContent = item.desc || '暂无描述';
-        infoDiv.appendChild(descEl);
-        
-        // 被其他角色装备时，显示详细装备者信息
-        if (item.status === 'other' && item.ownerName) {
-            const eqInfo = document.createElement('div');
-            eqInfo.className = 'treasure-equipped-by';
-            eqInfo.textContent = `· 装备者: ${item.ownerName}（槽位${item.ownerSlotIndex + 1}）`;
-            infoDiv.appendChild(eqInfo);
-        }
+		// 图标
+		const iconDiv = document.createElement('div');
+		iconDiv.className = 'treasure-select-icon';
+		if (item.icon) {
+			const img = document.createElement('img');
+			img.src = item.icon;
+			img.className = 'treasure-icon-img';
+			img.onerror = function () {
+				this.style.display = 'none';
+				iconDiv.textContent = item.name.charAt(0);
+			};
+			iconDiv.appendChild(img);
+		} else {
+			iconDiv.textContent = item.name.charAt(0);
+		}
+		row.appendChild(iconDiv);
 
-        row.appendChild(infoDiv);
+		// 信息
+		const infoDiv = document.createElement('div');
+		infoDiv.className = 'treasure-select-info';
 
-        // 按钮
-        const btn = document.createElement('button');
-        btn.className = 'treasure-select-btn';
 
-        if (item.isSelfEquipped) {
-            btn.textContent = '已装备';
-            btn.disabled = true;
-        } else if (item.status === 'other') {
-            btn.textContent = '不可用';
-            btn.disabled = true;
-        } else if (item.status === 'self') {
-            // 装备在自己其他槽位，允许更换
-            btn.textContent = '更换到此槽位';
-            btn.onclick = () => {
-                equipTreasure(charInstanceId, slotIndex, item.instanceId);
-                overlay.remove();
-                refreshTreasureUI(charInstanceId);
-                SaveManager.autoSave();
-                toast(`已将【${item.name}】更换到槽位${slotIndex + 1}`, 'success');
-            };
-        } else {
-            btn.textContent = '装备';
-            btn.onclick = () => {
-                equipTreasure(charInstanceId, slotIndex, item.instanceId);
-                overlay.remove();
-                refreshTreasureUI(charInstanceId);
-                SaveManager.autoSave();
-                toast(`已装备【${item.name}】`, 'success');
-            };
-        }
-        row.appendChild(btn);
+		// ==== 需求1 & 2：显示装备状态标签 ====
+		if (item.isSelfEquipped) {
+			// 当前槽位的宝物 - 金色高亮
+			nameEl.innerHTML += ` <span style="color:#ffd700;font-size:11px;">【已装备 - 当前槽位】</span>`;
+		} else if (item.status === 'self') {
+			// 装备在自己其他槽位的宝物 - 灰色提示
+			nameEl.innerHTML += ` <span style="color:#aaa;font-size:11px;">已装备（槽位${item.ownerSlotIndex + 1}）</span>`;
+		} else if (item.status === 'other') {
+			// 被其他角色装备的宝物 - 红色提示，显示装备者名字
+			nameEl.innerHTML += ` <span style="color:#ff6666;font-size:11px;">已装备（${item.ownerName}）</span>`;
+		}
 
-        scrollDiv.appendChild(row);
-    });
+		infoDiv.appendChild(nameEl);
 
-    popup.appendChild(scrollDiv);
+		const descEl = document.createElement('div');
+		descEl.className = 'treasure-select-desc';
+		descEl.textContent = item.desc || '暂无描述';
+		infoDiv.appendChild(descEl);
 
-    // 关闭按钮
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'treasure-select-close-btn';
-    closeBtn.textContent = '关闭';
-    closeBtn.onclick = () => overlay.remove();
-    popup.appendChild(closeBtn);
+		// 被其他角色装备时，显示详细装备者信息
+		if (item.status === 'other' && item.ownerName) {
+			const eqInfo = document.createElement('div');
+			eqInfo.className = 'treasure-equipped-by';
+			eqInfo.textContent = `· 装备者: ${item.ownerName}（槽位${item.ownerSlotIndex + 1}）`;
+			infoDiv.appendChild(eqInfo);
+		}
 
-    overlay.appendChild(popup);
-    document.body.appendChild(overlay);
+		row.appendChild(infoDiv);
 
-    overlay.onclick = (e) => {
-        if (e.target === overlay) overlay.remove();
-    };
+		// 按钮
+		const btn = document.createElement('button');
+		btn.className = 'treasure-select-btn';
+
+		if (item.isSelfEquipped) {
+			btn.textContent = '已装备';
+			btn.disabled = true;
+		} else if (item.status === 'other') {
+			btn.textContent = '不可用';
+			btn.disabled = true;
+		} else if (item.status === 'self') {
+			// 装备在自己其他槽位，允许更换
+			btn.textContent = '更换到此槽位';
+			btn.onclick = () => {
+				equipTreasure(charInstanceId, slotIndex, item.instanceId);
+				overlay.remove();
+				refreshTreasureUI(charInstanceId);
+				SaveManager.autoSave();
+				toast(`已将【${item.name}】更换到槽位${slotIndex + 1}`, 'success');
+			};
+		} else {
+			btn.textContent = '装备';
+			btn.onclick = () => {
+				equipTreasure(charInstanceId, slotIndex, item.instanceId);
+				overlay.remove();
+				refreshTreasureUI(charInstanceId);
+				SaveManager.autoSave();
+				toast(`已装备【${item.name}】`, 'success');
+			};
+		}
+		row.appendChild(btn);
+
+		scrollDiv.appendChild(row);
+	});
+
+	popup.appendChild(scrollDiv);
+
+	// 关闭按钮
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'treasure-select-close-btn';
+	closeBtn.textContent = '关闭';
+	closeBtn.onclick = () => overlay.remove();
+	popup.appendChild(closeBtn);
+
+	overlay.appendChild(popup);
+	document.body.appendChild(overlay);
+
+	overlay.onclick = (e) => {
+		if (e.target === overlay) overlay.remove();
+	};
 }
 
 
@@ -1325,19 +1325,19 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
  * @param {string} charInstanceId - 角色实例ID
  */
 function refreshTreasureUI(charInstanceId) {
-    // 如果队伍视图正在显示，刷新之
-    const teamView = document.getElementById('team-view');
-    if (teamView && teamView.style.display !== 'none') {
-        const idx = window._selectedSlotIndex;
-        if (idx !== null && idx !== undefined) {
-            const instId = window.currentTeam[idx];
-            if (instId) {
-                const instData = window.charBagData && window.charBagData[instId];
-                const charId = instData ? instData.charId : instId;
-                showTeamCharInfo(idx, instId, charId);
-            }
-        }
-    }
+	// 如果队伍视图正在显示，刷新之
+	const teamView = document.getElementById('team-view');
+	if (teamView && teamView.style.display !== 'none') {
+		const idx = window._selectedSlotIndex;
+		if (idx !== null && idx !== undefined) {
+			const instId = window.currentTeam[idx];
+			if (instId) {
+				const instData = window.charBagData && window.charBagData[instId];
+				const charId = instData ? instData.charId : instId;
+				showTeamCharInfo(idx, instId, charId);
+			}
+		}
+	}
 }
 
 
@@ -1347,162 +1347,162 @@ function refreshTreasureUI(charInstanceId) {
  * 主要用于从旧数据格式迁移到宝物实例化系统
  */
 function syncTreasureEquipData() {
-    // 如果已经安装了新系统，且已有宝物实例数据，则不需要做额外同步
-    if (window.treasureInventory && Object.keys(window.treasureInventory).length > 0) {
-        return;
-    }
-    
-    // 初始化新系统
-    window.ensureTreasureInventory();
-    
-    // ====== 1. 从旧格式 window.treasureBagData 迁移 ======
-    if (window.treasureBagData && Object.keys(window.treasureBagData).length > 0) {
-        console.log('[宝物迁移] 检测到旧格式 window.treasureBagData，正在迁移...');
-        
-        // 旧格式: { treasureBaseId: { count: number, equippedBy: [charInstanceId, ...] } }
-        Object.entries(window.treasureBagData).forEach(([baseId, data]) => {
-            if (!data || !data.count) return;
-            
-            // 创建指定数量的实例
-            for (let i = 0; i < data.count; i++) {
-                const instanceId = window.generateTreasureInstanceId(baseId);
-                const equippedBy = (data.equippedBy && data.equippedBy.length > i) 
-                    ? data.equippedBy[i] 
-                    : null;
-                    
-                window.treasureInventory[instanceId] = {
-                    baseId: baseId,
-                    equippedBy: equippedBy
-                };
-            }
-        });
-        
-        // 清除旧数据，避免重复迁移
-        window.treasureBagData = {};
-        console.log('[宝物迁移] 从 window.treasureBagData 迁移完成');
-    }
-    
-    // ====== 2. 从 gameData.data._treasureBag 迁移 ======
-    if (gameData && gameData.data && gameData.data._treasureBag) {
-        const oldBag = gameData.data._treasureBag;
-        if (Object.keys(oldBag).length > 0) {
-            console.log('[宝物迁移] 检测到 gameData.data._treasureBag，正在迁移...');
-            
-            // 旧格式: { treasureBaseId: { count: number, equippedBy: [charInstanceId, ...] } }
-            Object.entries(oldBag).forEach(([baseId, data]) => {
-                if (!data || !data.count) return;
-                
-                // 创建指定数量的实例
-                for (let i = 0; i < data.count; i++) {
-                    const instanceId = window.generateTreasureInstanceId(baseId);
-                    const equippedBy = (data.equippedBy && data.equippedBy.length > i) 
-                        ? data.equippedBy[i] 
-                        : null;
-                        
-                    // 如果 window.treasureInventory 中已有该实例，跳过
-                    if (window.treasureInventory[instanceId]) continue;
-                    
-                    window.treasureInventory[instanceId] = {
-                        baseId: baseId,
-                        equippedBy: equippedBy
-                    };
-                }
-            });
-            
-            // 清除旧数据，避免重复迁移
-            delete gameData.data._treasureBag;
-            console.log('[宝物迁移] 从 gameData.data._treasureBag 迁移完成');
-        }
-    }
-    
-    // ====== 3. 从 gameData.data._treasures（旧装备槽位数据）迁移 ======
-    if (gameData && gameData.data && gameData.data._treasures) {
-        const oldTreasures = gameData.data._treasures;
-        if (Object.keys(oldTreasures).length > 0) {
-            console.log('[宝物迁移] 检测到旧装备槽位数据 gameData.data._treasures，正在迁移...');
-            
-            // 旧格式: { charInstanceId: [treasureBaseId, null, ...] }  // 6个槽位
-            Object.entries(oldTreasures).forEach(([charInstId, slotArray]) => {
-                if (!Array.isArray(slotArray)) return;
-                
-                slotArray.forEach((treasureBaseId, slotIndex) => {
-                    if (!treasureBaseId) return;
-                    
-                    // 查找是否有未装备的同名宝物实例
-                    const available = Object.entries(window.treasureInventory || {}).find(
-                        ([, inv]) => inv.baseId === treasureBaseId && !inv.equippedBy
-                    );
-                    
-                    if (available) {
-                        // 直接为角色装备该实例
-                        window.treasureInventory[available[0]].equippedBy = charInstId;
-                    } else {
-                        // 如果没有可用实例，创建一个新实例并装备
-                        const instanceId = window.generateTreasureInstanceId(treasureBaseId);
-                        window.treasureInventory[instanceId] = {
-                            baseId: treasureBaseId,
-                            equippedBy: charInstId
-                        };
-                    }
-                });
-            });
-            
-            // 清除旧数据
-            delete gameData.data._treasures;
-            console.log('[宝物迁移] 从旧装备槽位数据迁移完成');
-        }
-    }
-    
-    // ====== 4. 从 window.treasureEquipData（旧装备槽位数据）迁移 ======
-    if (window.treasureEquipData && Object.keys(window.treasureEquipData).length > 0) {
-        console.log('[宝物迁移] 检测到旧格式 window.treasureEquipData，正在迁移...');
-        
-        // 旧格式: { charInstanceId: [treasureBaseId, null, ...] }
-        Object.entries(window.treasureEquipData).forEach(([charInstId, slotArray]) => {
-            if (!Array.isArray(slotArray)) return;
-            
-            slotArray.forEach((treasureBaseId, slotIndex) => {
-                if (!treasureBaseId) return;
-                
-                // 查找是否有未装备的同名宝物实例
-                const available = Object.entries(window.treasureInventory || {}).find(
-                    ([, inv]) => inv.baseId === treasureBaseId && !inv.equippedBy
-                );
-                
-                if (available) {
-                    window.treasureInventory[available[0]].equippedBy = charInstId;
-                } else {
-                    // 创建新实例并装备
-                    const instanceId = window.generateTreasureInstanceId(treasureBaseId);
-                    window.treasureInventory[instanceId] = {
-                        baseId: treasureBaseId,
-                        equippedBy: charInstId
-                    };
-                }
-            });
-        });
-        
-        // 清除旧数据
-        window.treasureEquipData = {};
-        console.log('[宝物迁移] 从 window.treasureEquipData 迁移完成');
-    }
-    
-    // ====== 5. 如果完全没有旧数据，确保有空的宝物背包 ======
-    if (!window.treasureInventory || Object.keys(window.treasureInventory).length === 0) {
-        window.treasureInventory = {};
-        console.log('[宝物迁移] 未检测到旧数据，初始化空宝物背包');
-    }
+	// 如果已经安装了新系统，且已有宝物实例数据，则不需要做额外同步
+	if (window.treasureInventory && Object.keys(window.treasureInventory).length > 0) {
+		return;
+	}
+
+	// 初始化新系统
+	window.ensureTreasureInventory();
+
+	// ====== 1. 从旧格式 window.treasureBagData 迁移 ======
+	if (window.treasureBagData && Object.keys(window.treasureBagData).length > 0) {
+		console.log('[宝物迁移] 检测到旧格式 window.treasureBagData，正在迁移...');
+
+		// 旧格式: { treasureBaseId: { count: number, equippedBy: [charInstanceId, ...] } }
+		Object.entries(window.treasureBagData).forEach(([baseId, data]) => {
+			if (!data || !data.count) return;
+
+			// 创建指定数量的实例
+			for (let i = 0; i < data.count; i++) {
+				const instanceId = window.generateTreasureInstanceId(baseId);
+				const equippedBy = (data.equippedBy && data.equippedBy.length > i)
+					? data.equippedBy[i]
+					: null;
+
+				window.treasureInventory[instanceId] = {
+					baseId: baseId,
+					equippedBy: equippedBy
+				};
+			}
+		});
+
+		// 清除旧数据，避免重复迁移
+		window.treasureBagData = {};
+		console.log('[宝物迁移] 从 window.treasureBagData 迁移完成');
+	}
+
+	// ====== 2. 从 gameData.data._treasureBag 迁移 ======
+	if (gameData && gameData.data && gameData.data._treasureBag) {
+		const oldBag = gameData.data._treasureBag;
+		if (Object.keys(oldBag).length > 0) {
+			console.log('[宝物迁移] 检测到 gameData.data._treasureBag，正在迁移...');
+
+			// 旧格式: { treasureBaseId: { count: number, equippedBy: [charInstanceId, ...] } }
+			Object.entries(oldBag).forEach(([baseId, data]) => {
+				if (!data || !data.count) return;
+
+				// 创建指定数量的实例
+				for (let i = 0; i < data.count; i++) {
+					const instanceId = window.generateTreasureInstanceId(baseId);
+					const equippedBy = (data.equippedBy && data.equippedBy.length > i)
+						? data.equippedBy[i]
+						: null;
+
+					// 如果 window.treasureInventory 中已有该实例，跳过
+					if (window.treasureInventory[instanceId]) continue;
+
+					window.treasureInventory[instanceId] = {
+						baseId: baseId,
+						equippedBy: equippedBy
+					};
+				}
+			});
+
+			// 清除旧数据，避免重复迁移
+			delete gameData.data._treasureBag;
+			console.log('[宝物迁移] 从 gameData.data._treasureBag 迁移完成');
+		}
+	}
+
+	// ====== 3. 从 gameData.data._treasures（旧装备槽位数据）迁移 ======
+	if (gameData && gameData.data && gameData.data._treasures) {
+		const oldTreasures = gameData.data._treasures;
+		if (Object.keys(oldTreasures).length > 0) {
+			console.log('[宝物迁移] 检测到旧装备槽位数据 gameData.data._treasures，正在迁移...');
+
+			// 旧格式: { charInstanceId: [treasureBaseId, null, ...] }  // 6个槽位
+			Object.entries(oldTreasures).forEach(([charInstId, slotArray]) => {
+				if (!Array.isArray(slotArray)) return;
+
+				slotArray.forEach((treasureBaseId, slotIndex) => {
+					if (!treasureBaseId) return;
+
+					// 查找是否有未装备的同名宝物实例
+					const available = Object.entries(window.treasureInventory || {}).find(
+						([, inv]) => inv.baseId === treasureBaseId && !inv.equippedBy
+					);
+
+					if (available) {
+						// 直接为角色装备该实例
+						window.treasureInventory[available[0]].equippedBy = charInstId;
+					} else {
+						// 如果没有可用实例，创建一个新实例并装备
+						const instanceId = window.generateTreasureInstanceId(treasureBaseId);
+						window.treasureInventory[instanceId] = {
+							baseId: treasureBaseId,
+							equippedBy: charInstId
+						};
+					}
+				});
+			});
+
+			// 清除旧数据
+			delete gameData.data._treasures;
+			console.log('[宝物迁移] 从旧装备槽位数据迁移完成');
+		}
+	}
+
+	// ====== 4. 从 window.treasureEquipData（旧装备槽位数据）迁移 ======
+	if (window.treasureEquipData && Object.keys(window.treasureEquipData).length > 0) {
+		console.log('[宝物迁移] 检测到旧格式 window.treasureEquipData，正在迁移...');
+
+		// 旧格式: { charInstanceId: [treasureBaseId, null, ...] }
+		Object.entries(window.treasureEquipData).forEach(([charInstId, slotArray]) => {
+			if (!Array.isArray(slotArray)) return;
+
+			slotArray.forEach((treasureBaseId, slotIndex) => {
+				if (!treasureBaseId) return;
+
+				// 查找是否有未装备的同名宝物实例
+				const available = Object.entries(window.treasureInventory || {}).find(
+					([, inv]) => inv.baseId === treasureBaseId && !inv.equippedBy
+				);
+
+				if (available) {
+					window.treasureInventory[available[0]].equippedBy = charInstId;
+				} else {
+					// 创建新实例并装备
+					const instanceId = window.generateTreasureInstanceId(treasureBaseId);
+					window.treasureInventory[instanceId] = {
+						baseId: treasureBaseId,
+						equippedBy: charInstId
+					};
+				}
+			});
+		});
+
+		// 清除旧数据
+		window.treasureEquipData = {};
+		console.log('[宝物迁移] 从 window.treasureEquipData 迁移完成');
+	}
+
+	// ====== 5. 如果完全没有旧数据，确保有空的宝物背包 ======
+	if (!window.treasureInventory || Object.keys(window.treasureInventory).length === 0) {
+		window.treasureInventory = {};
+		console.log('[宝物迁移] 未检测到旧数据，初始化空宝物背包');
+	}
 }
 
 
 
 // 高亮选中的方格
 function highlightTeamSlot(index) {
-    const gridDiv = document.getElementById('team-grid');
-    if (!gridDiv) return;
-    for (let i = 0; i < gridDiv.children.length; i++) {
-        gridDiv.children[i].classList.toggle('team-slot-selected', i === index);
-    }
+	const gridDiv = document.getElementById('team-grid');
+	if (!gridDiv) return;
+	for (let i = 0; i < gridDiv.children.length; i++) {
+		gridDiv.children[i].classList.toggle('team-slot-selected', i === index);
+	}
 }
 
 // ====== 布阵拖拽相关 ======
@@ -1510,72 +1510,72 @@ let _dragSourceIndex = null;
 
 // 交换两个方格的武将（公共逻辑）
 function swapTeamSlots(fromIndex, toIndex) {
-    if (fromIndex === null || fromIndex === toIndex) return;
-    const team = window.currentTeam;
-    const temp = team[toIndex];
-    team[toIndex] = team[fromIndex];
-    team[fromIndex] = temp;
+	if (fromIndex === null || fromIndex === toIndex) return;
+	const team = window.currentTeam;
+	const temp = team[toIndex];
+	team[toIndex] = team[fromIndex];
+	team[fromIndex] = temp;
 
-    refreshTeamSlot(toIndex);
-    refreshTeamSlot(fromIndex);
+	refreshTeamSlot(toIndex);
+	refreshTeamSlot(fromIndex);
 
-    // 如果当前有选中方格的详情展示，也刷新
-    const selectedIdx = window._selectedSlotIndex;
-    if (selectedIdx === toIndex || selectedIdx === fromIndex) {
-        const instanceId = team[selectedIdx];
-        // 修改：从 instanceId 获取 charId
-        if (instanceId && window.charBagData && window.charBagData[instanceId]) {
-            const charId = window.charBagData[instanceId].charId;
-            if (charId && characterList[charId]) {
-                showTeamCharInfo(selectedIdx, instanceId, charId);
-            }
-        }
-    }
+	// 如果当前有选中方格的详情展示，也刷新
+	const selectedIdx = window._selectedSlotIndex;
+	if (selectedIdx === toIndex || selectedIdx === fromIndex) {
+		const instanceId = team[selectedIdx];
+		// 修改：从 instanceId 获取 charId
+		if (instanceId && window.charBagData && window.charBagData[instanceId]) {
+			const charId = window.charBagData[instanceId].charId;
+			if (charId && characterList[charId]) {
+				showTeamCharInfo(selectedIdx, instanceId, charId);
+			}
+		}
+	}
 
-    toast('已交换位置', 'success');
-    SaveManager.autoSave();
+	toast('已交换位置', 'success');
+	SaveManager.autoSave();
 }
 
 function _clearDragStyles() {
-    document.querySelectorAll('.team-slot-dragging, .team-slot-drag-over').forEach(el => {
-        el.classList.remove('team-slot-dragging', 'team-slot-drag-over');
-    });
+	document.querySelectorAll('.team-slot-dragging, .team-slot-drag-over').forEach(el => {
+		el.classList.remove('team-slot-dragging', 'team-slot-drag-over');
+	});
 }
 
 // --- 桌面端 Drag & Drop ---
 function onSlotDragStart(e, index) {
-    _dragSourceIndex = index;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', String(index));
-    e.target.classList.add('team-slot-dragging');
+	_dragSourceIndex = index;
+	e.dataTransfer.effectAllowed = 'move';
+	e.dataTransfer.setData('text/plain', String(index));
+	e.target.classList.add('team-slot-dragging');
 }
 
 function onSlotDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+	e.preventDefault();
+	e.dataTransfer.dropEffect = 'move';
 }
 
 function onSlotDragEnter(e, index) {
-    e.preventDefault();
-    if (index !== _dragSourceIndex) {
-        e.target.closest('.team-slot')?.classList.add('team-slot-drag-over');
-    }
+	e.preventDefault();
+	if (index !== _dragSourceIndex) {
+		e.target.closest('.team-slot')?.classList.add('team-slot-drag-over');
+	}
 }
 
 function onSlotDragLeave(e) {
-    e.target.closest('.team-slot')?.classList.remove('team-slot-drag-over');
+	e.target.closest('.team-slot')?.classList.remove('team-slot-drag-over');
 }
 
 function onSlotDrop(e, targetIndex) {
-    e.preventDefault();
-    e.target.closest('.team-slot')?.classList.remove('team-slot-drag-over');
-    swapTeamSlots(_dragSourceIndex, targetIndex);
-    _dragSourceIndex = null;
+	e.preventDefault();
+	e.target.closest('.team-slot')?.classList.remove('team-slot-drag-over');
+	swapTeamSlots(_dragSourceIndex, targetIndex);
+	_dragSourceIndex = null;
 }
 
 function onSlotDragEnd(e) {
-    _clearDragStyles();
-    _dragSourceIndex = null;
+	_clearDragStyles();
+	_dragSourceIndex = null;
 }
 
 // --- 移动端触摸拖拽 ---
@@ -1589,96 +1589,96 @@ let _touchCurrentTarget = null; // 当前悬停的目标方格
 const _TOUCH_DRAG_THRESHOLD = 8; // 移动超过此像素数才视为拖拽
 
 function _createTouchGhost(touch) {
-    const rect = _touchSourceSlot.getBoundingClientRect();
-    _touchDragEl = _touchSourceSlot.cloneNode(true);
-    _touchDragEl.classList.add('team-slot-touch-ghost');
-    _touchDragEl.style.width = rect.width + 'px';
-    _touchDragEl.style.height = rect.height + 'px';
-    _touchDragEl.style.left = (touch.clientX - rect.width / 2) + 'px';
-    _touchDragEl.style.top = (touch.clientY - rect.height / 2) + 'px';
-    document.body.appendChild(_touchDragEl);
-    _touchSourceSlot.classList.add('team-slot-dragging');
+	const rect = _touchSourceSlot.getBoundingClientRect();
+	_touchDragEl = _touchSourceSlot.cloneNode(true);
+	_touchDragEl.classList.add('team-slot-touch-ghost');
+	_touchDragEl.style.width = rect.width + 'px';
+	_touchDragEl.style.height = rect.height + 'px';
+	_touchDragEl.style.left = (touch.clientX - rect.width / 2) + 'px';
+	_touchDragEl.style.top = (touch.clientY - rect.height / 2) + 'px';
+	document.body.appendChild(_touchDragEl);
+	_touchSourceSlot.classList.add('team-slot-dragging');
 }
 
 function onSlotTouchStart(e, index) {
-    const touch = e.touches[0];
-    _touchSourceSlot = e.currentTarget;
-    _touchSourceIndex = index;
-    _touchStartX = touch.clientX;
-    _touchStartY = touch.clientY;
-    _touchDragging = false;
-    _touchCurrentTarget = null;
+	const touch = e.touches[0];
+	_touchSourceSlot = e.currentTarget;
+	_touchSourceIndex = index;
+	_touchStartX = touch.clientX;
+	_touchStartY = touch.clientY;
+	_touchDragging = false;
+	_touchCurrentTarget = null;
 }
 
 function onSlotTouchMove(e) {
-    if (_touchSourceIndex === null) return;
+	if (_touchSourceIndex === null) return;
 
-    const touch = e.touches[0];
+	const touch = e.touches[0];
 
-    // 未进入拖拽模式时，判断是否超过阈值
-    if (!_touchDragging) {
-        const dx = touch.clientX - _touchStartX;
-        const dy = touch.clientY - _touchStartY;
-        if (dx * dx + dy * dy < _TOUCH_DRAG_THRESHOLD * _TOUCH_DRAG_THRESHOLD) return;
-        // 超过阈值，进入拖拽模式
-        e.preventDefault();
-        _touchDragging = true;
-        _createTouchGhost(touch);
-        return;
-    }
+	// 未进入拖拽模式时，判断是否超过阈值
+	if (!_touchDragging) {
+		const dx = touch.clientX - _touchStartX;
+		const dy = touch.clientY - _touchStartY;
+		if (dx * dx + dy * dy < _TOUCH_DRAG_THRESHOLD * _TOUCH_DRAG_THRESHOLD) return;
+		// 超过阈值，进入拖拽模式
+		e.preventDefault();
+		_touchDragging = true;
+		_createTouchGhost(touch);
+		return;
+	}
 
-    e.preventDefault(); // 阻止页面滚动
+	e.preventDefault(); // 阻止页面滚动
 
-    // 移动克隆元素
-    if (_touchDragEl) {
-        const w = parseFloat(_touchDragEl.style.width);
-        const h = parseFloat(_touchDragEl.style.height);
-        _touchDragEl.style.left = (touch.clientX - w / 2) + 'px';
-        _touchDragEl.style.top = (touch.clientY - h / 2) + 'px';
-    }
+	// 移动克隆元素
+	if (_touchDragEl) {
+		const w = parseFloat(_touchDragEl.style.width);
+		const h = parseFloat(_touchDragEl.style.height);
+		_touchDragEl.style.left = (touch.clientX - w / 2) + 'px';
+		_touchDragEl.style.top = (touch.clientY - h / 2) + 'px';
+	}
 
-    // 判断手指下方是哪个方格
-    if (_touchDragEl) _touchDragEl.style.pointerEvents = 'none';
-    const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (_touchDragEl) _touchDragEl.style.pointerEvents = '';
+	// 判断手指下方是哪个方格
+	if (_touchDragEl) _touchDragEl.style.pointerEvents = 'none';
+	const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+	if (_touchDragEl) _touchDragEl.style.pointerEvents = '';
 
-    const targetSlot = elemBelow?.closest('.team-slot');
+	const targetSlot = elemBelow?.closest('.team-slot');
 
-    // 清除上一个悬停目标的高亮
-    if (_touchCurrentTarget && _touchCurrentTarget !== targetSlot) {
-        _touchCurrentTarget.classList.remove('team-slot-drag-over');
-    }
+	// 清除上一个悬停目标的高亮
+	if (_touchCurrentTarget && _touchCurrentTarget !== targetSlot) {
+		_touchCurrentTarget.classList.remove('team-slot-drag-over');
+	}
 
-    if (targetSlot && targetSlot !== _touchSourceSlot) {
-        targetSlot.classList.add('team-slot-drag-over');
-        _touchCurrentTarget = targetSlot;
-    } else {
-        _touchCurrentTarget = null;
-    }
+	if (targetSlot && targetSlot !== _touchSourceSlot) {
+		targetSlot.classList.add('team-slot-drag-over');
+		_touchCurrentTarget = targetSlot;
+	} else {
+		_touchCurrentTarget = null;
+	}
 }
 
 function onSlotTouchEnd(e) {
-    // 如果处于拖拽模式，执行交换逻辑
-    if (_touchDragging) {
-        // 移除克隆元素
-        if (_touchDragEl) {
-            _touchDragEl.remove();
-            _touchDragEl = null;
-        }
+	// 如果处于拖拽模式，执行交换逻辑
+	if (_touchDragging) {
+		// 移除克隆元素
+		if (_touchDragEl) {
+			_touchDragEl.remove();
+			_touchDragEl = null;
+		}
 
-        if (_touchCurrentTarget) {
-            const targetIdx = parseInt(_touchCurrentTarget.dataset.slotIndex);
-            _clearDragStyles();
-            swapTeamSlots(_touchSourceIndex, targetIdx);
-        } else {
-            _clearDragStyles();
-        }
-    }
+		if (_touchCurrentTarget) {
+			const targetIdx = parseInt(_touchCurrentTarget.dataset.slotIndex);
+			_clearDragStyles();
+			swapTeamSlots(_touchSourceIndex, targetIdx);
+		} else {
+			_clearDragStyles();
+		}
+	}
 
-    _touchSourceSlot = null;
-    _touchSourceIndex = null;
-    _touchDragging = false;
-    _touchCurrentTarget = null;
+	_touchSourceSlot = null;
+	_touchSourceIndex = null;
+	_touchDragging = false;
+	_touchCurrentTarget = null;
 }
 
 // 展示选将浮窗
@@ -1687,487 +1687,487 @@ function onSlotTouchEnd(e) {
  * @param {string} charId - 角色基础ID (如 'ybsl_017xiaohong')
  */
 function showCharDetailPopup(charId) {
-    // 1. 获取基础数据
-    const baseChar = characterList[charId];
-    if (!baseChar) {
-        toast('角色数据不存在', 'error');
-        return;
-    }
-    // 【修复】尝试从存档中获取最新的 rank，防止基础数据缺失或不同步
-    let displayRank = baseChar.rank;
-    if (window.charBagData) {
-        // 查找该 charId 对应的任意一个实例的 rank
-        const instId = Object.keys(window.charBagData).find(id => window.charBagData[id].charId === charId);
-        if (instId && window.charBagData[instId].rank) {
-            displayRank = window.charBagData[instId].rank;
-        }
-    }
-    // 2. 【核心】编译属性数值
-    // 使用 compileCharacterStats 根据 template 和 rank 获取正确的 hp/at/def/spe
-    const stats = compileCharacterStats(baseChar);
+	// 1. 获取基础数据
+	const baseChar = characterList[charId];
+	if (!baseChar) {
+		toast('角色数据不存在', 'error');
+		return;
+	}
+	// 【修复】尝试从存档中获取最新的 rank，防止基础数据缺失或不同步
+	let displayRank = baseChar.rank;
+	if (window.charBagData) {
+		// 查找该 charId 对应的任意一个实例的 rank
+		const instId = Object.keys(window.charBagData).find(id => window.charBagData[id].charId === charId);
+		if (instId && window.charBagData[instId].rank) {
+			displayRank = window.charBagData[instId].rank;
+		}
+	}
+	// 2. 【核心】编译属性数值
+	// 使用 compileCharacterStats 根据 template 和 rank 获取正确的 hp/at/def/spe
+	const stats = compileCharacterStats(baseChar);
 
-    // 获取实例数据（如果有），用于显示等级
-    // 注意：这里尝试查找该 charId 的第一个实例，如果是图鉴模式可能没有实例
-    let instanceId = null;
-    let level = 1;
-    if (window.charBagData) {
-        // 查找第一个匹配 charId 的实例
-        instanceId = Object.keys(window.charBagData).find(id => window.charBagData[id].charId === charId);
-        if (instanceId) {
-            level = window.charBagData[instanceId].level || 1;
-        }
-    }
+	// 获取实例数据（如果有），用于显示等级
+	// 注意：这里尝试查找该 charId 的第一个实例，如果是图鉴模式可能没有实例
+	let instanceId = null;
+	let level = 1;
+	if (window.charBagData) {
+		// 查找第一个匹配 charId 的实例
+		instanceId = Object.keys(window.charBagData).find(id => window.charBagData[id].charId === charId);
+		if (instanceId) {
+			level = window.charBagData[instanceId].level || 1;
+		}
+	}
 
-    // 3. 创建遮罩层
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
-    overlay.id = 'char-detail-popup-overlay';
+	// 3. 创建遮罩层
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.id = 'char-detail-popup-overlay';
 
-    // 4. 创建对话框
-    const dialog = document.createElement('div');
-    dialog.className = 'gallery-detail-dialog';
-    dialog.style.maxHeight = '80vh'; // 限制最大高度
-    dialog.style.overflowY = 'auto'; // 允许滚动
+	// 4. 创建对话框
+	const dialog = document.createElement('div');
+	dialog.className = 'gallery-detail-dialog';
+	dialog.style.maxHeight = '80vh'; // 限制最大高度
+	dialog.style.overflowY = 'auto'; // 允许滚动
 
-    // --- 标题 ---
-    const tupoText = baseChar.tupolevel ? `+${baseChar.tupolevel}` : ''
-    const nameDiv = document.createElement('div');
-    nameDiv.className = 'gallery-detail-name';
-    nameDiv.textContent = baseChar.name + tupoText;
-    // 根据品质设置颜色
-    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', rare: '#a335ee', common: '#44aaff', junk: '#88cc88', epicfake: '#ffaa44' };
-    nameDiv.style.color = rankColors[baseChar.rank] || '#fff';
-    dialog.appendChild(nameDiv);
+	// --- 标题 ---
+	const tupoText = baseChar.tupolevel ? `+${baseChar.tupolevel}` : ''
+	const nameDiv = document.createElement('div');
+	nameDiv.className = 'gallery-detail-name';
+	nameDiv.textContent = baseChar.name + tupoText;
+	// 根据品质设置颜色
+	const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', rare: '#a335ee', common: '#44aaff', junk: '#88cc88', epicfake: '#ffaa44' };
+	nameDiv.style.color = rankColors[baseChar.rank] || '#fff';
+	dialog.appendChild(nameDiv);
 
-    // --- 上半区：头像 + 基础属性 ---
-    const topDiv = document.createElement('div');
-    topDiv.className = 'gallery-detail-top';
-    topDiv.style.display = 'flex';
-    topDiv.style.gap = '15px';
-    topDiv.style.alignItems = 'center';
-    topDiv.style.marginBottom = '10px';
+	// --- 上半区：头像 + 基础属性 ---
+	const topDiv = document.createElement('div');
+	topDiv.className = 'gallery-detail-top';
+	topDiv.style.display = 'flex';
+	topDiv.style.gap = '15px';
+	topDiv.style.alignItems = 'center';
+	topDiv.style.marginBottom = '10px';
 
-    // 左侧：头像
-    const imgDiv = document.createElement('div');
-    imgDiv.style.width = '80px';
-    imgDiv.style.height = '80px';
-    imgDiv.style.borderRadius = '8px';
-    imgDiv.style.overflow = 'hidden';
-    imgDiv.style.border = '2px solid #444';
-    imgDiv.style.flexShrink = '0';
+	// 左侧：头像
+	const imgDiv = document.createElement('div');
+	imgDiv.style.width = '80px';
+	imgDiv.style.height = '80px';
+	imgDiv.style.borderRadius = '8px';
+	imgDiv.style.overflow = 'hidden';
+	imgDiv.style.border = '2px solid #444';
+	imgDiv.style.flexShrink = '0';
 
-    const img = document.createElement('img');
-    img.src = `./image/character/${charId}.webp`;
-    img.style.width = '100%';
-    img.style.height = '100%';
-    img.style.objectFit = 'cover';
-    img.onerror = function () {
-        this.style.display = 'none';
-        const placeholder = document.createElement('div');
-        placeholder.style.width = '100%';
-        placeholder.style.height = '100%';
-        placeholder.style.background = '#333';
-        placeholder.style.display = 'flex';
-        placeholder.style.alignItems = 'center';
-        placeholder.style.justifyContent = 'center';
-        placeholder.style.color = '#888';
-        placeholder.style.fontSize = '24px';
-        placeholder.textContent = baseChar.name.charAt(0);
-        this.parentNode.appendChild(placeholder);
-    };
-    imgDiv.appendChild(img);
-    topDiv.appendChild(imgDiv);
+	const img = document.createElement('img');
+	img.src = `./image/character/${charId}.webp`;
+	img.style.width = '100%';
+	img.style.height = '100%';
+	img.style.objectFit = 'cover';
+	img.onerror = function () {
+		this.style.display = 'none';
+		const placeholder = document.createElement('div');
+		placeholder.style.width = '100%';
+		placeholder.style.height = '100%';
+		placeholder.style.background = '#333';
+		placeholder.style.display = 'flex';
+		placeholder.style.alignItems = 'center';
+		placeholder.style.justifyContent = 'center';
+		placeholder.style.color = '#888';
+		placeholder.style.fontSize = '24px';
+		placeholder.textContent = baseChar.name.charAt(0);
+		this.parentNode.appendChild(placeholder);
+	};
+	imgDiv.appendChild(img);
+	topDiv.appendChild(imgDiv);
 
-    // 右侧：属性列表
-    const attrContainer = document.createElement('div');
-    attrContainer.style.flex = '1';
-    attrContainer.style.display = 'flex';
-    attrContainer.style.flexDirection = 'column';
-    attrContainer.style.gap = '4px';
-    attrContainer.style.fontSize = '14px';
-    attrContainer.style.color = '#ddd';
+	// 右侧：属性列表
+	const attrContainer = document.createElement('div');
+	attrContainer.style.flex = '1';
+	attrContainer.style.display = 'flex';
+	attrContainer.style.flexDirection = 'column';
+	attrContainer.style.gap = '4px';
+	attrContainer.style.fontSize = '14px';
+	attrContainer.style.color = '#ddd';
 
-    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
-    const TIP_LABELS = { damage: '伤害系', recover: '治疗系' };
-    const TEMPLATE_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
+	const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+	const TIP_LABELS = { damage: '伤害系', recover: '治疗系' };
+	const TEMPLATE_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
-    const createAttrRow = (label, value, color = '#fff') => {
-        const row = document.createElement('div');
-        row.innerHTML = `<span style="color:#888;">${label}:</span> <span style="color:${color}; font-weight:bold;">${value}</span>`;
-        return row;
-    };
+	const createAttrRow = (label, value, color = '#fff') => {
+		const row = document.createElement('div');
+		row.innerHTML = `<span style="color:#888;">${label}:</span> <span style="color:${color}; font-weight:bold;">${value}</span>`;
+		return row;
+	};
 
-    attrContainer.appendChild(createAttrRow('品质', RANK_LABELS[baseChar.rank] || baseChar.rank, rankColors[baseChar.rank]));
-    attrContainer.appendChild(createAttrRow('定位', TEMPLATE_LABELS[baseChar.template] || baseChar.template));
-    if (baseChar.tip) {
-        attrContainer.appendChild(createAttrRow('类型', TIP_LABELS[baseChar.tip] || baseChar.tip));
-    }
-    attrContainer.appendChild(createAttrRow('等级', level));
+	attrContainer.appendChild(createAttrRow('品质', RANK_LABELS[baseChar.rank] || baseChar.rank, rankColors[baseChar.rank]));
+	attrContainer.appendChild(createAttrRow('定位', TEMPLATE_LABELS[baseChar.template] || baseChar.template));
+	if (baseChar.tip) {
+		attrContainer.appendChild(createAttrRow('类型', TIP_LABELS[baseChar.tip] || baseChar.tip));
+	}
+	attrContainer.appendChild(createAttrRow('等级', level));
 
-    // 分隔线
-    const divider = document.createElement('div');
-    divider.style.height = '1px';
-    divider.style.background = '#444';
-    divider.style.margin = '4px 0';
-    attrContainer.appendChild(divider);
+	// 分隔线
+	const divider = document.createElement('div');
+	divider.style.height = '1px';
+	divider.style.background = '#444';
+	divider.style.margin = '4px 0';
+	attrContainer.appendChild(divider);
 
-    attrContainer.appendChild(createAttrRow('血量', stats.hp, '#44aaff'));
-    attrContainer.appendChild(createAttrRow('攻击', stats.atk, '#ff4444'));
-    attrContainer.appendChild(createAttrRow('防御', stats.def, '#88cc88'));
-    attrContainer.appendChild(createAttrRow('速度', stats.spe, '#ffff44'));
+	attrContainer.appendChild(createAttrRow('血量', stats.hp, '#44aaff'));
+	attrContainer.appendChild(createAttrRow('攻击', stats.atk, '#ff4444'));
+	attrContainer.appendChild(createAttrRow('防御', stats.def, '#88cc88'));
+	attrContainer.appendChild(createAttrRow('速度', stats.spe, '#ffff44'));
 
-    topDiv.appendChild(attrContainer);
-    dialog.appendChild(topDiv);
+	topDiv.appendChild(attrContainer);
+	dialog.appendChild(topDiv);
 
-    // --- 下半区：技能详情 ---
-    const skillsDiv = document.createElement('div');
-    skillsDiv.style.marginTop = '10px';
-    skillsDiv.style.borderTop = '1px solid #444';
-    skillsDiv.style.paddingTop = '10px';
+	// --- 下半区：技能详情 ---
+	const skillsDiv = document.createElement('div');
+	skillsDiv.style.marginTop = '10px';
+	skillsDiv.style.borderTop = '1px solid #444';
+	skillsDiv.style.paddingTop = '10px';
 
-    const skillTitle = document.createElement('div');
-    skillTitle.textContent = '技能配置';
-    skillTitle.style.color = '#aaa';
-    skillTitle.style.fontSize = '12px';
-    skillTitle.style.marginBottom = '5px';
-    skillsDiv.appendChild(skillTitle);
+	const skillTitle = document.createElement('div');
+	skillTitle.textContent = '技能配置';
+	skillTitle.style.color = '#aaa';
+	skillTitle.style.fontSize = '12px';
+	skillTitle.style.marginBottom = '5px';
+	skillsDiv.appendChild(skillTitle);
 
-    if (baseChar.skills && Array.isArray(baseChar.skills)) {
-        baseChar.skills.forEach((skillId, index) => {
-            const skillData = getSkillData(skillId);
-            const section = document.createElement('div');
-            section.style.marginBottom = '8px';
-            section.style.padding = '8px';
-            section.style.background = 'rgba(255,255,255,0.05)';
-            section.style.borderRadius = '4px';
+	if (baseChar.skills && Array.isArray(baseChar.skills)) {
+		baseChar.skills.forEach((skillId, index) => {
+			const skillData = getSkillData(skillId);
+			const section = document.createElement('div');
+			section.style.marginBottom = '8px';
+			section.style.padding = '8px';
+			section.style.background = 'rgba(255,255,255,0.05)';
+			section.style.borderRadius = '4px';
 
-            const skillName = skillData ? skillData.name : skillId;
-            const skillIntro = skillData ? skillData.intro : '暂无描述';
-            const skillAi = skillData ? skillData.ai_intro : '';
+			const skillName = skillData ? skillData.name : skillId;
+			const skillIntro = skillData ? skillData.intro : '暂无描述';
+			const skillAi = skillData ? skillData.ai_intro : '';
 
-            // 技能类型标签
-            let typeTag = '';
-            if (index === 0) typeTag = '<span style="color:#88cc88; font-size:10px; border:1px solid #88cc88; padding:1px 3px; border-radius:2px; margin-right:5px;">普攻</span>';
-            else if (index === 1) typeTag = '<span style="color:#ffaa44; font-size:10px; border:1px solid #ffaa44; padding:1px 3px; border-radius:2px; margin-right:5px;">主动</span>';
-            else typeTag = '<span style="color:#ff4444; font-size:10px; border:1px solid #ff4444; padding:1px 3px; border-radius:2px; margin-right:5px;">必杀</span>';
+			// 技能类型标签
+			let typeTag = '';
+			if (index === 0) typeTag = '<span style="color:#88cc88; font-size:10px; border:1px solid #88cc88; padding:1px 3px; border-radius:2px; margin-right:5px;">普攻</span>';
+			else if (index === 1) typeTag = '<span style="color:#ffaa44; font-size:10px; border:1px solid #ffaa44; padding:1px 3px; border-radius:2px; margin-right:5px;">主动</span>';
+			else typeTag = '<span style="color:#ff4444; font-size:10px; border:1px solid #ff4444; padding:1px 3px; border-radius:2px; margin-right:5px;">必杀</span>';
 
-            section.innerHTML = `
+			section.innerHTML = `
                 <div style="font-weight:bold; color:#fff; margin-bottom:2px;">${typeTag}${skillName}</div>
                 <div style="font-size:12px; color:#ccc;">${skillIntro}</div>
                 ${skillAi ? `<div style="font-size:11px; color:#888; margin-top:2px;">AI: ${skillAi}</div>` : ''}
             `;
-            skillsDiv.appendChild(section);
-        });
-    } else {
-        skillsDiv.innerHTML += '<div style="color:#666; font-size:12px;">无技能数据</div>';
-    }
-    dialog.appendChild(skillsDiv);
+			skillsDiv.appendChild(section);
+		});
+	} else {
+		skillsDiv.innerHTML += '<div style="color:#666; font-size:12px;">无技能数据</div>';
+	}
+	dialog.appendChild(skillsDiv);
 
-    // --- 底部按钮 ---
-    const btnRow = document.createElement('div');
-    btnRow.style.cssText = 'display:flex; gap:10px; justify-content:center; margin-top:15px;';
+	// --- 底部按钮 ---
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex; gap:10px; justify-content:center; margin-top:15px;';
 
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'ybrpg-btn';
-    closeBtn.textContent = '关闭';
-    closeBtn.onclick = () => overlay.remove();
-    btnRow.appendChild(closeBtn);
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-btn';
+	closeBtn.textContent = '关闭';
+	closeBtn.onclick = () => overlay.remove();
+	btnRow.appendChild(closeBtn);
 
-    // 如果是在背包/队伍中查看，且有实例ID，显示“升级”按钮
-    // 如果是在背包/队伍中查看，且有实例ID，显示“升级”按钮
-    if (instanceId) {
-        const upgradeBtn = document.createElement('button');
-        upgradeBtn.className = 'ybrpg-btn';
-        upgradeBtn.style.background = '#44aaff';
-        upgradeBtn.textContent = '培养/升级';
-        upgradeBtn.onclick = () => {
-            // 调用现有的升级面板逻辑
-            if (typeof showUpgradePanel === 'function') {
-                // 获取当前最新的等级，防止传入旧数据
-                const currentInstData = window.charBagData[instanceId];
-                const currentLevel = currentInstData ? currentInstData.level : level;
+	// 如果是在背包/队伍中查看，且有实例ID，显示“升级”按钮
+	// 如果是在背包/队伍中查看，且有实例ID，显示“升级”按钮
+	if (instanceId) {
+		const upgradeBtn = document.createElement('button');
+		upgradeBtn.className = 'ybrpg-btn';
+		upgradeBtn.style.background = '#44aaff';
+		upgradeBtn.textContent = '培养/升级';
+		upgradeBtn.onclick = () => {
+			// 调用现有的升级面板逻辑
+			if (typeof showUpgradePanel === 'function') {
+				// 获取当前最新的等级，防止传入旧数据
+				const currentInstData = window.charBagData[instanceId];
+				const currentLevel = currentInstData ? currentInstData.level : level;
 
-                showUpgradePanel(instanceId, charId, currentLevel, (newLevel, newHp, newAtk, newDef, newSpe) => {
-                    // 1. 升级成功回调
+				showUpgradePanel(instanceId, charId, currentLevel, (newLevel, newHp, newAtk, newDef, newSpe) => {
+					// 1. 升级成功回调
 
-                    // 【关键修复】确保存档中的数据已更新（通常 showUpgradePanel 内部会更新，但为了保险起见）
-                    // 如果 showUpgradePanel 内部没有自动保存或更新 window.charBagData，这里需要手动更新
-                    // 假设 showUpgradePanel 已经更新了 window.charBagData[instanceId]
+					// 【关键修复】确保存档中的数据已更新（通常 showUpgradePanel 内部会更新，但为了保险起见）
+					// 如果 showUpgradePanel 内部没有自动保存或更新 window.charBagData，这里需要手动更新
+					// 假设 showUpgradePanel 已经更新了 window.charBagData[instanceId]
 
-                    // 2. 关闭当前弹窗
-                    overlay.remove();
+					// 2. 关闭当前弹窗
+					overlay.remove();
 
-                    // 3. 重新打开详情弹窗
-                    // 注意：showCharDetailPopup 内部会重新从 characterList 和 charBagData 获取数据
-                    showCharDetailPopup(charId);
-                    updateCharacterSP(saveData)
+					// 3. 重新打开详情弹窗
+					// 注意：showCharDetailPopup 内部会重新从 characterList 和 charBagData 获取数据
+					showCharDetailPopup(charId);
+					updateCharacterSP(saveData)
 
-                    toast('升级成功！', 'success');
-                });
-            } else {
-                toast('升级功能暂未实装', 'warning');
-            }
-        };
-        btnRow.appendChild(upgradeBtn);
-    }
+					toast('升级成功！', 'success');
+				});
+			} else {
+				toast('升级功能暂未实装', 'warning');
+			}
+		};
+		btnRow.appendChild(upgradeBtn);
+	}
 
-    dialog.appendChild(btnRow);
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
+	dialog.appendChild(btnRow);
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
 
-    // 点击遮罩关闭
-    overlay.onclick = (e) => {
-        if (e.target === overlay) overlay.remove();
-    };
+	// 点击遮罩关闭
+	overlay.onclick = (e) => {
+		if (e.target === overlay) overlay.remove();
+	};
 }
 
 function showCharSelectPopup(slotIndex) {
-    // 移除已有浮窗
-    const existing = document.getElementById('char-select-popup');
-    if (existing) existing.remove();
+	// 移除已有浮窗
+	const existing = document.getElementById('char-select-popup');
+	if (existing) existing.remove();
 
-    const RANK_ORDER = { kami: 1, legend: 2, epic: 3, epicfake: 4, rare: 5, common: 6, junk: 7 };
-    const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
-    const TIP_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
+	const RANK_ORDER = { kami: 1, legend: 2, epic: 3, epicfake: 4, rare: 5, common: 6, junk: 7 };
+	const RANK_BORDER_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+	const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+	const TIP_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
-    // 遮罩
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
-    overlay.id = 'char-select-popup';
+	// 遮罩
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.id = 'char-select-popup';
 
-    // 浮窗容器
-    const popup = document.createElement('div');
-    popup.className = 'char-select-popup';
+	// 浮窗容器
+	const popup = document.createElement('div');
+	popup.className = 'char-select-popup';
 
-    // 标题
-    const title = document.createElement('div');
-    title.className = 'char-select-title';
-    title.textContent = '选择武将';
-    popup.appendChild(title);
+	// 标题
+	const title = document.createElement('div');
+	title.className = 'char-select-title';
+	title.textContent = '选择武将';
+	popup.appendChild(title);
 
-    // 武将列表滚动区
-    const scrollDiv = document.createElement('div');
-    scrollDiv.className = 'char-select-scroll';
+	// 武将列表滚动区
+	const scrollDiv = document.createElement('div');
+	scrollDiv.className = 'char-select-scroll';
 
-    // 修改：获取拥有的角色实例列表
-    // window.charBagData 结构: { [instanceId]: { charId, level, ... } }
-    const ownedInstanceIds = Object.keys(window.charBagData || {});
+	// 修改：获取拥有的角色实例列表
+	// window.charBagData 结构: { [instanceId]: { charId, level, ... } }
+	const ownedInstanceIds = Object.keys(window.charBagData || {});
 
-    // 转换为包含基础信息的数组以便排序
-    const ownedInstances = ownedInstanceIds.map(instId => {
-        const instData = window.charBagData[instId];
-        const charId = instData.charId || instId;
-        const baseData = characterList[charId];
-        if (!baseData) return null;
-        return {
-            instanceId: instId,
-            charId: charId,
-            ...instData,
-            level: instData.level,
-            hp: instData.hp,
-            atk: instData.atk,
-            def: instData.def,
-            spe: instData.spe
-        };
-    }).filter(Boolean);
+	// 转换为包含基础信息的数组以便排序
+	const ownedInstances = ownedInstanceIds.map(instId => {
+		const instData = window.charBagData[instId];
+		const charId = instData.charId || instId;
+		const baseData = characterList[charId];
+		if (!baseData) return null;
+		return {
+			instanceId: instId,
+			charId: charId,
+			...instData,
+			level: instData.level,
+			hp: instData.hp,
+			atk: instData.atk,
+			def: instData.def,
+			spe: instData.spe
+		};
+	}).filter(Boolean);
 
-    // 排序：先按品质，再按等级
-    ownedInstances.sort((a, b) => {
-        const isInTeamA = window.currentTeam && window.currentTeam.includes(a.instanceId);
-        const isInTeamB = window.currentTeam && window.currentTeam.includes(b.instanceId);
+	// 排序：先按品质，再按等级
+	ownedInstances.sort((a, b) => {
+		const isInTeamA = window.currentTeam && window.currentTeam.includes(a.instanceId);
+		const isInTeamB = window.currentTeam && window.currentTeam.includes(b.instanceId);
 
-        // 如果一个在队一个不在，在队的排前面
-        if (isInTeamA && !isInTeamB) return -1;
-        if (!isInTeamA && isInTeamB) return 1;
+		// 如果一个在队一个不在，在队的排前面
+		if (isInTeamA && !isInTeamB) return -1;
+		if (!isInTeamA && isInTeamB) return 1;
 
-        // 都在队或都不在队，按原逻辑（品质+等级）
-        //先突破阶级
-        const breakthroughDiff = (b.tupolevel || 0) - (a.tupolevel || 0);
-        if (breakthroughDiff !== 0) return breakthroughDiff;
-        //先等级
-        const levelDiff = ((b.level || 1) - (a.level || 1))
-        if (levelDiff !== 0) return levelDiff;
-        //再品质
-        const rankDiff = (RANK_ORDER[a.rank] || 99) - (RANK_ORDER[b.rank] || 99);
-        if (rankDiff !== 0) return rankDiff;
-        return a.name.localeCompare(b.name);
-    });
+		// 都在队或都不在队，按原逻辑（品质+等级）
+		//先突破阶级
+		const breakthroughDiff = (b.tupolevel || 0) - (a.tupolevel || 0);
+		if (breakthroughDiff !== 0) return breakthroughDiff;
+		//先等级
+		const levelDiff = ((b.level || 1) - (a.level || 1))
+		if (levelDiff !== 0) return levelDiff;
+		//再品质
+		const rankDiff = (RANK_ORDER[a.rank] || 99) - (RANK_ORDER[b.rank] || 99);
+		if (rankDiff !== 0) return rankDiff;
+		return a.name.localeCompare(b.name);
+	});
 
-    for (const charInst of ownedInstances) {
-        const borderColor = RANK_BORDER_COLORS[charInst.rank] || '#888';
-        const isInTeam = window.currentTeam && window.currentTeam.includes(charInst.instanceId);
+	for (const charInst of ownedInstances) {
+		const borderColor = RANK_BORDER_COLORS[charInst.rank] || '#888';
+		const isInTeam = window.currentTeam && window.currentTeam.includes(charInst.instanceId);
 
-        const row = document.createElement('div');
-        row.className = 'char-select-row';
-        if (isInTeam) row.classList.add('in-team');
+		const row = document.createElement('div');
+		row.className = 'char-select-row';
+		if (isInTeam) row.classList.add('in-team');
 
-        // 左侧：图标+品质边框
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'char-select-icon';
-        iconDiv.style.borderColor = borderColor;
-        iconDiv.style.cursor = 'pointer';
-        const img = document.createElement('img');
-        img.src = `./image/character/${charInst.charId}.jpg`;
-        img.alt = charInst.name;
-        img.className = 'gallery-char-img';
-        img.onerror = function () {
-            this.onerror = function () {
-                this.style.display = 'none';
-                const p = document.createElement('div');
-                p.className = 'gallery-char-placeholder';
-                p.textContent = charInst.name.charAt(0);
-                this.parentNode.appendChild(p);
-            };
-            this.src = `./image/character/${charInst.charId}.webp`;
-        };
-        iconDiv.appendChild(img);
-        // 点击图标查看角色属性
-        iconDiv.onclick = (e) => {
-            e.stopPropagation();
-            showBagCharDetail({ id: charInst.charId, ...charInst }); // 传递基础信息用于展示
-        };
-        row.appendChild(iconDiv);
-
-        // 中间：武将名称 + 等级/类型
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'char-select-info';
-        const nameEl = document.createElement('div');
-        nameEl.className = 'char-select-name';
-
-        const tupoText = `${charInst.tupolevel ? '+' + charInst.tupolevel + '  ' : ''}`;
-
-        nameEl.textContent = charInst.name + tupoText;
-        if (RANK_BORDER_COLORS[charInst.rank]) nameEl.style.color = RANK_BORDER_COLORS[charInst.rank];
-        // if (charInst.rank === 'legend') nameEl.style.color = '#ff6666';
-        // else if (charInst.rank === 'epic') nameEl.style.color = '#ffaa44';
-        infoDiv.appendChild(nameEl);
-
-        const detailEl = document.createElement('div');
-        detailEl.className = 'char-select-detail';
-        const lvText = `Lv.${charInst.level || 1}`;
-        const tipText = TIP_LABELS[charInst.template] || '';
-        detailEl.textContent = `${lvText}  ${tipText}`;
-        infoDiv.appendChild(detailEl);
-
-        if (isInTeam) {
-            const inTeamTag = document.createElement('div');
-            inTeamTag.style.cssText = 'font-size:10px;color:#ffd700;';
-            inTeamTag.textContent = '已上阵';
-            infoDiv.appendChild(inTeamTag);
-        }
-        row.appendChild(infoDiv);
-
-        // 右侧：选择按钮
-        const selectBtn = document.createElement('button');
-        selectBtn.className = 'char-select-btn';
-        selectBtn.textContent = '选择';
-        selectBtn.onclick = (e) => {
+		// 左侧：图标+品质边框
+		const iconDiv = document.createElement('div');
+		iconDiv.className = 'char-select-icon';
+		iconDiv.style.borderColor = borderColor;
+		iconDiv.style.cursor = 'pointer';
+		const img = document.createElement('img');
+		img.src = `./image/character/${charInst.charId}.jpg`;
+		img.alt = charInst.name;
+		img.className = 'gallery-char-img';
+		img.onerror = function () {
+			this.onerror = function () {
+				this.style.display = 'none';
+				const p = document.createElement('div');
+				p.className = 'gallery-char-placeholder';
+				p.textContent = charInst.name.charAt(0);
+				this.parentNode.appendChild(p);
+			};
+			this.src = `./image/character/${charInst.charId}.webp`;
+		};
+		iconDiv.appendChild(img);
+		// 点击图标查看角色属性
+		iconDiv.onclick = (e) => {
 			e.stopPropagation();
-			
+			showBagCharDetail({ id: charInst.charId, ...charInst }); // 传递基础信息用于展示
+		};
+		row.appendChild(iconDiv);
+
+		// 中间：武将名称 + 等级/类型
+		const infoDiv = document.createElement('div');
+		infoDiv.className = 'char-select-info';
+		const nameEl = document.createElement('div');
+		nameEl.className = 'char-select-name';
+
+		const tupoText = `${charInst.tupolevel ? '+' + charInst.tupolevel + '  ' : ''}`;
+
+		nameEl.textContent = charInst.name + tupoText;
+		if (RANK_BORDER_COLORS[charInst.rank]) nameEl.style.color = RANK_BORDER_COLORS[charInst.rank];
+		// if (charInst.rank === 'legend') nameEl.style.color = '#ff6666';
+		// else if (charInst.rank === 'epic') nameEl.style.color = '#ffaa44';
+		infoDiv.appendChild(nameEl);
+
+		const detailEl = document.createElement('div');
+		detailEl.className = 'char-select-detail';
+		const lvText = `Lv.${charInst.level || 1}`;
+		const tipText = TIP_LABELS[charInst.template] || '';
+		detailEl.textContent = `${lvText}  ${tipText}`;
+		infoDiv.appendChild(detailEl);
+
+		if (isInTeam) {
+			const inTeamTag = document.createElement('div');
+			inTeamTag.style.cssText = 'font-size:10px;color:#ffd700;';
+			inTeamTag.textContent = '已上阵';
+			infoDiv.appendChild(inTeamTag);
+		}
+		row.appendChild(infoDiv);
+
+		// 右侧：选择按钮
+		const selectBtn = document.createElement('button');
+		selectBtn.className = 'char-select-btn';
+		selectBtn.textContent = '选择';
+		selectBtn.onclick = (e) => {
+			e.stopPropagation();
+
 			const existIdx = window.currentTeam.indexOf(charInst.instanceId);
 			const oldInstanceId = window.currentTeam[slotIndex];
-		
+
 			// 1. 处理宝物继承逻辑（使用新的 charTreasureSlots 系统）
 			if (oldInstanceId) {
 				// 确保宝物槽位数据已初始化
 				if (typeof window.ensureCharTreasureSlots === 'function') {
 					window.ensureCharTreasureSlots();
 				}
-				
+
 				// 获取旧角色的宝物槽位
 				const oldSlots = window.charTreasureSlots[oldInstanceId] || [null, null, null, null, null, null];
-				
+
 				// 如果新角色还没有宝物槽位，初始化
 				if (!window.charTreasureSlots[charInst.instanceId]) {
 					window.charTreasureSlots[charInst.instanceId] = [null, null, null, null, null, null];
 				}
-				
+
 				// 将旧角色的宝物转移到新角色
 				window.charTreasureSlots[charInst.instanceId] = [...oldSlots];
-				
+
 				// 清空旧角色的宝物槽位
 				window.charTreasureSlots[oldInstanceId] = [null, null, null, null, null, null];
 			}
-		
+
 			// 2. 处理队伍数据交换
 			if (existIdx !== -1) {
 				window.currentTeam[existIdx] = oldInstanceId;
 			}
-		
+
 			// 3. 设置新角色
 			window.currentTeam[slotIndex] = charInst.instanceId;
-			
+
 			// 4. 更新选中状态
 			window._selectedSlotIndex = slotIndex;
-		
+
 			// 5. 延迟刷新
 			setTimeout(() => {
 				// A. 刷新网格中的单个槽位（显示头像、名字等）
 				refreshTeamSlot(slotIndex);
-				
+
 				// B. 如果存在被交换出去的旧槽位，也刷新它
 				if (existIdx !== -1 && existIdx !== slotIndex) {
 					refreshTeamSlot(existIdx);
 				}
-		
+
 				// C. 刷新详情区域
 				const newInstanceId = window.currentTeam[slotIndex];
 				if (newInstanceId && window.charBagData && window.charBagData[newInstanceId]) {
 					const newInstanceData = window.charBagData[newInstanceId];
 					const newCharId = newInstanceData.charId || newInstanceId;
-					
+
 					// 强制调用详情刷新
 					showTeamCharInfo(slotIndex, newInstanceId, newCharId);
 				}
-				
+
 				// D. 自动保存
 				SaveManager.autoSave();
 			}, 0);
-		
+
 			// 6. 提示与关闭弹窗
 			toast(`${charInst.name} (Lv.${charInst.level}) 已上阵`, 'success');
 			overlay.remove();
 		};
-		
-        // var num = window._selectedSlotIndex;
-        //     const instanceId = window.currentTeam[num];
-        //     const instanceData = window.charBagData[instanceId];
-        //     const charId = instanceData.charId || instanceId;
-        //     showTeamCharInfo(num, instanceId, charId);
 
-        row.appendChild(selectBtn);
+		// var num = window._selectedSlotIndex;
+		//     const instanceId = window.currentTeam[num];
+		//     const instanceData = window.charBagData[instanceId];
+		//     const charId = instanceData.charId || instanceId;
+		//     showTeamCharInfo(num, instanceId, charId);
 
-        scrollDiv.appendChild(row);
-    }
+		row.appendChild(selectBtn);
 
-    if (ownedInstances.length === 0) {
-        const emptyTip = document.createElement('div');
-        emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
-        emptyTip.textContent = '暂无角色';
-        scrollDiv.appendChild(emptyTip);
-    }
+		scrollDiv.appendChild(row);
+	}
 
-    popup.appendChild(scrollDiv);
+	if (ownedInstances.length === 0) {
+		const emptyTip = document.createElement('div');
+		emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
+		emptyTip.textContent = '暂无角色';
+		scrollDiv.appendChild(emptyTip);
+	}
 
-    // 关闭按钮
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'char-select-close-btn';
-    closeBtn.textContent = '关闭';
-    closeBtn.onclick = () => overlay.remove();
-    popup.appendChild(closeBtn);
+	popup.appendChild(scrollDiv);
 
-    overlay.appendChild(popup);
-    document.body.appendChild(overlay);
+	// 关闭按钮
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'char-select-close-btn';
+	closeBtn.textContent = '关闭';
+	closeBtn.onclick = () => overlay.remove();
+	popup.appendChild(closeBtn);
 
-    // 点击遮罩关闭
-    overlay.onclick = (e) => {
-        if (e.target === overlay) overlay.remove();
-    };
+	overlay.appendChild(popup);
+	document.body.appendChild(overlay);
+
+	// 点击遮罩关闭
+	overlay.onclick = (e) => {
+		if (e.target === overlay) overlay.remove();
+	};
 }
 
 function renderBagView(container) {
-    container.innerHTML = '';
+	container.innerHTML = '';
 	// 【修改】优先从存档中获取，如果存档有值，则使用存档值，否则默认为 'char'
 	const savedTab = window.playerProgress?.bagTab || window.bagTab || 'char';
 	if (!window.bagTab) {
@@ -2181,140 +2181,140 @@ function renderBagView(container) {
 	// 在 renderBagView 函数开头添加
 	const defs = window.getTreasureDefs();
 	window.ensureCharTreasureSlots();
-    // 当前选中的子标签
-    if (!window.bagTab) window.bagTab = 'char';
+	// 当前选中的子标签
+	if (!window.bagTab) window.bagTab = 'char';
 
-    // 上方子标签
-    const tabsDiv = document.createElement('div');
-    tabsDiv.className = 'bag-tabs';
+	// 上方子标签
+	const tabsDiv = document.createElement('div');
+	tabsDiv.className = 'bag-tabs';
 
-    const tabConfigs = [
-        { key: 'item', label: '道具' },
-        { key: 'equip', label: '装备' },
-        { key: 'char', label: '武将' },
-        { key: 'other', label: '其他' },
-    ];
+	const tabConfigs = [
+		{ key: 'item', label: '道具' },
+		{ key: 'equip', label: '装备' },
+		{ key: 'char', label: '武将' },
+		{ key: 'other', label: '其他' },
+	];
 
-    tabConfigs.forEach(cfg => {
-        const btn = document.createElement('button');
-        btn.className = 'bag-tab-btn' + (window.bagTab === cfg.key ? ' active' : '');
-        btn.textContent = cfg.label;
-        btn.onclick = () => {
-            window.bagTab = cfg.key;
-            renderBagView(container);
-        };
-        tabsDiv.appendChild(btn);
-    });
-    container.appendChild(tabsDiv);
+	tabConfigs.forEach(cfg => {
+		const btn = document.createElement('button');
+		btn.className = 'bag-tab-btn' + (window.bagTab === cfg.key ? ' active' : '');
+		btn.textContent = cfg.label;
+		btn.onclick = () => {
+			window.bagTab = cfg.key;
+			renderBagView(container);
+		};
+		tabsDiv.appendChild(btn);
+	});
+	container.appendChild(tabsDiv);
 
-    // 中间：背包主体
-    const bodyDiv = document.createElement('div');
-    bodyDiv.className = 'bag-body';
+	// 中间：背包主体
+	const bodyDiv = document.createElement('div');
+	bodyDiv.className = 'bag-body';
 
-    if (window.bagTab === 'char') {
-        renderBagCharContent(bodyDiv);
-    } else if (window.bagTab === 'item') {
-        // 预留接口
-        const tip = document.createElement('div');
-        tip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:30px;';
-        tip.textContent = '道具背包 - 敬请期待';
-        bodyDiv.appendChild(tip);
-    } else if (window.bagTab === 'equip') {
-        renderBagEquipContent(bodyDiv);
-    } else {
-        const tip = document.createElement('div');
-        tip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:30px;';
-        tip.textContent = '其他 - 敬请期待';
-        bodyDiv.appendChild(tip);
-    }
+	if (window.bagTab === 'char') {
+		renderBagCharContent(bodyDiv);
+	} else if (window.bagTab === 'item') {
+		// 预留接口
+		const tip = document.createElement('div');
+		tip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:30px;';
+		tip.textContent = '道具背包 - 敬请期待';
+		bodyDiv.appendChild(tip);
+	} else if (window.bagTab === 'equip') {
+		renderBagEquipContent(bodyDiv);
+	} else {
+		const tip = document.createElement('div');
+		tip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:30px;';
+		tip.textContent = '其他 - 敬请期待';
+		bodyDiv.appendChild(tip);
+	}
 
-    container.appendChild(bodyDiv);
+	container.appendChild(bodyDiv);
 
-    // 下方：详情横框
-    const detailBar = document.createElement('div');
-    detailBar.className = 'bag-detail-bar';
-    detailBar.id = 'bag-detail-bar';
+	// 下方：详情横框
+	const detailBar = document.createElement('div');
+	detailBar.className = 'bag-detail-bar';
+	detailBar.id = 'bag-detail-bar';
 
-    if (window.bagTab === 'char') {
-        // 武将详情横框
-        // 左侧：武将头像
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'bag-detail-icon bag-detail-char-icon';
-        iconDiv.id = 'bag-detail-char-icon';
-        iconDiv.textContent = '?';
-        iconDiv.style.cursor = 'pointer';
-        iconDiv.onclick = () => {
-            const charId = detailBar.dataset.charId;
-            if (charId && characterList[charId]) {
-                showBagCharDetail({ id: charId, ...characterList[charId] });
-            }
-        };
-        detailBar.appendChild(iconDiv);
+	if (window.bagTab === 'char') {
+		// 武将详情横框
+		// 左侧：武将头像
+		const iconDiv = document.createElement('div');
+		iconDiv.className = 'bag-detail-icon bag-detail-char-icon';
+		iconDiv.id = 'bag-detail-char-icon';
+		iconDiv.textContent = '?';
+		iconDiv.style.cursor = 'pointer';
+		iconDiv.onclick = () => {
+			const charId = detailBar.dataset.charId;
+			if (charId && characterList[charId]) {
+				showBagCharDetail({ id: charId, ...characterList[charId] });
+			}
+		};
+		detailBar.appendChild(iconDiv);
 
-        // 中间：武将简介
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'bag-detail-info';
-        const nameEl = document.createElement('div');
-        nameEl.className = 'bag-detail-name';
-        nameEl.id = 'bag-detail-char-name';
-        nameEl.textContent = '选择武将查看详情';
-        infoDiv.appendChild(nameEl);
-        const descEl = document.createElement('div');
-        descEl.className = 'bag-detail-desc';
-        descEl.id = 'bag-detail-char-desc';
-        descEl.textContent = '点击背包中的武将查看信息';
-        infoDiv.appendChild(descEl);
-        detailBar.appendChild(infoDiv);
+		// 中间：武将简介
+		const infoDiv = document.createElement('div');
+		infoDiv.className = 'bag-detail-info';
+		const nameEl = document.createElement('div');
+		nameEl.className = 'bag-detail-name';
+		nameEl.id = 'bag-detail-char-name';
+		nameEl.textContent = '选择武将查看详情';
+		infoDiv.appendChild(nameEl);
+		const descEl = document.createElement('div');
+		descEl.className = 'bag-detail-desc';
+		descEl.id = 'bag-detail-char-desc';
+		descEl.textContent = '点击背包中的武将查看信息';
+		infoDiv.appendChild(descEl);
+		detailBar.appendChild(infoDiv);
 
-        // 右侧：查看按钮
-        const btnsDiv = document.createElement('div');
-        btnsDiv.className = 'bag-detail-btns';
-        const viewBtn = document.createElement('button');
-        viewBtn.className = 'bag-detail-action-btn';
-        viewBtn.id = 'bag-detail-view-btn';
-        viewBtn.textContent = '查看';
-        viewBtn.onclick = () => {
-            const instanceId = detailBar.dataset.instanceId;
-            const charId = detailBar.dataset.charId;
-            if (instanceId && charId && characterList[charId]) {
-                // 使用背包专用详情弹窗（带升级功能）
-                showBagCharDetailPopup(instanceId, charId);
-            }
-        };
-        btnsDiv.appendChild(viewBtn);
-        detailBar.appendChild(btnsDiv);
+		// 右侧：查看按钮
+		const btnsDiv = document.createElement('div');
+		btnsDiv.className = 'bag-detail-btns';
+		const viewBtn = document.createElement('button');
+		viewBtn.className = 'bag-detail-action-btn';
+		viewBtn.id = 'bag-detail-view-btn';
+		viewBtn.textContent = '查看';
+		viewBtn.onclick = () => {
+			const instanceId = detailBar.dataset.instanceId;
+			const charId = detailBar.dataset.charId;
+			if (instanceId && charId && characterList[charId]) {
+				// 使用背包专用详情弹窗（带升级功能）
+				showBagCharDetailPopup(instanceId, charId);
+			}
+		};
+		btnsDiv.appendChild(viewBtn);
+		detailBar.appendChild(btnsDiv);
 
-    } else if (window.bagTab === 'equip') {
-        // 宝物详情横框
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'bag-detail-icon bag-detail-equip-icon';
-        iconDiv.id = 'bag-detail-equip-icon';
-        iconDiv.textContent = '?';
-        iconDiv.style.cursor = 'pointer';
-        iconDiv.onclick = () => {
-            const tid = detailBar.dataset.treasureId;
-            if (tid && gameData.getTreasureList()[tid]) {
-                showBagTreasureDetail(tid);
-            }
-        };
-        detailBar.appendChild(iconDiv);
+	} else if (window.bagTab === 'equip') {
+		// 宝物详情横框
+		const iconDiv = document.createElement('div');
+		iconDiv.className = 'bag-detail-icon bag-detail-equip-icon';
+		iconDiv.id = 'bag-detail-equip-icon';
+		iconDiv.textContent = '?';
+		iconDiv.style.cursor = 'pointer';
+		iconDiv.onclick = () => {
+			const tid = detailBar.dataset.treasureId;
+			if (tid && gameData.getTreasureList()[tid]) {
+				showBagTreasureDetail(tid);
+			}
+		};
+		detailBar.appendChild(iconDiv);
 
-        // 中间：宝物简介
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'bag-detail-info';
-        const nameEl = document.createElement('div');
-        nameEl.className = 'bag-detail-name';
-        nameEl.id = 'bag-detail-equip-name';
-        nameEl.textContent = '选择宝物查看详情';
-        infoDiv.appendChild(nameEl);
-        const descEl = document.createElement('div');
-        descEl.className = 'bag-detail-desc';
-        descEl.id = 'bag-detail-equip-desc';
-        descEl.textContent = '点击背包中的宝物查看信息';
-        infoDiv.appendChild(descEl);
-        detailBar.appendChild(infoDiv);
+		// 中间：宝物简介
+		const infoDiv = document.createElement('div');
+		infoDiv.className = 'bag-detail-info';
+		const nameEl = document.createElement('div');
+		nameEl.className = 'bag-detail-name';
+		nameEl.id = 'bag-detail-equip-name';
+		nameEl.textContent = '选择宝物查看详情';
+		infoDiv.appendChild(nameEl);
+		const descEl = document.createElement('div');
+		descEl.className = 'bag-detail-desc';
+		descEl.id = 'bag-detail-equip-desc';
+		descEl.textContent = '点击背包中的宝物查看信息';
+		infoDiv.appendChild(descEl);
+		detailBar.appendChild(infoDiv);
 
-        // 右侧：按钮组
+		// 右侧：按钮组
 		const btnsDiv = document.createElement('div');
 		btnsDiv.className = 'bag-detail-btns';
 		btnsDiv.style.display = 'flex'; // 确保是flex布局
@@ -2342,14 +2342,14 @@ function renderBagView(container) {
 		};
 		btnsDiv.appendChild(trainBtn);
 
-        // 右侧：出售按钮（适配独立实例）
+		// 右侧：出售按钮（适配独立实例）
 		const sellBtn = document.createElement('button');
 		sellBtn.className = 'bag-detail-action-btn';
 		sellBtn.textContent = '出售';
 		sellBtn.onclick = () => {
 			const treasureInstanceId = detailBar.dataset.treasureInstanceId;
 			const baseId = detailBar.dataset.baseId || detailBar.dataset.treasureId;
-			
+
 			if (!treasureInstanceId || !baseId) {
 				toast('请先选择要出售的宝物', 'warning');
 				return;
@@ -2378,67 +2378,67 @@ function renderBagView(container) {
 			confirmDialog(`确定要出售【${tDef.name}】吗？\n获得 ${sellPrice} 金币`, () => {
 				// 执行出售：移除宝物实例
 				window.removeTreasureInstance(treasureInstanceId);
-				
+
 				// 增加金币
 				window.gameGold = (window.gameGold || 0) + sellPrice;
-				
+
 				toast(`出售【${tDef.name}】，获得 ${sellPrice} 金币`, 'success');
-				
+
 				// 刷新背包视图
 				const bagContainer = document.querySelector('.bag-view') || container;
 				renderBagView(bagContainer);
-				
+
 				SaveManager.autoSave();
 			});
 		};
 
-        btnsDiv.appendChild(sellBtn);
-        detailBar.appendChild(btnsDiv);
-    } else {
-        // 道具详情横框（原有逻辑）
-        // 左侧：道具图标
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'bag-detail-icon';
-        iconDiv.textContent = '?';
-        iconDiv.style.cursor = 'pointer';
-        detailBar.appendChild(iconDiv);
+		btnsDiv.appendChild(sellBtn);
+		detailBar.appendChild(btnsDiv);
+	} else {
+		// 道具详情横框（原有逻辑）
+		// 左侧：道具图标
+		const iconDiv = document.createElement('div');
+		iconDiv.className = 'bag-detail-icon';
+		iconDiv.textContent = '?';
+		iconDiv.style.cursor = 'pointer';
+		detailBar.appendChild(iconDiv);
 
-        // 中间：道具简介
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'bag-detail-info';
-        const nameEl = document.createElement('div');
-        nameEl.className = 'bag-detail-name';
-        nameEl.textContent = '选择道具查看详情';
-        infoDiv.appendChild(nameEl);
-        const descEl = document.createElement('div');
-        descEl.className = 'bag-detail-desc';
-        descEl.textContent = '点击背包中的道具查看信息';
-        infoDiv.appendChild(descEl);
-        detailBar.appendChild(infoDiv);
+		// 中间：道具简介
+		const infoDiv = document.createElement('div');
+		infoDiv.className = 'bag-detail-info';
+		const nameEl = document.createElement('div');
+		nameEl.className = 'bag-detail-name';
+		nameEl.textContent = '选择道具查看详情';
+		infoDiv.appendChild(nameEl);
+		const descEl = document.createElement('div');
+		descEl.className = 'bag-detail-desc';
+		descEl.textContent = '点击背包中的道具查看信息';
+		infoDiv.appendChild(descEl);
+		detailBar.appendChild(infoDiv);
 
-        // 右侧：使用和出售按钮
-        const btnsDiv = document.createElement('div');
-        btnsDiv.className = 'bag-detail-btns';
-        const useBtn = document.createElement('button');
-        useBtn.className = 'bag-detail-action-btn';
-        useBtn.textContent = '使用';
-        useBtn.onclick = () => {
-            // 预留接口
-            toast('使用功能 - 预留接口', 'info');
-        };
-        btnsDiv.appendChild(useBtn);
-        const sellBtn = document.createElement('button');
-        sellBtn.className = 'bag-detail-action-btn';
-        sellBtn.textContent = '出售';
-        sellBtn.onclick = () => {
-            // 预留接口
-            toast('出售功能 - 预留接口', 'info');
-        };
-        btnsDiv.appendChild(sellBtn);
-        detailBar.appendChild(btnsDiv);
-    }
+		// 右侧：使用和出售按钮
+		const btnsDiv = document.createElement('div');
+		btnsDiv.className = 'bag-detail-btns';
+		const useBtn = document.createElement('button');
+		useBtn.className = 'bag-detail-action-btn';
+		useBtn.textContent = '使用';
+		useBtn.onclick = () => {
+			// 预留接口
+			toast('使用功能 - 预留接口', 'info');
+		};
+		btnsDiv.appendChild(useBtn);
+		const sellBtn = document.createElement('button');
+		sellBtn.className = 'bag-detail-action-btn';
+		sellBtn.textContent = '出售';
+		sellBtn.onclick = () => {
+			// 预留接口
+			toast('出售功能 - 预留接口', 'info');
+		};
+		btnsDiv.appendChild(sellBtn);
+		detailBar.appendChild(btnsDiv);
+	}
 
-    container.appendChild(detailBar);
+	container.appendChild(detailBar);
 }
 
 /**
@@ -2446,70 +2446,70 @@ function renderBagView(container) {
  * 每个宝物实例独立显示，不再按 baseId 堆叠
  */
 function renderBagEquipContent(container) {
-    const defs = getTreasureDefs();
-    const allInstances = getTreasureInstanceList(); // 获取所有宝物实例（独立）
-    window.ensureCharTreasureSlots();
+	const defs = getTreasureDefs();
+	const allInstances = getTreasureInstanceList(); // 获取所有宝物实例（独立）
+	window.ensureCharTreasureSlots();
 
-    // 构建装备者查询表
-    const treasureOwnerMap = {};
-    for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
-        slots.forEach((tId, sIdx) => {
-            if (tId) {
-                treasureOwnerMap[tId] = { ownerId, slotIndex: sIdx };
-            }
-        });
-    }
+	// 构建装备者查询表
+	const treasureOwnerMap = {};
+	for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
+		slots.forEach((tId, sIdx) => {
+			if (tId) {
+				treasureOwnerMap[tId] = { ownerId, slotIndex: sIdx };
+			}
+		});
+	}
 
-    const scrollDiv = document.createElement('div');
-    scrollDiv.className = 'bag-char-scroll';
+	const scrollDiv = document.createElement('div');
+	scrollDiv.className = 'bag-char-scroll';
 
-    const grid = document.createElement('div');
-    grid.className = 'gallery-grid';
+	const grid = document.createElement('div');
+	grid.className = 'gallery-grid';
 
-    // 如果没有宝物
-    if (allInstances.length === 0) {
-        const emptyTip = document.createElement('div');
-        emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
-        emptyTip.textContent = '暂无宝物';
-        grid.appendChild(emptyTip);
-    }
+	// 如果没有宝物
+	if (allInstances.length === 0) {
+		const emptyTip = document.createElement('div');
+		emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
+		emptyTip.textContent = '暂无宝物';
+		grid.appendChild(emptyTip);
+	}
 
 	allInstances.sort((a, b) => {
 		const aOwnerInfo = treasureOwnerMap[a.instanceId];
 		const bOwnerInfo = treasureOwnerMap[b.instanceId];
 		const aIsEquipped = !!aOwnerInfo;
 		const bIsEquipped = !!bOwnerInfo;
-		
+
 		// 已装备的排前面
 		if (aIsEquipped && !bIsEquipped) return -1;
 		if (!aIsEquipped && bIsEquipped) return 1;
-		
+
 		// 如果都没装备或都装备了，按宝物名称排序（可选）
 		return (a.name || '').localeCompare(b.name || '');
 	});
-    // 遍历所有宝物实例，每个独立展示
-    allInstances.forEach(item => {
-        const ownerInfo = treasureOwnerMap[item.instanceId];
-        const isEquipped = !!ownerInfo;
+	// 遍历所有宝物实例，每个独立展示
+	allInstances.forEach(item => {
+		const ownerInfo = treasureOwnerMap[item.instanceId];
+		const isEquipped = !!ownerInfo;
 
-        // 获取装备者信息
-        let ownerName = null;
-        if (isEquipped) {
-            const ownerInst = window.charBagData && window.charBagData[ownerInfo.ownerId];
-            const ownerCharId = ownerInst ? ownerInst.charId : ownerInfo.ownerId;
-            const ownerChar = characterList[ownerCharId];
-            ownerName = ownerChar ? ownerChar.name : ownerInfo.ownerId;
-        }
+		// 获取装备者信息
+		let ownerName = null;
+		if (isEquipped) {
+			const ownerInst = window.charBagData && window.charBagData[ownerInfo.ownerId];
+			const ownerCharId = ownerInst ? ownerInst.charId : ownerInfo.ownerId;
+			const ownerChar = characterList[ownerCharId];
+			ownerName = ownerChar ? ownerChar.name : ownerInfo.ownerId;
+		}
 
-        const card = document.createElement('div');
-        card.className = 'gallery-char-card equipbag-treasure-card';
-        card.dataset.treasureInstanceId = item.instanceId;
-        card.dataset.baseId = item.baseId;
-        card.dataset.equipped = isEquipped ? 'true' : 'false';
-        card.dataset.ownerName = ownerName || '';
+		const card = document.createElement('div');
+		card.className = 'gallery-char-card equipbag-treasure-card';
+		card.dataset.treasureInstanceId = item.instanceId;
+		card.dataset.baseId = item.baseId;
+		card.dataset.equipped = isEquipped ? 'true' : 'false';
+		card.dataset.ownerName = ownerName || '';
 
-        // 图标
-        // 图标
+		// 图标
+		// 图标
 		const iconDiv = document.createElement('div');
 		iconDiv.className = 'gallery-char-icon equipbag-icon';
 		iconDiv.style.position = 'relative'; // 用于绝对定位标签
@@ -2560,24 +2560,24 @@ function renderBagEquipContent(container) {
 			const ownerInstanceData = window.charBagData && window.charBagData[ownerInfo.ownerId];
 			const ownerCharId = ownerInstanceData ? ownerInstanceData.charId : ownerInfo.ownerId;
 			const ownerCharData = characterList[ownerCharId];
-			
+
 			// 获取品质颜色
-			const rankColors = { 
-				kami: '#ffff00', 
-				legend: '#ff4444', 
-				epic: '#ff8d8d', 
-				epicfake: '#ff8800', 
-				rare: '#a335ee', 
-				common: '#44aaff', 
-				junk: '#88cc88' 
+			const rankColors = {
+				kami: '#ffff00',
+				legend: '#ff4444',
+				epic: '#ff8d8d',
+				epicfake: '#ff8800',
+				rare: '#a335ee',
+				common: '#44aaff',
+				junk: '#88cc88'
 			};
 			const ownerRank = ownerInstanceData ? ownerInstanceData.rank : (ownerCharData ? ownerCharData.rank : 'common');
 			const ownerColor = rankColors[ownerRank] || '#aaa';
-			
+
 			// 获取突破等级
 			const ownerTupoLevel = ownerInstanceData ? (ownerInstanceData.tupolevel || 0) : 0;
 			const tupoSuffix = ownerTupoLevel > 0 ? ` +${ownerTupoLevel}` : '';
-			
+
 			const ownerBadge = document.createElement('div');
 			ownerBadge.style.cssText = `
 				position: absolute;
@@ -2610,11 +2610,11 @@ function renderBagEquipContent(container) {
 
 
 
-        // 数量不再需要（每个实例独立）
-        // 移除 countBadge 相关代码
+		// 数量不再需要（每个实例独立）
+		// 移除 countBadge 相关代码
 
-        // 点击选中宝物，显示到底部详情横框
-        // 修改位置：renderBagEquipContent 函数中，card.onclick 事件
+		// 点击选中宝物，显示到底部详情横框
+		// 修改位置：renderBagEquipContent 函数中，card.onclick 事件
 
 		card.onclick = () => {
 			// 关键：这里将 item.instanceId 存到 detailBar.dataset 中
@@ -2629,24 +2629,24 @@ function renderBagEquipContent(container) {
 			};
 			// 传参时，确保 tDef 是当前的 item
 			updateBagEquipDetailBar(item.baseId, item, bagItem);
-			
+
 			// 高亮
 			document.querySelectorAll('.equipbag-treasure-card.selected').forEach(c => c.classList.remove('selected'));
 			card.classList.add('selected');
 		};
 
-		
+
 		// 双击宝物卡片显示升级浮窗
 		// card.ondblclick = () => {
 		// 	showTreasureUpgradePopup(item.instanceId, isEquipped ? ownerInfo.ownerId : null);
 		// };
-		
 
-        grid.appendChild(card);
-    });
 
-    scrollDiv.appendChild(grid);
-    container.appendChild(scrollDiv);
+		grid.appendChild(card);
+	});
+
+	scrollDiv.appendChild(grid);
+	container.appendChild(scrollDiv);
 }
 
 
@@ -2654,683 +2654,683 @@ function renderBagEquipContent(container) {
  * 更新底部宝物详情横框（适配独立实例版）
  */
 function updateBagEquipDetailBar(baseId, tDef, bagItem) {
-    const detailBar = document.getElementById('bag-detail-bar');
-    if (!detailBar) return;
+	const detailBar = document.getElementById('bag-detail-bar');
+	if (!detailBar) return;
 
-    // 注意：bagItem 是从 renderBagEquipContent 传入的兼容对象
-    // 实际出售时需要使用 detailBar.dataset.treasureInstanceId 作为实例ID
-    const treasureInstanceId = detailBar.dataset.treasureInstanceId;
+	// 注意：bagItem 是从 renderBagEquipContent 传入的兼容对象
+	// 实际出售时需要使用 detailBar.dataset.treasureInstanceId 作为实例ID
+	const treasureInstanceId = detailBar.dataset.treasureInstanceId;
 
-    detailBar.dataset.treasureId = baseId;
-    detailBar.dataset.baseId = baseId;
-    detailBar.classList.add('equip-selected');
+	detailBar.dataset.treasureId = baseId;
+	detailBar.dataset.baseId = baseId;
+	detailBar.classList.add('equip-selected');
 
-    // 【修改】从宝物实例中获取等级
-    let treasureLevel = 1;
-    if (treasureInstanceId && window.treasureInventory) {
-        const invData = window.treasureInventory[treasureInstanceId];
-        if (invData && invData.level) {
-            treasureLevel = invData.level;
-        }
-    }
-    // 更新图标
-    const iconDiv = document.getElementById('bag-detail-equip-icon');
-    if (iconDiv) {
-        iconDiv.textContent = '';
-        if (tDef.icon) {
-            const img = document.createElement('img');
-            img.src = tDef.icon;
-            img.alt = tDef.name;
-            img.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:4px;';
-            img.onerror = function () {
-                this.style.display = 'none';
-                iconDiv.textContent = tDef.emoji || tDef.name.charAt(0);
-                iconDiv.style.fontSize = '18px';
-                iconDiv.style.color = '#ffd700';
-            };
-            iconDiv.appendChild(img);
-        } else {
-            iconDiv.textContent = tDef.emoji || tDef.name.charAt(0);
-            iconDiv.style.fontSize = '18px';
-            iconDiv.style.color = '#ffd700';
-        }
-    }
+	// 【修改】从宝物实例中获取等级
+	let treasureLevel = 1;
+	if (treasureInstanceId && window.treasureInventory) {
+		const invData = window.treasureInventory[treasureInstanceId];
+		if (invData && invData.level) {
+			treasureLevel = invData.level;
+		}
+	}
+	// 更新图标
+	const iconDiv = document.getElementById('bag-detail-equip-icon');
+	if (iconDiv) {
+		iconDiv.textContent = '';
+		if (tDef.icon) {
+			const img = document.createElement('img');
+			img.src = tDef.icon;
+			img.alt = tDef.name;
+			img.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:4px;';
+			img.onerror = function () {
+				this.style.display = 'none';
+				iconDiv.textContent = tDef.emoji || tDef.name.charAt(0);
+				iconDiv.style.fontSize = '18px';
+				iconDiv.style.color = '#ffd700';
+			};
+			iconDiv.appendChild(img);
+		} else {
+			iconDiv.textContent = tDef.emoji || tDef.name.charAt(0);
+			iconDiv.style.fontSize = '18px';
+			iconDiv.style.color = '#ffd700';
+		}
+	}
 
-    // 更新名称
-    const nameEl = document.getElementById('bag-detail-equip-name');
-    if (nameEl) {
-        // 【修改】名称后显示等级
-        nameEl.textContent = `${tDef.name} Lv.${treasureLevel}`;
-        nameEl.style.color = '#ffd700';
-    }
+	// 更新名称
+	const nameEl = document.getElementById('bag-detail-equip-name');
+	if (nameEl) {
+		// 【修改】名称后显示等级
+		nameEl.textContent = `${tDef.name} Lv.${treasureLevel}`;
+		nameEl.style.color = '#ffd700';
+	}
 
-    // 更新描述
-    const descEl = document.getElementById('bag-detail-equip-desc');
-    if (descEl) {
-        let descText = tDef.desc || '';
-        // 【修改】这里不再单独显示等级，因为名称里已经显示了
-        // descText += ` | 持有: 1`;
-        
-        
-        if (bagItem.equippedBy && bagItem.equippedBy.length > 0) {
-            const equipperNames = bagItem.equippedBy.map(instId => {
-                // 从 charTreasureSlots 反查角色名
-                let ownerName = null;
-                for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
-                    if (slots.includes(treasureInstanceId)) {
-                        const ownerInst = window.charBagData && window.charBagData[ownerId];
-                        const ownerCharId = ownerInst ? ownerInst.charId : ownerId;
-                        const ownerChar = characterList[ownerCharId];
-                        ownerName = ownerChar ? ownerChar.name : ownerId;
-                        break;
-                    }
-                }
-                return ownerName || '未知角色';
-            });
-            descText += ` | 装备者:${equipperNames.join(', ')}`;
-        }
-        descEl.textContent = descText;
-    }
+	// 更新描述
+	const descEl = document.getElementById('bag-detail-equip-desc');
+	if (descEl) {
+		let descText = tDef.desc || '';
+		// 【修改】这里不再单独显示等级，因为名称里已经显示了
+		// descText += ` | 持有: 1`;
+
+
+		if (bagItem.equippedBy && bagItem.equippedBy.length > 0) {
+			const equipperNames = bagItem.equippedBy.map(instId => {
+				// 从 charTreasureSlots 反查角色名
+				let ownerName = null;
+				for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
+					if (slots.includes(treasureInstanceId)) {
+						const ownerInst = window.charBagData && window.charBagData[ownerId];
+						const ownerCharId = ownerInst ? ownerInst.charId : ownerId;
+						const ownerChar = characterList[ownerCharId];
+						ownerName = ownerChar ? ownerChar.name : ownerId;
+						break;
+					}
+				}
+				return ownerName || '未知角色';
+			});
+			descText += ` | 装备者:${equipperNames.join(', ')}`;
+		}
+		descEl.textContent = descText;
+	}
 }
 
 
 // 渲染武将背包内容
 function renderBagCharContent(container) {
-    const RANK_ORDER = { kami: 1, legend: 2, epic: 3, epicfake: 4, rare: 5, common: 6, junk: 7 };
-    const RANK_BORDER_COLORS = {
-        kami: '#ffff00',
-        legend: '#ff4444',
-        epic: '#ff8d8d',
-        epicfake: '#ff8800',
-        rare: '#a335ee',
-        common: '#44aaff',
-        junk: '#88cc88'
-    };
+	const RANK_ORDER = { kami: 1, legend: 2, epic: 3, epicfake: 4, rare: 5, common: 6, junk: 7 };
+	const RANK_BORDER_COLORS = {
+		kami: '#ffff00',
+		legend: '#ff4444',
+		epic: '#ff8d8d',
+		epicfake: '#ff8800',
+		rare: '#a335ee',
+		common: '#44aaff',
+		junk: '#88cc88'
+	};
 
-    const scrollDiv = document.createElement('div');
-    scrollDiv.className = 'bag-char-scroll';
+	const scrollDiv = document.createElement('div');
+	scrollDiv.className = 'bag-char-scroll';
 
-    const grid = document.createElement('div');
-    grid.className = 'gallery-grid';
+	const grid = document.createElement('div');
+	grid.className = 'gallery-grid';
 
-    // 从存档中获取拥有的角色实例并按品质排序
-    const ownedInstanceIds = Object.keys(window.charBagData || {});
-    const ownedInstances = ownedInstanceIds.map(instId => {
-        const instData = window.charBagData[instId];
-        const charId = instData.charId || instId;
-        const baseData = characterList[charId];
-        if (!baseData) return null;
-        var info = {
-            instanceId: instId,
-            charId: charId,
-            ...instData,
-            level: instData.level
-        };
-        return info
-    }).filter(Boolean);
-    // console.log('ownedInstances', ownedInstances);
-    ownedInstances.sort((a, b) => {
-        const isInTeamA = window.currentTeam && window.currentTeam.includes(a.instanceId);
-        const isInTeamB = window.currentTeam && window.currentTeam.includes(b.instanceId);
+	// 从存档中获取拥有的角色实例并按品质排序
+	const ownedInstanceIds = Object.keys(window.charBagData || {});
+	const ownedInstances = ownedInstanceIds.map(instId => {
+		const instData = window.charBagData[instId];
+		const charId = instData.charId || instId;
+		const baseData = characterList[charId];
+		if (!baseData) return null;
+		var info = {
+			instanceId: instId,
+			charId: charId,
+			...instData,
+			level: instData.level
+		};
+		return info
+	}).filter(Boolean);
+	// console.log('ownedInstances', ownedInstances);
+	ownedInstances.sort((a, b) => {
+		const isInTeamA = window.currentTeam && window.currentTeam.includes(a.instanceId);
+		const isInTeamB = window.currentTeam && window.currentTeam.includes(b.instanceId);
 
-        // 如果一个在队一个不在，在队的排前面
-        if (isInTeamA && !isInTeamB) return -1;
-        if (!isInTeamA && isInTeamB) return 1;
+		// 如果一个在队一个不在，在队的排前面
+		if (isInTeamA && !isInTeamB) return -1;
+		if (!isInTeamA && isInTeamB) return 1;
 
-        // 都在队或都不在队，按原逻辑（品质+等级）
-        //先突破阶级
-        const breakthroughDiff = (b.tupolevel || 0) - (a.tupolevel || 0);
-        if (breakthroughDiff !== 0) return breakthroughDiff;
-        //先等级
-        const levelDiff = ((b.level || 1) - (a.level || 1))
-        if (levelDiff !== 0) return levelDiff;
-        //再品质
-        const rankDiff = (RANK_ORDER[a.rank] || 99) - (RANK_ORDER[b.rank] || 99);
-        if (rankDiff !== 0) return rankDiff;
-        return a.name.localeCompare(b.name);
-    });
+		// 都在队或都不在队，按原逻辑（品质+等级）
+		//先突破阶级
+		const breakthroughDiff = (b.tupolevel || 0) - (a.tupolevel || 0);
+		if (breakthroughDiff !== 0) return breakthroughDiff;
+		//先等级
+		const levelDiff = ((b.level || 1) - (a.level || 1))
+		if (levelDiff !== 0) return levelDiff;
+		//再品质
+		const rankDiff = (RANK_ORDER[a.rank] || 99) - (RANK_ORDER[b.rank] || 99);
+		if (rankDiff !== 0) return rankDiff;
+		return a.name.localeCompare(b.name);
+	});
 
-    // ... 在 renderBagCharContent 函数内部 ...
+	// ... 在 renderBagCharContent 函数内部 ...
 
-    for (const charInst of ownedInstances) {
-        const borderColor = RANK_BORDER_COLORS[charInst.rank] || '#888';
-        const isInTeam = window.currentTeam && window.currentTeam.includes(charInst.instanceId);
+	for (const charInst of ownedInstances) {
+		const borderColor = RANK_BORDER_COLORS[charInst.rank] || '#888';
+		const isInTeam = window.currentTeam && window.currentTeam.includes(charInst.instanceId);
 
-        // 获取实例详细数据以获取等级和突破信息
-        const instData = window.charBagData[charInst.instanceId];
-        const level = instData ? (instData.level || 1) : 1;
-        // 假设突破字段为 breakthrough，如果没有则默认为 0 或 '+'
-        const breakthrough = instData ? (instData.tupolevel || 0) : 0;
+		// 获取实例详细数据以获取等级和突破信息
+		const instData = window.charBagData[charInst.instanceId];
+		const level = instData ? (instData.level || 1) : 1;
+		// 假设突破字段为 breakthrough，如果没有则默认为 0 或 '+'
+		const breakthrough = instData ? (instData.tupolevel || 0) : 0;
 
-        const card = document.createElement('div');
-        card.className = 'gallery-char-card charbag-char-card';
-        card.dataset.charId = charInst.charId;
-        card.dataset.instanceId = charInst.instanceId;
+		const card = document.createElement('div');
+		card.className = 'gallery-char-card charbag-char-card';
+		card.dataset.charId = charInst.charId;
+		card.dataset.instanceId = charInst.instanceId;
 
-        const iconDiv = document.createElement('div');
-        iconDiv.className = 'gallery-char-icon';
-        iconDiv.style.borderColor = borderColor;
-        // 确保 iconDiv 相对定位，以便绝对定位的子元素徽章能正确显示
-        iconDiv.style.position = 'relative';
+		const iconDiv = document.createElement('div');
+		iconDiv.className = 'gallery-char-icon';
+		iconDiv.style.borderColor = borderColor;
+		// 确保 iconDiv 相对定位，以便绝对定位的子元素徽章能正确显示
+		iconDiv.style.position = 'relative';
 
-        const img = document.createElement('img');
-        img.className = 'gallery-char-img';
-        img.src = `./image/character/${charInst.charId}.jpg`;
-        img.alt = charInst.name;
-        img.onerror = function () {
-            this.onerror = function () {
-                this.style.display = 'none';
-                const placeholder = document.createElement('div');
-                placeholder.className = 'gallery-char-placeholder';
-                placeholder.textContent = charInst.name.charAt(0);
-                this.parentNode.appendChild(placeholder);
-            };
-            this.src = `./image/character/${charInst.charId}.webp`;
-        };
-        iconDiv.appendChild(img);
+		const img = document.createElement('img');
+		img.className = 'gallery-char-img';
+		img.src = `./image/character/${charInst.charId}.jpg`;
+		img.alt = charInst.name;
+		img.onerror = function () {
+			this.onerror = function () {
+				this.style.display = 'none';
+				const placeholder = document.createElement('div');
+				placeholder.className = 'gallery-char-placeholder';
+				placeholder.textContent = charInst.name.charAt(0);
+				this.parentNode.appendChild(placeholder);
+			};
+			this.src = `./image/character/${charInst.charId}.webp`;
+		};
+		iconDiv.appendChild(img);
 
-        // 【新增】等级徽章 (左下角)
-        const levelBadge = document.createElement('div');
-        levelBadge.className = 'charbag-level-badge';
-        levelBadge.textContent = `Lv.${level}`;
-        iconDiv.appendChild(levelBadge);
+		// 【新增】等级徽章 (左下角)
+		const levelBadge = document.createElement('div');
+		levelBadge.className = 'charbag-level-badge';
+		levelBadge.textContent = `Lv.${level}`;
+		iconDiv.appendChild(levelBadge);
 
-        // 【新增】突破阶级徽章 (右下角或左上角，视布局而定，这里放右下角)
-        if (breakthrough > 0) {
-            const breakBadge = document.createElement('div');
-            breakBadge.className = 'charbag-breakthrough-badge';
-            // 显示为 +1, +2 等，或者使用星星符号 ★
-            breakBadge.textContent = `+${breakthrough}`;
-            iconDiv.appendChild(breakBadge);
-        }
+		// 【新增】突破阶级徽章 (右下角或左上角，视布局而定，这里放右下角)
+		if (breakthrough > 0) {
+			const breakBadge = document.createElement('div');
+			breakBadge.className = 'charbag-breakthrough-badge';
+			// 显示为 +1, +2 等，或者使用星星符号 ★
+			breakBadge.textContent = `+${breakthrough}`;
+			iconDiv.appendChild(breakBadge);
+		}
 
-        card.appendChild(iconDiv);
+		card.appendChild(iconDiv);
 
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'gallery-char-name';
-        nameDiv.textContent = charInst.name;
-        // if (charInst.rank === 'legend') nameDiv.style.color = '#ff6666';
-        // else if (charInst.rank === 'epic') nameDiv.style.color = '#ffaa44';
-        nameDiv.style.color = getRankColor(charInst.rank);
-        card.appendChild(nameDiv);
+		const nameDiv = document.createElement('div');
+		nameDiv.className = 'gallery-char-name';
+		nameDiv.textContent = charInst.name;
+		// if (charInst.rank === 'legend') nameDiv.style.color = '#ff6666';
+		// else if (charInst.rank === 'epic') nameDiv.style.color = '#ffaa44';
+		nameDiv.style.color = getRankColor(charInst.rank);
+		card.appendChild(nameDiv);
 
-        // 已上阵标记
-        if (isInTeam) {
-            const badge = document.createElement('div');
-            badge.className = 'charbag-in-team-badge';
-            badge.textContent = '阵';
-            card.appendChild(badge);
-        }
+		// 已上阵标记
+		if (isInTeam) {
+			const badge = document.createElement('div');
+			badge.className = 'charbag-in-team-badge';
+			badge.textContent = '阵';
+			card.appendChild(badge);
+		}
 
-        // 点击选中武将，显示到底部详情横框
-        card.onclick = () => {
-            // 传递完整实例信息
-            updateBagCharDetailBar(charInst);
-            // 高亮选中卡片
-            document.querySelectorAll('.charbag-char-card.selected').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-        };
+		// 点击选中武将，显示到底部详情横框
+		card.onclick = () => {
+			// 传递完整实例信息
+			updateBagCharDetailBar(charInst);
+			// 高亮选中卡片
+			document.querySelectorAll('.charbag-char-card.selected').forEach(c => c.classList.remove('selected'));
+			card.classList.add('selected');
+		};
 
-        grid.appendChild(card);
-    }
-    // ...
+		grid.appendChild(card);
+	}
+	// ...
 
-    if (ownedInstances.length === 0) {
-        const emptyTip = document.createElement('div');
-        emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
-        emptyTip.textContent = '暂无角色';
-        grid.appendChild(emptyTip);
-    }
+	if (ownedInstances.length === 0) {
+		const emptyTip = document.createElement('div');
+		emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
+		emptyTip.textContent = '暂无角色';
+		grid.appendChild(emptyTip);
+	}
 
-    scrollDiv.appendChild(grid);
-    container.appendChild(scrollDiv);
+	scrollDiv.appendChild(grid);
+	container.appendChild(scrollDiv);
 }
 
 // 更新底部武将详情横框
 function updateBagCharDetailBar(charInst) {
-    const detailBar = document.getElementById('bag-detail-bar');
-    if (!detailBar) return;
-    // console.log('updateBagCharDetailBar', charInst);
+	const detailBar = document.getElementById('bag-detail-bar');
+	if (!detailBar) return;
+	// console.log('updateBagCharDetailBar', charInst);
 
-    // charInst 现在包含 instanceId, charId, level 等
-    const saveData = window.charBagData[charInst.instanceId];
-    const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
-    const tipLabels = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
-    const level = saveData ? saveData.level : 1;
-    const rankText = rankLabels[charInst.rank] || charInst.rank;
-    const tipText = tipLabels[charInst.template] || '';
+	// charInst 现在包含 instanceId, charId, level 等
+	const saveData = window.charBagData[charInst.instanceId];
+	const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+	const tipLabels = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
+	const level = saveData ? saveData.level : 1;
+	const rankText = rankLabels[charInst.rank] || charInst.rank;
+	const tipText = tipLabels[charInst.template] || '';
 
-    // 保存当前选中的武将 InstanceID
-    detailBar.dataset.instanceId = charInst.instanceId;
-    detailBar.dataset.charId = charInst.charId; // 兼容
-    detailBar.classList.add('char-selected');
+	// 保存当前选中的武将 InstanceID
+	detailBar.dataset.instanceId = charInst.instanceId;
+	detailBar.dataset.charId = charInst.charId; // 兼容
+	detailBar.classList.add('char-selected');
 
-    // 更新头像
-    const iconDiv = document.getElementById('bag-detail-char-icon');
-    if (iconDiv) {
-        iconDiv.textContent = '';
-        const img = document.createElement('img');
-        img.src = `./image/character/${charInst.charId}.jpg`;
-        img.alt = charInst.name;
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:4px;object-position: center top;display: block;';
-    //     width: 100%;
-    // height: 100%;
-    // object-fit: cover;
-    // object-position: center top;
-    // display: block;
-        img.onerror = function () {
-            this.onerror = function () {
-                this.style.display = 'none';
-                iconDiv.textContent = charInst.name.charAt(0);
-                iconDiv.style.fontSize = '18px';
-                iconDiv.style.color = '#eee';
-                
-            };
-            this.src = `./image/character/${charInst.charId}.webp`;
-        };
-        iconDiv.appendChild(img);
-    }
+	// 更新头像
+	const iconDiv = document.getElementById('bag-detail-char-icon');
+	if (iconDiv) {
+		iconDiv.textContent = '';
+		const img = document.createElement('img');
+		img.src = `./image/character/${charInst.charId}.jpg`;
+		img.alt = charInst.name;
+		img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:4px;object-position: center top;display: block;';
+		//     width: 100%;
+		// height: 100%;
+		// object-fit: cover;
+		// object-position: center top;
+		// display: block;
+		img.onerror = function () {
+			this.onerror = function () {
+				this.style.display = 'none';
+				iconDiv.textContent = charInst.name.charAt(0);
+				iconDiv.style.fontSize = '18px';
+				iconDiv.style.color = '#eee';
 
-    // 更新名称
-    const nameEl = document.getElementById('bag-detail-char-name');
-    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-    if (nameEl) {
-        const tupoText = charInst.tupolevel ? `+${charInst.tupolevel}` : '';
-        nameEl.textContent = charInst.name + tupoText;
-        nameEl.style.color = rankColors[charInst.rank] || '#eee';
-    }
+			};
+			this.src = `./image/character/${charInst.charId}.webp`;
+		};
+		iconDiv.appendChild(img);
+	}
 
-    // 更新描述（品质 + 等级 + 偏向）
-    const descEl = document.getElementById('bag-detail-char-desc');
-    if (descEl) {
-        descEl.textContent = `${rankText} · Lv.${level} · ${tipText}`;
-    }
-    const levelText = saveData ? `Lv.${saveData.level}` : 'Lv.1';
-    const attrDiv = document.createElement('div');
-    attrDiv.className = 'team-info-attr';
+	// 更新名称
+	const nameEl = document.getElementById('bag-detail-char-name');
+	const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+	if (nameEl) {
+		const tupoText = charInst.tupolevel ? `+${charInst.tupolevel}` : '';
+		nameEl.textContent = charInst.name + tupoText;
+		nameEl.style.color = rankColors[charInst.rank] || '#eee';
+	}
+
+	// 更新描述（品质 + 等级 + 偏向）
+	const descEl = document.getElementById('bag-detail-char-desc');
+	if (descEl) {
+		descEl.textContent = `${rankText} · Lv.${level} · ${tipText}`;
+	}
+	const levelText = saveData ? `Lv.${saveData.level}` : 'Lv.1';
+	const attrDiv = document.createElement('div');
+	attrDiv.className = 'team-info-attr';
 
 }
 
 // 背包中查看宝物详情弹窗
 function showBagTreasureDetail(tid) {
-    const tDef = gameData.getTreasureList()[tid];
-    if (!tDef) return;
-    const bagItem = gameData.getTreasureInventory()[tid] || { count: 0, equippedBy: [] };
-    const remaining = bagItem.count - (bagItem.equippedBy ? bagItem.equippedBy.length : 0);
-    const typeLabels = {
-        on_kill: '击杀时触发',
-        on_any_death: '有人阵亡时触发',
-        on_turn_start: '回合开始时触发',
-        on_hit: '被攻击时触发',
-        on_skill: '使用技能后触发',
-        on_damage_dealt: '造成伤害后触发',
-        on_attack: '普攻时触发',
-        passive: '被动',
-        on_death: '亡语',
-        on_pugong: '普攻特殊效果',
-    };
+	const tDef = gameData.getTreasureList()[tid];
+	if (!tDef) return;
+	const bagItem = gameData.getTreasureInventory()[tid] || { count: 0, equippedBy: [] };
+	const remaining = bagItem.count - (bagItem.equippedBy ? bagItem.equippedBy.length : 0);
+	const typeLabels = {
+		on_kill: '击杀时触发',
+		on_any_death: '有人阵亡时触发',
+		on_turn_start: '回合开始时触发',
+		on_hit: '被攻击时触发',
+		on_skill: '使用技能后触发',
+		on_damage_dealt: '造成伤害后触发',
+		on_attack: '普攻时触发',
+		passive: '被动',
+		on_death: '亡语',
+		on_pugong: '普攻特殊效果',
+	};
 
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
 
-    const dialog = document.createElement('div');
-    dialog.className = 'gallery-detail-dialog';
+	const dialog = document.createElement('div');
+	dialog.className = 'gallery-detail-dialog';
 
-    // 名称
-    const nameDiv = document.createElement('div');
-    nameDiv.className = 'gallery-detail-name';
-    nameDiv.textContent = tDef.name;
-    dialog.appendChild(nameDiv);
+	// 名称
+	const nameDiv = document.createElement('div');
+	nameDiv.className = 'gallery-detail-name';
+	nameDiv.textContent = tDef.name;
+	dialog.appendChild(nameDiv);
 
-    // 上半区：图标 + 属性
-    const topDiv = document.createElement('div');
-    topDiv.className = 'gallery-detail-top';
+	// 上半区：图标 + 属性
+	const topDiv = document.createElement('div');
+	topDiv.className = 'gallery-detail-top';
 
-    // 图标
-    const imgDiv = document.createElement('div');
-    imgDiv.className = 'gallery-detail-img-container';
-    if (tDef.icon) {
-        const img = document.createElement('img');
-        img.className = 'gallery-detail-img';
-        img.src = tDef.icon;
-        img.alt = tDef.name;
-        // img.style.objectFit = 'contain';
-        img.onerror = function () {
-            this.style.display = 'none';
-            const p = document.createElement('div');
-            p.className = 'gallery-char-placeholder';
-            p.style.width = '168px';
-            p.style.height = '207px';
-            p.style.fontSize = '50px';
-            p.textContent = tDef.emoji || tDef.name.charAt(0);
-            this.parentNode.appendChild(p);
-        };
-        imgDiv.appendChild(img);
-    } else {
-        const p = document.createElement('div');
-        p.className = 'gallery-char-placeholder';
-        p.style.width = '168px';
-        p.style.height = '207px';
-        p.style.fontSize = '50px';
-        p.textContent = tDef.emoji || tDef.name.charAt(0);
-        imgDiv.appendChild(p);
-    }
-    topDiv.appendChild(imgDiv);
+	// 图标
+	const imgDiv = document.createElement('div');
+	imgDiv.className = 'gallery-detail-img-container';
+	if (tDef.icon) {
+		const img = document.createElement('img');
+		img.className = 'gallery-detail-img';
+		img.src = tDef.icon;
+		img.alt = tDef.name;
+		// img.style.objectFit = 'contain';
+		img.onerror = function () {
+			this.style.display = 'none';
+			const p = document.createElement('div');
+			p.className = 'gallery-char-placeholder';
+			p.style.width = '168px';
+			p.style.height = '207px';
+			p.style.fontSize = '50px';
+			p.textContent = tDef.emoji || tDef.name.charAt(0);
+			this.parentNode.appendChild(p);
+		};
+		imgDiv.appendChild(img);
+	} else {
+		const p = document.createElement('div');
+		p.className = 'gallery-char-placeholder';
+		p.style.width = '168px';
+		p.style.height = '207px';
+		p.style.fontSize = '50px';
+		p.textContent = tDef.emoji || tDef.name.charAt(0);
+		imgDiv.appendChild(p);
+	}
+	topDiv.appendChild(imgDiv);
 
-    // 属性区
-    const attrDiv = document.createElement('div');
-    attrDiv.className = 'gallery-detail-attr';
+	// 属性区
+	const attrDiv = document.createElement('div');
+	attrDiv.className = 'gallery-detail-attr';
 
-    // 触发时点
-    const typeDiv = document.createElement('div');
-    typeDiv.className = 'gallery-detail-rank';
-    typeDiv.innerHTML = `<span style="color:#ffd700">${typeLabels[tDef.type] || tDef.type || '未知'}</span>`;
-    attrDiv.appendChild(typeDiv);
+	// 触发时点
+	const typeDiv = document.createElement('div');
+	typeDiv.className = 'gallery-detail-rank';
+	typeDiv.innerHTML = `<span style="color:#ffd700">${typeLabels[tDef.type] || tDef.type || '未知'}</span>`;
+	attrDiv.appendChild(typeDiv);
 
-    // 持有信息
-    const infoRows = [
-        { label: '持有', value: bagItem.count },
-        { label: '可用', value: remaining },
-        { label: '价值', value: (tDef.price || 0) + ' 金' },
-    ];
-    infoRows.forEach(a => {
-        const row = document.createElement('div');
-        row.className = 'gallery-detail-attr-row';
-        row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${a.value}</span>`;
-        attrDiv.appendChild(row);
-    });
+	// 持有信息
+	const infoRows = [
+		{ label: '持有', value: bagItem.count },
+		{ label: '可用', value: remaining },
+		{ label: '价值', value: (tDef.price || 0) + ' 金' },
+	];
+	infoRows.forEach(a => {
+		const row = document.createElement('div');
+		row.className = 'gallery-detail-attr-row';
+		row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${a.value}</span>`;
+		attrDiv.appendChild(row);
+	});
 
-    // 装备者
-    if (bagItem.equippedBy && bagItem.equippedBy.length > 0) {
-        const equipperNames = bagItem.equippedBy.map(instId => {
-            // 1. 从 charBagData 中通过实例ID获取实例数据
-            const instData = window.charBagData && window.charBagData[instId];
-            // 2. 获取基础角色ID
-            const charId = instData ? instData.charId : instId;
-            // 3. 从 characterList 中获取角色定义以显示名字
-            const cData = characterList[charId];
-            return cData ? cData.name : charId;
-        });
-        const eqRow = document.createElement('div');
-        eqRow.className = 'gallery-detail-attr-row';
-        eqRow.innerHTML = `<span class="attr-label">装备者</span><span class="attr-value" style="color:#ffa500">${equipperNames.join(', ')}</span>`;
-        attrDiv.appendChild(eqRow);
-    }
+	// 装备者
+	if (bagItem.equippedBy && bagItem.equippedBy.length > 0) {
+		const equipperNames = bagItem.equippedBy.map(instId => {
+			// 1. 从 charBagData 中通过实例ID获取实例数据
+			const instData = window.charBagData && window.charBagData[instId];
+			// 2. 获取基础角色ID
+			const charId = instData ? instData.charId : instId;
+			// 3. 从 characterList 中获取角色定义以显示名字
+			const cData = characterList[charId];
+			return cData ? cData.name : charId;
+		});
+		const eqRow = document.createElement('div');
+		eqRow.className = 'gallery-detail-attr-row';
+		eqRow.innerHTML = `<span class="attr-label">装备者</span><span class="attr-value" style="color:#ffa500">${equipperNames.join(', ')}</span>`;
+		attrDiv.appendChild(eqRow);
+	}
 
-    topDiv.appendChild(attrDiv);
-    dialog.appendChild(topDiv);
+	topDiv.appendChild(attrDiv);
+	dialog.appendChild(topDiv);
 
-    // 描述
-    const descSection = document.createElement('div');
-    descSection.className = 'gallery-detail-skills';
-    const descBox = document.createElement('div');
-    descBox.className = 'gallery-skill-section';
-    const descTitle = document.createElement('div');
-    descTitle.className = 'gallery-skill-title';
-    descTitle.textContent = '效果描述';
-    descBox.appendChild(descTitle);
-    const descContent = document.createElement('div');
-    descContent.className = 'gallery-skill-intro';
-    descContent.textContent = tDef.desc || '无描述';
-    descBox.appendChild(descContent);
-    descSection.appendChild(descBox);
-    dialog.appendChild(descSection);
+	// 描述
+	const descSection = document.createElement('div');
+	descSection.className = 'gallery-detail-skills';
+	const descBox = document.createElement('div');
+	descBox.className = 'gallery-skill-section';
+	const descTitle = document.createElement('div');
+	descTitle.className = 'gallery-skill-title';
+	descTitle.textContent = '效果描述';
+	descBox.appendChild(descTitle);
+	const descContent = document.createElement('div');
+	descContent.className = 'gallery-skill-intro';
+	descContent.textContent = tDef.desc || '无描述';
+	descBox.appendChild(descContent);
+	descSection.appendChild(descBox);
+	dialog.appendChild(descSection);
 
-    // 关闭按钮
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'ybrpg-btn';
-    closeBtn.style.width = '80px';
-    closeBtn.style.padding = '6px';
-    closeBtn.style.fontSize = '13px';
-    closeBtn.textContent = '关闭';
-    closeBtn.onclick = () => {
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    };
-    dialog.appendChild(closeBtn);
+	// 关闭按钮
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-btn';
+	closeBtn.style.width = '80px';
+	closeBtn.style.padding = '6px';
+	closeBtn.style.fontSize = '13px';
+	closeBtn.textContent = '关闭';
+	closeBtn.onclick = () => {
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+	};
+	dialog.appendChild(closeBtn);
 
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
 
-    overlay.onclick = (e) => {
-        if (e.target === overlay) {
-            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        }
-    };
+	overlay.onclick = (e) => {
+		if (e.target === overlay) {
+			if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		}
+	};
 }
 
 // 修改renderSettingsView函数中的按钮事件
 function renderSettingsView(container) {
-    // 清空容器以防重复渲染
-    container.innerHTML = '';
+	// 清空容器以防重复渲染
+	container.innerHTML = '';
 
-    // 创建按钮组容器
-    const groupDiv = document.createElement('div');
-    groupDiv.className = 'settings-btn-group';
+	// 创建按钮组容器
+	const groupDiv = document.createElement('div');
+	groupDiv.className = 'settings-btn-group';
 
-    // 图鉴行：角色图鉴 + 宝物图鉴
-    const galleryRow = document.createElement('div');
-    galleryRow.style.cssText = 'display:flex;gap:20px;justify-content:center;';
+	// 图鉴行：角色图鉴 + 宝物图鉴
+	const galleryRow = document.createElement('div');
+	galleryRow.style.cssText = 'display:flex;gap:20px;justify-content:center;';
 
-    // 角色图鉴按钮
-    const galleryBtn = document.createElement('button');
-    galleryBtn.className = 'ybrpg-settings-btn';
-    galleryBtn.id = 'btn-setting-gallery';
-    galleryBtn.textContent = '角色图鉴';
-    galleryBtn.onclick = () => renderGalleryView(container);
-    galleryRow.appendChild(galleryBtn);
+	// 角色图鉴按钮
+	const galleryBtn = document.createElement('button');
+	galleryBtn.className = 'ybrpg-settings-btn';
+	galleryBtn.id = 'btn-setting-gallery';
+	galleryBtn.textContent = '角色图鉴';
+	galleryBtn.onclick = () => renderGalleryView(container);
+	galleryRow.appendChild(galleryBtn);
 
-    // 宝物图鉴按钮
-    const treasureBtn = document.createElement('button');
-    treasureBtn.className = 'ybrpg-settings-btn';
-    treasureBtn.id = 'btn-setting-treasure-gallery';
-    treasureBtn.textContent = '宝物图鉴';
-    treasureBtn.onclick = () => renderTreasureGalleryView(container);
-    galleryRow.appendChild(treasureBtn);
+	// 宝物图鉴按钮
+	const treasureBtn = document.createElement('button');
+	treasureBtn.className = 'ybrpg-settings-btn';
+	treasureBtn.id = 'btn-setting-treasure-gallery';
+	treasureBtn.textContent = '宝物图鉴';
+	treasureBtn.onclick = () => renderTreasureGalleryView(container);
+	galleryRow.appendChild(treasureBtn);
 
-    groupDiv.appendChild(galleryRow);
+	groupDiv.appendChild(galleryRow);
 
-    // ... 之前的图鉴行 ...
+	// ... 之前的图鉴行 ...
 
-    // AI托管设置
-    const autoSettingRow = document.createElement('div');
-    autoSettingRow.style.cssText = 'display:flex;gap:15px;justify-content:center;align-items:center;width:100%;margin-top:10px;';
+	// AI托管设置
+	const autoSettingRow = document.createElement('div');
+	autoSettingRow.style.cssText = 'display:flex;gap:15px;justify-content:center;align-items:center;width:100%;margin-top:10px;';
 
-    const autoLabel = document.createElement('span');
-    autoLabel.style.color = '#ccc';
-    autoLabel.style.fontSize = '14px';
-    autoLabel.textContent = 'AI战斗托管: ';
+	const autoLabel = document.createElement('span');
+	autoLabel.style.color = '#ccc';
+	autoLabel.style.fontSize = '14px';
+	autoLabel.textContent = 'AI战斗托管: ';
 
-    const autoToggle = document.createElement('button');
-    autoToggle.className = 'ybrpg-settings-btn';
-    autoToggle.style.cssText = 'width:70px;height:40px;font-size:14px;';
-    autoToggle.textContent = window.autoBattle ? '开启' : '关闭';
-    autoToggle.onclick = () => {
-        window.autoBattle = !window.autoBattle;
-        autoToggle.textContent = window.autoBattle ? '开启' : '关闭';
-        toast(`AI战斗托管已${window.autoBattle ? '开启' : '关闭'}`, 'info');
-    };
-    autoSettingRow.appendChild(autoLabel);
-    autoSettingRow.appendChild(autoToggle);
-    groupDiv.appendChild(autoSettingRow);
+	const autoToggle = document.createElement('button');
+	autoToggle.className = 'ybrpg-settings-btn';
+	autoToggle.style.cssText = 'width:70px;height:40px;font-size:14px;';
+	autoToggle.textContent = window.autoBattle ? '开启' : '关闭';
+	autoToggle.onclick = () => {
+		window.autoBattle = !window.autoBattle;
+		autoToggle.textContent = window.autoBattle ? '开启' : '关闭';
+		toast(`AI战斗托管已${window.autoBattle ? '开启' : '关闭'}`, 'info');
+	};
+	autoSettingRow.appendChild(autoLabel);
+	autoSettingRow.appendChild(autoToggle);
+	groupDiv.appendChild(autoSettingRow);
 
-    // ... 存档管理按钮 ...
+	// ... 存档管理按钮 ...
 
 
-    // 存档管理按钮
-    const saveBtn = document.createElement('button');
-    saveBtn.className = 'ybrpg-settings-btn';
-    saveBtn.id = 'btn-setting-save';
-    saveBtn.textContent = '存档管理';
-    saveBtn.onclick = () => showSaveView();
-    groupDiv.appendChild(saveBtn);
+	// 存档管理按钮
+	const saveBtn = document.createElement('button');
+	saveBtn.className = 'ybrpg-settings-btn';
+	saveBtn.id = 'btn-setting-save';
+	saveBtn.textContent = '存档管理';
+	saveBtn.onclick = () => showSaveView();
+	groupDiv.appendChild(saveBtn);
 
-    container.appendChild(groupDiv);
+	container.appendChild(groupDiv);
 }
 
 // 新增: 渲染角色图鉴视图
 function renderGalleryView(container) {
-    container.innerHTML = '';
+	container.innerHTML = '';
 
-    // 返回按钮
-    const backBtn = document.createElement('button');
-    backBtn.className = 'ybrpg-back-btn';
-    backBtn.textContent = '← 返回';
-    backBtn.onclick = () => {
-        renderSettingsView(container);
-    };
-    container.appendChild(backBtn);
+	// 返回按钮
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-back-btn';
+	backBtn.textContent = '← 返回';
+	backBtn.onclick = () => {
+		renderSettingsView(container);
+	};
+	container.appendChild(backBtn);
 
-    // 阵营切换 Tab（回忆 / 梦境）
-    if (!window.galleryTab) window.galleryTab = 'YB_memory';
-    const tabsDiv = document.createElement('div');
-    tabsDiv.className = 'gallery-tabs';
+	// 阵营切换 Tab（回忆 / 梦境）
+	if (!window.galleryTab) window.galleryTab = 'YB_memory';
+	const tabsDiv = document.createElement('div');
+	tabsDiv.className = 'gallery-tabs';
 
-    const tabMemory = document.createElement('button');
-    tabMemory.className = 'gallery-tab-btn' + (window.galleryTab === 'YB_memory' ? ' active' : '');
-    tabMemory.textContent = '回忆';
-    tabMemory.onclick = () => {
-        window.galleryTab = 'YB_memory';
-        renderGalleryView(container);
-    };
+	const tabMemory = document.createElement('button');
+	tabMemory.className = 'gallery-tab-btn' + (window.galleryTab === 'YB_memory' ? ' active' : '');
+	tabMemory.textContent = '回忆';
+	tabMemory.onclick = () => {
+		window.galleryTab = 'YB_memory';
+		renderGalleryView(container);
+	};
 
-    const tabDream = document.createElement('button');
-    tabDream.className = 'gallery-tab-btn' + (window.galleryTab === 'YB_dream' ? ' active' : '');
-    tabDream.textContent = '梦境';
-    tabDream.onclick = () => {
-        window.galleryTab = 'YB_dream';
-        renderGalleryView(container);
-    };
+	const tabDream = document.createElement('button');
+	tabDream.className = 'gallery-tab-btn' + (window.galleryTab === 'YB_dream' ? ' active' : '');
+	tabDream.textContent = '梦境';
+	tabDream.onclick = () => {
+		window.galleryTab = 'YB_dream';
+		renderGalleryView(container);
+	};
 
-    tabsDiv.appendChild(tabMemory);
-    tabsDiv.appendChild(tabDream);
-    container.appendChild(tabsDiv);
+	tabsDiv.appendChild(tabMemory);
+	tabsDiv.appendChild(tabDream);
+	container.appendChild(tabsDiv);
 
-    // 按品质排序：传说 → 史诗（后续扩展：稀有 → 精品 → 平凡）
-    const RANK_ORDER = ['kami', 'legend', 'epic', 'epicfake', 'rare', 'common', 'junk'];
-    const RANK_LABELS = {
-        kami: '神品',
-        legend: '传说',
-        epic: '史诗',
-        epicfake: '伪史诗',
-        rare: '稀有',
-        common: '精品',
-        junk: '平凡'
-    };
-    const RANK_BORDER_COLORS = {
-        kami: '#ffff00',
-        legend: '#ff4444',
-        epic: '#ff8d8d',
-        epicfake: '#ff8800',
-        rare: '#a335ee',
-        common: '#44aaff',
-        junk: '#88cc88'
-    };
+	// 按品质排序：传说 → 史诗（后续扩展：稀有 → 精品 → 平凡）
+	const RANK_ORDER = ['kami', 'legend', 'epic', 'epicfake', 'rare', 'common', 'junk'];
+	const RANK_LABELS = {
+		kami: '神品',
+		legend: '传说',
+		epic: '史诗',
+		epicfake: '伪史诗',
+		rare: '稀有',
+		common: '精品',
+		junk: '平凡'
+	};
+	const RANK_BORDER_COLORS = {
+		kami: '#ffff00',
+		legend: '#ff4444',
+		epic: '#ff8d8d',
+		epicfake: '#ff8800',
+		rare: '#a335ee',
+		common: '#44aaff',
+		junk: '#88cc88'
+	};
 
-    // 筛选当前阵营的角色
-    const currentGroup = window.galleryTab;
-    const filteredChars = Object.entries(characterList).filter(
-        ([, charData]) => charData.group === currentGroup
-    );
+	// 筛选当前阵营的角色
+	const currentGroup = window.galleryTab;
+	const filteredChars = Object.entries(characterList).filter(
+		([, charData]) => charData.group === currentGroup
+	);
 
-    // 按品质分组
-    const grouped = {};
-    for (const [charId, charData] of filteredChars) {
-        const rank = charData.rank || 'common';
-        if (!grouped[rank]) grouped[rank] = [];
-        grouped[rank].push({ id: charId, ...charData });
-    }
+	// 按品质分组
+	const grouped = {};
+	for (const [charId, charData] of filteredChars) {
+		const rank = charData.rank || 'common';
+		if (!grouped[rank]) grouped[rank] = [];
+		grouped[rank].push({ id: charId, ...charData });
+	}
 
-    // 获取已拥有角色列表（调试：临时全部解锁）
-    // const ownedChars = Object.keys(characterList);
-    const ownedChars = gameData.data.handbook.ownedCharacters
+	// 获取已拥有角色列表（调试：临时全部解锁）
+	// const ownedChars = Object.keys(characterList);
+	const ownedChars = gameData.data.handbook.ownedCharacters
 
-    // 滚动容器
-    const scrollDiv = document.createElement('div');
-    scrollDiv.className = 'gallery-scroll';
+	// 滚动容器
+	const scrollDiv = document.createElement('div');
+	scrollDiv.className = 'gallery-scroll';
 
-    // 按 RANK_ORDER 顺序渲染各组
-    for (const rank of RANK_ORDER) {
-        if (!grouped[rank] || grouped[rank].length === 0) continue;
+	// 按 RANK_ORDER 顺序渲染各组
+	for (const rank of RANK_ORDER) {
+		if (!grouped[rank] || grouped[rank].length === 0) continue;
 
-        // 品质标题
-        const sectionTitle = document.createElement('div');
-        sectionTitle.className = 'gallery-section-title';
-        sectionTitle.textContent = RANK_LABELS[rank] || rank;
-        sectionTitle.style.borderLeftColor = RANK_BORDER_COLORS[rank] || '#888';
-        scrollDiv.appendChild(sectionTitle);
+		// 品质标题
+		const sectionTitle = document.createElement('div');
+		sectionTitle.className = 'gallery-section-title';
+		sectionTitle.textContent = RANK_LABELS[rank] || rank;
+		sectionTitle.style.borderLeftColor = RANK_BORDER_COLORS[rank] || '#888';
+		scrollDiv.appendChild(sectionTitle);
 
-        // 角色网格
-        const grid = document.createElement('div');
-        grid.className = 'gallery-grid';
+		// 角色网格
+		const grid = document.createElement('div');
+		grid.className = 'gallery-grid';
 
-        for (const char of grouped[rank]) {
-            const isOwned = ownedChars.includes(char.id);
-            const borderColor = RANK_BORDER_COLORS[rank] || '#888';
+		for (const char of grouped[rank]) {
+			const isOwned = ownedChars.includes(char.id);
+			const borderColor = RANK_BORDER_COLORS[rank] || '#888';
 
-            const card = document.createElement('div');
-            card.className = 'gallery-char-card';
+			const card = document.createElement('div');
+			card.className = 'gallery-char-card';
 
-            // 角色图标（64x64）
-            const iconDiv = document.createElement('div');
-            iconDiv.className = 'gallery-char-icon';
-            iconDiv.style.borderColor = borderColor;
+			// 角色图标（64x64）
+			const iconDiv = document.createElement('div');
+			iconDiv.className = 'gallery-char-icon';
+			iconDiv.style.borderColor = borderColor;
 
-            if (isOwned) {
-                // 尝试加载角色图片
-                const img = document.createElement('img');
-                img.className = 'gallery-char-img';
-                img.src = `./image/character/${char.id}.jpg`;
-                img.alt = char.name;
-                img.onerror = function () {
-                    // 图片加载失败，尝试 .webp
-                    this.onerror = function () {
-                        // .webp也失败，显示占位
-                        this.style.display = 'none';
-                        const placeholder = document.createElement('div');
-                        placeholder.className = 'gallery-char-placeholder';
-                        placeholder.textContent = char.name.charAt(0);
-                        this.parentNode.appendChild(placeholder);
-                    };
-                    this.src = `./image/character/${char.id}.webp`;
-                };
-                iconDiv.appendChild(img);
-            } else {
-                // 未拥有：显示问号
-                const placeholder = document.createElement('div');
-                placeholder.className = 'gallery-char-placeholder locked';
-                placeholder.textContent = '?';
-                iconDiv.appendChild(placeholder);
-            }
+			if (isOwned) {
+				// 尝试加载角色图片
+				const img = document.createElement('img');
+				img.className = 'gallery-char-img';
+				img.src = `./image/character/${char.id}.jpg`;
+				img.alt = char.name;
+				img.onerror = function () {
+					// 图片加载失败，尝试 .webp
+					this.onerror = function () {
+						// .webp也失败，显示占位
+						this.style.display = 'none';
+						const placeholder = document.createElement('div');
+						placeholder.className = 'gallery-char-placeholder';
+						placeholder.textContent = char.name.charAt(0);
+						this.parentNode.appendChild(placeholder);
+					};
+					this.src = `./image/character/${char.id}.webp`;
+				};
+				iconDiv.appendChild(img);
+			} else {
+				// 未拥有：显示问号
+				const placeholder = document.createElement('div');
+				placeholder.className = 'gallery-char-placeholder locked';
+				placeholder.textContent = '?';
+				iconDiv.appendChild(placeholder);
+			}
 
-            card.appendChild(iconDiv);
+			card.appendChild(iconDiv);
 
-            // 角色名称
-            const nameDiv = document.createElement('div');
-            nameDiv.className = 'gallery-char-name';
-            nameDiv.textContent = isOwned ? char.name : '???';
-            // if (isOwned && rank === 'legend') {
-            //     nameDiv.style.color = '#ff6666';
-            // } else if (isOwned && rank === 'epic') {
-            //     nameDiv.style.color = '#ffaa44';
-            // }
-            nameDiv.style.color = getRankColor(rank);
-            card.appendChild(nameDiv);
+			// 角色名称
+			const nameDiv = document.createElement('div');
+			nameDiv.className = 'gallery-char-name';
+			nameDiv.textContent = isOwned ? char.name : '???';
+			// if (isOwned && rank === 'legend') {
+			//     nameDiv.style.color = '#ff6666';
+			// } else if (isOwned && rank === 'epic') {
+			//     nameDiv.style.color = '#ffaa44';
+			// }
+			nameDiv.style.color = getRankColor(rank);
+			card.appendChild(nameDiv);
 
-            // 点击查看详情（已拥有的角色）
-            if (isOwned) {
-                card.style.cursor = 'pointer';
-                card.onclick = () => {
-                    showCharDetail(container, char);
-                };
-            }
+			// 点击查看详情（已拥有的角色）
+			if (isOwned) {
+				card.style.cursor = 'pointer';
+				card.onclick = () => {
+					showCharDetail(container, char);
+				};
+			}
 
-            grid.appendChild(card);
-        }
+			grid.appendChild(card);
+		}
 
-        scrollDiv.appendChild(grid);
-    }
+		scrollDiv.appendChild(grid);
+	}
 
-    container.appendChild(scrollDiv);
+	container.appendChild(scrollDiv);
 }
 
 /**
@@ -3350,250 +3350,250 @@ function renderGalleryView(container) {
  * @returns {void}
  */
 function showCharDetail(_parentContainer, charData) {
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
 
-    const dialog = document.createElement('div');
-    dialog.className = 'gallery-detail-dialog';
+	const dialog = document.createElement('div');
+	dialog.className = 'gallery-detail-dialog';
 
-    // 角色名
-    const tupoText = charData.tupolevel ? `+${charData.tupolevel}` : '';
-    const nameDiv = document.createElement('div');
-    nameDiv.className = 'gallery-detail-name';
-    nameDiv.textContent = charData.name + tupoText;
-    dialog.appendChild(nameDiv);
+	// 角色名
+	const tupoText = charData.tupolevel ? `+${charData.tupolevel}` : '';
+	const nameDiv = document.createElement('div');
+	nameDiv.className = 'gallery-detail-name';
+	nameDiv.textContent = charData.name + tupoText;
+	dialog.appendChild(nameDiv);
 
-    // 上半部分：图片 + 属性 横向排列
-    const topDiv = document.createElement('div');
-    topDiv.className = 'gallery-detail-top';
+	// 上半部分：图片 + 属性 横向排列
+	const topDiv = document.createElement('div');
+	topDiv.className = 'gallery-detail-top';
 
-    // 角色大图（168x207，偏左上）
-    const imgDiv = document.createElement('div');
-    imgDiv.className = 'gallery-detail-img-container';
-    const img = document.createElement('img');
-    img.className = 'gallery-detail-img';
-    img.src = `./image/character/${charData.id}.jpg`;
-    img.alt = charData.name;
+	// 角色大图（168x207，偏左上）
+	const imgDiv = document.createElement('div');
+	imgDiv.className = 'gallery-detail-img-container';
+	const img = document.createElement('img');
+	img.className = 'gallery-detail-img';
+	img.src = `./image/character/${charData.id}.jpg`;
+	img.alt = charData.name;
 
-    // 图片加载失败处理：尝试加载webp格式，若仍失败则显示首字母占位符
-    img.onerror = function () {
-        this.onerror = function () {
-            this.style.display = 'none';
-            const p = document.createElement('div');
-            p.className = 'gallery-char-placeholder';
-            p.style.width = '168px';
-            p.style.height = '207px';
-            p.style.fontSize = '50px';
-            p.textContent = charData.name.charAt(0);
-            this.parentNode.appendChild(p);
-        };
-        this.src = `./image/character/${charData.id}.webp`;
-    };
+	// 图片加载失败处理：尝试加载webp格式，若仍失败则显示首字母占位符
+	img.onerror = function () {
+		this.onerror = function () {
+			this.style.display = 'none';
+			const p = document.createElement('div');
+			p.className = 'gallery-char-placeholder';
+			p.style.width = '168px';
+			p.style.height = '207px';
+			p.style.fontSize = '50px';
+			p.textContent = charData.name.charAt(0);
+			this.parentNode.appendChild(p);
+		};
+		this.src = `./image/character/${charData.id}.webp`;
+	};
 
-    // 点击图片查看高清原图
-    imgDiv.onclick = () => {
-        showFullImage(charData.id, charData.name);
-    };
-    imgDiv.appendChild(img);
-    topDiv.appendChild(imgDiv);
+	// 点击图片查看高清原图
+	imgDiv.onclick = () => {
+		showFullImage(charData.id, charData.name);
+	};
+	imgDiv.appendChild(img);
+	topDiv.appendChild(imgDiv);
 
-    // 右侧属性区域
-    const attrDiv = document.createElement('div');
-    attrDiv.className = 'gallery-detail-attr';
+	// 右侧属性区域
+	const attrDiv = document.createElement('div');
+	attrDiv.className = 'gallery-detail-attr';
 
-    const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
-    const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-    const tipLabels = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
+	const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+	const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+	const tipLabels = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
-    // 品质 + 等级（图鉴中显示基础等级 Lv.1）
-    const rankDiv = document.createElement('div');
-    rankDiv.className = 'gallery-detail-rank';
-    const rankText = rankLabels[charData.rank] || charData.rank;
-    rankDiv.innerHTML = `<span style="color:${rankColors[charData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.1</span>`;
-    attrDiv.appendChild(rankDiv);
+	// 品质 + 等级（图鉴中显示基础等级 Lv.1）
+	const rankDiv = document.createElement('div');
+	rankDiv.className = 'gallery-detail-rank';
+	const rankText = rankLabels[charData.rank] || charData.rank;
+	rankDiv.innerHTML = `<span style="color:${rankColors[charData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.1</span>`;
+	attrDiv.appendChild(rankDiv);
 
-    // 属性标签
-    const tipDiv = document.createElement('div');
-    tipDiv.style.fontSize = '12px';
-    tipDiv.style.color = '#aaa';
-    tipDiv.style.marginBottom = '4px';
-    tipDiv.textContent = tipLabels[charData.template] || '';
-    attrDiv.appendChild(tipDiv);
-    //  null;
+	// 属性标签
+	const tipDiv = document.createElement('div');
+	tipDiv.style.fontSize = '12px';
+	tipDiv.style.color = '#aaa';
+	tipDiv.style.marginBottom = '4px';
+	tipDiv.textContent = tipLabels[charData.template] || '';
+	attrDiv.appendChild(tipDiv);
+	//  null;
 
-    // 尝试从 characterTemplate获取数值
-    let info = characterTemplate[charData.template][charData.rank]
+	// 尝试从 characterTemplate获取数值
+	let info = characterTemplate[charData.template][charData.rank]
 
-    // 如果没找到 template 数据， fallback 到 charData 自身的基础数值（防止显示 undefined）
-    const finalHp = info ? info.hp : (charData.hp || 0);
-    const finalAtk = info ? info.atk : (charData.atk || 0);
-    const finalDef = info ? info.def : (charData.def || 0);
-    const finalSpe = info ? info.spe : (charData.spe || 0);
+	// 如果没找到 template 数据， fallback 到 charData 自身的基础数值（防止显示 undefined）
+	const finalHp = info ? info.hp : (charData.hp || 0);
+	const finalAtk = info ? info.atk : (charData.atk || 0);
+	const finalDef = info ? info.def : (charData.def || 0);
+	const finalSpe = info ? info.spe : (charData.spe || 0);
 
-    // 四维属性（图鉴显示基础值）
-    const attrs = [
-        { label: '生命', value: finalHp },
-        { label: '攻击', value: finalAtk },
-        { label: '防御', value: finalDef },
-        { label: '速度', value: finalSpe },
-    ];
+	// 四维属性（图鉴显示基础值）
+	const attrs = [
+		{ label: '生命', value: finalHp },
+		{ label: '攻击', value: finalAtk },
+		{ label: '防御', value: finalDef },
+		{ label: '速度', value: finalSpe },
+	];
 
-    attrs.forEach(a => {
-        const row = document.createElement('div');
-        row.className = 'gallery-detail-attr-row';
-        row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${a.value}</span>`;
-        attrDiv.appendChild(row);
-    });
+	attrs.forEach(a => {
+		const row = document.createElement('div');
+		row.className = 'gallery-detail-attr-row';
+		row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${a.value}</span>`;
+		attrDiv.appendChild(row);
+	});
 
-    topDiv.appendChild(attrDiv);
-    dialog.appendChild(topDiv);
+	topDiv.appendChild(attrDiv);
+	dialog.appendChild(topDiv);
 
-    // 下半部分：技能信息
-    const skillsDiv = document.createElement('div');
-    skillsDiv.className = 'gallery-detail-skills';
+	// 下半部分：技能信息
+	const skillsDiv = document.createElement('div');
+	skillsDiv.className = 'gallery-detail-skills';
 
-    // 获取角色的 skills 数组：[普攻id, 技能id, 必杀id(可选)]
-    const skillIds = charData.skills || [];
+	// 获取角色的 skills 数组：[普攻id, 技能id, 必杀id(可选)]
+	const skillIds = charData.skills || [];
 
-    // 普攻
-    if (skillIds[0] && contentList.pugong && contentList.pugong[skillIds[0]]) {
-        const pg = contentList.pugong[skillIds[0]];
-        const section = document.createElement('div');
-        section.className = 'gallery-skill-section';
+	// 普攻
+	if (skillIds[0] && contentList.pugong && contentList.pugong[skillIds[0]]) {
+		const pg = contentList.pugong[skillIds[0]];
+		const section = document.createElement('div');
+		section.className = 'gallery-skill-section';
 
-        const title = document.createElement('div');
-        title.className = 'gallery-skill-title pugong';
-        title.textContent = '普攻';
-        section.appendChild(title);
+		const title = document.createElement('div');
+		title.className = 'gallery-skill-title pugong';
+		title.textContent = '普攻';
+		section.appendChild(title);
 
-        const nameEl = document.createElement('div');
-        nameEl.className = 'gallery-skill-name';
-        nameEl.textContent = pg.name;
-        section.appendChild(nameEl);
+		const nameEl = document.createElement('div');
+		nameEl.className = 'gallery-skill-name';
+		nameEl.textContent = pg.name;
+		section.appendChild(nameEl);
 
-        const intro = document.createElement('div');
-        intro.className = 'gallery-skill-intro';
-        intro.textContent = pg.intro;
-        section.appendChild(intro);
+		const intro = document.createElement('div');
+		intro.className = 'gallery-skill-intro';
+		intro.textContent = pg.intro;
+		section.appendChild(intro);
 
-        const aiIntro = document.createElement('div');
-        aiIntro.className = 'gallery-skill-ai';
-        aiIntro.textContent = 'AI倾向：' + pg.ai_intro;
-        section.appendChild(aiIntro);
+		const aiIntro = document.createElement('div');
+		aiIntro.className = 'gallery-skill-ai';
+		aiIntro.textContent = 'AI倾向：' + pg.ai_intro;
+		section.appendChild(aiIntro);
 
-        skillsDiv.appendChild(section);
-    }
+		skillsDiv.appendChild(section);
+	}
 
-    // 技能
-    if (skillIds[1] && contentList.skill && contentList.skill[skillIds[1]]) {
-        const sk = contentList.skill[skillIds[1]];
-        const section = document.createElement('div');
-        section.className = 'gallery-skill-section';
+	// 技能
+	if (skillIds[1] && contentList.skill && contentList.skill[skillIds[1]]) {
+		const sk = contentList.skill[skillIds[1]];
+		const section = document.createElement('div');
+		section.className = 'gallery-skill-section';
 
-        const title = document.createElement('div');
-        title.className = 'gallery-skill-title skill';
-        title.textContent = '技能';
-        section.appendChild(title);
+		const title = document.createElement('div');
+		title.className = 'gallery-skill-title skill';
+		title.textContent = '技能';
+		section.appendChild(title);
 
-        const nameEl = document.createElement('div');
-        nameEl.className = 'gallery-skill-name';
-        nameEl.textContent = sk.name;
-        section.appendChild(nameEl);
+		const nameEl = document.createElement('div');
+		nameEl.className = 'gallery-skill-name';
+		nameEl.textContent = sk.name;
+		section.appendChild(nameEl);
 
-        const intro = document.createElement('div');
-        intro.className = 'gallery-skill-intro';
-        intro.textContent = sk.intro;
-        section.appendChild(intro);
+		const intro = document.createElement('div');
+		intro.className = 'gallery-skill-intro';
+		intro.textContent = sk.intro;
+		section.appendChild(intro);
 
-        const aiIntro = document.createElement('div');
-        aiIntro.className = 'gallery-skill-ai';
-        aiIntro.textContent = 'AI倾向：' + sk.ai_intro;
-        section.appendChild(aiIntro);
+		const aiIntro = document.createElement('div');
+		aiIntro.className = 'gallery-skill-ai';
+		aiIntro.textContent = 'AI倾向：' + sk.ai_intro;
+		section.appendChild(aiIntro);
 
-        skillsDiv.appendChild(section);
-    }
+		skillsDiv.appendChild(section);
+	}
 
-    // 必杀
-    if (skillIds[2] && contentList.spskill && contentList.spskill[skillIds[2]]) {
-        const sp = contentList.spskill[skillIds[2]];
-        const section = document.createElement('div');
-        section.className = 'gallery-skill-section';
+	// 必杀
+	if (skillIds[2] && contentList.spskill && contentList.spskill[skillIds[2]]) {
+		const sp = contentList.spskill[skillIds[2]];
+		const section = document.createElement('div');
+		section.className = 'gallery-skill-section';
 
-        const title = document.createElement('div');
-        title.className = 'gallery-skill-title spskill';
-        title.textContent = '必杀';
-        section.appendChild(title);
+		const title = document.createElement('div');
+		title.className = 'gallery-skill-title spskill';
+		title.textContent = '必杀';
+		section.appendChild(title);
 
-        const nameEl = document.createElement('div');
-        nameEl.className = 'gallery-skill-name';
-        nameEl.textContent = sp.name;
-        section.appendChild(nameEl);
+		const nameEl = document.createElement('div');
+		nameEl.className = 'gallery-skill-name';
+		nameEl.textContent = sp.name;
+		section.appendChild(nameEl);
 
-        const intro = document.createElement('div');
-        intro.className = 'gallery-skill-intro';
-        intro.textContent = sp.intro;
-        section.appendChild(intro);
+		const intro = document.createElement('div');
+		intro.className = 'gallery-skill-intro';
+		intro.textContent = sp.intro;
+		section.appendChild(intro);
 
-        const aiIntro = document.createElement('div');
-        aiIntro.className = 'gallery-skill-ai';
-        aiIntro.textContent = 'AI倾向：' + sp.ai_intro;
-        section.appendChild(aiIntro);
+		const aiIntro = document.createElement('div');
+		aiIntro.className = 'gallery-skill-ai';
+		aiIntro.textContent = 'AI倾向：' + sp.ai_intro;
+		section.appendChild(aiIntro);
 
-        skillsDiv.appendChild(section);
-    }
+		skillsDiv.appendChild(section);
+	}
 
-    dialog.appendChild(skillsDiv);
+	dialog.appendChild(skillsDiv);
 
-    // 关闭按钮
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'ybrpg-btn';
-    closeBtn.style.width = '80px';
-    closeBtn.style.padding = '6px';
-    closeBtn.style.fontSize = '13px';
-    closeBtn.textContent = '关闭';
-    closeBtn.onclick = () => {
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    };
-    dialog.appendChild(closeBtn);
+	// 关闭按钮
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-btn';
+	closeBtn.style.width = '80px';
+	closeBtn.style.padding = '6px';
+	closeBtn.style.fontSize = '13px';
+	closeBtn.textContent = '关闭';
+	closeBtn.onclick = () => {
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+	};
+	dialog.appendChild(closeBtn);
 
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
 
-    // 点击遮罩关闭
-    overlay.onclick = (e) => {
-        if (e.target === overlay) {
-            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        }
-    };
+	// 点击遮罩关闭
+	overlay.onclick = (e) => {
+		if (e.target === overlay) {
+			if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		}
+	};
 }
 
 // 显示高清原图弹窗
 function showFullImage(charId, charName) {
-    const overlay = document.createElement('div');
-    overlay.className = 'gallery-fullimg-overlay';
+	const overlay = document.createElement('div');
+	overlay.className = 'gallery-fullimg-overlay';
 
-    const img = document.createElement('img');
-    img.src = `./image/character/${charId}.jpg`;
-    img.alt = charName;
-    img.onerror = function () {
-        this.onerror = function () {
-            this.style.display = 'none';
-            const p = document.createElement('div');
-            p.style.color = '#666';
-            p.style.fontSize = '24px';
-            p.textContent = '图片不可用';
-            this.parentNode.appendChild(p);
-        };
-        this.src = `./image/character/${charId}.webp`;
-    };
+	const img = document.createElement('img');
+	img.src = `./image/character/${charId}.jpg`;
+	img.alt = charName;
+	img.onerror = function () {
+		this.onerror = function () {
+			this.style.display = 'none';
+			const p = document.createElement('div');
+			p.style.color = '#666';
+			p.style.fontSize = '24px';
+			p.textContent = '图片不可用';
+			this.parentNode.appendChild(p);
+		};
+		this.src = `./image/character/${charId}.webp`;
+	};
 
-    overlay.appendChild(img);
-    document.body.appendChild(overlay);
+	overlay.appendChild(img);
+	document.body.appendChild(overlay);
 
-    // 点击任意位置关闭
-    overlay.onclick = () => {
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    };
+	// 点击任意位置关闭
+	overlay.onclick = () => {
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+	};
 }
 
 // ========== 宝物图鉴 ==========
@@ -3602,52 +3602,52 @@ function showFullImage(charId, charName) {
  * 宝物触发时点中文映射
  */
 const TREASURE_TYPE_LABELS = {
-    'on_kill': '击杀时',
-    'on_any_death': '有人阵亡时',
-    'on_turn_start': '回合开始',
-    'on_hit': '被攻击时',
-    'on_skill': '技能后',
-    'on_damage_dealt': '伤害后',
-    'on_attack': '普攻时',
-    'passive': '被动',
-    'on_death': '亡语',
-    'on_pugong': '普攻特效',
+	'on_kill': '击杀时',
+	'on_any_death': '有人阵亡时',
+	'on_turn_start': '回合开始',
+	'on_hit': '被攻击时',
+	'on_skill': '技能后',
+	'on_damage_dealt': '伤害后',
+	'on_attack': '普攻时',
+	'passive': '被动',
+	'on_death': '亡语',
+	'on_pugong': '普攻特效',
 };
 
 /**
  * 宝物品质颜色映射（按价格区间）
  */
 function getTreasureRankInfo(price) {
-    if (price >= 350) return { label: '珍稀', color: '#ff8d8d' };
-    if (price >= 250) return { label: '上品', color: '#44aaff' };
-    if (price >= 180) return { label: '良品', color: '#88cc88' };
-    return { label: '精品', color: '#888' };
+	if (price >= 350) return { label: '珍稀', color: '#ff8d8d' };
+	if (price >= 250) return { label: '上品', color: '#44aaff' };
+	if (price >= 180) return { label: '良品', color: '#88cc88' };
+	return { label: '精品', color: '#888' };
 }
 
 /**
  * 渲染宝物图鉴视图
  */
 function renderTreasureGalleryView(container) {
-    container.innerHTML = '';
+	container.innerHTML = '';
 
-    // 返回按钮
-    const backBtn = document.createElement('button');
-    backBtn.className = 'ybrpg-back-btn';
-    backBtn.textContent = '← 返回';
-    backBtn.onclick = () => {
-        renderSettingsView(container);
-    };
-    container.appendChild(backBtn);
+	// 返回按钮
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-back-btn';
+	backBtn.textContent = '← 返回';
+	backBtn.onclick = () => {
+		renderSettingsView(container);
+	};
+	container.appendChild(backBtn);
 
-    // 标题
-    const titleDiv = document.createElement('div');
-    titleDiv.style.cssText = 'text-align:center;color:#ffd700;font-size:18px;font-weight:bold;margin:10px 0 5px;';
-    titleDiv.textContent = '宝物图鉴';
-    container.appendChild(titleDiv);
+	// 标题
+	const titleDiv = document.createElement('div');
+	titleDiv.style.cssText = 'text-align:center;color:#ffd700;font-size:18px;font-weight:bold;margin:10px 0 5px;';
+	titleDiv.textContent = '宝物图鉴';
+	container.appendChild(titleDiv);
 
 	const treasureDefs = gameData.getTreasureList();
 	const treasureIds = Object.keys(treasureDefs);
-	
+
 	// 从实例化系统中获取拥有的宝物
 	const ownedTreasureBaseIds = new Set();
 	if (window.treasureInventory) {
@@ -3666,14 +3666,14 @@ function renderTreasureGalleryView(container) {
 		});
 	}
 	const ownedCount = ownedTreasureBaseIds.size;
-	
-    const statDiv = document.createElement('div');
-    statDiv.style.cssText = 'text-align:center;color:#aaa;font-size:12px;margin-bottom:10px;';
-    statDiv.textContent = `已收集 ${ownedCount} / ${treasureIds.length}`;
-    container.appendChild(statDiv);
 
-    // 按触发时点分类
-    // 按触发时点分类
+	const statDiv = document.createElement('div');
+	statDiv.style.cssText = 'text-align:center;color:#aaa;font-size:12px;margin-bottom:10px;';
+	statDiv.textContent = `已收集 ${ownedCount} / ${treasureIds.length}`;
+	container.appendChild(statDiv);
+
+	// 按触发时点分类
+	// 按触发时点分类
 	const TYPE_ORDER = ['passive', 'on_turn_start', 'on_pugong', 'on_hit', 'on_skill', 'on_damage_dealt', 'on_kill', 'on_any_death', 'on_death', 'other'];
 	const VALID_TYPES = new Set(TYPE_ORDER);
 	const grouped = {};
@@ -3688,158 +3688,158 @@ function renderTreasureGalleryView(container) {
 		grouped[type].push({ id: tid, ...tDef });
 	}
 
-    // 滚动容器
-    const scrollDiv = document.createElement('div');
-    scrollDiv.className = 'gallery-scroll';
+	// 滚动容器
+	const scrollDiv = document.createElement('div');
+	scrollDiv.className = 'gallery-scroll';
 
-    for (const typeKey of TYPE_ORDER) {
-        if (!grouped[typeKey] || grouped[typeKey].length === 0) continue;
+	for (const typeKey of TYPE_ORDER) {
+		if (!grouped[typeKey] || grouped[typeKey].length === 0) continue;
 
-        const sectionTitle = document.createElement('div');
+		const sectionTitle = document.createElement('div');
 		sectionTitle.className = 'gallery-section-title';
 		// 处理 'other' 的中文显示
 		const typeLabel = typeKey === 'other' ? '其他' : (TREASURE_TYPE_LABELS[typeKey] || typeKey);
 		sectionTitle.textContent = typeLabel;
 		sectionTitle.style.borderLeftColor = '#c0a060';
-        scrollDiv.appendChild(sectionTitle);
+		scrollDiv.appendChild(sectionTitle);
 
-        // 宝物网格
-        const grid = document.createElement('div');
-        grid.className = 'gallery-grid';
+		// 宝物网格
+		const grid = document.createElement('div');
+		grid.className = 'gallery-grid';
 
-        for (const t of grouped[typeKey]) {
-            const isOwned = ownedTreasureBaseIds.has(t.id);
-            const rankInfo = getTreasureRankInfo(t.price || 0);
+		for (const t of grouped[typeKey]) {
+			const isOwned = ownedTreasureBaseIds.has(t.id);
+			const rankInfo = getTreasureRankInfo(t.price || 0);
 
-            const card = document.createElement('div');
-            card.className = 'gallery-char-card';
-            card.style.cursor = 'pointer';
+			const card = document.createElement('div');
+			card.className = 'gallery-char-card';
+			card.style.cursor = 'pointer';
 
-            // 宝物图标
-            const iconDiv = document.createElement('div');
-            iconDiv.className = 'gallery-char-icon';
-            iconDiv.style.borderColor = isOwned ? rankInfo.color : '#555';
+			// 宝物图标
+			const iconDiv = document.createElement('div');
+			iconDiv.className = 'gallery-char-icon';
+			iconDiv.style.borderColor = isOwned ? rankInfo.color : '#555';
 
-            if (isOwned && t.icon) {
-                const img = document.createElement('img');
-                img.className = 'gallery-char-img';
-                img.src = t.icon;
-                img.alt = t.name;
-                // img.style.objectFit = 'contain';
-                img.onerror = function () {
-                    this.style.display = 'none';
-                    const placeholder = document.createElement('div');
-                    placeholder.className = 'gallery-char-placeholder';
-                    placeholder.textContent = t.name.charAt(0);
-                    this.parentNode.appendChild(placeholder);
-                };
-                iconDiv.appendChild(img);
-            } else {
-                const placeholder = document.createElement('div');
-                placeholder.className = 'gallery-char-placeholder' + (isOwned ? '' : ' locked');
-                if (isOwned) {
-                    placeholder.textContent = t.name.charAt(0);
-                } else {
-                    placeholder.textContent = '?';
-                }
-                iconDiv.appendChild(placeholder);
-            }
+			if (isOwned && t.icon) {
+				const img = document.createElement('img');
+				img.className = 'gallery-char-img';
+				img.src = t.icon;
+				img.alt = t.name;
+				// img.style.objectFit = 'contain';
+				img.onerror = function () {
+					this.style.display = 'none';
+					const placeholder = document.createElement('div');
+					placeholder.className = 'gallery-char-placeholder';
+					placeholder.textContent = t.name.charAt(0);
+					this.parentNode.appendChild(placeholder);
+				};
+				iconDiv.appendChild(img);
+			} else {
+				const placeholder = document.createElement('div');
+				placeholder.className = 'gallery-char-placeholder' + (isOwned ? '' : ' locked');
+				if (isOwned) {
+					placeholder.textContent = t.name.charAt(0);
+				} else {
+					placeholder.textContent = '?';
+				}
+				iconDiv.appendChild(placeholder);
+			}
 
-            card.appendChild(iconDiv);
+			card.appendChild(iconDiv);
 
-            // 宝物名称
-            const nameDiv = document.createElement('div');
-            nameDiv.className = 'gallery-char-name';
-            nameDiv.textContent = isOwned ? t.name : '???';
-            if (isOwned) nameDiv.style.color = rankInfo.color;
-            card.appendChild(nameDiv);
+			// 宝物名称
+			const nameDiv = document.createElement('div');
+			nameDiv.className = 'gallery-char-name';
+			nameDiv.textContent = isOwned ? t.name : '???';
+			if (isOwned) nameDiv.style.color = rankInfo.color;
+			card.appendChild(nameDiv);
 
-            // 点击查看详情
-            card.onclick = () => {
-                showTreasureGalleryDetail(t, isOwned, rankInfo);
-            };
+			// 点击查看详情
+			card.onclick = () => {
+				showTreasureGalleryDetail(t, isOwned, rankInfo);
+			};
 
-            grid.appendChild(card);
-        }
+			grid.appendChild(card);
+		}
 
-        scrollDiv.appendChild(grid);
-    }
+		scrollDiv.appendChild(grid);
+	}
 
-    container.appendChild(scrollDiv);
+	container.appendChild(scrollDiv);
 }
 
 /**
  * 宝物图鉴详情弹窗
  */
 function showTreasureGalleryDetail(tDef, isOwned, rankInfo) {
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
 
-    const dialog = document.createElement('div');
-    dialog.className = 'gallery-detail-dialog';
+	const dialog = document.createElement('div');
+	dialog.className = 'gallery-detail-dialog';
 
-    // 宝物名称
-    const nameDiv = document.createElement('div');
-    nameDiv.className = 'gallery-detail-name';
-    nameDiv.textContent = isOwned ? tDef.name : '???';
-    dialog.appendChild(nameDiv);
+	// 宝物名称
+	const nameDiv = document.createElement('div');
+	nameDiv.className = 'gallery-detail-name';
+	nameDiv.textContent = isOwned ? tDef.name : '???';
+	dialog.appendChild(nameDiv);
 
-    // 上半部分：图标 + 属性 横向排列
-    const topDiv = document.createElement('div');
-    topDiv.className = 'gallery-detail-top';
+	// 上半部分：图标 + 属性 横向排列
+	const topDiv = document.createElement('div');
+	topDiv.className = 'gallery-detail-top';
 
-    // 宝物大图
-    const imgDiv = document.createElement('div');
-    imgDiv.className = 'gallery-detail-img-container';
-    imgDiv.style.cssText = 'width:140px;height:140px;display:flex;align-items:center;justify-content:center;background:#2a2a2a;';
+	// 宝物大图
+	const imgDiv = document.createElement('div');
+	imgDiv.className = 'gallery-detail-img-container';
+	imgDiv.style.cssText = 'width:140px;height:140px;display:flex;align-items:center;justify-content:center;background:#2a2a2a;';
 
-    if (isOwned && tDef.icon) {
-        const img = document.createElement('img');
-        img.src = tDef.icon;
-        img.alt = tDef.name;
-        img.style.cssText = 'max-width:120px;max-height:120px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,215,0,0.4));';
-        img.onerror = function () {
-            imgDiv.innerHTML = '';
-            const p = document.createElement('div');
-            p.className = 'gallery-char-placeholder';
-            p.style.cssText = 'width:140px;height:140px;font-size:60px;';
-            p.textContent = tDef.name.charAt(0);
-            imgDiv.appendChild(p);
-        };
-        imgDiv.appendChild(img);
-    } else {
-        const p = document.createElement('div');
-        p.className = 'gallery-char-placeholder locked';
-        p.style.cssText = 'width:140px;height:140px;font-size:50px;';
-        p.textContent = '?';
-        imgDiv.appendChild(p);
-    }
-    topDiv.appendChild(imgDiv);
+	if (isOwned && tDef.icon) {
+		const img = document.createElement('img');
+		img.src = tDef.icon;
+		img.alt = tDef.name;
+		img.style.cssText = 'max-width:120px;max-height:120px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,215,0,0.4));';
+		img.onerror = function () {
+			imgDiv.innerHTML = '';
+			const p = document.createElement('div');
+			p.className = 'gallery-char-placeholder';
+			p.style.cssText = 'width:140px;height:140px;font-size:60px;';
+			p.textContent = tDef.name.charAt(0);
+			imgDiv.appendChild(p);
+		};
+		imgDiv.appendChild(img);
+	} else {
+		const p = document.createElement('div');
+		p.className = 'gallery-char-placeholder locked';
+		p.style.cssText = 'width:140px;height:140px;font-size:50px;';
+		p.textContent = '?';
+		imgDiv.appendChild(p);
+	}
+	topDiv.appendChild(imgDiv);
 
-    // 右侧属性区域
-    const attrDiv = document.createElement('div');
-    attrDiv.className = 'gallery-detail-attr';
+	// 右侧属性区域
+	const attrDiv = document.createElement('div');
+	attrDiv.className = 'gallery-detail-attr';
 
-    if (isOwned) {
-        // 品质
-        const rankDiv = document.createElement('div');
-        rankDiv.className = 'gallery-detail-rank';
-        rankDiv.innerHTML = `<span style="color:${rankInfo.color}">${rankInfo.label}</span>`;
-        attrDiv.appendChild(rankDiv);
+	if (isOwned) {
+		// 品质
+		const rankDiv = document.createElement('div');
+		rankDiv.className = 'gallery-detail-rank';
+		rankDiv.innerHTML = `<span style="color:${rankInfo.color}">${rankInfo.label}</span>`;
+		attrDiv.appendChild(rankDiv);
 
-        // 触发时点
-        const typeRow = document.createElement('div');
-        typeRow.className = 'gallery-detail-attr-row';
-        typeRow.innerHTML = `<span class="attr-label">触发时点</span><span class="attr-value" style="color:#ffd700">${TREASURE_TYPE_LABELS[tDef.type] || tDef.type}</span>`;
-        attrDiv.appendChild(typeRow);
+		// 触发时点
+		const typeRow = document.createElement('div');
+		typeRow.className = 'gallery-detail-attr-row';
+		typeRow.innerHTML = `<span class="attr-label">触发时点</span><span class="attr-value" style="color:#ffd700">${TREASURE_TYPE_LABELS[tDef.type] || tDef.type}</span>`;
+		attrDiv.appendChild(typeRow);
 
-        // 价格
-        const priceRow = document.createElement('div');
-        priceRow.className = 'gallery-detail-attr-row';
-        priceRow.innerHTML = `<span class="attr-label">售价</span><span class="attr-value" style="color:#ffcc00">${tDef.price || 0} 金</span>`;
-        attrDiv.appendChild(priceRow);
+		// 价格
+		const priceRow = document.createElement('div');
+		priceRow.className = 'gallery-detail-attr-row';
+		priceRow.innerHTML = `<span class="attr-label">售价</span><span class="attr-value" style="color:#ffcc00">${tDef.price || 0} 金</span>`;
+		attrDiv.appendChild(priceRow);
 
-        // 持有数量 - 从实例化系统获取
+		// 持有数量 - 从实例化系统获取
 		let count = 0;
 		if (window.treasureInventory) {
 			count = Object.values(window.treasureInventory).filter(inv => inv && inv.baseId === tDef.id).length;
@@ -3849,359 +3849,359 @@ function showTreasureGalleryDetail(tDef, isOwned, rankInfo) {
 			count += window.treasureBagData[tDef.id].count || 0;
 		}
 
-        const countRow = document.createElement('div');
-        countRow.className = 'gallery-detail-attr-row';
-        countRow.innerHTML = `<span class="attr-label">持有</span><span class="attr-value">${count}</span>`;
-        attrDiv.appendChild(countRow);
+		const countRow = document.createElement('div');
+		countRow.className = 'gallery-detail-attr-row';
+		countRow.innerHTML = `<span class="attr-label">持有</span><span class="attr-value">${count}</span>`;
+		attrDiv.appendChild(countRow);
 
-        
-    } else {
-        const lockDiv = document.createElement('div');
-        lockDiv.style.cssText = 'color:#666;font-size:13px;text-align:center;margin-top:20px;';
-        lockDiv.textContent = '尚未获得';
-        attrDiv.appendChild(lockDiv);
-    }
 
-    topDiv.appendChild(attrDiv);
-    dialog.appendChild(topDiv);
+	} else {
+		const lockDiv = document.createElement('div');
+		lockDiv.style.cssText = 'color:#666;font-size:13px;text-align:center;margin-top:20px;';
+		lockDiv.textContent = '尚未获得';
+		attrDiv.appendChild(lockDiv);
+	}
 
-    // 下半部分：描述
-    const descDiv = document.createElement('div');
-    descDiv.className = 'gallery-detail-skills';
+	topDiv.appendChild(attrDiv);
+	dialog.appendChild(topDiv);
 
-    const descSection = document.createElement('div');
-    descSection.className = 'gallery-skill-section';
+	// 下半部分：描述
+	const descDiv = document.createElement('div');
+	descDiv.className = 'gallery-detail-skills';
 
-    const descTitle = document.createElement('div');
-    descTitle.className = 'gallery-skill-title skill';
-    descTitle.textContent = '效果描述';
-    descSection.appendChild(descTitle);
+	const descSection = document.createElement('div');
+	descSection.className = 'gallery-skill-section';
 
-    const descText = document.createElement('div');
-    descText.className = 'gallery-skill-intro';
-    descText.style.cssText = 'font-size:13px;color:#ccc;line-height:1.6;';
-    descText.textContent = isOwned ? (tDef.desc || '暂无描述') : '???';
-    descSection.appendChild(descText);
+	const descTitle = document.createElement('div');
+	descTitle.className = 'gallery-skill-title skill';
+	descTitle.textContent = '效果描述';
+	descSection.appendChild(descTitle);
 
-    descDiv.appendChild(descSection);
-    dialog.appendChild(descDiv);
+	const descText = document.createElement('div');
+	descText.className = 'gallery-skill-intro';
+	descText.style.cssText = 'font-size:13px;color:#ccc;line-height:1.6;';
+	descText.textContent = isOwned ? (tDef.desc || '暂无描述') : '???';
+	descSection.appendChild(descText);
 
-    // 关闭按钮
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'ybrpg-btn';
-    closeBtn.style.cssText = 'width:80px;padding:6px;font-size:13px;';
-    closeBtn.textContent = '关闭';
-    closeBtn.onclick = () => {
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    };
-    dialog.appendChild(closeBtn);
+	descDiv.appendChild(descSection);
+	dialog.appendChild(descDiv);
 
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
+	// 关闭按钮
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-btn';
+	closeBtn.style.cssText = 'width:80px;padding:6px;font-size:13px;';
+	closeBtn.textContent = '关闭';
+	closeBtn.onclick = () => {
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+	};
+	dialog.appendChild(closeBtn);
 
-    // 点击遮罩关闭
-    overlay.onclick = (e) => {
-        if (e.target === overlay) {
-            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        }
-    };
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
+
+	// 点击遮罩关闭
+	overlay.onclick = (e) => {
+		if (e.target === overlay) {
+			if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		}
+	};
 }
 
 // ========== 角色背包数据 ==========
 
 // 获取存档中的角色数据（含等级、实际数值）
 function getCharSaveData(charId) {
-    if (!window.charBagData) window.charBagData = {};
-    if (!window.charBagData[charId]) {
-        const base = characterList[charId];
-        if (!base) return null;
-        window.charBagData[charId] = {
-            level: 1,
-            hp: base.hp,
-            atk: base.atk,
-            def: base.def,
-            spe: base.spe,
-            buff: [],
-        };
-    }
-    return window.charBagData[charId];
+	if (!window.charBagData) window.charBagData = {};
+	if (!window.charBagData[charId]) {
+		const base = characterList[charId];
+		if (!base) return null;
+		window.charBagData[charId] = {
+			level: 1,
+			hp: base.hp,
+			atk: base.atk,
+			def: base.def,
+			spe: base.spe,
+			buff: [],
+		};
+	}
+	return window.charBagData[charId];
 }
 
 
 // 新增: 渲染副本视图
 function renderDungeonView(container, selectedChapterKey = null) {
-    // 清空容器以防重复渲染
-    container.innerHTML = '';
+	// 清空容器以防重复渲染
+	container.innerHTML = '';
 
-    // 确保容器本身有合适的布局上下文，防止子元素绝对定位溢出等导致覆盖
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.height = '100%'; // 假设父容器有高度，或者根据需要调整
-    container.style.overflow = 'hidden'; // 防止整体溢出
+	// 确保容器本身有合适的布局上下文，防止子元素绝对定位溢出等导致覆盖
+	container.style.display = 'flex';
+	container.style.flexDirection = 'column';
+	container.style.height = '100%'; // 假设父容器有高度，或者根据需要调整
+	container.style.overflow = 'hidden'; // 防止整体溢出
 
-    // 如果传入了 selectedChapterKey，则渲染该章节的事件目录（子页面）
-    if (selectedChapterKey && eventList[selectedChapterKey]) {
-        renderChapterEventList(container, selectedChapterKey);
-        return;
-    }
-    if(selectedChapterKey&&SPeventList[selectedChapterKey]){
-        renderChapterEventList(container, selectedChapterKey);
-        return;
-    }
+	// 如果传入了 selectedChapterKey，则渲染该章节的事件目录（子页面）
+	if (selectedChapterKey && eventList[selectedChapterKey]) {
+		renderChapterEventList(container, selectedChapterKey);
+		return;
+	}
+	if (selectedChapterKey && SPeventList[selectedChapterKey]) {
+		renderChapterEventList(container, selectedChapterKey);
+		return;
+	}
 
-    // 否则渲染章节列表（主页面）
+	// 否则渲染章节列表（主页面）
 
-    // 1. 上方展示难度按钮 (普通, 噩梦, 地狱)
-    const difficultyContainer = document.createElement('div');
-    difficultyContainer.style.display = 'flex';
-    difficultyContainer.style.justifyContent = 'center';
-    difficultyContainer.style.gap = '10px';
-    difficultyContainer.style.marginBottom = '20px';
-    difficultyContainer.style.width = '100%';
-    difficultyContainer.style.flexShrink = '0';
+	// 1. 上方展示难度按钮 (普通, 噩梦, 地狱)
+	const difficultyContainer = document.createElement('div');
+	difficultyContainer.style.display = 'flex';
+	difficultyContainer.style.justifyContent = 'center';
+	difficultyContainer.style.gap = '10px';
+	difficultyContainer.style.marginBottom = '20px';
+	difficultyContainer.style.width = '100%';
+	difficultyContainer.style.flexShrink = '0';
 
-    const difficulties = [
-        { name: '普通', key: 'normal' },
-        { name: '噩梦', key: 'nightmare' },
-        { name: '地狱', key: 'hell' },
-        { name: '秘境', key: 'secret' }
-    ];
+	const difficulties = [
+		{ name: '普通', key: 'normal' },
+		{ name: '噩梦', key: 'nightmare' },
+		{ name: '地狱', key: 'hell' },
+		{ name: '秘境', key: 'secret' }
+	];
 
-    // 获取当前选中的难度，默认为普通
-    let currentDifficulty = window.currentDifficulty || 'normal';
+	// 获取当前选中的难度，默认为普通
+	let currentDifficulty = window.currentDifficulty || 'normal';
 
-    // 获取所有章节key并排序（提前声明，供难度解锁检查和章节列表共用）
-    const chapterKeys = Object.keys(eventList).sort((a, b) => {
-        const numA = parseInt(a.replace(/\D/g, '')) || 0;
-        const numB = parseInt(b.replace(/\D/g, '')) || 0;
-        return numA - numB;
-    });
+	// 获取所有章节key并排序（提前声明，供难度解锁检查和章节列表共用）
+	const chapterKeys = Object.keys(eventList).sort((a, b) => {
+		const numA = parseInt(a.replace(/\D/g, '')) || 0;
+		const numB = parseInt(b.replace(/\D/g, '')) || 0;
+		return numA - numB;
+	});
 
-    // 获取所有章节key并排序（提前声明，供难度解锁检查和章节列表共用）
-    const SPchapterKeys = Object.keys(SPeventList).sort((a, b) => {
-        const numA = parseInt(a.replace(/\D/g, '')) || 0;
-        const numB = parseInt(b.replace(/\D/g, '')) || 0;
-        return numA - numB;
-    });
-    // 检查难度解锁状态 - 只要存在任意一章该难度可玩，即视为解锁
-    const isDifficultyUnlocked = (diffKey) => {
-        if (diffKey === 'normal') return true;
-        if(diffKey === 'secret') return true;
+	// 获取所有章节key并排序（提前声明，供难度解锁检查和章节列表共用）
+	const SPchapterKeys = Object.keys(SPeventList).sort((a, b) => {
+		const numA = parseInt(a.replace(/\D/g, '')) || 0;
+		const numB = parseInt(b.replace(/\D/g, '')) || 0;
+		return numA - numB;
+	});
+	// 检查难度解锁状态 - 只要存在任意一章该难度可玩，即视为解锁
+	const isDifficultyUnlocked = (diffKey) => {
+		if (diffKey === 'normal') return true;
+		if (diffKey === 'secret') return true;
 
-        // 遍历所有章节，只要有任意一章满足解锁条件即可
-        for (const chKey of chapterKeys) {
-            const chNum = parseInt(chKey.replace(/\D/g, '')) || 0;
-            if (diffKey === 'nightmare') {
-                // 噩梦解锁：上一章噩梦通关 + 当前章普通通关
-                const normalLastEvent = `c${chNum}-10`;
-                const prevNightmareLastEvent = `c${chNum - 1}-10_nightmare`;
-                const prevOk = chNum === 1 || !!window.playerProgress?.[prevNightmareLastEvent];
-                if (prevOk && !!window.playerProgress?.[normalLastEvent]) return true;
-            } else if (diffKey === 'hell') {
-                // 地狱解锁：上一章地狱通关 + 当前章噩梦通关
-                const nightmareLastEvent = `c${chNum}-10_nightmare`;
-                const prevHellLastEvent = `c${chNum - 1}-10_hell`;
-                const prevOk = chNum === 1 || !!window.playerProgress?.[prevHellLastEvent];
-                if (prevOk && !!window.playerProgress?.[nightmareLastEvent]) return true;
-            }
-        }
-        return false;
-    };
+		// 遍历所有章节，只要有任意一章满足解锁条件即可
+		for (const chKey of chapterKeys) {
+			const chNum = parseInt(chKey.replace(/\D/g, '')) || 0;
+			if (diffKey === 'nightmare') {
+				// 噩梦解锁：上一章噩梦通关 + 当前章普通通关
+				const normalLastEvent = `c${chNum}-10`;
+				const prevNightmareLastEvent = `c${chNum - 1}-10_nightmare`;
+				const prevOk = chNum === 1 || !!window.playerProgress?.[prevNightmareLastEvent];
+				if (prevOk && !!window.playerProgress?.[normalLastEvent]) return true;
+			} else if (diffKey === 'hell') {
+				// 地狱解锁：上一章地狱通关 + 当前章噩梦通关
+				const nightmareLastEvent = `c${chNum}-10_nightmare`;
+				const prevHellLastEvent = `c${chNum - 1}-10_hell`;
+				const prevOk = chNum === 1 || !!window.playerProgress?.[prevHellLastEvent];
+				if (prevOk && !!window.playerProgress?.[nightmareLastEvent]) return true;
+			}
+		}
+		return false;
+	};
 
-    difficulties.forEach(diff => {
-        const btn = document.createElement('button');
-        btn.className = 'ybrpg-btn';
-        btn.style.width = '70px';
-        btn.style.minWidth = '50px';
-        btn.style.padding = '5px';
-        btn.style.fontSize = '14px';
-        btn.textContent = diff.name;
+	difficulties.forEach(diff => {
+		const btn = document.createElement('button');
+		btn.className = 'ybrpg-btn';
+		btn.style.width = '70px';
+		btn.style.minWidth = '50px';
+		btn.style.padding = '5px';
+		btn.style.fontSize = '14px';
+		btn.textContent = diff.name;
 
-        const unlocked = isDifficultyUnlocked(diff.key);
-        const isSelected = currentDifficulty === diff.key;
+		const unlocked = isDifficultyUnlocked(diff.key);
+		const isSelected = currentDifficulty === diff.key;
 
-        if (isSelected) {
-            btn.style.borderColor = '#ffd700';
-            btn.style.background = '#444';
-        } else {
-            btn.style.borderColor = '#555';
-            btn.style.background = '#333';
-        }
+		if (isSelected) {
+			btn.style.borderColor = '#ffd700';
+			btn.style.background = '#444';
+		} else {
+			btn.style.borderColor = '#555';
+			btn.style.background = '#333';
+		}
 
-        if (!unlocked) {
-            btn.disabled = true;
-            btn.style.opacity = '0.5';
-            btn.style.cursor = 'not-allowed';
-            btn.title = '尚未解锁';
-        }
+		if (!unlocked) {
+			btn.disabled = true;
+			btn.style.opacity = '0.5';
+			btn.style.cursor = 'not-allowed';
+			btn.title = '尚未解锁';
+		}
 
-        btn.onclick = () => {
-            if (!unlocked) return;
-            // console.log(`切换难度: ${diff.name}`);
-            window.currentDifficulty = diff.key;
-            renderDungeonView(container, null); // 重新渲染以更新按钮状态
-        };
-        difficultyContainer.appendChild(btn);
-    });
-    container.appendChild(difficultyContainer);
+		btn.onclick = () => {
+			if (!unlocked) return;
+			// console.log(`切换难度: ${diff.name}`);
+			window.currentDifficulty = diff.key;
+			renderDungeonView(container, null); // 重新渲染以更新按钮状态
+		};
+		difficultyContainer.appendChild(btn);
+	});
+	container.appendChild(difficultyContainer);
 
-    // 2. 中央展示章节列表
-    const listContainer = document.createElement('div');
-    listContainer.style.display = 'flex';
-    listContainer.style.flexDirection = 'column';
-    listContainer.style.alignItems = 'center';
-    listContainer.style.gap = '10px';
-    listContainer.style.width = '100%';
-    listContainer.style.maxWidth = '400px';
-    listContainer.style.flex = '1';
-    listContainer.style.overflowY = 'auto';
-    listContainer.style.paddingBottom = '20px';
+	// 2. 中央展示章节列表
+	const listContainer = document.createElement('div');
+	listContainer.style.display = 'flex';
+	listContainer.style.flexDirection = 'column';
+	listContainer.style.alignItems = 'center';
+	listContainer.style.gap = '10px';
+	listContainer.style.width = '100%';
+	listContainer.style.maxWidth = '400px';
+	listContainer.style.flex = '1';
+	listContainer.style.overflowY = 'auto';
+	listContainer.style.paddingBottom = '20px';
 
-    let prevChapterCompleted = true; // 第一章默认前置条件满足
-    // currentDifficulty 已在函数开头声明，直接使用
-    if (currentDifficulty === 'secret') {
-        for (const chapterKey of SPchapterKeys) {
-            const chapterData = SPeventList[chapterKey];
-            
-            // 调试日志保留
-            console.log('SPchapterKeys', SPeventList);
-            console.log('chapterKey', chapterKey);
-            console.log('chapterData', chapterData);
+	let prevChapterCompleted = true; // 第一章默认前置条件满足
+	// currentDifficulty 已在函数开头声明，直接使用
+	if (currentDifficulty === 'secret') {
+		for (const chapterKey of SPchapterKeys) {
+			const chapterData = SPeventList[chapterKey];
 
-            // 章节标题按钮
-            const chapterBtn = document.createElement('button');
-            chapterBtn.className = 'ybrpg-btn';
-            chapterBtn.style.width = '95%';
-            chapterBtn.style.marginBottom = '5px';
-            
-            // 将 chapter1 转换为更友好的显示名称，如 "章节 1"
-            // 如果是秘境，可能需要在名字前加标识
-            let displayName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
-            if (chapterData.type === 'secret' || chapterKey.includes('secret')) {
-                displayName = `【秘境】${displayName}`;
-                chapterBtn.style.borderColor = '#ff4444'; // 可选：给秘境按钮加个红色边框区分
-                chapterBtn.style.color = '#ff4444';
-            }
-            chapterBtn.textContent = `▶ ${displayName}`;
+			// 调试日志保留
+			console.log('SPchapterKeys', SPeventList);
+			console.log('chapterKey', chapterKey);
+			console.log('chapterData', chapterData);
 
-            // 章节按钮点击事件：进入该章节的子页面
-            chapterBtn.onclick = () => {
-                // 保存当前选中的章节，用于难度解锁判断
-                window.selectedChapter = chapterKey;
-                renderDungeonView(container, chapterKey);
-                // 【修改】判断是否为秘境副本，进行兼容处理
-                const isSecretDungeon = (chapterData.type === 'secret') || (chapterKey.includes('secret'));
+			// 章节标题按钮
+			const chapterBtn = document.createElement('button');
+			chapterBtn.className = 'ybrpg-btn';
+			chapterBtn.style.width = '95%';
+			chapterBtn.style.marginBottom = '5px';
 
-                if (isSecretDungeon) {
-                    // 1. 如果有专门的秘境渲染函数，请取消下面这行的注释并替换函数名
-                    // renderSecretDungeonView(container, chapterKey); 
-                    
-                    // 2. 如果暂时复用普通地下城视图，但需要传递秘境标识
-                    // 假设 renderDungeonView 能处理 chapterData 中的 type 字段
-                    renderDungeonView(container, chapterKey);
-                    
-                    // 3. 如果秘境功能确实尚未实装，保留提示
-                    // toast('秘境副本暂未完全开放，正在开发中...', 'warning');
-                } else {
-                    // 普通章节逻辑
-                    renderDungeonView(container, chapterKey);
-                }
-            };
+			// 将 chapter1 转换为更友好的显示名称，如 "章节 1"
+			// 如果是秘境，可能需要在名字前加标识
+			let displayName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
+			if (chapterData.type === 'secret' || chapterKey.includes('secret')) {
+				displayName = `【秘境】${displayName}`;
+				chapterBtn.style.borderColor = '#ff4444'; // 可选：给秘境按钮加个红色边框区分
+				chapterBtn.style.color = '#ff4444';
+			}
+			chapterBtn.textContent = `▶ ${displayName}`;
 
-            listContainer.appendChild(chapterBtn);
-        }
-    }
-    else {
-        // 遍历章节
-        for (const chapterKey of chapterKeys) {
-            const chapterData = eventList[chapterKey];
-            if (!chapterData.eventPack) continue;
-    
-            // 检查前一章是否完成，如果未完成，则当前章及后续章节隐藏
-            if (!prevChapterCompleted) {
-                break; // 跳出循环，隐藏后续章节
-            }
-    
-            // 高难度额外解锁条件：当前章低一难度通关
-            const chapterNum = parseInt(chapterKey.replace(/\D/g, '')) || 1;
-            let chapterVisible = true;
-            if (currentDifficulty === 'nightmare') {
-                // 噩梦：需要当前章普通通关
-                const normalLastEvent = `c${chapterNum}-10`;
-                chapterVisible = !!window.playerProgress?.[normalLastEvent];
-            } else if (currentDifficulty === 'hell') {
-                // 地狱：需要当前章噩梦通关
-                const nightmareLastEvent = `c${chapterNum}-10_nightmare`;
-                chapterVisible = !!window.playerProgress?.[nightmareLastEvent];
-            }
-    
-            if (!chapterVisible) {
-                // 当前章低一难度未通关，隐藏当前章及后续
-                break;
-            }
-    
-            // 章节标题按钮
-            const chapterBtn = document.createElement('button');
-            chapterBtn.className = 'ybrpg-btn';
-            chapterBtn.style.width = '95%';
-            chapterBtn.style.marginBottom = '5px';
-            // 将 chapter1 转换为更友好的显示名称，如 "章节 1"
-            const chapterName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
-            chapterBtn.textContent = `▶ ${chapterName}`;
-    
-            // 章节按钮点击事件：进入该章节的子页面
-            chapterBtn.onclick = () => {
-                // 保存当前选中的章节，用于难度解锁判断
-                window.selectedChapter = chapterKey;
-                renderDungeonView(container, chapterKey);
-            };
-    
-            listContainer.appendChild(chapterBtn);
-    
-            // 检查当前章节是否完成，以决定下一章是否显示
-            // 根据当前难度判断章节完成状态
-            const procedure = chapterData.procedure || [];
-            const eventIds = procedure.length > 0 ? procedure : Object.keys(chapterData.eventPack);
-            let lastEventId = eventIds[eventIds.length - 1];
-    
-            // 如果是噩梦/地狱难度，需要使用对应的eventId
-            if (currentDifficulty === 'nightmare') {
-                lastEventId = lastEventId + '_nightmare';
-            } else if (currentDifficulty === 'hell') {
-                lastEventId = lastEventId + '_hell';
-            }
-    
-            // 更新 prevChapterCompleted 状态
-            // 如果当前章节没有任何事件，或者最后一个事件已完成，则下一章解锁
-            if (lastEventId) {
-                prevChapterCompleted = !!window.playerProgress?.[lastEventId];
-            } else {
-                prevChapterCompleted = false; // 如果没有事件，默认不解锁下一章
-            }
-        }
+			// 章节按钮点击事件：进入该章节的子页面
+			chapterBtn.onclick = () => {
+				// 保存当前选中的章节，用于难度解锁判断
+				window.selectedChapter = chapterKey;
+				renderDungeonView(container, chapterKey);
+				// 【修改】判断是否为秘境副本，进行兼容处理
+				const isSecretDungeon = (chapterData.type === 'secret') || (chapterKey.includes('secret'));
 
-    }
+				if (isSecretDungeon) {
+					// 1. 如果有专门的秘境渲染函数，请取消下面这行的注释并替换函数名
+					// renderSecretDungeonView(container, chapterKey); 
 
-    
+					// 2. 如果暂时复用普通地下城视图，但需要传递秘境标识
+					// 假设 renderDungeonView 能处理 chapterData 中的 type 字段
+					renderDungeonView(container, chapterKey);
 
-    container.appendChild(listContainer);
+					// 3. 如果秘境功能确实尚未实装，保留提示
+					// toast('秘境副本暂未完全开放，正在开发中...', 'warning');
+				} else {
+					// 普通章节逻辑
+					renderDungeonView(container, chapterKey);
+				}
+			};
+
+			listContainer.appendChild(chapterBtn);
+		}
+	}
+	else {
+		// 遍历章节
+		for (const chapterKey of chapterKeys) {
+			const chapterData = eventList[chapterKey];
+			if (!chapterData.eventPack) continue;
+
+			// 检查前一章是否完成，如果未完成，则当前章及后续章节隐藏
+			if (!prevChapterCompleted) {
+				break; // 跳出循环，隐藏后续章节
+			}
+
+			// 高难度额外解锁条件：当前章低一难度通关
+			const chapterNum = parseInt(chapterKey.replace(/\D/g, '')) || 1;
+			let chapterVisible = true;
+			if (currentDifficulty === 'nightmare') {
+				// 噩梦：需要当前章普通通关
+				const normalLastEvent = `c${chapterNum}-10`;
+				chapterVisible = !!window.playerProgress?.[normalLastEvent];
+			} else if (currentDifficulty === 'hell') {
+				// 地狱：需要当前章噩梦通关
+				const nightmareLastEvent = `c${chapterNum}-10_nightmare`;
+				chapterVisible = !!window.playerProgress?.[nightmareLastEvent];
+			}
+
+			if (!chapterVisible) {
+				// 当前章低一难度未通关，隐藏当前章及后续
+				break;
+			}
+
+			// 章节标题按钮
+			const chapterBtn = document.createElement('button');
+			chapterBtn.className = 'ybrpg-btn';
+			chapterBtn.style.width = '95%';
+			chapterBtn.style.marginBottom = '5px';
+			// 将 chapter1 转换为更友好的显示名称，如 "章节 1"
+			const chapterName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
+			chapterBtn.textContent = `▶ ${chapterName}`;
+
+			// 章节按钮点击事件：进入该章节的子页面
+			chapterBtn.onclick = () => {
+				// 保存当前选中的章节，用于难度解锁判断
+				window.selectedChapter = chapterKey;
+				renderDungeonView(container, chapterKey);
+			};
+
+			listContainer.appendChild(chapterBtn);
+
+			// 检查当前章节是否完成，以决定下一章是否显示
+			// 根据当前难度判断章节完成状态
+			const procedure = chapterData.procedure || [];
+			const eventIds = procedure.length > 0 ? procedure : Object.keys(chapterData.eventPack);
+			let lastEventId = eventIds[eventIds.length - 1];
+
+			// 如果是噩梦/地狱难度，需要使用对应的eventId
+			if (currentDifficulty === 'nightmare') {
+				lastEventId = lastEventId + '_nightmare';
+			} else if (currentDifficulty === 'hell') {
+				lastEventId = lastEventId + '_hell';
+			}
+
+			// 更新 prevChapterCompleted 状态
+			// 如果当前章节没有任何事件，或者最后一个事件已完成，则下一章解锁
+			if (lastEventId) {
+				prevChapterCompleted = !!window.playerProgress?.[lastEventId];
+			} else {
+				prevChapterCompleted = false; // 如果没有事件，默认不解锁下一章
+			}
+		}
+
+	}
+
+
+
+	container.appendChild(listContainer);
 }
 
 // 新增: 难度缩放配置
 const DIFFICULTY_SCALE = {
-    normal: { hp: 1.0, atk: 1.0, def: 1.0, gold: 1.0, name: '普通', buffs: [], treasures: [], },
-    nightmare: { hp: 1.5, atk: 1.3, def: 1.3, gold: 1.5, name: '噩梦', buffs: [], treasures: [], },
-    hell: { hp: 2.0, atk: 1.6, def: 1.6, gold: 2.0, name: '地狱', buffs: [], treasures: [], }
+	normal: { hp: 1.0, atk: 1.0, def: 1.0, gold: 1.0, name: '普通', buffs: [], treasures: [], },
+	nightmare: { hp: 1.5, atk: 1.3, def: 1.3, gold: 1.5, name: '噩梦', buffs: [], treasures: [], },
+	hell: { hp: 2.0, atk: 1.6, def: 1.6, gold: 2.0, name: '地狱', buffs: [], treasures: [], }
 };
 // 根据难度获取事件数据（支持噩梦和地狱难度）
 function getEventForDifficulty(chapterKey, eventId, difficulty) {
-    if (difficulty === 'normal') {
-        return eventList[chapterKey]?.eventPack?.[eventId];
-    }
+	if (difficulty === 'normal') {
+		return eventList[chapterKey]?.eventPack?.[eventId];
+	}
 
-    // 噩梦/地狱难度：尝试从 eventPack 中查找对应难度的事件
-    const nightmareEventId = eventId + '_' + difficulty;
-    return eventList[chapterKey]?.eventPack?.[nightmareEventId];
+	// 噩梦/地狱难度：尝试从 eventPack 中查找对应难度的事件
+	const nightmareEventId = eventId + '_' + difficulty;
+	return eventList[chapterKey]?.eventPack?.[nightmareEventId];
 }
 
 /**
@@ -4209,251 +4209,251 @@ function getEventForDifficulty(chapterKey, eventId, difficulty) {
  * 返回包含 treasures 字段的单位数组
  */
 function buildPlayerTeamForBattle() {
-    return (window.currentTeam || []).map(instanceId => {
-        const instData = window.charBagData && window.charBagData[instanceId];
-        if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
+	return (window.currentTeam || []).map(instanceId => {
+		const instData = window.charBagData && window.charBagData[instanceId];
+		if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
 
-        const charId = instData.charId || instanceId;
-        const base = characterList[charId];
+		const charId = instData.charId || instanceId;
+		const base = characterList[charId];
 
-        // 获取实例独立的宝物列表（使用 instanceId）
-        const treasures = (window.treasureEquipData && window.treasureEquipData[instanceId]) || [];
+		// 获取实例独立的宝物列表（使用 instanceId）
+		const treasures = (window.treasureEquipData && window.treasureEquipData[instanceId]) || [];
 
-        return {
-            id: charId,                             // 战斗内技能查找仍用 charId
-            instanceId: instanceId,                  // 传递实例ID供宝物系统使用
-            name: base ? base.name : charId,
-            hp: instData.hp || (base ? base.hp : 0),
-            atk: instData.atk || (base ? base.atk : 0),
-            def: instData.def || (base ? base.def : 0),
-            spe: instData.spe || (base ? base.spe : 0),
-            skills: instData.skills||(base ? base.skills : []),
-            buff: instData.buff || [],
-            treasures: treasures,     
-            rank: instData.rank || (base ? base.rank : 'conmon'),
-            tupolevel: instData.tupolevel || 0, 
-            tupoList: instData.tupoList || (base ? base.tupoList : []),        // 宝物数组，用于战斗内时点触发
-        };
-    });
+		return {
+			id: charId,                             // 战斗内技能查找仍用 charId
+			instanceId: instanceId,                  // 传递实例ID供宝物系统使用
+			name: base ? base.name : charId,
+			hp: instData.hp || (base ? base.hp : 0),
+			atk: instData.atk || (base ? base.atk : 0),
+			def: instData.def || (base ? base.def : 0),
+			spe: instData.spe || (base ? base.spe : 0),
+			skills: instData.skills || (base ? base.skills : []),
+			buff: instData.buff || [],
+			treasures: treasures,
+			rank: instData.rank || (base ? base.rank : 'conmon'),
+			tupolevel: instData.tupolevel || 0,
+			tupoList: instData.tupoList || (base ? base.tupoList : []),        // 宝物数组，用于战斗内时点触发
+		};
+	});
 }
 
 
 // 新增: 渲染特定章节的事件列表（子页面）
 function renderChapterEventList(container, chapterKey) {
-    // 修复: 清空容器以防重复渲染
-    container.innerHTML = '';
+	// 修复: 清空容器以防重复渲染
+	container.innerHTML = '';
 
-    const SPchapterData = SPeventList[chapterKey];
-    const chapterData = eventList[chapterKey];
-    if (!chapterData&&!SPchapterData) return;
+	const SPchapterData = SPeventList[chapterKey];
+	const chapterData = eventList[chapterKey];
+	if (!chapterData && !SPchapterData) return;
 
-    // 获取当前难度
-    let currentDifficulty = window.currentDifficulty || 'normal';
+	// 获取当前难度
+	let currentDifficulty = window.currentDifficulty || 'normal';
 
-    // 创建返回按钮和章节标题容器
-    const headerDiv = document.createElement('div');
-    headerDiv.style.width = '100%';
-    headerDiv.style.display = 'flex';
-    headerDiv.style.justifyContent = 'space-between';
-    headerDiv.style.alignItems = 'center';
-    headerDiv.style.marginBottom = '10px';
-    headerDiv.style.paddingLeft = '10px';
-    headerDiv.style.paddingRight = '10px';
-    headerDiv.style.boxSizing = 'border-box';
+	// 创建返回按钮和章节标题容器
+	const headerDiv = document.createElement('div');
+	headerDiv.style.width = '100%';
+	headerDiv.style.display = 'flex';
+	headerDiv.style.justifyContent = 'space-between';
+	headerDiv.style.alignItems = 'center';
+	headerDiv.style.marginBottom = '10px';
+	headerDiv.style.paddingLeft = '10px';
+	headerDiv.style.paddingRight = '10px';
+	headerDiv.style.boxSizing = 'border-box';
 
-    const backBtn = document.createElement('button');
-    backBtn.className = 'ybrpg-btn';
-    backBtn.style.width = 'auto';
-    backBtn.style.padding = '5px 15px';
-    backBtn.textContent = '← 返回';
-    backBtn.onclick = () => {
-        renderDungeonView(container, null); // 返回主视图
-    };
-    headerDiv.appendChild(backBtn);
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-btn';
+	backBtn.style.width = 'auto';
+	backBtn.style.padding = '5px 15px';
+	backBtn.textContent = '← 返回';
+	backBtn.onclick = () => {
+		renderDungeonView(container, null); // 返回主视图
+	};
+	headerDiv.appendChild(backBtn);
 
-    // 右侧显示章节标题和难度
-    const headerTitle = document.createElement('div');
-    if(SPchapterData){
-        var chapterName = SPchapterData.name||'神秘副本';
-        var difficultyName = '秘境';
-    }
-    else {
-        var chapterName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
-        var difficultyName = DIFFICULTY_SCALE[currentDifficulty]?.name || '普通';
-    }
-    headerTitle.textContent = `${chapterName} [${difficultyName}]`;
-    headerTitle.style.color = '#ffd700';
-    headerTitle.style.fontSize = '15px';
-    headerTitle.style.whiteSpace = 'nowrap';
-    headerTitle.style.flexShrink = '0';
-    headerDiv.appendChild(headerTitle);
+	// 右侧显示章节标题和难度
+	const headerTitle = document.createElement('div');
+	if (SPchapterData) {
+		var chapterName = SPchapterData.name || '神秘副本';
+		var difficultyName = '秘境';
+	}
+	else {
+		var chapterName = chapterData.name || chapterKey.replace(/chapter/i, '章节 ').replace(/(\d+)/, '$1');
+		var difficultyName = DIFFICULTY_SCALE[currentDifficulty]?.name || '普通';
+	}
+	headerTitle.textContent = `${chapterName} [${difficultyName}]`;
+	headerTitle.style.color = '#ffd700';
+	headerTitle.style.fontSize = '15px';
+	headerTitle.style.whiteSpace = 'nowrap';
+	headerTitle.style.flexShrink = '0';
+	headerDiv.appendChild(headerTitle);
 
-    container.appendChild(headerDiv);
+	container.appendChild(headerDiv);
 
-    // 创建事件列表容器
-    const listContainer = document.createElement('div');
-    listContainer.style.display = 'flex';
-    listContainer.style.flexDirection = 'column';
-    listContainer.style.alignItems = 'center';
-    listContainer.style.gap = '10px';
-    listContainer.style.width = '100%';
-    listContainer.style.maxWidth = '400px';
-    listContainer.style.flex = '1';
-    listContainer.style.overflowY = 'auto';
-    listContainer.style.paddingBottom = '20px';
+	// 创建事件列表容器
+	const listContainer = document.createElement('div');
+	listContainer.style.display = 'flex';
+	listContainer.style.flexDirection = 'column';
+	listContainer.style.alignItems = 'center';
+	listContainer.style.gap = '10px';
+	listContainer.style.width = '100%';
+	listContainer.style.maxWidth = '400px';
+	listContainer.style.flex = '1';
+	listContainer.style.overflowY = 'auto';
+	listContainer.style.paddingBottom = '20px';
 
-    // 模拟玩家通关状态
-    const playerProgress = window.playerProgress || {};
+	// 模拟玩家通关状态
+	const playerProgress = window.playerProgress || {};
 
-    if (SPchapterData) {
-        // SPchapterData 即为当前的秘境系列数据 (如 spEvent1 或 spEvent2)
-        const procedure = SPchapterData.procedure || [];
-        const eventPack = SPchapterData.eventPack || {};
-        
-        // 如果 procedure 为空，则尝试从 eventPack 获取所有 key 并排序（假设 key 有规律）
-        let eventIds = procedure;
-        if (eventIds.length === 0 && Object.keys(eventPack).length > 0) {
-            eventIds = Object.keys(eventPack).sort();
-        }
+	if (SPchapterData) {
+		// SPchapterData 即为当前的秘境系列数据 (如 spEvent1 或 spEvent2)
+		const procedure = SPchapterData.procedure || [];
+		const eventPack = SPchapterData.eventPack || {};
 
-        // 遍历该秘境系列下的所有关卡
-        eventIds.forEach((eventId, index) => {
-            const eventData = eventPack[eventId];
-            if (!eventData) return;
+		// 如果 procedure 为空，则尝试从 eventPack 获取所有 key 并排序（假设 key 有规律）
+		let eventIds = procedure;
+		if (eventIds.length === 0 && Object.keys(eventPack).length > 0) {
+			eventIds = Object.keys(eventPack).sort();
+		}
 
-            // 1. 判断解锁状态
-            let isLocked = false;
-            let lockReason = '';
-            let isNew = false; // 【新增】标记是否为最新可挑战关卡
+		// 遍历该秘境系列下的所有关卡
+		eventIds.forEach((eventId, index) => {
+			const eventData = eventPack[eventId];
+			if (!eventData) return;
 
-            // 获取已通关列表
-            var passed = Object.keys(window.playerProgress || {});
+			// 1. 判断解锁状态
+			let isLocked = false;
+			let lockReason = '';
+			let isNew = false; // 【新增】标记是否为最新可挑战关卡
 
-            if (eventData.prev) {
-                // 有显式前置关卡
-                const prevPassed = passed && passed.includes(eventData.prev);
-                
-                if (!prevPassed) {
-                    isLocked = true;
-                    lockReason = `需先通过【${getEventName(eventData.prev)}】`;
-                } else {
-                    // 前置已通过，检查自己是否已通过
-                    if (!passed.includes(eventId)) {
-                        isNew = true; // 前置过了，自己没过，标记为新
-                    }
-                }
-            } else if (index > 0) {
-                // 没有显式 prev，隐含前置是上一关
-                const prevId = eventIds[index - 1];
-                const prevPassed = passed && passed.includes(prevId);
-                
-                if (!prevPassed) {
-                    isLocked = true;
-                    lockReason = `需先通过上一关`;
-                } else {
-                    // 前置（上一关）已过，检查自己是否已通过
-                    if (!passed.includes(eventId)) {
-                        isNew = true; // 前置过了，自己没过，标记为新
-                    }
-                }
-            } else {
-                // 第一关 (index === 0) 且无 prev
-                if (!passed.includes(eventId)) {
-                    isNew = true; // 第一关且未通过，标记为新
-                }
-            }
+			// 获取已通关列表
+			var passed = Object.keys(window.playerProgress || {});
 
-            // 2. 创建按钮
-            const levelBtn = document.createElement('button');
-            levelBtn.className = 'ybrpg-btn';
-            levelBtn.style.width = '95%';
-            levelBtn.style.marginBottom = '5px';
-            
-            // 构建显示文本
-            let btnText = `▶ ${eventData.name}`;
-            if (isNew) {
-                btnText += ' <span style="color:#ff4444;font-weight:bold;font-size:12px;">(新)</span>';
-            }
+			if (eventData.prev) {
+				// 有显式前置关卡
+				const prevPassed = passed && passed.includes(eventData.prev);
 
-            // 样式区分：锁定状态
-            if (isLocked) {
-                levelBtn.style.opacity = '0.6';
-                levelBtn.style.cursor = 'not-allowed';
-                // 锁定状态下不显示“新”，或者你可以选择显示“🔒 ... (需前置)”
-                levelBtn.innerHTML = `🔒 ${eventData.name} <span style="font-size:12px;color:#aaa;">(${lockReason})</span>`;
-            } else {
-                levelBtn.innerHTML = btnText; // 使用 innerHTML 以支持标签样式
-                // 可选：如果是Boss关或特殊关，加高亮
-                if (eventData.type === 'boss') {
-                    levelBtn.style.borderColor = '#ff4444';
-                    levelBtn.style.color = '#ff4444';
-                }
-            }
+				if (!prevPassed) {
+					isLocked = true;
+					lockReason = `需先通过【${getEventName(eventData.prev)}】`;
+				} else {
+					// 前置已通过，检查自己是否已通过
+					if (!passed.includes(eventId)) {
+						isNew = true; // 前置过了，自己没过，标记为新
+					}
+				}
+			} else if (index > 0) {
+				// 没有显式 prev，隐含前置是上一关
+				const prevId = eventIds[index - 1];
+				const prevPassed = passed && passed.includes(prevId);
 
-            // 3. 点击事件
-            levelBtn.onclick = () => {
-                if (isLocked) {
-                    toast(lockReason, 'warning');
-                    return;
-                }
-                let event = SPchapterData.eventPack[eventId];
-                let checkEventId = eventId;
-                console.log(`进入副本: ${event.name}, ID: ${checkEventId}, 难度: ${currentDifficulty}`);
-                // 保存当前选择的秘境关卡ID
-                window.selectedSecretLevel = eventId;
-                window.currentSecretEvent = eventData; // 缓存当前事件数据
-                
-                syncTreasureEquipData();
-                
-                const playerTeam = buildPlayerTeamForBattle();
-                console.log(playerTeam)
-                while (playerTeam.length < 6) {
-                    playerTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
-                }
-                const enemyTeam = (event.enemy || []).map(e => {
-                    if (!e || !e.id) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
-                    const base = characterList[e.id] || {};
-                    return {
-                        id: e.id,
-                        name: e.name || base.name || e.id,
-                        hp: e.hp ||base.hp ||0,
-                        atk: e.atk || base.atk || 0,
-                        def: e.def || base.def|| 0,
-                        spe: e.spe || base.spe|| 0,
-                        skills: e.skills||base.skills || [],
-                        buff: e.buff || [],
-                        treasures: e.treasures || [],
-                        tupoList:e.tupoList ||base.tupoList || [],
-                        tupolevel:e.tupolevel || 0,
-                        rank:e.rank || base.rank || 'conmon',
-                    };
-                });
-                console.log(enemyTeam)
-                while (enemyTeam.length < 6) {
-                    enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
-                }
-                
-                for (var i in enemyTeam) {
-                    // if (DIFFICULTY_SCALE[currentDifficulty]?.treasures?.length > 0) {
-                    //     for (var j in DIFFICULTY_SCALE[currentDifficulty].treasures) {
-                    //         enemyTeam[i].treasures.push(DIFFICULTY_SCALE[currentDifficulty].treasures[j]);
-                    //     }
-                    // }
-                    //////敌人的公式化加强
-                }
-                startBattle(playerTeam, enemyTeam, {
-                    difficulty: currentDifficulty,
-                    eventId: checkEventId,
-                    eventType: event.type || 'battle',
-                    chapterKey: chapterKey,
-                    // 【新增】传递事件配置的金币奖励
-                    goldReward: event.gold || 0, 
-                    goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
-                    onWin: () => {
+				if (!prevPassed) {
+					isLocked = true;
+					lockReason = `需先通过上一关`;
+				} else {
+					// 前置（上一关）已过，检查自己是否已通过
+					if (!passed.includes(eventId)) {
+						isNew = true; // 前置过了，自己没过，标记为新
+					}
+				}
+			} else {
+				// 第一关 (index === 0) 且无 prev
+				if (!passed.includes(eventId)) {
+					isNew = true; // 第一关且未通过，标记为新
+				}
+			}
+
+			// 2. 创建按钮
+			const levelBtn = document.createElement('button');
+			levelBtn.className = 'ybrpg-btn';
+			levelBtn.style.width = '95%';
+			levelBtn.style.marginBottom = '5px';
+
+			// 构建显示文本
+			let btnText = `▶ ${eventData.name}`;
+			if (isNew) {
+				btnText += ' <span style="color:#ff4444;font-weight:bold;font-size:12px;">(新)</span>';
+			}
+
+			// 样式区分：锁定状态
+			if (isLocked) {
+				levelBtn.style.opacity = '0.6';
+				levelBtn.style.cursor = 'not-allowed';
+				// 锁定状态下不显示“新”，或者你可以选择显示“🔒 ... (需前置)”
+				levelBtn.innerHTML = `🔒 ${eventData.name} <span style="font-size:12px;color:#aaa;">(${lockReason})</span>`;
+			} else {
+				levelBtn.innerHTML = btnText; // 使用 innerHTML 以支持标签样式
+				// 可选：如果是Boss关或特殊关，加高亮
+				if (eventData.type === 'boss') {
+					levelBtn.style.borderColor = '#ff4444';
+					levelBtn.style.color = '#ff4444';
+				}
+			}
+
+			// 3. 点击事件
+			levelBtn.onclick = () => {
+				if (isLocked) {
+					toast(lockReason, 'warning');
+					return;
+				}
+				let event = SPchapterData.eventPack[eventId];
+				let checkEventId = eventId;
+				console.log(`进入副本: ${event.name}, ID: ${checkEventId}, 难度: ${currentDifficulty}`);
+				// 保存当前选择的秘境关卡ID
+				window.selectedSecretLevel = eventId;
+				window.currentSecretEvent = eventData; // 缓存当前事件数据
+
+				syncTreasureEquipData();
+
+				const playerTeam = buildPlayerTeamForBattle();
+				console.log(playerTeam)
+				while (playerTeam.length < 6) {
+					playerTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
+				}
+				const enemyTeam = (event.enemy || []).map(e => {
+					if (!e || !e.id) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
+					const base = characterList[e.id] || {};
+					return {
+						id: e.id,
+						name: e.name || base.name || e.id,
+						hp: e.hp || base.hp || 0,
+						atk: e.atk || base.atk || 0,
+						def: e.def || base.def || 0,
+						spe: e.spe || base.spe || 0,
+						skills: e.skills || base.skills || [],
+						buff: e.buff || [],
+						treasures: e.treasures || [],
+						tupoList: e.tupoList || base.tupoList || [],
+						tupolevel: e.tupolevel || 0,
+						rank: e.rank || base.rank || 'conmon',
+					};
+				});
+				console.log(enemyTeam)
+				while (enemyTeam.length < 6) {
+					enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
+				}
+
+				for (var i in enemyTeam) {
+					// if (DIFFICULTY_SCALE[currentDifficulty]?.treasures?.length > 0) {
+					//     for (var j in DIFFICULTY_SCALE[currentDifficulty].treasures) {
+					//         enemyTeam[i].treasures.push(DIFFICULTY_SCALE[currentDifficulty].treasures[j]);
+					//     }
+					// }
+					//////敌人的公式化加强
+				}
+				startBattle(playerTeam, enemyTeam, {
+					difficulty: currentDifficulty,
+					eventId: checkEventId,
+					eventType: event.type || 'battle',
+					chapterKey: chapterKey,
+					// 【新增】传递事件配置的金币奖励
+					goldReward: event.gold || 0,
+					goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
+					onWin: () => {
 						if (!window.playerProgress) window.playerProgress = {};
 						if (!window.playerProgress[checkEventId]) {
 							window.playerProgress[checkEventId] = true;
-							
+
 							// 判断是主角突破秘境还是升阶秘境
 							if (chapterKey === 'spEvent1') {
 								// 主角升阶秘境 - 根据关卡ID提取突破等级
@@ -4477,7 +4477,7 @@ function renderChapterEventList(container, chapterKey) {
 									'sp2-5': 'legend',     // 传说试炼 -> 传说
 									'sp2-6': 'kami'        // 真神秘境 -> 神品
 								};
-								
+
 								const targetRank = rankMap[eventId];
 								if (targetRank) {
 									promoteMainCharacter(targetRank);
@@ -4488,280 +4488,280 @@ function renderChapterEventList(container, chapterKey) {
 								}
 							}
 						}
-					
-                        // 战斗胜利金币奖励
-                        // const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
-                        const isBoss = event.type === 'boss';
-                        const baseGold = event.gold||300;
-                        const goldScale = baseGold;
-                        const goldReward = Math.floor(goldScale);
-                        window.gameGold = (window.gameGold || 0) + goldReward;
-                        // 事件完成后自动存档
-                        SaveManager.autoSave();
-                        toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
-                        // 重新渲染副本视图
-                        const dungeonView = document.getElementById('dungeon-view');
-                        if (dungeonView) {
-                            hideOtherViews('dungeon-view');
-                            dungeonView.style.display = 'flex';
-                            renderDungeonView(dungeonView, chapterKey);
-                        }
-                    },
-                    onLose: () => {
-                        toast(`挑战失败: ${event.name}`, 'warning');
-                        const dungeonView = document.getElementById('dungeon-view');
-                        if (dungeonView) {
-                            hideOtherViews('dungeon-view');
-                            dungeonView.style.display = 'flex';
-                            renderDungeonView(dungeonView, chapterKey);
-                        }
-                    }
-                });
-            };
 
-            listContainer.appendChild(levelBtn);
-        });
-        container.appendChild(listContainer);
-    }
-    else{
-        // 生成该章节下的所有子剧本按钮
-        const procedure = chapterData.procedure || [];
-        // 如果 procedure 为空，则遍历 eventPack 的所有 key
-        const eventIds = procedure.length > 0 ? procedure : Object.keys(chapterData.eventPack);
-    
-        // 获取难度缩放配置
-        const scale = DIFFICULTY_SCALE[currentDifficulty] || DIFFICULTY_SCALE.normal;
-    
-        // 解锁条件检查
-        const chapterNum = parseInt(chapterKey.replace(/\D/g, '')) || 1;
-        console.log('chapterNum:', chapterNum);
-        // 高难度解锁条件：上一章通关 + 当前章通关
-        // 普通难度章节1默认解锁
-        // 噩梦章节N解锁：普通章节N-1通关 AND 普通章节N通关
-        // 地狱章节N解锁：噩梦章节N-1通关 AND 噩梦章节N通关
-        let difficultyUnlocked = true; // 普通难度默认解锁
-    
-        if (currentDifficulty === 'nightmare') {
-            // 噩梦难度：需要上一章噩梦通关 + 当前章普通通关
-            const normalLastEvent = `c${chapterNum}-10`;
-            const prevNightmareLastEvent = `c${chapterNum - 1}-10_nightmare`;
-            const prevChapterCompleted = chapterNum === 1 || !!window.playerProgress?.[prevNightmareLastEvent];
-            difficultyUnlocked = prevChapterCompleted && !!window.playerProgress?.[normalLastEvent];
-        } else if (currentDifficulty === 'hell') {
-            // 地狱难度：需要上一章地狱通关 + 当前章噩梦通关
-            const nightmareLastEvent = `c${chapterNum}-10_nightmare`;
-            const prevHellLastEvent = `c${chapterNum - 1}-10_hell`;
-            const prevChapterCompleted = chapterNum === 1 || !!window.playerProgress?.[prevHellLastEvent];
-            difficultyUnlocked = prevChapterCompleted && !!window.playerProgress?.[nightmareLastEvent];
-        }
-    
-        // 第一个事件是否解锁（难度已解锁时，第一个事件才解锁）
-        let firstEventUnlocked = difficultyUnlocked;
-        let prevEventCompleted = false; // 前一个事件是否完成，初始为false
-    
-        eventIds.forEach((eventId, index) => {
-            // 根据难度获取事件数据
-            let event = chapterData.eventPack[eventId];
-    
-            // 如果是噩梦/地狱难度，尝试获取对应难度的事件
-            if (currentDifficulty !== 'normal') {
-                const diffEventId = eventId + '_' + currentDifficulty;
-                if (chapterData.eventPack[diffEventId]) {
-                    event = chapterData.eventPack[diffEventId];
-                } else {
-                    // 如果没有噩梦/地狱难度的事件，则使用普通难度事件但应用缩放
-                    // 克隆事件以避免修改原始数据
-                    event = JSON.parse(JSON.stringify(chapterData.eventPack[eventId]));
-                    // 应用难度缩放
-                    event.enemy = event.enemy.map(e => {
-                        if (e && e.id) {
-                            return {
-                                ...e,
-                                hp: Math.floor(e.hp * scale.hp),
-                                atk: Math.floor(e.atk * scale.atk),
-                                def: Math.floor(e.def * scale.def)
-                            };
-                        }
-                        return e;
-                    });
-                }
-            }
-    
-            if (!event) return;
-    
-            // 如果难度未解锁，则隐藏所有事件
-            if (!difficultyUnlocked) {
-                return; // 难度未解锁，隐藏所有事件
-            }
-    
-            // 所有难度：事件需要逐个解锁才能显示
-            let canShow = index === 0 || prevEventCompleted;
-    
-            if (!canShow) {
-                return; // 跳过当前及后续事件
-            }
-    
-            // 高难度解锁逻辑：第一个事件难度解锁即解锁，后续根据当前难度进度
-            let isUnlocked = false;
-    
-            if (currentDifficulty === 'normal') {
-                // 普通难度：根据前驱事件判断
-                const prevEventId = event.prev;
-                isUnlocked = !prevEventId || !!playerProgress[prevEventId];
-            } else {
-                // 高难度：第一个事件难度解锁即解锁，后续根据前一个事件完成状态
-                if (index === 0) {
-                    isUnlocked = firstEventUnlocked;
-                } else {
-                    // 检查前一个事件在该难度下是否完成（始终使用带难度后缀的ID）
-                    const prevEventId = eventIds[index - 1] + '_' + currentDifficulty;
-                    isUnlocked = !!playerProgress[prevEventId];
-                }
-            }
-    
-            // 根据难度调整当前事件的完成状态检查
-            // 高难度下始终使用带难度后缀的ID检查进度，避免与普通难度进度混淆
-            let checkEventId = eventId;
-            if (currentDifficulty !== 'normal') {
-                checkEventId = eventId + '_' + currentDifficulty;
-            }
-            const currentEventCompleted = !!playerProgress[checkEventId];
-    
-            const levelBtn = document.createElement('button');
-            levelBtn.className = 'ybrpg-btn';
-            levelBtn.style.width = '90%';
-            levelBtn.style.fontSize = '14px';
-            levelBtn.style.padding = '8px';
-            levelBtn.textContent = `${event.name}`;
-    
-            if (!isUnlocked) {
-                levelBtn.disabled = true;
-                levelBtn.style.opacity = '0.5';
-                levelBtn.style.cursor = 'not-allowed';
-                levelBtn.textContent += ' [未解锁]';
-            } else {
-                levelBtn.onclick = () => {
-                    console.log(`进入副本: ${event.name}, ID: ${checkEventId}, 难度: ${currentDifficulty}`);
-    
-                    // 确保宝物装备数据已同步
-                    syncTreasureEquipData();
-    
-                    // 修改：使用新的辅助函数构建队伍数据
-                    const playerTeam = buildPlayerTeamForBattle();
-                    console.log(playerTeam)
-                    // 补齐6个位置
-                    while (playerTeam.length < 6) {
-                        playerTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
-                    }
-    
-                    const enemyTeam = (event.enemy || []).map(e => {
-                        if (!e || !e.id) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
-                        const base = characterList[e.id] || {};
-                        return {
-                            id: e.id,
-                            name: e.name || base.name || e.id,
-                            hp: e.hp ||base.hp ||0,
-                            atk: e.atk || base.atk || 0,
-                            def: e.def || base.def|| 0,
-                            spe: e.spe || base.spe|| 0,
-                            skills: e.skills||base.skills || [],
-                            buff: e.buff || [],
-                            treasures: e.treasures || [],
-                            rank: e.rank || base.rank || 'conmon',
-                            tupolevel: e.tupolevel || 0, 
-                            tupoList:e.tupoList ||base.tupoList || [],
-                        };
-                    });
-                    // for(k of cards.filter(c=>!upe.includes(c))){
-                    //     if(cardTrue(k).num==num-1){}
-                    // }
-                    // 补齐6个位置
-                    while (enemyTeam.length < 6) {
-                        enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [],tupolevel: 0,tupoList: [], });
-                    }
-                    for (var i in enemyTeam) {
-                        if (DIFFICULTY_SCALE[currentDifficulty]?.treasures?.length > 0) {
-                            for (var j in DIFFICULTY_SCALE[currentDifficulty].treasures) {
-                                enemyTeam[i].treasures.push(DIFFICULTY_SCALE[currentDifficulty].treasures[j]);
-                            }
-                        }
-                    }
-    
-                    // 启动战斗
-                    startBattle(playerTeam, enemyTeam, {
-                        difficulty: currentDifficulty,
-                        eventId: checkEventId,
-                        eventType: event.type || 'battle',
-                        chapterKey: chapterKey,
-                        // 【新增】传递事件配置的金币奖励
-                        goldReward: event.gold || 0, 
-                        goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
-                        onWin: () => {
-                            if (!window.playerProgress) window.playerProgress = {};
-                            if (!window.playerProgress[checkEventId]) {
-                                window.playerProgress[checkEventId] = true;
-                                levelUpMainCharacter();
-                            }
-                            // 战斗胜利金币奖励
-                            const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
-                            const isBoss = event.type === 'boss';
-                            const baseGold = event.gold||50 + enemyCount * 30;
-                            const goldScale = DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0;
-                            const goldReward = Math.floor((isBoss ? baseGold * 2 : baseGold) * goldScale);
-                            window.gameGold = (window.gameGold || 0) + goldReward;
-                            // 事件完成后自动存档
-                            SaveManager.autoSave();
-                            toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
-                            // 重新渲染副本视图
-                            const dungeonView = document.getElementById('dungeon-view');
-                            if (dungeonView) {
-                                hideOtherViews('dungeon-view');
-                                dungeonView.style.display = 'flex';
-                                renderDungeonView(dungeonView, chapterKey);
-                            }
-                        },
-                        onLose: () => {
-                            toast(`挑战失败: ${event.name}`, 'warning');
-                            const dungeonView = document.getElementById('dungeon-view');
-                            if (dungeonView) {
-                                hideOtherViews('dungeon-view');
-                                dungeonView.style.display = 'flex';
-                                renderDungeonView(dungeonView, chapterKey);
-                            }
-                        }
-                    });
-                };
-            }
-            listContainer.appendChild(levelBtn);
-    
-            // 更新 prevEventCompleted 供下一次循环使用
-            // 只有当前事件已完成，下一个事件才会显示
-            prevEventCompleted = currentEventCompleted;
-        });
-    
-        container.appendChild(listContainer);
+						// 战斗胜利金币奖励
+						// const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
+						const isBoss = event.type === 'boss';
+						const baseGold = event.gold || 300;
+						const goldScale = baseGold;
+						const goldReward = Math.floor(goldScale);
+						window.gameGold = (window.gameGold || 0) + goldReward;
+						// 事件完成后自动存档
+						SaveManager.autoSave();
+						toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
+						// 重新渲染副本视图
+						const dungeonView = document.getElementById('dungeon-view');
+						if (dungeonView) {
+							hideOtherViews('dungeon-view');
+							dungeonView.style.display = 'flex';
+							renderDungeonView(dungeonView, chapterKey);
+						}
+					},
+					onLose: () => {
+						toast(`挑战失败: ${event.name}`, 'warning');
+						const dungeonView = document.getElementById('dungeon-view');
+						if (dungeonView) {
+							hideOtherViews('dungeon-view');
+							dungeonView.style.display = 'flex';
+							renderDungeonView(dungeonView, chapterKey);
+						}
+					}
+				});
+			};
 
-    }
+			listContainer.appendChild(levelBtn);
+		});
+		container.appendChild(listContainer);
+	}
+	else {
+		// 生成该章节下的所有子剧本按钮
+		const procedure = chapterData.procedure || [];
+		// 如果 procedure 为空，则遍历 eventPack 的所有 key
+		const eventIds = procedure.length > 0 ? procedure : Object.keys(chapterData.eventPack);
+
+		// 获取难度缩放配置
+		const scale = DIFFICULTY_SCALE[currentDifficulty] || DIFFICULTY_SCALE.normal;
+
+		// 解锁条件检查
+		const chapterNum = parseInt(chapterKey.replace(/\D/g, '')) || 1;
+		console.log('chapterNum:', chapterNum);
+		// 高难度解锁条件：上一章通关 + 当前章通关
+		// 普通难度章节1默认解锁
+		// 噩梦章节N解锁：普通章节N-1通关 AND 普通章节N通关
+		// 地狱章节N解锁：噩梦章节N-1通关 AND 噩梦章节N通关
+		let difficultyUnlocked = true; // 普通难度默认解锁
+
+		if (currentDifficulty === 'nightmare') {
+			// 噩梦难度：需要上一章噩梦通关 + 当前章普通通关
+			const normalLastEvent = `c${chapterNum}-10`;
+			const prevNightmareLastEvent = `c${chapterNum - 1}-10_nightmare`;
+			const prevChapterCompleted = chapterNum === 1 || !!window.playerProgress?.[prevNightmareLastEvent];
+			difficultyUnlocked = prevChapterCompleted && !!window.playerProgress?.[normalLastEvent];
+		} else if (currentDifficulty === 'hell') {
+			// 地狱难度：需要上一章地狱通关 + 当前章噩梦通关
+			const nightmareLastEvent = `c${chapterNum}-10_nightmare`;
+			const prevHellLastEvent = `c${chapterNum - 1}-10_hell`;
+			const prevChapterCompleted = chapterNum === 1 || !!window.playerProgress?.[prevHellLastEvent];
+			difficultyUnlocked = prevChapterCompleted && !!window.playerProgress?.[nightmareLastEvent];
+		}
+
+		// 第一个事件是否解锁（难度已解锁时，第一个事件才解锁）
+		let firstEventUnlocked = difficultyUnlocked;
+		let prevEventCompleted = false; // 前一个事件是否完成，初始为false
+
+		eventIds.forEach((eventId, index) => {
+			// 根据难度获取事件数据
+			let event = chapterData.eventPack[eventId];
+
+			// 如果是噩梦/地狱难度，尝试获取对应难度的事件
+			if (currentDifficulty !== 'normal') {
+				const diffEventId = eventId + '_' + currentDifficulty;
+				if (chapterData.eventPack[diffEventId]) {
+					event = chapterData.eventPack[diffEventId];
+				} else {
+					// 如果没有噩梦/地狱难度的事件，则使用普通难度事件但应用缩放
+					// 克隆事件以避免修改原始数据
+					event = JSON.parse(JSON.stringify(chapterData.eventPack[eventId]));
+					// 应用难度缩放
+					event.enemy = event.enemy.map(e => {
+						if (e && e.id) {
+							return {
+								...e,
+								hp: Math.floor(e.hp * scale.hp),
+								atk: Math.floor(e.atk * scale.atk),
+								def: Math.floor(e.def * scale.def)
+							};
+						}
+						return e;
+					});
+				}
+			}
+
+			if (!event) return;
+
+			// 如果难度未解锁，则隐藏所有事件
+			if (!difficultyUnlocked) {
+				return; // 难度未解锁，隐藏所有事件
+			}
+
+			// 所有难度：事件需要逐个解锁才能显示
+			let canShow = index === 0 || prevEventCompleted;
+
+			if (!canShow) {
+				return; // 跳过当前及后续事件
+			}
+
+			// 高难度解锁逻辑：第一个事件难度解锁即解锁，后续根据当前难度进度
+			let isUnlocked = false;
+
+			if (currentDifficulty === 'normal') {
+				// 普通难度：根据前驱事件判断
+				const prevEventId = event.prev;
+				isUnlocked = !prevEventId || !!playerProgress[prevEventId];
+			} else {
+				// 高难度：第一个事件难度解锁即解锁，后续根据前一个事件完成状态
+				if (index === 0) {
+					isUnlocked = firstEventUnlocked;
+				} else {
+					// 检查前一个事件在该难度下是否完成（始终使用带难度后缀的ID）
+					const prevEventId = eventIds[index - 1] + '_' + currentDifficulty;
+					isUnlocked = !!playerProgress[prevEventId];
+				}
+			}
+
+			// 根据难度调整当前事件的完成状态检查
+			// 高难度下始终使用带难度后缀的ID检查进度，避免与普通难度进度混淆
+			let checkEventId = eventId;
+			if (currentDifficulty !== 'normal') {
+				checkEventId = eventId + '_' + currentDifficulty;
+			}
+			const currentEventCompleted = !!playerProgress[checkEventId];
+
+			const levelBtn = document.createElement('button');
+			levelBtn.className = 'ybrpg-btn';
+			levelBtn.style.width = '90%';
+			levelBtn.style.fontSize = '14px';
+			levelBtn.style.padding = '8px';
+			levelBtn.textContent = `${event.name}`;
+
+			if (!isUnlocked) {
+				levelBtn.disabled = true;
+				levelBtn.style.opacity = '0.5';
+				levelBtn.style.cursor = 'not-allowed';
+				levelBtn.textContent += ' [未解锁]';
+			} else {
+				levelBtn.onclick = () => {
+					console.log(`进入副本: ${event.name}, ID: ${checkEventId}, 难度: ${currentDifficulty}`);
+
+					// 确保宝物装备数据已同步
+					syncTreasureEquipData();
+
+					// 修改：使用新的辅助函数构建队伍数据
+					const playerTeam = buildPlayerTeamForBattle();
+					console.log(playerTeam)
+					// 补齐6个位置
+					while (playerTeam.length < 6) {
+						playerTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
+					}
+
+					const enemyTeam = (event.enemy || []).map(e => {
+						if (!e || !e.id) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
+						const base = characterList[e.id] || {};
+						return {
+							id: e.id,
+							name: e.name || base.name || e.id,
+							hp: e.hp || base.hp || 0,
+							atk: e.atk || base.atk || 0,
+							def: e.def || base.def || 0,
+							spe: e.spe || base.spe || 0,
+							skills: e.skills || base.skills || [],
+							buff: e.buff || [],
+							treasures: e.treasures || [],
+							rank: e.rank || base.rank || 'conmon',
+							tupolevel: e.tupolevel || 0,
+							tupoList: e.tupoList || base.tupoList || [],
+						};
+					});
+					// for(k of cards.filter(c=>!upe.includes(c))){
+					//     if(cardTrue(k).num==num-1){}
+					// }
+					// 补齐6个位置
+					while (enemyTeam.length < 6) {
+						enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], tupolevel: 0, tupoList: [], });
+					}
+					for (var i in enemyTeam) {
+						if (DIFFICULTY_SCALE[currentDifficulty]?.treasures?.length > 0) {
+							for (var j in DIFFICULTY_SCALE[currentDifficulty].treasures) {
+								enemyTeam[i].treasures.push(DIFFICULTY_SCALE[currentDifficulty].treasures[j]);
+							}
+						}
+					}
+
+					// 启动战斗
+					startBattle(playerTeam, enemyTeam, {
+						difficulty: currentDifficulty,
+						eventId: checkEventId,
+						eventType: event.type || 'battle',
+						chapterKey: chapterKey,
+						// 【新增】传递事件配置的金币奖励
+						goldReward: event.gold || 0,
+						goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
+						onWin: () => {
+							if (!window.playerProgress) window.playerProgress = {};
+							if (!window.playerProgress[checkEventId]) {
+								window.playerProgress[checkEventId] = true;
+								levelUpMainCharacter();
+							}
+							// 战斗胜利金币奖励
+							const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
+							const isBoss = event.type === 'boss';
+							const baseGold = event.gold || 50 + enemyCount * 30;
+							const goldScale = DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0;
+							const goldReward = Math.floor((isBoss ? baseGold * 2 : baseGold) * goldScale);
+							window.gameGold = (window.gameGold || 0) + goldReward;
+							// 事件完成后自动存档
+							SaveManager.autoSave();
+							toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
+							// 重新渲染副本视图
+							const dungeonView = document.getElementById('dungeon-view');
+							if (dungeonView) {
+								hideOtherViews('dungeon-view');
+								dungeonView.style.display = 'flex';
+								renderDungeonView(dungeonView, chapterKey);
+							}
+						},
+						onLose: () => {
+							toast(`挑战失败: ${event.name}`, 'warning');
+							const dungeonView = document.getElementById('dungeon-view');
+							if (dungeonView) {
+								hideOtherViews('dungeon-view');
+								dungeonView.style.display = 'flex';
+								renderDungeonView(dungeonView, chapterKey);
+							}
+						}
+					});
+				};
+			}
+			listContainer.appendChild(levelBtn);
+
+			// 更新 prevEventCompleted 供下一次循环使用
+			// 只有当前事件已完成，下一个事件才会显示
+			prevEventCompleted = currentEventCompleted;
+		});
+
+		container.appendChild(listContainer);
+
+	}
 }
 // 辅助函数：根据ID获取关卡名称（用于提示）
 function getEventName(id) {
-    // 在 SPeventList 中查找
-    for (const key in SPeventList) {
-        const pack = SPeventList[key].eventPack;
-        if (pack && pack[id]) {
-            return pack[id].name;
-        }
-    }
-    // 如果在主线的 eventList 中查找（如果 prev 跨了主线）
-    if (window.eventList) {
-        for (const key in window.eventList) {
-            const pack = window.eventList[key].eventPack;
-            if (pack && pack[id]) {
-                return pack[id].name;
-            }
-        }
-    }
-    return id;
+	// 在 SPeventList 中查找
+	for (const key in SPeventList) {
+		const pack = SPeventList[key].eventPack;
+		if (pack && pack[id]) {
+			return pack[id].name;
+		}
+	}
+	// 如果在主线的 eventList 中查找（如果 prev 跨了主线）
+	if (window.eventList) {
+		for (const key in window.eventList) {
+			const pack = window.eventList[key].eventPack;
+			if (pack && pack[id]) {
+				return pack[id].name;
+			}
+		}
+	}
+	return id;
 }
 
 // 新增: 渲染商店视图
@@ -4772,124 +4772,124 @@ function getEventName(id) {
  * 获取角色品质对应价格
  */
 function getCharPrice(rank) {
-    return { legend: 500, epic: 300 }[rank] || 200;
+	return { legend: 500, epic: 300 }[rank] || 200;
 }
 
 /**
  * 获取角色品质颜色
  */
 function getRankColor(rank) {
-    return { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' }[rank] || '#888';
+	return { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' }[rank] || '#888';
 }
 
 /**
  * 获取角色品质中文名
  */
 function getRankName(rank) {
-    return { legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' }[rank] || '精品';
+	return { legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' }[rank] || '精品';
 }
 
 /**
  * 刷新商店物品
  */
 function refreshShopItems(type = 'normal') {
-    if (!window.shopData) window.shopData = { items: [], spitems: [], refreshCost: 50 };
-    const items = [];
-    const spitems = [];
-    const allTreasureIds = Object.keys(gameData.getTreasureList());
-    const selectedTreasures = allTreasureIds.sort(() => 0.5 - Math.random()).slice(0, 4);
-    const allCharIds = Object.keys(characterList || {}).filter(cid => characterList[cid].group != 'zhujue');
-    const selectedChars = allCharIds.sort(() => 0.5 - Math.random()).slice(0, 4);
-    const allIteams = selectedTreasures.concat(selectedChars);
-    const allProducts = [...allIteams].sort(() => Math.random() - 0.5);
-    if (type == 'normal') {
-        for (let i = 0; i < Math.min(8, allProducts.length); i++) {
-            const id = allProducts[i];
-            if (id in characterList) {
-                const cData = characterList[id];
-                if (cData) {
-                    items.push({
-                        type: 'character',
-                        id: id,
-                        name: cData.name,
-                        desc: `${getRankName(cData.rank)} | HP:${cData.hp} ATK:${cData.atk} DEF:${cData.def}`,
-                        price: getCharPrice(cData.rank),
-                        sold: false,
-                        number: 1,
-                        rank: cData.rank,
-                        icon: `./image/character/${id}.jpg`,
-                    });
-                }
-            }
-            else if (id in gameData.getTreasureList()) {
-                const tData = gameData.getTreasureList()[id];
-                if (tData) {
-                    items.push({
-                        type: 'treasure',
-                        id: id,
-                        name: tData.name,
-                        desc: tData.desc,
-                        price: tData.price || 200,
-                        sold: false,
-                        number: 1,
-                        icon: tData.icon || `./image/equip/${id}.png`,
-                    })
-                }
-            }
-        }
-        window.shopData.items = items;
-        window.shopData.refreshCost = 50;
-        return items;
-    }
-    else {
-        for (let i = 0; i < Math.min(8, allProducts.length); i++) {
-            const id = allProducts[i];
-            if (id in characterList) {
-                const cData = characterList[id];
-                if (cData) {
-                    var beilv = Math.floor(Math.random() * 4) + 2;
-                    spitems.push({
-                        type: 'character',
-                        id: id,
-                        name: cData.name,
-                        desc: `${getRankName(cData.rank)} | HP:${cData.hp} ATK:${cData.atk} DEF:${cData.def}`,
-                        price: getCharPrice(cData.rank) * beilv,
-                        sold: false,
-                        number: beilv,
-                        rank: cData.rank,
-                        icon: `./image/character/${id}.jpg`,
-                    });
-                }
-            }
-            else if (id in gameData.getTreasureList()) {
-                const tData = gameData.getTreasureList()[id];
-                if (tData) {
-                    var beilv = Math.floor(Math.random() * 4) + 2;
-                    spitems.push({
-                        type: 'treasure',
-                        id: id,
-                        name: tData.name,
-                        desc: tData.desc,
-                        price: (tData.price || 200) * beilv,
-                        sold: false,
-                        number: beilv,
-                        icon: tData.icon || `./image/equip/${id}.png`,
-                    })
-                }
-            }
-        }
-        window.shopData.spitems = spitems;
-        window.shopData.refreshCost = 50;
-        return spitems;
-    }
+	if (!window.shopData) window.shopData = { items: [], spitems: [], refreshCost: 50 };
+	const items = [];
+	const spitems = [];
+	const allTreasureIds = Object.keys(gameData.getTreasureList());
+	const selectedTreasures = allTreasureIds.sort(() => 0.5 - Math.random()).slice(0, 4);
+	const allCharIds = Object.keys(characterList || {}).filter(cid => characterList[cid].group != 'zhujue');
+	const selectedChars = allCharIds.sort(() => 0.5 - Math.random()).slice(0, 4);
+	const allIteams = selectedTreasures.concat(selectedChars);
+	const allProducts = [...allIteams].sort(() => Math.random() - 0.5);
+	if (type == 'normal') {
+		for (let i = 0; i < Math.min(8, allProducts.length); i++) {
+			const id = allProducts[i];
+			if (id in characterList) {
+				const cData = characterList[id];
+				if (cData) {
+					items.push({
+						type: 'character',
+						id: id,
+						name: cData.name,
+						desc: `${getRankName(cData.rank)} | HP:${cData.hp} ATK:${cData.atk} DEF:${cData.def}`,
+						price: getCharPrice(cData.rank),
+						sold: false,
+						number: 1,
+						rank: cData.rank,
+						icon: `./image/character/${id}.jpg`,
+					});
+				}
+			}
+			else if (id in gameData.getTreasureList()) {
+				const tData = gameData.getTreasureList()[id];
+				if (tData) {
+					items.push({
+						type: 'treasure',
+						id: id,
+						name: tData.name,
+						desc: tData.desc,
+						price: tData.price || 200,
+						sold: false,
+						number: 1,
+						icon: tData.icon || `./image/equip/${id}.png`,
+					})
+				}
+			}
+		}
+		window.shopData.items = items;
+		window.shopData.refreshCost = 50;
+		return items;
+	}
+	else {
+		for (let i = 0; i < Math.min(8, allProducts.length); i++) {
+			const id = allProducts[i];
+			if (id in characterList) {
+				const cData = characterList[id];
+				if (cData) {
+					var beilv = Math.floor(Math.random() * 4) + 2;
+					spitems.push({
+						type: 'character',
+						id: id,
+						name: cData.name,
+						desc: `${getRankName(cData.rank)} | HP:${cData.hp} ATK:${cData.atk} DEF:${cData.def}`,
+						price: getCharPrice(cData.rank) * beilv,
+						sold: false,
+						number: beilv,
+						rank: cData.rank,
+						icon: `./image/character/${id}.jpg`,
+					});
+				}
+			}
+			else if (id in gameData.getTreasureList()) {
+				const tData = gameData.getTreasureList()[id];
+				if (tData) {
+					var beilv = Math.floor(Math.random() * 4) + 2;
+					spitems.push({
+						type: 'treasure',
+						id: id,
+						name: tData.name,
+						desc: tData.desc,
+						price: (tData.price || 200) * beilv,
+						sold: false,
+						number: beilv,
+						icon: tData.icon || `./image/equip/${id}.png`,
+					})
+				}
+			}
+		}
+		window.shopData.spitems = spitems;
+		window.shopData.refreshCost = 50;
+		return spitems;
+	}
 }
 
 // 显示物品/角色详情弹窗
 function showItemDetail(item) {
-    // 创建遮罩层
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-detail-overlay';
-    overlay.style.cssText = `
+	// 创建遮罩层
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-detail-overlay';
+	overlay.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
@@ -4902,9 +4902,9 @@ function showItemDetail(item) {
         z-index: 1000;
     `;
 
-    // 创建详情卡片
-    const card = document.createElement('div');
-    card.style.cssText = `
+	// 创建详情卡片
+	const card = document.createElement('div');
+	card.style.cssText = `
         background: #2a2a2a;
         border: 2px solid #555;
         border-radius: 12px;
@@ -4914,13 +4914,13 @@ function showItemDetail(item) {
         color: #fff;
     `;
 
-    let content = '';
+	let content = '';
 
-    if (item.type === 'character') {
-        // 角色详情
-        const charData = characterList[item.id] || {};
-        const rankColor = getRankColor(item.rank) || '#fff';
-        content = `
+	if (item.type === 'character') {
+		// 角色详情
+		const charData = characterList[item.id] || {};
+		const rankColor = getRankColor(item.rank) || '#fff';
+		content = `
             <div style="text-align:center;margin-bottom:15px;">
                 <div style="width:80px;height:80px;margin:0 auto;border:3px solid ${rankColor};border-radius:8px;overflow:hidden;background:#444;">
                     ${item.icon ? `<img src="${item.icon}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='?'">` : '<span style="display:flex;align-items:center;justify-content:center;height:100%;font-size:30px;">?</span>'}
@@ -4948,9 +4948,9 @@ function showItemDetail(item) {
                 ${item.desc ? `<div style="margin-top:10px;padding:8px;background:#333;border-radius:6px;font-size:12px;color:#ccc;">${item.desc}</div>` : ''}
             </div>
         `;
-    } else {
-        // 宝物详情
-        content = `
+	} else {
+		// 宝物详情
+		content = `
             <div style="text-align:center;margin-bottom:15px;">
                 <div style="width:80px;height:80px;margin:0 auto;border:3px solid #888;border-radius:8px;overflow:hidden;background:#444;">
                     ${item.icon ? `<img src="${item.icon}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='?'">` : '<span style="display:flex;align-items:center;justify-content:center;height:100%;font-size:30px;">?</span>'}
@@ -4959,14 +4959,14 @@ function showItemDetail(item) {
             </div>
             ${item.desc ? `<div style="padding:8px;background:#333;border-radius:6px;font-size:14px;color:#ccc;line-height:1.6;">${item.desc}</div>` : '<div style="color:#888;text-align:center;">暂无描述</div>'}
         `;
-    }
+	}
 
-    card.innerHTML = content;
+	card.innerHTML = content;
 
-    // 关闭按钮
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = '关闭';
-    closeBtn.style.cssText = `
+	// 关闭按钮
+	const closeBtn = document.createElement('button');
+	closeBtn.textContent = '关闭';
+	closeBtn.style.cssText = `
         width: 100%;
         margin-top: 15px;
         padding: 10px;
@@ -4977,19 +4977,19 @@ function showItemDetail(item) {
         cursor: pointer;
         font-size: 14px;
     `;
-    closeBtn.onmouseover = () => closeBtn.style.background = '#666';
-    closeBtn.onmouseout = () => closeBtn.style.background = '#555';
-    closeBtn.onclick = () => overlay.remove();
+	closeBtn.onmouseover = () => closeBtn.style.background = '#666';
+	closeBtn.onmouseout = () => closeBtn.style.background = '#555';
+	closeBtn.onclick = () => overlay.remove();
 
-    card.appendChild(closeBtn);
-    overlay.appendChild(card);
+	card.appendChild(closeBtn);
+	overlay.appendChild(card);
 
-    // 点击遮罩关闭
-    overlay.onclick = (e) => {
-        if (e.target === overlay) overlay.remove();
-    };
+	// 点击遮罩关闭
+	overlay.onclick = (e) => {
+		if (e.target === overlay) overlay.remove();
+	};
 
-    document.body.appendChild(overlay);
+	document.body.appendChild(overlay);
 }
 
 // 获取品质颜色（与图鉴一致）
@@ -5007,339 +5007,339 @@ function showItemDetail(item) {
 
 // 获取品质文本
 function getRankText(rank) {
-    const texts = {
-        'junk': '废柴',
-        'common': '精品',
-        'rare': '稀有',
-        'epicfake': '伪史诗',
-        'epic': '史诗',
-        'legend': '传说',
-        'kami': '神品',
-    };
-    return texts[rank] || rank || '精品';
+	const texts = {
+		'junk': '废柴',
+		'common': '精品',
+		'rare': '稀有',
+		'epicfake': '伪史诗',
+		'epic': '史诗',
+		'legend': '传说',
+		'kami': '神品',
+	};
+	return texts[rank] || rank || '精品';
 }
 
 function renderShopView(container) {
-    // 清空容器以防重复渲染
-    container.innerHTML = '';
+	// 清空容器以防重复渲染
+	container.innerHTML = '';
 
-    // 金币显示
-    const goldBar = document.createElement('div');
-    goldBar.className = 'shop-gold-bar';
-    goldBar.innerHTML = `<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${window.gameGold || 0}</span> 金币`;
-    container.appendChild(goldBar);
+	// 金币显示
+	const goldBar = document.createElement('div');
+	goldBar.className = 'shop-gold-bar';
+	goldBar.innerHTML = `<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${window.gameGold || 0}</span> 金币`;
+	container.appendChild(goldBar);
 
-    // 新增: 创建子按钮容器 (普通商店, 高级商店)
-    const tabsContainer = document.createElement('div');
-    tabsContainer.className = 'shop-tabs-container';
+	// 新增: 创建子按钮容器 (普通商店, 高级商店)
+	const tabsContainer = document.createElement('div');
+	tabsContainer.className = 'shop-tabs-container';
 
-    // 获取当前状态，如果未初始化则默认为普通商店
-    if (!window.shopMode) window.shopMode = 'normal';
+	// 获取当前状态，如果未初始化则默认为普通商店
+	if (!window.shopMode) window.shopMode = 'normal';
 
-    const btnNormal = document.createElement('button');
-    btnNormal.className = 'shop-sub-btn' + (window.shopMode === 'normal' ? ' active' : '');
-    btnNormal.textContent = '普通商店';
-    btnNormal.onclick = () => {
-        window.shopMode = 'normal';
-        renderShopView(container);
-    };
+	const btnNormal = document.createElement('button');
+	btnNormal.className = 'shop-sub-btn' + (window.shopMode === 'normal' ? ' active' : '');
+	btnNormal.textContent = '普通商店';
+	btnNormal.onclick = () => {
+		window.shopMode = 'normal';
+		renderShopView(container);
+	};
 
-    const btnAdvanced = document.createElement('button');
-    btnAdvanced.className = 'shop-sub-btn' + (window.shopMode === 'advanced' ? ' active' : '');
-    btnAdvanced.textContent = '高级商店';
-    btnAdvanced.onclick = () => {
-        window.shopMode = 'advanced';
-        renderShopView(container);
-    };
+	const btnAdvanced = document.createElement('button');
+	btnAdvanced.className = 'shop-sub-btn' + (window.shopMode === 'advanced' ? ' active' : '');
+	btnAdvanced.textContent = '高级商店';
+	btnAdvanced.onclick = () => {
+		window.shopMode = 'advanced';
+		renderShopView(container);
+	};
 
-    tabsContainer.appendChild(btnNormal);
-    tabsContainer.appendChild(btnAdvanced);
-    container.appendChild(tabsContainer);
+	tabsContainer.appendChild(btnNormal);
+	tabsContainer.appendChild(btnAdvanced);
+	container.appendChild(tabsContainer);
 
-    // 确保商店数据存在
-    // if (!window.shopData || !window.shopData.items || window.shopData.items.length === 0) {
-    //     refreshShopItems(window.shopMode);
-    // }
-    if ((!window.shopData || (window.shopMode === 'normal' && !window.shopData.items) || (window.shopMode === 'advanced' && !window.shopData.items))) {
-        refreshShopItems(window.shopMode);
-    }
+	// 确保商店数据存在
+	// if (!window.shopData || !window.shopData.items || window.shopData.items.length === 0) {
+	//     refreshShopItems(window.shopMode);
+	// }
+	if ((!window.shopData || (window.shopMode === 'normal' && !window.shopData.items) || (window.shopMode === 'advanced' && !window.shopData.items))) {
+		refreshShopItems(window.shopMode);
+	}
 
-    // 普通商店显示宝物，高级商店显示角色
-    const items = window.shopData[window.shopMode == 'normal' ? 'items' : 'spitems']
-    console.log('items', items)
+	// 普通商店显示宝物，高级商店显示角色
+	const items = window.shopData[window.shopMode == 'normal' ? 'items' : 'spitems']
+	console.log('items', items)
 
-    //创建网格容器
-    const gridDiv = document.createElement('div');
-    gridDiv.className = 'shop-grid';
+	//创建网格容器
+	const gridDiv = document.createElement('div');
+	gridDiv.className = 'shop-grid';
 
-    // 生成商品 (2列 x 4行，共8个位置)
-    const totalItems = 8;
-    for (let i = 0; i < totalItems; i++) {
-        const item = items[i] || null;
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'shop-item' + (item && item.sold ? ' sold-out' : '');
+	// 生成商品 (2列 x 4行，共8个位置)
+	const totalItems = 8;
+	for (let i = 0; i < totalItems; i++) {
+		const item = items[i] || null;
+		const itemDiv = document.createElement('div');
+		itemDiv.className = 'shop-item' + (item && item.sold ? ' sold-out' : '');
 
-        // 左侧：图片占位 (70x70)
-        const imgPlaceholder = document.createElement('div');
-        imgPlaceholder.className = 'shop-item-img' + (item && item.type === 'character' ? ' character-icon' : '');
-        if (item && !item.sold && item.icon) {
-            const img = document.createElement('img');
-            img.src = item.icon;
-            img.onerror = function () {
-                this.style.display = 'none';
-                imgPlaceholder.textContent = item.type === 'treasure' ? '宝' : '将';
-                imgPlaceholder.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:20px;color:#888;';
-            };
-            imgPlaceholder.appendChild(img);
-        } else {
-            imgPlaceholder.textContent = item ? (item.sold ? '—' : (item.type === 'treasure' ? '宝' : '将')) : '';
-        }
-        // 点击商品图标弹出详情
-        if (item && !item.sold) {
-            imgPlaceholder.style.cursor = 'pointer';
-            imgPlaceholder.onclick = () => {
-                if (item.type === 'character') {
-                    const cData = characterList[item.id];
-                    if (cData) {
-                        // 【关键修改】不要直接传 cData，而是构建一个包含编译后属性的对象
-                        const stats = compileCharacterStats(cData);
-                        const displayData = {
-                            id: item.id,
-                            name: cData.name,
-                            rank: cData.rank,
-                            template: cData.template,
-                            tip: cData.tip,
-                            skills: cData.skills,
-                            group: cData.group,
-                            ...cData,
-                            hp: stats.hp,
-                            atk: stats.atk,
-                            def: stats.def,
-                            spe: stats.spe,
-                            level: 1 // 商店购买的通常是1级
-                        };
-                        showCharDetail(null, displayData);
-                    }
-                } else {
-                    showItemDetail(item);
-                }
-            };
-        }
-        itemDiv.appendChild(imgPlaceholder);
+		// 左侧：图片占位 (70x70)
+		const imgPlaceholder = document.createElement('div');
+		imgPlaceholder.className = 'shop-item-img' + (item && item.type === 'character' ? ' character-icon' : '');
+		if (item && !item.sold && item.icon) {
+			const img = document.createElement('img');
+			img.src = item.icon;
+			img.onerror = function () {
+				this.style.display = 'none';
+				imgPlaceholder.textContent = item.type === 'treasure' ? '宝' : '将';
+				imgPlaceholder.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:20px;color:#888;';
+			};
+			imgPlaceholder.appendChild(img);
+		} else {
+			imgPlaceholder.textContent = item ? (item.sold ? '—' : (item.type === 'treasure' ? '宝' : '将')) : '';
+		}
+		// 点击商品图标弹出详情
+		if (item && !item.sold) {
+			imgPlaceholder.style.cursor = 'pointer';
+			imgPlaceholder.onclick = () => {
+				if (item.type === 'character') {
+					const cData = characterList[item.id];
+					if (cData) {
+						// 【关键修改】不要直接传 cData，而是构建一个包含编译后属性的对象
+						const stats = compileCharacterStats(cData);
+						const displayData = {
+							id: item.id,
+							name: cData.name,
+							rank: cData.rank,
+							template: cData.template,
+							tip: cData.tip,
+							skills: cData.skills,
+							group: cData.group,
+							...cData,
+							hp: stats.hp,
+							atk: stats.atk,
+							def: stats.def,
+							spe: stats.spe,
+							level: 1 // 商店购买的通常是1级
+						};
+						showCharDetail(null, displayData);
+					}
+				} else {
+					showItemDetail(item);
+				}
+			};
+		}
+		itemDiv.appendChild(imgPlaceholder);
 
-        // 右侧：信息容器
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'shop-item-info';
+		// 右侧：信息容器
+		const infoDiv = document.createElement('div');
+		infoDiv.className = 'shop-item-info';
 
-        // 右侧上半部分：名称和数量
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'shop-item-header';
+		// 右侧上半部分：名称和数量
+		const headerDiv = document.createElement('div');
+		headerDiv.className = 'shop-item-header';
 
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'shop-item-name';
-        if (item && item.type === 'character' && item.rank) {
-            nameDiv.style.color = getRankColor(item.rank);
-        }
-        nameDiv.textContent = item ? item.name : '空';
-        headerDiv.appendChild(nameDiv);
+		const nameDiv = document.createElement('div');
+		nameDiv.className = 'shop-item-name';
+		if (item && item.type === 'character' && item.rank) {
+			nameDiv.style.color = getRankColor(item.rank);
+		}
+		nameDiv.textContent = item ? item.name : '空';
+		headerDiv.appendChild(nameDiv);
 
-        var number = item ? item.number : 1;
-        const countDiv = document.createElement('div');
-        countDiv.className = 'shop-item-count';
-        countDiv.textContent = number ? `数量:${number}` : '';
-        headerDiv.appendChild(countDiv);
+		var number = item ? item.number : 1;
+		const countDiv = document.createElement('div');
+		countDiv.className = 'shop-item-count';
+		countDiv.textContent = number ? `数量:${number}` : '';
+		headerDiv.appendChild(countDiv);
 
-        infoDiv.appendChild(headerDiv);
+		infoDiv.appendChild(headerDiv);
 
-        // 购买按钮逻辑
-        const buyBtn = document.createElement('button');
-        buyBtn.className = 'shop-item-buy-btn';
-        buyBtn.textContent = item.price + '金';
+		// 购买按钮逻辑
+		const buyBtn = document.createElement('button');
+		buyBtn.className = 'shop-item-buy-btn';
+		buyBtn.textContent = item.price + '金';
 
-        // 【关键修复】防止重复点击或逻辑混乱
-        buyBtn.onclick = (e) => {
-            e.stopPropagation(); // 阻止事件冒泡
+		// 【关键修复】防止重复点击或逻辑混乱
+		buyBtn.onclick = (e) => {
+			e.stopPropagation(); // 阻止事件冒泡
 
-            // 1. 检查是否已售出
-            if (item.sold) {
-                toast('该商品已售出', 'warning');
-                return;
-            }
+			// 1. 检查是否已售出
+			if (item.sold) {
+				toast('该商品已售出', 'warning');
+				return;
+			}
 
-            // 2. 检查金币
-            if ((window.gameGold || 0) < item.price) {
-                toast('金币不足！', 'error');
-                return;
-            }
+			// 2. 检查金币
+			if ((window.gameGold || 0) < item.price) {
+				toast('金币不足！', 'error');
+				return;
+			}
 
-            // 3. 执行购买逻辑
-            buyevent(item)
-            // 6. 【关键】立即刷新商店界面和金币显示
-            // 先更新金币数字
+			// 3. 执行购买逻辑
+			buyevent(item)
+			// 6. 【关键】立即刷新商店界面和金币显示
+			// 先更新金币数字
 
-            // 重新渲染整个商店视图，以反映 "sold" 状态
-            // 注意：这里直接调用 renderShopView，传入当前容器
-            // 假设 container 是 renderShopView 的参数
-            renderShopView(container);
+			// 重新渲染整个商店视图，以反映 "sold" 状态
+			// 注意：这里直接调用 renderShopView，传入当前容器
+			// 假设 container 是 renderShopView 的参数
+			renderShopView(container);
 
-            // 7. 自动存档
-            if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
-                SaveManager.autoSave();
-            }
-        };
+			// 7. 自动存档
+			if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+				SaveManager.autoSave();
+			}
+		};
 
-        infoDiv.appendChild(buyBtn);
-        itemDiv.appendChild(infoDiv);
+		infoDiv.appendChild(buyBtn);
+		itemDiv.appendChild(infoDiv);
 
-        gridDiv.appendChild(itemDiv);
-    }
+		gridDiv.appendChild(itemDiv);
+	}
 
-    container.appendChild(gridDiv);
+	container.appendChild(gridDiv);
 
-    // 刷新按钮
-    const downBtns = document.createElement('div');
-    downBtns.className = 'shop-downBtns';
-    // downBtns.cssText =`
-    //     display: flex; 
-    //     gap: 10px; 
-    //     justify-content: center; 
-    //     margin-top: 10px;
-    //     min-width: 90%;
-    // `
+	// 刷新按钮
+	const downBtns = document.createElement('div');
+	downBtns.className = 'shop-downBtns';
+	// downBtns.cssText =`
+	//     display: flex; 
+	//     gap: 10px; 
+	//     justify-content: center; 
+	//     margin-top: 10px;
+	//     min-width: 90%;
+	// `
 
-    const allBuyBtn = document.createElement('button');
-    allBuyBtn.className = 'shop-refresh-btn';
+	const allBuyBtn = document.createElement('button');
+	allBuyBtn.className = 'shop-refresh-btn';
 
-    // 1. 获取当前商店模式的物品列表
-    const currentItems = window.shopData[window.shopMode === 'normal' ? 'items' : 'spitems'];
+	// 1. 获取当前商店模式的物品列表
+	const currentItems = window.shopData[window.shopMode === 'normal' ? 'items' : 'spitems'];
 
-    // 2. 筛选出未售罄的商品
-    const availableItems = currentItems.filter(item => !item.sold);
+	// 2. 筛选出未售罄的商品
+	const availableItems = currentItems.filter(item => !item.sold);
 
-    // 3. 计算总价
-    let num = 0;
-    availableItems.forEach(item => {
-        num += (item.price || 0);
-    });
+	// 3. 计算总价
+	let num = 0;
+	availableItems.forEach(item => {
+		num += (item.price || 0);
+	});
 
-    // 4. 设置按钮文本和状态
-    allBuyBtn.style.whiteSpace = 'pre-wrap';
+	// 4. 设置按钮文本和状态
+	allBuyBtn.style.whiteSpace = 'pre-wrap';
 
-    if (availableItems.length === 0) {
-        // 如果没有可购买的商品
-        allBuyBtn.textContent = '已售罄';
-        allBuyBtn.disabled = true;
-        allBuyBtn.style.opacity = '0.5';
-        allBuyBtn.style.cursor = 'not-allowed';
-    } else {
-        // 有可购买的商品
-        allBuyBtn.textContent = `一键购买\n（${num}金）`;
-        allBuyBtn.disabled = false;
-        allBuyBtn.style.opacity = '1';
-        allBuyBtn.style.cursor = 'pointer';
+	if (availableItems.length === 0) {
+		// 如果没有可购买的商品
+		allBuyBtn.textContent = '已售罄';
+		allBuyBtn.disabled = true;
+		allBuyBtn.style.opacity = '0.5';
+		allBuyBtn.style.cursor = 'not-allowed';
+	} else {
+		// 有可购买的商品
+		allBuyBtn.textContent = `一键购买\n（${num}金）`;
+		allBuyBtn.disabled = false;
+		allBuyBtn.style.opacity = '1';
+		allBuyBtn.style.cursor = 'pointer';
 
-        // 5. 绑定点击事件
-        allBuyBtn.onclick = () => {
-            // 再次检查金币（防止并发或数据变动）
-            if ((window.gameGold || 0) < num) {
-                toast('金币不足，无法购买！', 'error');
-                return;
-            }
+		// 5. 绑定点击事件
+		allBuyBtn.onclick = () => {
+			// 再次检查金币（防止并发或数据变动）
+			if ((window.gameGold || 0) < num) {
+				toast('金币不足，无法购买！', 'error');
+				return;
+			}
 
-            // 6. 执行购买逻辑 (只购买未售罄的)
-            let successCount = 0;
-            availableItems.forEach(item => {
-                // 确保调用购买函数
-                if (typeof buyevent === 'function') {
-                    buyevent(item);
-                    successCount++;
-                }
-            });
+			// 6. 执行购买逻辑 (只购买未售罄的)
+			let successCount = 0;
+			availableItems.forEach(item => {
+				// 确保调用购买函数
+				if (typeof buyevent === 'function') {
+					buyevent(item);
+					successCount++;
+				}
+			});
 
-            if (successCount > 0) {
-                toast(`成功购买 ${successCount} 件商品`, 'success');
-            }
+			if (successCount > 0) {
+				toast(`成功购买 ${successCount} 件商品`, 'success');
+			}
 
-            // 7. 刷新界面
-            renderShopView(container);
+			// 7. 刷新界面
+			renderShopView(container);
 
-            // 8. 自动存档
-            if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
-                SaveManager.autoSave();
-            }
-        };
-    }
-    downBtns.appendChild(allBuyBtn);
+			// 8. 自动存档
+			if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+				SaveManager.autoSave();
+			}
+		};
+	}
+	downBtns.appendChild(allBuyBtn);
 
-    const refreshBtn = document.createElement('button');
-    refreshBtn.className = 'shop-refresh-btn';
-    var beilv = (window.shopMode === 'advanced') ? 4 : 1;
-    const cost = (window.shopData.refreshCost || 50) * beilv;
-    refreshBtn.textContent = `刷新商品\n（${cost}金）`;
-    refreshBtn.style.whiteSpace = 'pre-wrap';
-    refreshBtn.onclick = () => {
-        if ((window.gameGold || 0) < cost) {
-            toast('金币不足，无法刷新！', 'error');
-            return;
-        }
-        window.gameGold = (window.gameGold || 0) - cost;
-        refreshShopItems(window.shopMode);
-        renderShopView(container);
-        toast('商店已刷新', 'info');
-        SaveManager.autoSave();
-    };
-    downBtns.appendChild(refreshBtn);
+	const refreshBtn = document.createElement('button');
+	refreshBtn.className = 'shop-refresh-btn';
+	var beilv = (window.shopMode === 'advanced') ? 4 : 1;
+	const cost = (window.shopData.refreshCost || 50) * beilv;
+	refreshBtn.textContent = `刷新商品\n（${cost}金）`;
+	refreshBtn.style.whiteSpace = 'pre-wrap';
+	refreshBtn.onclick = () => {
+		if ((window.gameGold || 0) < cost) {
+			toast('金币不足，无法刷新！', 'error');
+			return;
+		}
+		window.gameGold = (window.gameGold || 0) - cost;
+		refreshShopItems(window.shopMode);
+		renderShopView(container);
+		toast('商店已刷新', 'info');
+		SaveManager.autoSave();
+	};
+	downBtns.appendChild(refreshBtn);
 
-    container.appendChild(downBtns);
+	container.appendChild(downBtns);
 }
 
 function canBuy(item) {
 
 }
 function buyevent(item) {
-    if (item.type === 'character') {
-        for (var i = 0; i < (item.number || 1); i++) {
-            const baseChar = characterList[item.id];
-            if (!baseChar) {
-                toast('角色数据错误', 'error');
-                return;
-            }
+	if (item.type === 'character') {
+		for (var i = 0; i < (item.number || 1); i++) {
+			const baseChar = characterList[item.id];
+			if (!baseChar) {
+				toast('角色数据错误', 'error');
+				return;
+			}
 
-            // A. 生成唯一实例ID
-            const instanceId = generateInstanceId(item.id);
+			// A. 生成唯一实例ID
+			const instanceId = generateInstanceId(item.id);
 
-            // B. 【核心】编译属性并创建背包数据
-            const stats = compileCharacterStats(baseChar);
+			// B. 【核心】编译属性并创建背包数据
+			const stats = compileCharacterStats(baseChar);
 
-            window.charBagData[instanceId] = {
-                charId: item.id,
-                level: 1,
-                // rank: baseChar.rank,
-                // template: baseChar.template,
-                // tip: baseChar.tip,
-                // tip: baseChar.tip,
-                // ties: baseChar.ties,
-                // tupoList: baseChar.tupoList,
+			window.charBagData[instanceId] = {
+				charId: item.id,
+				level: 1,
+				// rank: baseChar.rank,
+				// template: baseChar.template,
+				// tip: baseChar.tip,
+				// tip: baseChar.tip,
+				// ties: baseChar.ties,
+				// tupoList: baseChar.tupoList,
 
-                hp: stats.hp,
-                atk: stats.atk,
-                def: stats.def,
-                spe: stats.spe,
-                currentHp: stats.hp,
-                maxHp: stats.hp
-            };
-            mergeNoOverwrite(window.charBagData[instanceId], baseChar)
+				hp: stats.hp,
+				atk: stats.atk,
+				def: stats.def,
+				spe: stats.spe,
+				currentHp: stats.hp,
+				maxHp: stats.hp
+			};
+			mergeNoOverwrite(window.charBagData[instanceId], baseChar)
 
-            // C. 添加到图鉴 (如果 gameData 支持)
-            if (typeof gameData.addToHandbook === 'function') {
-                gameData.addToHandbook(item.id);
-            }
+			// C. 添加到图鉴 (如果 gameData 支持)
+			if (typeof gameData.addToHandbook === 'function') {
+				gameData.addToHandbook(item.id);
+			}
 
-            toast(`成功招募【${baseChar.name}】！`, 'success');
+			toast(`成功招募【${baseChar.name}】！`, 'success');
 
-        }
-    }
-	
+		}
+	}
+
 	else if (item.type === 'treasure') {
 		// 新逻辑：创建宝物实例
 		const ids = addTreasureInstance(item.id, item.number || 1);
@@ -5350,114 +5350,114 @@ function buyevent(item) {
 		}
 	}
 
-    // 4. 扣除金币 (只扣一次)
-    window.gameGold -= item.price;
+	// 4. 扣除金币 (只扣一次)
+	window.gameGold -= item.price;
 
-    // 5. 标记为已售出
-    item.sold = true;
+	// 5. 标记为已售出
+	item.sold = true;
 
-    const goldDisplay = document.getElementById('shop-gold-display');
-    if (goldDisplay) {
-        goldDisplay.textContent = window.gameGold;
-    }
+	const goldDisplay = document.getElementById('shop-gold-display');
+	if (goldDisplay) {
+		goldDisplay.textContent = window.gameGold;
+	}
 }
 // 占位函数，防止报错
 
 // 新增: 封装隐藏其他视图的函数
 // 修改hideOtherViews函数，加入save-view
 function hideOtherViews(currentViewId) {
-    const views = ['main-view', 'team-view', 'bag-view', 'dungeon-view', 'shop-view', 'settings-view', 'save-view', 'battle-view'];
-    views.forEach(viewId => {
-        if (viewId !== currentViewId) {
-            const view = document.getElementById(viewId);
-            if (view) {
-                view.style.display = 'none';
-            }
-        }
-    });
+	const views = ['main-view', 'team-view', 'bag-view', 'dungeon-view', 'shop-view', 'settings-view', 'save-view', 'battle-view'];
+	views.forEach(viewId => {
+		if (viewId !== currentViewId) {
+			const view = document.getElementById(viewId);
+			if (view) {
+				view.style.display = 'none';
+			}
+		}
+	});
 }
 
 
 // 初始化事件监听
 function initEventListeners() {
-    const btnTeam = document.getElementById('btn-team');
-    const btnBag = document.getElementById('btn-bag');
-    const btnDungeon = document.getElementById('btn-dungeon');
-    const btnShop = document.getElementById('btn-shop');
-    const btnSettings = document.getElementById('btn-settings');
+	const btnTeam = document.getElementById('btn-team');
+	const btnBag = document.getElementById('btn-bag');
+	const btnDungeon = document.getElementById('btn-dungeon');
+	const btnShop = document.getElementById('btn-shop');
+	const btnSettings = document.getElementById('btn-settings');
 
-    // 添加一个全局的"返回主界面"逻辑
-    // 当从游戏内任何地方想要返回主界面时，都应该调用showMainView()
+	// 添加一个全局的"返回主界面"逻辑
+	// 当从游戏内任何地方想要返回主界面时，都应该调用showMainView()
 
-    if (btnTeam) {
-        btnTeam.addEventListener('click', () => {
-            const teamView = document.getElementById('team-view');
-            renderTeamView(teamView);
-            hideOtherViews('team-view');
-            if (teamView) teamView.style.display = 'flex';
-        });
-    }
+	if (btnTeam) {
+		btnTeam.addEventListener('click', () => {
+			const teamView = document.getElementById('team-view');
+			renderTeamView(teamView);
+			hideOtherViews('team-view');
+			if (teamView) teamView.style.display = 'flex';
+		});
+	}
 
-    if (btnBag) {
-        btnBag.addEventListener('click', () => {
-            const bagView = document.getElementById('bag-view');
-            renderBagView(bagView);
-            hideOtherViews('bag-view');
-            if (bagView) bagView.style.display = 'flex';
-        });
-    }
-    if (btnDungeon) {
-        btnDungeon.addEventListener('click', () => {
-            const dungeonView = document.getElementById('dungeon-view');
+	if (btnBag) {
+		btnBag.addEventListener('click', () => {
+			const bagView = document.getElementById('bag-view');
+			renderBagView(bagView);
+			hideOtherViews('bag-view');
+			if (bagView) bagView.style.display = 'flex';
+		});
+	}
+	if (btnDungeon) {
+		btnDungeon.addEventListener('click', () => {
+			const dungeonView = document.getElementById('dungeon-view');
 
-            // 每次点击都重新渲染，以便更新解锁状态（如果有动态变化）
-            // 或者只在第一次渲染，后续通过其他方式更新
-            if (dungeonView) {
-                renderDungeonView(dungeonView);
-            }
+			// 每次点击都重新渲染，以便更新解锁状态（如果有动态变化）
+			// 或者只在第一次渲染，后续通过其他方式更新
+			if (dungeonView) {
+				renderDungeonView(dungeonView);
+			}
 
-            // 使用封装函数隐藏其他视图
-            hideOtherViews('dungeon-view');
+			// 使用封装函数隐藏其他视图
+			hideOtherViews('dungeon-view');
 
-            // 显示当前视图
-            if (dungeonView) dungeonView.style.display = 'flex';
-        });
-    }
+			// 显示当前视图
+			if (dungeonView) dungeonView.style.display = 'flex';
+		});
+	}
 
-    // 新增: 商店按钮事件
-    if (btnShop) {
-        btnShop.addEventListener('click', () => {
-            const shopView = document.getElementById('shop-view');
+	// 新增: 商店按钮事件
+	if (btnShop) {
+		btnShop.addEventListener('click', () => {
+			const shopView = document.getElementById('shop-view');
 
-            // 每次进入商店都重新渲染，确保金币等信息是最新的
-            if (shopView) {
-                renderShopView(shopView);
-            }
+			// 每次进入商店都重新渲染，确保金币等信息是最新的
+			if (shopView) {
+				renderShopView(shopView);
+			}
 
-            // 使用封装函数隐藏其他视图
-            hideOtherViews('shop-view');
+			// 使用封装函数隐藏其他视图
+			hideOtherViews('shop-view');
 
-            // 显示当前视图
-            if (shopView) shopView.style.display = 'flex';
-        });
-    }
+			// 显示当前视图
+			if (shopView) shopView.style.display = 'flex';
+		});
+	}
 
-    if (btnSettings) {
-        btnSettings.addEventListener('click', () => {
-            const settingsView = document.getElementById('settings-view');
+	if (btnSettings) {
+		btnSettings.addEventListener('click', () => {
+			const settingsView = document.getElementById('settings-view');
 
-            // 如果设置视图已经初始化过，直接显示即可
-            if (settingsView && settingsView.children.length === 0) {
-                renderSettingsView(settingsView);
-            }
+			// 如果设置视图已经初始化过，直接显示即可
+			if (settingsView && settingsView.children.length === 0) {
+				renderSettingsView(settingsView);
+			}
 
-            // 使用封装函数隐藏其他视图
-            hideOtherViews('settings-view');
+			// 使用封装函数隐藏其他视图
+			hideOtherViews('settings-view');
 
-            // 显示当前视图
-            if (settingsView) settingsView.style.display = 'flex';
-        });
-    }
+			// 显示当前视图
+			if (settingsView) settingsView.style.display = 'flex';
+		});
+	}
 
 }
 
@@ -5469,14 +5469,14 @@ function initEventListeners() {
 // }
 // 修改DOM加载后的初始化
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-        initEventListeners();
-        // 初始显示主界面（新游戏/读取存档）
-        showMainView();
-    });
+	document.addEventListener('DOMContentLoaded', function () {
+		initEventListeners();
+		// 初始显示主界面（新游戏/读取存档）
+		showMainView();
+	});
 } else {
-    initEventListeners();
-    showMainView();
+	initEventListeners();
+	showMainView();
 }
 
 // const viewList = [
@@ -5537,100 +5537,100 @@ if (document.readyState === 'loading') {
 // }
 // 美化版showMainView函数
 function showMainView() {
-    const mainView = document.getElementById('main-view');
-    const bottomBar = document.querySelector('.ybrpg-bottom-bar');
-    const saveView = document.getElementById('save-view');
+	const mainView = document.getElementById('main-view');
+	const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+	const saveView = document.getElementById('save-view');
 
-    // 隐藏底部导航栏
-    if (bottomBar) bottomBar.style.display = 'none';
+	// 隐藏底部导航栏
+	if (bottomBar) bottomBar.style.display = 'none';
 
-    // 清空存档界面，防止下次进入时重复渲染
-    if (saveView) {
-        saveView.innerHTML = '';
-        saveView.style.display = 'none';
-    }
+	// 清空存档界面，防止下次进入时重复渲染
+	if (saveView) {
+		saveView.innerHTML = '';
+		saveView.style.display = 'none';
+	}
 
-    // 显示主界面
-    if (mainView) {
-        mainView.style.display = 'flex';
-        mainView.style.flexDirection = 'column';
-        mainView.style.alignItems = 'center';
-        mainView.style.justifyContent = 'flex-end'; // 从底部开始
+	// 显示主界面
+	if (mainView) {
+		mainView.style.display = 'flex';
+		mainView.style.flexDirection = 'column';
+		mainView.style.alignItems = 'center';
+		mainView.style.justifyContent = 'flex-end'; // 从底部开始
 
-        // 清空主界面内容
-        mainView.innerHTML = '';
+		// 清空主界面内容
+		mainView.innerHTML = '';
 
-        // 添加背景装饰
-        const backgroundDiv = document.createElement('div');
-        backgroundDiv.className = 'main-background';
-        mainView.appendChild(backgroundDiv);
+		// 添加背景装饰
+		const backgroundDiv = document.createElement('div');
+		backgroundDiv.className = 'main-background';
+		mainView.appendChild(backgroundDiv);
 
-        // 添加游戏标题
-        const titleDiv = document.createElement('div');
-        titleDiv.className = 'game-title';
-        titleDiv.textContent = '夜白旅程';
-        mainView.appendChild(titleDiv);
+		// 添加游戏标题
+		const titleDiv = document.createElement('div');
+		titleDiv.className = 'game-title';
+		titleDiv.textContent = '夜白旅程';
+		mainView.appendChild(titleDiv);
 
-        // 创建按钮容器
-        const btnContainer = document.createElement('div');
-        btnContainer.className = 'main-btn-container';
+		// 创建按钮容器
+		const btnContainer = document.createElement('div');
+		btnContainer.className = 'main-btn-container';
 
-        // 创建新游戏按钮
-        const newGameBtn = document.createElement('button');
-        newGameBtn.className = 'main-start-btn';
-        newGameBtn.textContent = '▶ 新游戏';
-        newGameBtn.onclick = () => {
-            // 初始化新游戏
-            initNewGame();
-            // 显示底部导航栏，进入游戏
-            if (bottomBar) bottomBar.style.display = 'flex';
-            // 切换到队伍视图或其他默认视图
-            const teamView = document.getElementById('team-view');
-            hideOtherViews('team-view');
-            if (teamView) teamView.style.display = 'flex';
-        };
-        btnContainer.appendChild(newGameBtn);
+		// 创建新游戏按钮
+		const newGameBtn = document.createElement('button');
+		newGameBtn.className = 'main-start-btn';
+		newGameBtn.textContent = '▶ 新游戏';
+		newGameBtn.onclick = () => {
+			// 初始化新游戏
+			initNewGame();
+			// 显示底部导航栏，进入游戏
+			if (bottomBar) bottomBar.style.display = 'flex';
+			// 切换到队伍视图或其他默认视图
+			const teamView = document.getElementById('team-view');
+			hideOtherViews('team-view');
+			if (teamView) teamView.style.display = 'flex';
+		};
+		btnContainer.appendChild(newGameBtn);
 
-        // 创建读取存档按钮
-        const loadGameBtn = document.createElement('button');
-        loadGameBtn.className = 'main-start-btn';
-        loadGameBtn.textContent = '▶ 读取存档';
-        loadGameBtn.onclick = () => {
-            // 显示存档界面（从主界面进入，允许删除）
-            showSaveView(false);
-        };
-        btnContainer.appendChild(loadGameBtn);
+		// 创建读取存档按钮
+		const loadGameBtn = document.createElement('button');
+		loadGameBtn.className = 'main-start-btn';
+		loadGameBtn.textContent = '▶ 读取存档';
+		loadGameBtn.onclick = () => {
+			// 显示存档界面（从主界面进入，允许删除）
+			showSaveView(false);
+		};
+		btnContainer.appendChild(loadGameBtn);
 
-        mainView.appendChild(btnContainer);
+		mainView.appendChild(btnContainer);
 
-        // 添加版本信息
-        const versionDiv = document.createElement('div');
-        versionDiv.style.color = '#888';
-        versionDiv.style.fontSize = '12px';
-        versionDiv.style.marginTop = '20px';
-        versionDiv.textContent = '独立版 v1.0';
-        mainView.appendChild(versionDiv);
-    }
+		// 添加版本信息
+		const versionDiv = document.createElement('div');
+		versionDiv.style.color = '#888';
+		versionDiv.style.fontSize = '12px';
+		versionDiv.style.marginTop = '20px';
+		versionDiv.textContent = '独立版 v1.0';
+		mainView.appendChild(versionDiv);
+	}
 }
 
 
 // 初始化新游戏
 function initNewGame() {
-    // 重置游戏状态
-    window.playerProgress = {};
-    window.currentTeam = [null, null, null, null, null, null];
-    window.currentDifficulty = 'normal';
-    window.shopMode = 'normal';
-    window.gameGold = 1000; // 初始金币
-    window.charBagData = {}; // 角色背包数据（等级、实际数值）
-    window.treasureEquipData = {}; // 宝物装备数据
-    window.treasureBagData = {}; // 宝物背包数据
-    window.autoBattle = false;
+	// 重置游戏状态
+	window.playerProgress = {};
+	window.currentTeam = [null, null, null, null, null, null];
+	window.currentDifficulty = 'normal';
+	window.shopMode = 'normal';
+	window.gameGold = 1000; // 初始金币
+	window.charBagData = {}; // 角色背包数据（等级、实际数值）
+	window.treasureEquipData = {}; // 宝物装备数据
+	window.treasureBagData = {}; // 宝物背包数据
+	window.autoBattle = false;
 
-    // 初始化宝物背包
-    window.ensureTreasureInventory();
+	// 初始化宝物背包
+	window.ensureTreasureInventory();
 	// 在 initNewGame 函数中，初始化队伍数据后：
-	window.initCharTreasureSlots = function() {
+	window.initCharTreasureSlots = function () {
 		window.charTreasureSlots = window.charTreasureSlots || {};
 		// 为每个有实例的角色初始化6个空槽位
 		if (window.charBagData) {
@@ -5641,161 +5641,161 @@ function initNewGame() {
 			});
 		}
 	};
-    // 开局福利：随机获得1名武将
-    const allCharIds = Object.keys(characterList);
-    const shuffledAll = [...allCharIds].sort(() => Math.random() - 0.5);
-    // const pickedAll = shuffledAll.slice(0, 1);
-    const pickedAll = ['zhujue'];
-    pickedAll.forEach(id => {
-        const base = characterList[id];
-        // 修改：生成 instanceId
-        const instanceId = generateInstanceId(id);
-        // 1. 先编译基础属性
-        const stats = compileCharacterStats(base);
+	// 开局福利：随机获得1名武将
+	const allCharIds = Object.keys(characterList);
+	const shuffledAll = [...allCharIds].sort(() => Math.random() - 0.5);
+	// const pickedAll = shuffledAll.slice(0, 1);
+	const pickedAll = ['zhujue'];
+	pickedAll.forEach(id => {
+		const base = characterList[id];
+		// 修改：生成 instanceId
+		const instanceId = generateInstanceId(id);
+		// 1. 先编译基础属性
+		const stats = compileCharacterStats(base);
 
-        window.charBagData[instanceId] = {
-            charId: id,
-            level: 1,
-            // 2. 使用编译后的属性
-            // rank: base.rank || 'common',      
-            // template: base.template || 'balanced',
-            // rank: base.rank||'rare',
-            // template: base.template||'balanced',
-            // tip: base.tip,
-            // tip: baseChar.tip,
-            // ties: baseChar.ties,
-            // tupoList: baseChar.tupoList,
+		window.charBagData[instanceId] = {
+			charId: id,
+			level: 1,
+			// 2. 使用编译后的属性
+			// rank: base.rank || 'common',      
+			// template: base.template || 'balanced',
+			// rank: base.rank||'rare',
+			// template: base.template||'balanced',
+			// tip: base.tip,
+			// tip: baseChar.tip,
+			// ties: baseChar.ties,
+			// tupoList: baseChar.tupoList,
 
-            hp: stats.hp,
-            atk: stats.atk,
-            def: stats.def,
-            spe: stats.spe,
-            // 其他字段...
-            currentHp: stats.hp, // 记得初始化当前血量
-            maxHp: stats.hp
-        };
-        mergeNoOverwrite(window.charBagData[instanceId], base)
-    });
-    syncTreasureEquipData();
+			hp: stats.hp,
+			atk: stats.atk,
+			def: stats.def,
+			spe: stats.spe,
+			// 其他字段...
+			currentHp: stats.hp, // 记得初始化当前血量
+			maxHp: stats.hp
+		};
+		mergeNoOverwrite(window.charBagData[instanceId], base)
+	});
+	syncTreasureEquipData();
 
-    // 初始化商店数据
-    window.shopData = { items: [],spitems:[], refreshCost: 50 };
+	// 初始化商店数据
+	window.shopData = { items: [], spitems: [], refreshCost: 50 };
 
-    // 初始化队伍视图
-    const teamView = document.getElementById('team-view');
-    if (teamView && teamView.children.length === 0) {
-        renderTeamView(teamView);
-    }
+	// 初始化队伍视图
+	const teamView = document.getElementById('team-view');
+	if (teamView && teamView.children.length === 0) {
+		renderTeamView(teamView);
+	}
 
-    console.log('新游戏已初始化，初始角色:', pickedAll);
-    // 假设主角的 charId 是 'ybsl_zhujue' (请替换为你实际的主角ID)
-    const mainCharId = 'zhujue';
-    // 如果背包里没有主角，先创建一个
-    if (!window.charBagData || !Object.values(window.charBagData).some(inst => inst.charId === mainCharId)) {
-        const mainInstId = generateInstanceId(mainCharId);
-        const baseChar = characterList[mainCharId];
-        if (baseChar) {
-            // 编译属性
-            const stats = compileCharacterStats(baseChar);
-            window.charBagData[mainInstId] = {
-                charId: mainCharId,
-                level: 1,
-                rank: baseChar.rank,
-                template: baseChar.template,
-                hp: stats.hp,
-                atk: stats.atk,
-                def: stats.def,
-                spe: stats.spe,
-                currentHp: stats.hp,
-                maxHp: stats.hp
-            };
-            mergeNoOverwrite(window.charBagData[mainInstId], baseChar)
-            // 【关键】将主角强制放在队伍第一位
-            window.currentTeam[0] = mainInstId;
-        }
-    } else {
-        // 如果已有主角实例，找到它并放在第一位
-        const mainInst = Object.values(window.charBagData).find(inst => inst.charId === mainCharId || inst === 'zhujue');
-        if (mainInst) {
-            // 从队伍其他位置移除（如果存在）
-            var tmain = Object.keys(window.charBagData).filter(id => window.charBagData[id].charId === mainCharId)[0];
-            window.currentTeam[0] = tmain;
-        }
-        refreshAllTeamSlots();
-        refreshShopItems('normal');
-        refreshShopItems('advanced');
+	console.log('新游戏已初始化，初始角色:', pickedAll);
+	// 假设主角的 charId 是 'ybsl_zhujue' (请替换为你实际的主角ID)
+	const mainCharId = 'zhujue';
+	// 如果背包里没有主角，先创建一个
+	if (!window.charBagData || !Object.values(window.charBagData).some(inst => inst.charId === mainCharId)) {
+		const mainInstId = generateInstanceId(mainCharId);
+		const baseChar = characterList[mainCharId];
+		if (baseChar) {
+			// 编译属性
+			const stats = compileCharacterStats(baseChar);
+			window.charBagData[mainInstId] = {
+				charId: mainCharId,
+				level: 1,
+				rank: baseChar.rank,
+				template: baseChar.template,
+				hp: stats.hp,
+				atk: stats.atk,
+				def: stats.def,
+				spe: stats.spe,
+				currentHp: stats.hp,
+				maxHp: stats.hp
+			};
+			mergeNoOverwrite(window.charBagData[mainInstId], baseChar)
+			// 【关键】将主角强制放在队伍第一位
+			window.currentTeam[0] = mainInstId;
+		}
+	} else {
+		// 如果已有主角实例，找到它并放在第一位
+		const mainInst = Object.values(window.charBagData).find(inst => inst.charId === mainCharId || inst === 'zhujue');
+		if (mainInst) {
+			// 从队伍其他位置移除（如果存在）
+			var tmain = Object.keys(window.charBagData).filter(id => window.charBagData[id].charId === mainCharId)[0];
+			window.currentTeam[0] = tmain;
+		}
+		refreshAllTeamSlots();
+		refreshShopItems('normal');
+		refreshShopItems('advanced');
 
-    }
-    // ... 保存存档等后续操作 ...
-    // SaveManager.autoSave();
+	}
+	// ... 保存存档等后续操作 ...
+	// SaveManager.autoSave();
 }
 
 // 显示存档界面
 function showSaveView(fromGame = true) {
-    const saveView = document.getElementById('save-view');
-    const mainView = document.getElementById('main-view');
+	const saveView = document.getElementById('save-view');
+	const mainView = document.getElementById('main-view');
 
-    // 渲染存档视图（每次重新渲染以适应不同入口）
-    if (saveView) {
-        renderSaveView(saveView, fromGame);
-    }
+	// 渲染存档视图（每次重新渲染以适应不同入口）
+	if (saveView) {
+		renderSaveView(saveView, fromGame);
+	}
 
-    // 隐藏其他视图
-    hideOtherViews('save-view');
+	// 隐藏其他视图
+	hideOtherViews('save-view');
 
-    // 显示存档视图
-    if (saveView) saveView.style.display = 'flex';
-    if (mainView) mainView.style.display = 'none';
+	// 显示存档视图
+	if (saveView) saveView.style.display = 'flex';
+	if (mainView) mainView.style.display = 'none';
 }
 //---------------存档
 // 存档数据管理 - 基于 GameData 类统一管理
 const SaveManager = {
-    SLOT_COUNT: gameData.SLOT_COUNT,
+	SLOT_COUNT: gameData.SLOT_COUNT,
 
-    // 获取所有手动存档（跳过索引0的自动存档）
-    getAllSaves() {
-        // 手动存档使用索引1-4，自动存档使用索引0
-        const manualSlots = [];
-        for (let i = 1; i <= this.SLOT_COUNT; i++) {
-            const key = `${gameData.STORAGE_KEY}_${i}`;
-            const savedData = localStorage.getItem(key);
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                manualSlots.push({
-                    slot: i,
-                    data: {
-                        baseInfo: data.baseInfo || {},
-                        team: data.team || {},
-                        bag: data.bag || {},
-                        dungeon: data.dungeon || {},
-                        shop: data.shop || {},
-                        handbook: data.handbook || {},
-                        saveTime: data.baseInfo?.saveTime || null,
-                        saveName: data.baseInfo?.saveName || `存档${i}`,
-                        playerProgress: window.playerProgress || {},
-                        currentTeam: window.currentTeam || [null, null, null, null, null, null],
-                        currentDifficulty: window.currentDifficulty || 'normal',
-                        shopMode: window.shopMode || 'normal',
-                        shopData: window.shopData || { items: [], refreshCost: 50 },
-                        charBagData: window.charBagData || {},
-                        treasureEquipData: window.treasureEquipData || {},
-                        treasureBagData: window.treasureBagData || {}
-                    },
-                    exists: true
-                });
-            } else {
-                manualSlots.push({
-                    slot: i,
-                    data: null,
-                    exists: false
-                });
-            }
-        }
-        return manualSlots;
-    },
+	// 获取所有手动存档（跳过索引0的自动存档）
+	getAllSaves() {
+		// 手动存档使用索引1-4，自动存档使用索引0
+		const manualSlots = [];
+		for (let i = 1; i <= this.SLOT_COUNT; i++) {
+			const key = `${gameData.STORAGE_KEY}_${i}`;
+			const savedData = localStorage.getItem(key);
+			if (savedData) {
+				const data = JSON.parse(savedData);
+				manualSlots.push({
+					slot: i,
+					data: {
+						baseInfo: data.baseInfo || {},
+						team: data.team || {},
+						bag: data.bag || {},
+						dungeon: data.dungeon || {},
+						shop: data.shop || {},
+						handbook: data.handbook || {},
+						saveTime: data.baseInfo?.saveTime || null,
+						saveName: data.baseInfo?.saveName || `存档${i}`,
+						playerProgress: window.playerProgress || {},
+						currentTeam: window.currentTeam || [null, null, null, null, null, null],
+						currentDifficulty: window.currentDifficulty || 'normal',
+						shopMode: window.shopMode || 'normal',
+						shopData: window.shopData || { items: [], refreshCost: 50 },
+						charBagData: window.charBagData || {},
+						treasureEquipData: window.treasureEquipData || {},
+						treasureBagData: window.treasureBagData || {}
+					},
+					exists: true
+				});
+			} else {
+				manualSlots.push({
+					slot: i,
+					data: null,
+					exists: false
+				});
+			}
+		}
+		return manualSlots;
+	},
 
-    // 保存到指定槽位（同步 GameData 和 window 变量）
-    saveToSlot(slot) {
+	// 保存到指定槽位（同步 GameData 和 window 变量）
+	saveToSlot(slot) {
 		// 确保 gameData.data 完整
 		if (!gameData.data || !gameData.data.team) {
 			gameData.data = gameData.getDefaultData();
@@ -5813,15 +5813,15 @@ const SaveManager = {
 		if (typeof window.ensureCharTreasureSlots === 'function') {
 			window.ensureCharTreasureSlots();
 		}
-		
+
 		// 同步到 GameData
 		gameData.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));
 		gameData.data.baseInfo.saveName = `存档${slot}`;
 		gameData.data.baseInfo.saveTime = new Date().toISOString();
-	
+
 		// 保存到 localStorage
 		gameData.save(slot);
-		
+
 		// 同时保存 window 变量（兼容性）
 		const compatData = {
 			playerProgress: window.playerProgress || {},
@@ -5831,7 +5831,7 @@ const SaveManager = {
 			shopData: window.shopData || { items: [], refreshCost: 50 },
 			gameGold: window.gameGold || 1000,
 			charTreasureSlots: window.charTreasureSlots || {},
-			
+
 			charBagData: window.charBagData || {},
 			treasureEquipData: window.treasureEquipData || {},
 			treasureBagData: window.treasureBagData || {},
@@ -5841,22 +5841,22 @@ const SaveManager = {
 			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {}))
 		};
 		localStorage.setItem(`ybrpg_save_${slot}`, JSON.stringify(compatData));
-		
+
 		console.log(`已保存到槽位${slot}`);
 		return compatData;
 	},
-	
-    // 从指定槽位读取（同步到 GameData 和 window）
-    loadFromSlot(slot) {
-        // 使用 GameData 加载（索引0留给自动存档，手动存档从索引1开始）
-        const data = gameData.load(slot);
 
-        // ========== 新增：迁移旧版宝物数据 ==========
-        migrateTreasuresToInstanceId();  // 在 window 变量恢复前迁移
-		
+	// 从指定槽位读取（同步到 GameData 和 window）
+	loadFromSlot(slot) {
+		// 使用 GameData 加载（索引0留给自动存档，手动存档从索引1开始）
+		const data = gameData.load(slot);
+
+		// ========== 新增：迁移旧版宝物数据 ==========
+		migrateTreasuresToInstanceId();  // 在 window 变量恢复前迁移
+
 		const compatKey = `ybrpg_save_${slot}`;
 		const compatData = localStorage.getItem(compatKey);
-	
+
 		if (compatData) {
 			const parsed = JSON.parse(compatData);
 			// 【新增】恢复背包Tab
@@ -5865,53 +5865,53 @@ const SaveManager = {
 			} else {
 				window.bagTab = 'char';
 			}
-            // 迁移逻辑：检查 charBagData 是否需要从 charId-key 迁移到 instanceId-key
-            let charBag = parsed.charBagData || {};
-            if (charBag && typeof charBag === 'object') {
-                const needsMigration = Object.keys(charBag).some(key => !key.includes('_') || key.split('_').length < 3);
-                if (needsMigration) {
-                    console.log('[存档加载] 检测到旧版角色数据，正在迁移...');
-                    const newCharBag = {};
-                    Object.entries(charBag).forEach(([key, val]) => {
-                        if (val.charId || characterList[key]) {
-                            const actualCharId = val.charId || key;
-                            const newInstanceId = generateInstanceId(actualCharId);
-                            newCharBag[newInstanceId] = { ...val, charId: actualCharId };
-                        } else {
-                            newCharBag[key] = val;
-                        }
-                    });
-                    charBag = newCharBag;
-                }
-            }
+			// 迁移逻辑：检查 charBagData 是否需要从 charId-key 迁移到 instanceId-key
+			let charBag = parsed.charBagData || {};
+			if (charBag && typeof charBag === 'object') {
+				const needsMigration = Object.keys(charBag).some(key => !key.includes('_') || key.split('_').length < 3);
+				if (needsMigration) {
+					console.log('[存档加载] 检测到旧版角色数据，正在迁移...');
+					const newCharBag = {};
+					Object.entries(charBag).forEach(([key, val]) => {
+						if (val.charId || characterList[key]) {
+							const actualCharId = val.charId || key;
+							const newInstanceId = generateInstanceId(actualCharId);
+							newCharBag[newInstanceId] = { ...val, charId: actualCharId };
+						} else {
+							newCharBag[key] = val;
+						}
+					});
+					charBag = newCharBag;
+				}
+			}
 
-            window.playerProgress = parsed.playerProgress || {};
-            window.currentTeam = parsed.currentTeam || [null, null, null, null, null, null];
+			window.playerProgress = parsed.playerProgress || {};
+			window.currentTeam = parsed.currentTeam || [null, null, null, null, null, null];
 
-            if (parsed.currentTeam) {
-                window.currentTeam = parsed.currentTeam.map(charId => {
-                    if (!charId) return null;
-                    const instId = Object.keys(charBag).find(k => charBag[k].charId === charId);
-                    return instId || charId;
-                });
-            }
+			if (parsed.currentTeam) {
+				window.currentTeam = parsed.currentTeam.map(charId => {
+					if (!charId) return null;
+					const instId = Object.keys(charBag).find(k => charBag[k].charId === charId);
+					return instId || charId;
+				});
+			}
 
-            window.currentDifficulty = parsed.currentDifficulty || 'normal';
-            window.shopMode = parsed.shopMode || 'normal';
-            window.shopData = parsed.shopData || { items: [], refreshCost: 50 };
-            window.gameGold = parsed.gameGold || 1000;
-            window.charBagData = charBag;
-			
+			window.currentDifficulty = parsed.currentDifficulty || 'normal';
+			window.shopMode = parsed.shopMode || 'normal';
+			window.shopData = parsed.shopData || { items: [], refreshCost: 50 };
+			window.gameGold = parsed.gameGold || 1000;
+			window.charBagData = charBag;
+
 			// window.charTreasureSlots = (data && data._charTreasureSlots) || parsed.charTreasureSlots || {};
-            window.treasureEquipData = parsed.treasureEquipData || {};
-            window.treasureBagData = parsed.treasureBagData || {};
-            window.autoBattle = parsed.autoBattle || false;
+			window.treasureEquipData = parsed.treasureEquipData || {};
+			window.treasureBagData = parsed.treasureBagData || {};
+			window.autoBattle = parsed.autoBattle || false;
 
-            // 同步 window 变量回 gameData 内存
-            gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData));
-            gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData));
-            gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData));
-			
+			// 同步 window 变量回 gameData 内存
+			gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData));
+			gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData));
+			gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData));
+
 			// ========== 在解析完所有数据后，添加这一段 ==========
 			// 恢复宝物实例化数据
 			if (parsed._treasureInventory) {
@@ -5925,8 +5925,8 @@ const SaveManager = {
 						if (!data || !data.count) return;
 						for (let i = 0; i < data.count; i++) {
 							const instanceId = window.generateTreasureInstanceId(baseId);
-							const equippedBy = (data.equippedBy && data.equippedBy.length > i) 
-								? data.equippedBy[i] 
+							const equippedBy = (data.equippedBy && data.equippedBy.length > i)
+								? data.equippedBy[i]
 								: null;
 							window.treasureInventory[instanceId] = {
 								baseId: baseId,
@@ -5942,83 +5942,83 @@ const SaveManager = {
 				window.charTreasureSlots = JSON.parse(JSON.stringify(parsed._charTreasureSlots));
 			}
 		} else if (data) {
-            // 如果只有 GameData 格式，从 GameData 恢复 window 变量
-            window.currentTeam = [...(data.team?.members || []), ...Array(6).fill(null)].slice(0, 6);
-            window.gameGold = data.bag?.gold || 1000;
-            window.charBagData = data._charBag || {};
-            window.treasureEquipData = data._treasures || {};
-            window.treasureBagData = data._treasureBag || {};
-			 // 【新增】
-			 window.bagTab = data._playerPreferences?.bagTab || 'char';
-        }
+			// 如果只有 GameData 格式，从 GameData 恢复 window 变量
+			window.currentTeam = [...(data.team?.members || []), ...Array(6).fill(null)].slice(0, 6);
+			window.gameGold = data.bag?.gold || 1000;
+			window.charBagData = data._charBag || {};
+			window.treasureEquipData = data._treasures || {};
+			window.treasureBagData = data._treasureBag || {};
+			// 【新增】
+			window.bagTab = data._playerPreferences?.bagTab || 'char';
+		}
 
-        // 确保 gameData 内存与存档数据一致
-        if (data) {
-            const defaults = gameData.getDefaultData();
-            gameData.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
-        }
-		
-        // ========== 新增：同步宝物数据到 window ==========
-        syncTreasureEquipData();
+		// 确保 gameData 内存与存档数据一致
+		if (data) {
+			const defaults = gameData.getDefaultData();
+			gameData.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
+		}
 
-        console.log(`已读取槽位${slot}的存档`);
-        return data || JSON.parse(compatData || 'null');
-    },
+		// ========== 新增：同步宝物数据到 window ==========
+		syncTreasureEquipData();
+
+		console.log(`已读取槽位${slot}的存档`);
+		return data || JSON.parse(compatData || 'null');
+	},
 
 
-    // 删除指定槽位存档
-    deleteSlot(slot) {
-        gameData.deleteSave(slot); // 索引0留给自动存档，手动存档从索引1开始
-        localStorage.removeItem(`ybrpg_save_${slot}`);
-        console.log(`已删除槽位${slot}的存档`);
-    },
+	// 删除指定槽位存档
+	deleteSlot(slot) {
+		gameData.deleteSave(slot); // 索引0留给自动存档，手动存档从索引1开始
+		localStorage.removeItem(`ybrpg_save_${slot}`);
+		console.log(`已删除槽位${slot}的存档`);
+	},
 
-    // ====== 自动存档 ======
-    AUTO_KEY: 'ybrpg_autosave',
+	// ====== 自动存档 ======
+	AUTO_KEY: 'ybrpg_autosave',
 
-    autoSave() {
-        // 确保 gameData.data 完整
-        if (!gameData.data || !gameData.data.team) {
-            gameData.data = gameData.getDefaultData();
-        }
+	autoSave() {
+		// 确保 gameData.data 完整
+		if (!gameData.data || !gameData.data.team) {
+			gameData.data = gameData.getDefaultData();
+		}
 		// 【新增】保存当前的背包Tab状态
 		if (!gameData.data._playerPreferences) {
 			gameData.data._playerPreferences = {};
 		}
 		gameData.data._playerPreferences.bagTab = window.bagTab || 'char';
 
-        // 迁移旧数据：如果索引0存的是手动存档（旧逻辑），迁移到索引1
-        const slot0Raw = localStorage.getItem(`${gameData.STORAGE_KEY}_0`);
-        if (slot0Raw) {
-            try {
-                const oldData = JSON.parse(slot0Raw);
-                if (oldData.baseInfo?.saveName && oldData.baseInfo.saveName !== '自动存档') {
-                    // 旧的手动存档，迁移到索引1（如果索引1为空）
-                    const slot1Raw = localStorage.getItem(`${gameData.STORAGE_KEY}_1`);
-                    if (!slot1Raw) {
-                        localStorage.setItem(`${gameData.STORAGE_KEY}_1`, slot0Raw);
-                        console.log('[自动存档] 已将旧手动存档从索引0迁移到索引1');
-                    }
-                }
-            } catch (e) { /* 忽略解析错误 */ }
-        }
+		// 迁移旧数据：如果索引0存的是手动存档（旧逻辑），迁移到索引1
+		const slot0Raw = localStorage.getItem(`${gameData.STORAGE_KEY}_0`);
+		if (slot0Raw) {
+			try {
+				const oldData = JSON.parse(slot0Raw);
+				if (oldData.baseInfo?.saveName && oldData.baseInfo.saveName !== '自动存档') {
+					// 旧的手动存档，迁移到索引1（如果索引1为空）
+					const slot1Raw = localStorage.getItem(`${gameData.STORAGE_KEY}_1`);
+					if (!slot1Raw) {
+						localStorage.setItem(`${gameData.STORAGE_KEY}_1`, slot0Raw);
+						console.log('[自动存档] 已将旧手动存档从索引0迁移到索引1');
+					}
+				}
+			} catch (e) { /* 忽略解析错误 */ }
+		}
 		// 确保数据最新
 		if (typeof window.ensureCharTreasureSlots === 'function') {
 			window.ensureCharTreasureSlots();
 		}
-        // 同步 GameData 数据
-        gameData.data.team.members = (window.currentTeam || []).filter(Boolean);
-        gameData.data.bag.gold = window.gameGold || 1000;
-        gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData || {}));
-        gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
-        gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
-        gameData.data.baseInfo.saveName = '自动存档';
-        gameData.data.baseInfo.saveTime = new Date().toISOString();
+		// 同步 GameData 数据
+		gameData.data.team.members = (window.currentTeam || []).filter(Boolean);
+		gameData.data.bag.gold = window.gameGold || 1000;
+		gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData || {}));
+		gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
+		gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
+		gameData.data.baseInfo.saveName = '自动存档';
+		gameData.data.baseInfo.saveTime = new Date().toISOString();
 
-        // 保存到 GameData 的专用自动存档槽位（索引0）
-        gameData.save(0);
+		// 保存到 GameData 的专用自动存档槽位（索引0）
+		gameData.save(0);
 
-        // 同时保存兼容格式
+		// 同时保存兼容格式
 		const compatData = {
 			playerProgress: window.playerProgress || {},
 			currentTeam: window.currentTeam || [null, null, null, null, null, null],
@@ -6042,31 +6042,31 @@ const SaveManager = {
 			}
 		};
 		localStorage.setItem(SaveManager.AUTO_KEY, JSON.stringify(compatData));
-        
 
-        console.log('[自动存档] 已保存');
-    },
 
-    loadAutoSave() {
-        // 直接读取 localStorage，避免 gameData.load() 覆盖内存数据
-        const key = `${gameData.STORAGE_KEY}_0`;
-        const raw = localStorage.getItem(key);
-        if (!raw) return null;
-        let data;
-        try { data = JSON.parse(raw); } catch { return null; }
+		console.log('[自动存档] 已保存');
+	},
 
-        if (data && data.baseInfo?.saveName === '自动存档') {
-            // ========== 新增：先迁移宝物数据（在恢复 window 之前） ==========
-            gameData.data = data;  // 临时置入 data，方便迁移函数读取
-            migrateTreasuresToInstanceId();
-            data = gameData.data;  // 更新后的数据
+	loadAutoSave() {
+		// 直接读取 localStorage，避免 gameData.load() 覆盖内存数据
+		const key = `${gameData.STORAGE_KEY}_0`;
+		const raw = localStorage.getItem(key);
+		if (!raw) return null;
+		let data;
+		try { data = JSON.parse(raw); } catch { return null; }
 
-            // 恢复 window 变量
-            const compatKey = SaveManager.AUTO_KEY;
-            const compatData = localStorage.getItem(compatKey);
-            if (compatData) {
+		if (data && data.baseInfo?.saveName === '自动存档') {
+			// ========== 新增：先迁移宝物数据（在恢复 window 之前） ==========
+			gameData.data = data;  // 临时置入 data，方便迁移函数读取
+			migrateTreasuresToInstanceId();
+			data = gameData.data;  // 更新后的数据
+
+			// 恢复 window 变量
+			const compatKey = SaveManager.AUTO_KEY;
+			const compatData = localStorage.getItem(compatKey);
+			if (compatData) {
 				const parsed = JSON.parse(compatData);
-				
+
 				// 【新增】恢复背包Tab
 				if (parsed.playerPreferences?.bagTab) {
 					window.bagTab = parsed.playerPreferences.bagTab;
@@ -6074,45 +6074,45 @@ const SaveManager = {
 					window.bagTab = 'char'; // 默认值
 				}
 
-                // 迁移逻辑同 loadFromSlot
-                let charBag = parsed.charBagData || {};
-                if (charBag && typeof charBag === 'object') {
-                    const needsMigration = Object.keys(charBag).some(key => !key.includes('_') || key.split('_').length < 3);
-                    if (needsMigration) {
-                        console.log('[自动存档加载] 检测到旧版角色数据，正在迁移...');
-                        const newCharBag = {};
-                        Object.entries(charBag).forEach(([key, val]) => {
-                            if (val.charId || characterList[key]) {
-                                const actualCharId = val.charId || key;
-                                const newInstanceId = generateInstanceId(actualCharId);
-                                newCharBag[newInstanceId] = { ...val, charId: actualCharId };
-                            } else {
-                                newCharBag[key] = val;
-                            }
-                        });
-                        charBag = newCharBag;
-                    }
-                }
+				// 迁移逻辑同 loadFromSlot
+				let charBag = parsed.charBagData || {};
+				if (charBag && typeof charBag === 'object') {
+					const needsMigration = Object.keys(charBag).some(key => !key.includes('_') || key.split('_').length < 3);
+					if (needsMigration) {
+						console.log('[自动存档加载] 检测到旧版角色数据，正在迁移...');
+						const newCharBag = {};
+						Object.entries(charBag).forEach(([key, val]) => {
+							if (val.charId || characterList[key]) {
+								const actualCharId = val.charId || key;
+								const newInstanceId = generateInstanceId(actualCharId);
+								newCharBag[newInstanceId] = { ...val, charId: actualCharId };
+							} else {
+								newCharBag[key] = val;
+							}
+						});
+						charBag = newCharBag;
+					}
+				}
 
-                window.playerProgress = parsed.playerProgress || {};
-                window.currentTeam = parsed.currentTeam || [null, null, null, null, null, null];
+				window.playerProgress = parsed.playerProgress || {};
+				window.currentTeam = parsed.currentTeam || [null, null, null, null, null, null];
 
-                if (parsed.currentTeam) {
-                    window.currentTeam = parsed.currentTeam.map(charId => {
-                        if (!charId) return null;
-                        const instId = Object.keys(charBag).find(k => charBag[k].charId === charId);
-                        return instId || charId;
-                    });
-                }
+				if (parsed.currentTeam) {
+					window.currentTeam = parsed.currentTeam.map(charId => {
+						if (!charId) return null;
+						const instId = Object.keys(charBag).find(k => charBag[k].charId === charId);
+						return instId || charId;
+					});
+				}
 
-                window.currentDifficulty = parsed.currentDifficulty || 'normal';
-                window.shopMode = parsed.shopMode || 'normal';
-                window.shopData = parsed.shopData || { items: [], refreshCost: 50 };
-                window.gameGold = parsed.gameGold || 1000;
-                window.charBagData = charBag;
-                window.treasureEquipData = parsed.treasureEquipData || {};
-                window.treasureBagData = parsed.treasureBagData || {};
-                window.autoBattle = parsed.autoBattle || false;
+				window.currentDifficulty = parsed.currentDifficulty || 'normal';
+				window.shopMode = parsed.shopMode || 'normal';
+				window.shopData = parsed.shopData || { items: [], refreshCost: 50 };
+				window.gameGold = parsed.gameGold || 1000;
+				window.charBagData = charBag;
+				window.treasureEquipData = parsed.treasureEquipData || {};
+				window.treasureBagData = parsed.treasureBagData || {};
+				window.autoBattle = parsed.autoBattle || false;
 				// ========== 在解析完所有数据后，添加这一段 ==========
 				// 恢复宝物实例化数据
 				if (parsed._treasureInventory) {
@@ -6125,8 +6125,8 @@ const SaveManager = {
 							if (!data || !data.count) return;
 							for (let i = 0; i < data.count; i++) {
 								const instanceId = window.generateTreasureInstanceId(baseId);
-								const equippedBy = (data.equippedBy && data.equippedBy.length > i) 
-									? data.equippedBy[i] 
+								const equippedBy = (data.equippedBy && data.equippedBy.length > i)
+									? data.equippedBy[i]
 									: null;
 								window.treasureInventory[instanceId] = {
 									baseId: baseId,
@@ -6137,302 +6137,302 @@ const SaveManager = {
 					}
 				}
 				// ... 您现有的恢复代码（恢复 playerProgress, currentTeam 等）...
-				
+
 				// ========== 新增：恢复宝物槽位数据 ==========
 				window.charTreasureSlots = parsed.charTreasureSlots || {};
-				
+
 				// 如果 gameData 中也有，也同步一下
 				if (gameData.data && gameData.data._charTreasureSlots) {
 					window.charTreasureSlots = JSON.parse(JSON.stringify(gameData.data._charTreasureSlots));
 				}
-				
+
 				// 确保数据结构完整
 				if (typeof window.ensureCharTreasureSlots === 'function') {
 					window.ensureCharTreasureSlots();
 				}
 				// ==========================================
-            } else {
+			} else {
 				window.currentTeam = [...(data.team?.members || []), ...Array(6).fill(null)].slice(0, 6);
 				window.gameGold = data.bag?.gold || 1000;
 				window.charBagData = data._charBag || {};
 				window.treasureEquipData = data._treasures || {};
 				window.treasureBagData = data._treasureBag || {};
 				window.autoBattle = window.autoBattle || false;  // ✅ 使用 window.autoBattle 保持原值
-						
+
 				// 【新增】
 				window.bagTab = data._playerPreferences?.bagTab || 'char';
 			}
 
-            // 同步到 gameData 内存（确保结构完整）
-            const defaults = gameData.getDefaultData();
-            gameData.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
+			// 同步到 gameData 内存（确保结构完整）
+			const defaults = gameData.getDefaultData();
+			gameData.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
 
-            // ========== 新增：同步宝物数据 ==========
-            syncTreasureEquipData();
+			// ========== 新增：同步宝物数据 ==========
+			syncTreasureEquipData();
 
-            console.log('[自动存档] 已读取');
-            return data;
-        }
-        return null;
-    },
+			console.log('[自动存档] 已读取');
+			return data;
+		}
+		return null;
+	},
 
 
-    hasAutoSave() {
-        // 直接读取 localStorage，避免 gameData.load() 的副作用
-        const key = `${gameData.STORAGE_KEY}_0`;
-        const raw = localStorage.getItem(key);
-        if (!raw) return false;
-        try {
-            const data = JSON.parse(raw);
-            return data.baseInfo?.saveName === '自动存档';
-        } catch { return false; }
-    }
+	hasAutoSave() {
+		// 直接读取 localStorage，避免 gameData.load() 的副作用
+		const key = `${gameData.STORAGE_KEY}_0`;
+		const raw = localStorage.getItem(key);
+		if (!raw) return false;
+		try {
+			const data = JSON.parse(raw);
+			return data.baseInfo?.saveName === '自动存档';
+		} catch { return false; }
+	}
 };
 /**
  * 迁移旧版宝物数据（从 charId 键迁移到 instanceId 键）
  * 在加载旧存档后调用
  */
 function migrateTreasuresToInstanceId() {
-    const treasures = gameData.data._treasures;
-    if (!treasures || typeof treasures !== 'object') return;
+	const treasures = gameData.data._treasures;
+	if (!treasures || typeof treasures !== 'object') return;
 
-    // 判断是否需要迁移：如果所有键都不包含下划线（说明是 charId 格式），则迁移
-    const keys = Object.keys(treasures);
-    const isOldFormat = keys.length > 0 && keys.every(k => !k.includes('_'));
-    if (!isOldFormat) return; // 已经是新格式，无需迁移
+	// 判断是否需要迁移：如果所有键都不包含下划线（说明是 charId 格式），则迁移
+	const keys = Object.keys(treasures);
+	const isOldFormat = keys.length > 0 && keys.every(k => !k.includes('_'));
+	if (!isOldFormat) return; // 已经是新格式，无需迁移
 
-    console.log('[迁移] 检测到旧版宝物数据（键为charId），正在迁移...');
-    const newTreasures = {};
-    const charBag = window.charBagData || {};
+	console.log('[迁移] 检测到旧版宝物数据（键为charId），正在迁移...');
+	const newTreasures = {};
+	const charBag = window.charBagData || {};
 
-    // 遍历旧键（charId）
-    keys.forEach(charId => {
-        const treasureArray = treasures[charId];
-        // 找到 charBagData 中所有以该 charId 创建的实例 ID
-        const instanceIds = Object.keys(charBag).filter(instId => {
-            const inst = charBag[instId];
-            return inst && inst.charId === charId;
-        });
+	// 遍历旧键（charId）
+	keys.forEach(charId => {
+		const treasureArray = treasures[charId];
+		// 找到 charBagData 中所有以该 charId 创建的实例 ID
+		const instanceIds = Object.keys(charBag).filter(instId => {
+			const inst = charBag[instId];
+			return inst && inst.charId === charId;
+		});
 
-        if (instanceIds.length === 0) {
-            // 没有对应的实例，则忽略该角色的宝物（或可丢弃）
-            // 但如果该角色在队伍中且属于临时生成的实例，可能是在旧存档中实例不存在
-            // 这里直接忽略（不会报错，但宝物会丢失）
-            console.warn(`[迁移] 角色 ${charId} 在 charBagData 中无实例，宝物将被丢弃`);
-            return;
-        }
+		if (instanceIds.length === 0) {
+			// 没有对应的实例，则忽略该角色的宝物（或可丢弃）
+			// 但如果该角色在队伍中且属于临时生成的实例，可能是在旧存档中实例不存在
+			// 这里直接忽略（不会报错，但宝物会丢失）
+			console.warn(`[迁移] 角色 ${charId} 在 charBagData 中无实例，宝物将被丢弃`);
+			return;
+		}
 
-        // 为每个实例复制一份相同的宝物数据（注意深拷贝数组）
-        instanceIds.forEach(instId => {
-            newTreasures[instId] = [...treasureArray];
-        });
-    });
+		// 为每个实例复制一份相同的宝物数据（注意深拷贝数组）
+		instanceIds.forEach(instId => {
+			newTreasures[instId] = [...treasureArray];
+		});
+	});
 
-    // 替换 gameData 中的宝物数据
-    gameData.data._treasures = newTreasures;
-    console.log('[迁移] 宝物数据迁移完成，共迁移了 ' + Object.keys(newTreasures).length + ' 个实例的宝物');
+	// 替换 gameData 中的宝物数据
+	gameData.data._treasures = newTreasures;
+	console.log('[迁移] 宝物数据迁移完成，共迁移了 ' + Object.keys(newTreasures).length + ' 个实例的宝物');
 }
 
 // 渲染存档界面
 function renderSaveView(container, fromGame = true) {
-    // 清空容器
-    container.innerHTML = '';
+	// 清空容器
+	container.innerHTML = '';
 
-    // 创建返回按钮
-    const backBtn = document.createElement('button');
-    backBtn.className = 'ybrpg-btn';
-    backBtn.style.width = 'auto';
-    backBtn.style.padding = '5px 15px';
-    backBtn.style.marginBottom = '20px';
-    backBtn.textContent = fromGame ? '← 返回上一级' : '← 返回主界面';
-    backBtn.onclick = () => {
-        if (fromGame) {
-            // 返回设置视图
-            const settingsView = document.getElementById('settings-view');
-            if (settingsView) {
-                hideOtherViews('settings-view');
-                settingsView.style.display = 'flex';
-                renderSettingsView(settingsView);
-            }
-        } else {
-            showMainView();
-        }
-    };
-    container.appendChild(backBtn);
+	// 创建返回按钮
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-btn';
+	backBtn.style.width = 'auto';
+	backBtn.style.padding = '5px 15px';
+	backBtn.style.marginBottom = '20px';
+	backBtn.textContent = fromGame ? '← 返回上一级' : '← 返回主界面';
+	backBtn.onclick = () => {
+		if (fromGame) {
+			// 返回设置视图
+			const settingsView = document.getElementById('settings-view');
+			if (settingsView) {
+				hideOtherViews('settings-view');
+				settingsView.style.display = 'flex';
+				renderSettingsView(settingsView);
+			}
+		} else {
+			showMainView();
+		}
+	};
+	container.appendChild(backBtn);
 
-    // 创建存档槽位网格
-    const gridDiv = document.createElement('div');
-    gridDiv.className = 'save-slot-grid';
+	// 创建存档槽位网格
+	const gridDiv = document.createElement('div');
+	gridDiv.className = 'save-slot-grid';
 
-    // ====== 自动存档槽位 ======
-    const autoSlot = document.createElement('div');
-    autoSlot.className = 'save-slot';
-    autoSlot.style.borderColor = '#4ecdc4';
+	// ====== 自动存档槽位 ======
+	const autoSlot = document.createElement('div');
+	autoSlot.className = 'save-slot';
+	autoSlot.style.borderColor = '#4ecdc4';
 
-    const hasAuto = SaveManager.hasAutoSave();
-    if (hasAuto) {
-        const autoData = (() => {
-            try { return JSON.parse(localStorage.getItem(`${gameData.STORAGE_KEY}_0`)); } catch { return null; }
-        })();
-        const autoInfo = document.createElement('div');
-        autoInfo.className = 'save-info';
+	const hasAuto = SaveManager.hasAutoSave();
+	if (hasAuto) {
+		const autoData = (() => {
+			try { return JSON.parse(localStorage.getItem(`${gameData.STORAGE_KEY}_0`)); } catch { return null; }
+		})();
+		const autoInfo = document.createElement('div');
+		autoInfo.className = 'save-info';
 
-        const autoName = document.createElement('div');
-        autoName.className = 'save-name';
-        autoName.textContent = '🔄 自动存档';
-        autoName.style.color = '#4ecdc4';
-        autoInfo.appendChild(autoName);
+		const autoName = document.createElement('div');
+		autoName.className = 'save-name';
+		autoName.textContent = '🔄 自动存档';
+		autoName.style.color = '#4ecdc4';
+		autoInfo.appendChild(autoName);
 
-        const autoTime = document.createElement('div');
-        autoTime.className = 'save-time';
-        autoTime.textContent = autoData?.baseInfo?.saveTime
-            ? new Date(autoData.baseInfo.saveTime).toLocaleString()
-            : '未知时间';
-        autoInfo.appendChild(autoTime);
+		const autoTime = document.createElement('div');
+		autoTime.className = 'save-time';
+		autoTime.textContent = autoData?.baseInfo?.saveTime
+			? new Date(autoData.baseInfo.saveTime).toLocaleString()
+			: '未知时间';
+		autoInfo.appendChild(autoTime);
 
-        autoSlot.appendChild(autoInfo);
+		autoSlot.appendChild(autoInfo);
 
-        // 读取按钮
-        const autoLoadBtn = document.createElement('button');
-        autoLoadBtn.className = 'save-action-btn';
-        autoLoadBtn.style.borderColor = '#4ecdc4';
-        autoLoadBtn.textContent = '读取';
-        autoLoadBtn.onclick = () => {
-            SaveManager.loadAutoSave();
-            toast('已读取自动存档', 'success');
-            const bottomBar = document.querySelector('.ybrpg-bottom-bar');
-            if (bottomBar) bottomBar.style.display = 'flex';
-            hideOtherViews('team-view');
-            const teamView = document.getElementById('team-view');
-            if (teamView) teamView.style.display = 'flex';
-        };
-        autoSlot.appendChild(autoLoadBtn);
+		// 读取按钮
+		const autoLoadBtn = document.createElement('button');
+		autoLoadBtn.className = 'save-action-btn';
+		autoLoadBtn.style.borderColor = '#4ecdc4';
+		autoLoadBtn.textContent = '读取';
+		autoLoadBtn.onclick = () => {
+			SaveManager.loadAutoSave();
+			toast('已读取自动存档', 'success');
+			const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+			if (bottomBar) bottomBar.style.display = 'flex';
+			hideOtherViews('team-view');
+			const teamView = document.getElementById('team-view');
+			if (teamView) teamView.style.display = 'flex';
+		};
+		autoSlot.appendChild(autoLoadBtn);
 
-        // 自动存档不提供删除按钮
-    } else {
-        autoSlot.classList.add('empty');
-        const autoEmpty = document.createElement('div');
-        autoEmpty.className = 'save-name';
-        autoEmpty.textContent = '🔄 自动存档';
-        autoEmpty.style.color = '#4ecdc4';
-        autoSlot.appendChild(autoEmpty);
+		// 自动存档不提供删除按钮
+	} else {
+		autoSlot.classList.add('empty');
+		const autoEmpty = document.createElement('div');
+		autoEmpty.className = 'save-name';
+		autoEmpty.textContent = '🔄 自动存档';
+		autoEmpty.style.color = '#4ecdc4';
+		autoSlot.appendChild(autoEmpty);
 
-        const autoHint = document.createElement('div');
-        autoHint.className = 'save-progress';
-        autoHint.textContent = '暂无自动存档';
-        autoSlot.appendChild(autoHint);
-    }
-    gridDiv.appendChild(autoSlot);
+		const autoHint = document.createElement('div');
+		autoHint.className = 'save-progress';
+		autoHint.textContent = '暂无自动存档';
+		autoSlot.appendChild(autoHint);
+	}
+	gridDiv.appendChild(autoSlot);
 
-    // ====== 手动存档槽位 ======
-    // 获取所有存档
-    const saves = SaveManager.getAllSaves();
+	// ====== 手动存档槽位 ======
+	// 获取所有存档
+	const saves = SaveManager.getAllSaves();
 
-    // 创建手动存档槽位
-    for (let i = 1; i <= SaveManager.SLOT_COUNT; i++) {
-        const saveSlot = document.createElement('div');
-        saveSlot.className = 'save-slot';
+	// 创建手动存档槽位
+	for (let i = 1; i <= SaveManager.SLOT_COUNT; i++) {
+		const saveSlot = document.createElement('div');
+		saveSlot.className = 'save-slot';
 
-        const save = saves[i - 1];
+		const save = saves[i - 1];
 
-        if (save.exists) {
-            // 有存档的槽位
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'save-info';
+		if (save.exists) {
+			// 有存档的槽位
+			const infoDiv = document.createElement('div');
+			infoDiv.className = 'save-info';
 
-            const nameDiv = document.createElement('div');
-            nameDiv.className = 'save-name';
-            nameDiv.textContent = save.data.saveName || `存档${i}`;
-            infoDiv.appendChild(nameDiv);
+			const nameDiv = document.createElement('div');
+			nameDiv.className = 'save-name';
+			nameDiv.textContent = save.data.saveName || `存档${i}`;
+			infoDiv.appendChild(nameDiv);
 
-            const timeDiv = document.createElement('div');
-            timeDiv.className = 'save-time';
-            timeDiv.textContent = save.data.saveTime || '未知时间';
-            infoDiv.appendChild(timeDiv);
+			const timeDiv = document.createElement('div');
+			timeDiv.className = 'save-time';
+			timeDiv.textContent = save.data.saveTime || '未知时间';
+			infoDiv.appendChild(timeDiv);
 
-            saveSlot.appendChild(infoDiv);
+			saveSlot.appendChild(infoDiv);
 
-            // 读取按钮
-            const loadBtn = document.createElement('button');
-            loadBtn.className = 'save-action-btn';
-            loadBtn.textContent = '读取';
-            loadBtn.onclick = () => {
-                SaveManager.loadFromSlot(i);
-                toast(`已读取存档${i}`, 'success');
-                const bottomBar = document.querySelector('.ybrpg-bottom-bar');
-                if (bottomBar) bottomBar.style.display = 'flex';
-                hideOtherViews('team-view');
-                const teamView = document.getElementById('team-view');
-                if (teamView) teamView.style.display = 'flex';
-            };
-            saveSlot.appendChild(loadBtn);
+			// 读取按钮
+			const loadBtn = document.createElement('button');
+			loadBtn.className = 'save-action-btn';
+			loadBtn.textContent = '读取';
+			loadBtn.onclick = () => {
+				SaveManager.loadFromSlot(i);
+				toast(`已读取存档${i}`, 'success');
+				const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+				if (bottomBar) bottomBar.style.display = 'flex';
+				hideOtherViews('team-view');
+				const teamView = document.getElementById('team-view');
+				if (teamView) teamView.style.display = 'flex';
+			};
+			saveSlot.appendChild(loadBtn);
 
-            // 保存按钮（覆盖已有存档，仅从游戏内进入时显示）
-            if (fromGame) {
-                const saveBtn = document.createElement('button');
-                saveBtn.className = 'save-action-btn';
-                saveBtn.textContent = '保存';
-                saveBtn.onclick = () => {
-                    if (!window.playerProgress || Object.keys(window.playerProgress).length === 0) {
-                        toast('当前没有游戏进度，请先开始游戏', 'warning');
-                        return;
-                    }
-                    SaveManager.saveToSlot(i);
-                    toast(`已保存到存档${i}`, 'success');
-                    renderSaveView(container, fromGame);
-                };
-                saveSlot.appendChild(saveBtn);
-            }
+			// 保存按钮（覆盖已有存档，仅从游戏内进入时显示）
+			if (fromGame) {
+				const saveBtn = document.createElement('button');
+				saveBtn.className = 'save-action-btn';
+				saveBtn.textContent = '保存';
+				saveBtn.onclick = () => {
+					if (!window.playerProgress || Object.keys(window.playerProgress).length === 0) {
+						toast('当前没有游戏进度，请先开始游戏', 'warning');
+						return;
+					}
+					SaveManager.saveToSlot(i);
+					toast(`已保存到存档${i}`, 'success');
+					renderSaveView(container, fromGame);
+				};
+				saveSlot.appendChild(saveBtn);
+			}
 
-            // 删除按钮（仅从主界面进入时显示）
-            if (!fromGame) {
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'save-action-btn';
-                deleteBtn.textContent = '删除';
-                deleteBtn.onclick = () => {
-                    confirmDialog(`确定要删除存档${i}吗？`, () => {
-                        SaveManager.deleteSlot(i);
-                        renderSaveView(container, fromGame);
-                    });
-                };
-                saveSlot.appendChild(deleteBtn);
-            }
-        } else {
-            // 空槽位
-            saveSlot.classList.add('empty');
+			// 删除按钮（仅从主界面进入时显示）
+			if (!fromGame) {
+				const deleteBtn = document.createElement('button');
+				deleteBtn.className = 'save-action-btn';
+				deleteBtn.textContent = '删除';
+				deleteBtn.onclick = () => {
+					confirmDialog(`确定要删除存档${i}吗？`, () => {
+						SaveManager.deleteSlot(i);
+						renderSaveView(container, fromGame);
+					});
+				};
+				saveSlot.appendChild(deleteBtn);
+			}
+		} else {
+			// 空槽位
+			saveSlot.classList.add('empty');
 
-            const emptyText = document.createElement('div');
-            emptyText.className = 'save-name';
-            emptyText.textContent = `空存档${i}`;
-            saveSlot.appendChild(emptyText);
+			const emptyText = document.createElement('div');
+			emptyText.className = 'save-name';
+			emptyText.textContent = `空存档${i}`;
+			saveSlot.appendChild(emptyText);
 
-            const emptyHint = document.createElement('div');
-            emptyHint.className = 'save-progress';
-            emptyHint.textContent = '暂无存档';
-            saveSlot.appendChild(emptyHint);
+			const emptyHint = document.createElement('div');
+			emptyHint.className = 'save-progress';
+			emptyHint.textContent = '暂无存档';
+			saveSlot.appendChild(emptyHint);
 
-            // 保存按钮（仅从游戏内进入时显示）
-            if (fromGame) {
-                const saveBtn = document.createElement('button');
-                saveBtn.className = 'save-action-btn';
-                saveBtn.textContent = '保存';
-                saveBtn.onclick = () => {
-                    if (!window.playerProgress || Object.keys(window.playerProgress).length === 0) {
-                        toast('当前没有游戏进度，请先开始游戏', 'warning');
-                        return;
-                    }
-                    SaveManager.saveToSlot(i);
-                    toast(`已保存到存档${i}`, 'success');
-                    renderSaveView(container, fromGame);
-                };
-                saveSlot.appendChild(saveBtn);
-            }
-        }
+			// 保存按钮（仅从游戏内进入时显示）
+			if (fromGame) {
+				const saveBtn = document.createElement('button');
+				saveBtn.className = 'save-action-btn';
+				saveBtn.textContent = '保存';
+				saveBtn.onclick = () => {
+					if (!window.playerProgress || Object.keys(window.playerProgress).length === 0) {
+						toast('当前没有游戏进度，请先开始游戏', 'warning');
+						return;
+					}
+					SaveManager.saveToSlot(i);
+					toast(`已保存到存档${i}`, 'success');
+					renderSaveView(container, fromGame);
+				};
+				saveSlot.appendChild(saveBtn);
+			}
+		}
 
-        gridDiv.appendChild(saveSlot);
-    }
+		gridDiv.appendChild(saveSlot);
+	}
 
-    container.appendChild(gridDiv);
+	container.appendChild(gridDiv);
 }
 
 
@@ -6441,16 +6441,16 @@ function renderSaveView(container, fromGame = true) {
  * @param {Object} charInfo - 包含 id, level, hp, atk, def, spe, name 等字段的对象
  */
 function showBagCharDetail(charInfo) {
-    if (!charInfo || !charInfo.id) return;
-    // 合并完整数据（基础定义 + 实例数据）
-    const base = characterList[charInfo.id];
-    if (!base) {
-        toast('角色数据丢失', 'error');
-        return;
-    }
-    const fullData = { ...base, ...charInfo };
-    // 使用已有的 showCharDetail 弹窗（第一个参数传 null 表示无父容器）
-    showCharDetail(null, fullData);
+	if (!charInfo || !charInfo.id) return;
+	// 合并完整数据（基础定义 + 实例数据）
+	const base = characterList[charInfo.id];
+	if (!base) {
+		toast('角色数据丢失', 'error');
+		return;
+	}
+	const fullData = { ...base, ...charInfo };
+	// 使用已有的 showCharDetail 弹窗（第一个参数传 null 表示无父容器）
+	showCharDetail(null, fullData);
 }
 
 /**
@@ -6459,84 +6459,84 @@ function showBagCharDetail(charInfo) {
  * @param {string} charId - 角色基础ID
  */
 function showBagCharDetailPopup(instanceId, charId) {
-    const instData = window.charBagData && window.charBagData[instanceId];
-    if (!instData) return;
-    const char = characterList[charId];
-    if (!char) return;
-    const charT = instData;
-    // 遮罩层
-    // const overlay = document.createElement('div');
-    // overlay.className = 'ybrpg-confirm-overlay'; // 保持原有类名
-    // overlay.id = 'bag-char-detail-overlay';      // <--- 新增：添加ID以便刷新时移除
-    const saveData = instData;
-    const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
-    const RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-    const TIP_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
+	const instData = window.charBagData && window.charBagData[instanceId];
+	if (!instData) return;
+	const char = characterList[charId];
+	if (!char) return;
+	const charT = instData;
+	// 遮罩层
+	// const overlay = document.createElement('div');
+	// overlay.className = 'ybrpg-confirm-overlay'; // 保持原有类名
+	// overlay.id = 'bag-char-detail-overlay';      // <--- 新增：添加ID以便刷新时移除
+	const saveData = instData;
+	const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+	const RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+	const TIP_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
 
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
-    // overlay.id = 'bag-char-detail-overlay';      // <--- 新增：添加ID以便刷新时移除
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	// overlay.id = 'bag-char-detail-overlay';      // <--- 新增：添加ID以便刷新时移除
 
-    const dialog = document.createElement('div');
-    dialog.className = 'gallery-detail-dialog';
-    dialog.style.maxWidth = '300px';
+	const dialog = document.createElement('div');
+	dialog.className = 'gallery-detail-dialog';
+	dialog.style.maxWidth = '300px';
 
-    // 角色名
-    const tupoText = charT.tupolevel ? `+${charT.tupolevel}` : ''
-    const nameDiv = document.createElement('div');
-    nameDiv.className = 'gallery-detail-name';
-    nameDiv.textContent = charT.name + tupoText;
-    dialog.appendChild(nameDiv);
+	// 角色名
+	const tupoText = charT.tupolevel ? `+${charT.tupolevel}` : ''
+	const nameDiv = document.createElement('div');
+	nameDiv.className = 'gallery-detail-name';
+	nameDiv.textContent = charT.name + tupoText;
+	dialog.appendChild(nameDiv);
 
-    // 上半部分：图片 + 属性
-    const topDiv = document.createElement('div');
-    topDiv.className = 'gallery-detail-top';
+	// 上半部分：图片 + 属性
+	const topDiv = document.createElement('div');
+	topDiv.className = 'gallery-detail-top';
 
-    // 图片
-    const imgDiv = document.createElement('div');
-    imgDiv.className = 'gallery-detail-img-container';
-    imgDiv.style.width = '120px';
-    imgDiv.style.height = '150px';
-    const img = document.createElement('img');
-    img.className = 'gallery-detail-img';
-    img.src = `./image/character/${charId}.jpg`;
-    img.alt = charT.name;
-    img.onerror = function () {
-        this.onerror = function () {
-            this.style.display = 'none';
-            const p = document.createElement('div');
-            p.className = 'gallery-char-placeholder';
-            p.style.width = '120px';
-            p.style.height = '150px';
-            p.style.fontSize = '36px';
-            p.textContent = charT.name.charAt(0);
-            this.parentNode.appendChild(p);
-        };
-        this.src = `./image/character/${charId}.webp`;
-    };
-    imgDiv.onclick = () => showFullImage(charId, char.name);
-    imgDiv.appendChild(img);
-    topDiv.appendChild(imgDiv);
+	// 图片
+	const imgDiv = document.createElement('div');
+	imgDiv.className = 'gallery-detail-img-container';
+	imgDiv.style.width = '120px';
+	imgDiv.style.height = '150px';
+	const img = document.createElement('img');
+	img.className = 'gallery-detail-img';
+	img.src = `./image/character/${charId}.jpg`;
+	img.alt = charT.name;
+	img.onerror = function () {
+		this.onerror = function () {
+			this.style.display = 'none';
+			const p = document.createElement('div');
+			p.className = 'gallery-char-placeholder';
+			p.style.width = '120px';
+			p.style.height = '150px';
+			p.style.fontSize = '36px';
+			p.textContent = charT.name.charAt(0);
+			this.parentNode.appendChild(p);
+		};
+		this.src = `./image/character/${charId}.webp`;
+	};
+	imgDiv.onclick = () => showFullImage(charId, char.name);
+	imgDiv.appendChild(img);
+	topDiv.appendChild(imgDiv);
 
-    // 属性区
-    const attrDiv = document.createElement('div');
-    attrDiv.className = 'gallery-detail-attr';
+	// 属性区
+	const attrDiv = document.createElement('div');
+	attrDiv.className = 'gallery-detail-attr';
 
-    const rankDiv = document.createElement('div');
-    rankDiv.className = 'gallery-detail-rank';
-    const rankText = RANK_LABELS[charT.rank] || charT.rank;
-    const levelText = `Lv.${saveData.level}`;
-    rankDiv.innerHTML = `<span style="color:${RANK_COLORS[charT.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">${levelText}</span>`;
-    attrDiv.appendChild(rankDiv);
+	const rankDiv = document.createElement('div');
+	rankDiv.className = 'gallery-detail-rank';
+	const rankText = RANK_LABELS[charT.rank] || charT.rank;
+	const levelText = `Lv.${saveData.level}`;
+	rankDiv.innerHTML = `<span style="color:${RANK_COLORS[charT.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">${levelText}</span>`;
+	attrDiv.appendChild(rankDiv);
 
-    const tipDiv = document.createElement('div');
-    tipDiv.style.fontSize = '12px';
-    tipDiv.style.color = '#aaa';
-    tipDiv.style.marginBottom = '4px';
-    tipDiv.textContent = TIP_LABELS[charT.template] || '';
-    attrDiv.appendChild(tipDiv);
+	const tipDiv = document.createElement('div');
+	tipDiv.style.fontSize = '12px';
+	tipDiv.style.color = '#aaa';
+	tipDiv.style.marginBottom = '4px';
+	tipDiv.textContent = TIP_LABELS[charT.template] || '';
+	attrDiv.appendChild(tipDiv);
 
-    // 修改位置：showBagCharDetailPopup 函数内，属性显示部分
+	// 修改位置：showBagCharDetailPopup 函数内，属性显示部分
 
 	// 原有的 attrs 数组
 	// const attrs = [
@@ -6561,213 +6561,213 @@ function showBagCharDetailPopup(instanceId, charId) {
 	attrs.forEach(a => {
 		const row = document.createElement('div');
 		row.className = 'gallery-detail-attr-row';
-		
+
 		let displayText = `${a.value}`;
 		if (a.bonus > 0) {
 			displayText += ` <span style="color:#44ff88;font-size:11px;">(+${a.bonus})</span>`;
 		}
-		
+
 		row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${displayText}</span>`;
 		attrDiv.appendChild(row);
 	});
 
 
-    topDiv.appendChild(attrDiv);
-    dialog.appendChild(topDiv);
+	topDiv.appendChild(attrDiv);
+	dialog.appendChild(topDiv);
 
-    // 技能信息
-    const skillsDiv = document.createElement('div');
-    skillsDiv.className = 'gallery-detail-skills';
-    const skillIds = char.skills || [];
-    if (skillIds[0] && contentList.pugong && contentList.pugong[skillIds[0]]) {
-        const pg = contentList.pugong[skillIds[0]];
-        const section = buildSkillSection('普攻', pg, '#5ba8ff');
-        skillsDiv.appendChild(section);
-    }
-    if (skillIds[1] && contentList.skill && contentList.skill[skillIds[1]]) {
-        const sk = contentList.skill[skillIds[1]];
-        const section = buildSkillSection('技能', sk, '#ff8c00');
-        skillsDiv.appendChild(section);
-    }
-    if (skillIds[2] && contentList.spskill && contentList.spskill[skillIds[2]]) {
-        const sp = contentList.spskill[skillIds[2]];
-        const section = buildSkillSection('必杀', sp, '#ffd700');
-        skillsDiv.appendChild(section);
-    }
-    dialog.appendChild(skillsDiv);
+	// 技能信息
+	const skillsDiv = document.createElement('div');
+	skillsDiv.className = 'gallery-detail-skills';
+	const skillIds = char.skills || [];
+	if (skillIds[0] && contentList.pugong && contentList.pugong[skillIds[0]]) {
+		const pg = contentList.pugong[skillIds[0]];
+		const section = buildSkillSection('普攻', pg, '#5ba8ff');
+		skillsDiv.appendChild(section);
+	}
+	if (skillIds[1] && contentList.skill && contentList.skill[skillIds[1]]) {
+		const sk = contentList.skill[skillIds[1]];
+		const section = buildSkillSection('技能', sk, '#ff8c00');
+		skillsDiv.appendChild(section);
+	}
+	if (skillIds[2] && contentList.spskill && contentList.spskill[skillIds[2]]) {
+		const sp = contentList.spskill[skillIds[2]];
+		const section = buildSkillSection('必杀', sp, '#ffd700');
+		skillsDiv.appendChild(section);
+	}
+	dialog.appendChild(skillsDiv);
 
-    // 底部按钮：选择升级 + 关闭
-    const btnRow = document.createElement('div');
-    btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:10px;';
+	// 底部按钮：选择升级 + 关闭
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:10px;';
 
-    const upgradeBtn = document.createElement('button');
-    upgradeBtn.className = 'ybrpg-btn';
-    upgradeBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;flex:1;';
-    upgradeBtn.textContent = '选择升级';
-    upgradeBtn.onclick = () => {
-        // 不关闭详情弹窗，升级面板浮在之上
-        showUpgradePanel(instanceId, charId, saveData.level, (newLevel, newHp, newAtk, newDef, newSpe) => {
-            // 升级成功后刷新详情弹窗的内容
-            // 更新等级显示
-            const rankEl = dialog.querySelector('.gallery-detail-rank');
-            if (rankEl) {
-                const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-                const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
-                const rankText = rankLabels[saveData.rank] || saveData.rank;
-                rankEl.innerHTML = `<span style="color:${rankColors[saveData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${newLevel}</span>`;
-            }
-            // 更新四维属性
-            const attrRows = dialog.querySelectorAll('.gallery-detail-attr-row .attr-value');
-            const newValues = [newHp, newAtk, newDef, newSpe];
-            attrRows.forEach((el, i) => {
-                if (i < newValues.length) el.textContent = newValues[i];
-            });
-            // 更新 saveData（全局数据已更新）
-            saveData.level = newLevel;
-            saveData.hp = newHp;
-            saveData.atk = newAtk;
-            saveData.def = newDef;
-            saveData.spe = newSpe;
-            // updateCharacterSP(saveData)
-        });
-    };
-    btnRow.appendChild(upgradeBtn);
+	const upgradeBtn = document.createElement('button');
+	upgradeBtn.className = 'ybrpg-btn';
+	upgradeBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;flex:1;';
+	upgradeBtn.textContent = '选择升级';
+	upgradeBtn.onclick = () => {
+		// 不关闭详情弹窗，升级面板浮在之上
+		showUpgradePanel(instanceId, charId, saveData.level, (newLevel, newHp, newAtk, newDef, newSpe) => {
+			// 升级成功后刷新详情弹窗的内容
+			// 更新等级显示
+			const rankEl = dialog.querySelector('.gallery-detail-rank');
+			if (rankEl) {
+				const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+				const rankLabels = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+				const rankText = rankLabels[saveData.rank] || saveData.rank;
+				rankEl.innerHTML = `<span style="color:${rankColors[saveData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${newLevel}</span>`;
+			}
+			// 更新四维属性
+			const attrRows = dialog.querySelectorAll('.gallery-detail-attr-row .attr-value');
+			const newValues = [newHp, newAtk, newDef, newSpe];
+			attrRows.forEach((el, i) => {
+				if (i < newValues.length) el.textContent = newValues[i];
+			});
+			// 更新 saveData（全局数据已更新）
+			saveData.level = newLevel;
+			saveData.hp = newHp;
+			saveData.atk = newAtk;
+			saveData.def = newDef;
+			saveData.spe = newSpe;
+			// updateCharacterSP(saveData)
+		});
+	};
+	btnRow.appendChild(upgradeBtn);
 
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'ybrpg-btn';
-    closeBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;flex:1;';
-    closeBtn.textContent = '关闭';
-    closeBtn.onclick = () => overlay.remove();
-    btnRow.appendChild(closeBtn);
-     // --- 👇 突破/升阶按钮逻辑 (解耦版) 👇 ---
-	 if (instanceId) {
-        const currentTupo = instData.tupolevel || 0;
-        const currentRank = instData.rank || char.rank || 'common';
-        
-        // 获取突破信息和升阶信息
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-btn';
+	closeBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;flex:1;';
+	closeBtn.textContent = '关闭';
+	closeBtn.onclick = () => overlay.remove();
+	btnRow.appendChild(closeBtn);
+	// --- 👇 突破/升阶按钮逻辑 (解耦版) 👇 ---
+	if (instanceId) {
+		const currentTupo = instData.tupolevel || 0;
+		const currentRank = instData.rank || char.rank || 'common';
+
+		// 获取突破信息和升阶信息
 		let breakInfo = getBreakthroughInfo(char, currentTupo);
-        let needPromotion = needUpgrade(saveData);
+		let needPromotion = needUpgrade(saveData);
 
-        const promotionInfo = getPromotionInfo(currentTupo, currentRank);
-        
-        // 创建突破/升阶按钮
-        const breakthroughBtn = document.createElement('button');
-        breakthroughBtn.className = 'ybrpg-btn';
-        breakthroughBtn.id = 'breakthrough-btn';
-        breakthroughBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;flex:1;';
-        
-        // 更新按钮状态的函数
-        function updateBtnState() {
-            if (breakInfo.maxed) {
-                breakthroughBtn.textContent = '已突破至极限';
-                breakthroughBtn.disabled = true;
-                breakthroughBtn.style.opacity = '0.6';
-                breakthroughBtn.style.background = '#555';
-            } else if (needPromotion) {
-                breakthroughBtn.textContent = `升阶`;//至【${getRankLabel(needPromotion)}】
-                breakthroughBtn.style.background = '#ffaa00';
-                breakthroughBtn.style.color = '#000';
-                breakthroughBtn.disabled = false;
-            } else {
-                breakthroughBtn.textContent = `突破 `;//(消耗${breakInfo.cost}个同名)
-                breakthroughBtn.style.background = '#44aaff';
-                breakthroughBtn.style.color = '#fff';
-                breakthroughBtn.disabled = false;
-            }
-        }
-        
-        // 获取消耗文本（分离升阶和突破的说明）
-        function getConfirmText() {
-            if (needPromotion) {
-                const targetRankLabel = getRankLabel(needPromotion);
-                const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
-                    if (id === instanceId) return false;
-                    const inst = window.charBagData[id];
-                    return inst && (inst.charId === charId || id === charId);
-                });
-                const availableCount = availableFodderIds.length;
-                return `确定要将【${char.name}】升阶至【${targetRankLabel}】吗？\n` +
-                       `当前突破等级: ${currentTupo}阶\n` +
-                       `可用同名材料: ${availableCount}个`;
-            } else {
-                const cost = breakInfo.cost;
-                const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
-                    if (id === instanceId) return false;
-                    const inst = window.charBagData[id];
-                    return inst && (inst.charId === charId || id === charId);
-                });
-                const availableCount = availableFodderIds.length;
-                return `确定要突破【${char.name}】吗？\n` +
-                       `当前突破等级: ${currentTupo}阶 → 目标: ${currentTupo + 1}阶\n` +
-                       `消耗: ${cost}个同名角色 (可用: ${availableCount}个)`;
-            }
-        }
-        
-        // 初始化按钮状态
-        updateBtnState();
-        
-        // 按钮点击事件
-        breakthroughBtn.onclick = () => {
-            // 检查材料是否足够
-            const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
-                if (id === instanceId) return false;
-                const inst = window.charBagData[id];
-                return inst && (inst.charId === charId || id === charId);
-            });
-            const availableCount = availableFodderIds.length;
-            
-            if (needPromotion) {
-                // 升阶逻辑
-                const promotionCost = Math.floor(currentTupo / 4) + 1;
-                if (availableCount < promotionCost) {
-                    toast(`升阶材料不足！需要 ${promotionCost} 个同名角色，当前可用: ${availableCount}`, 'error');
-                    return;
-                }
-                
-                confirmDialog(getConfirmText(), () => {
-                    // 先执行突破（升阶前需要先消耗材料）
-                    const beforeTupo = instData.tupolevel || 0;
-                    
-                    // 执行升阶
-                    const result = promoteCharacterRank(instanceId);
-                    if (result.success) {
-                        toast(result.message, 'success');
-                        // 刷新弹窗
-                        refreshDetailPopup();
-                    } else {
-                        toast(result.message, 'error');
-                    }
-                });
-            } else {
-                // 突破逻辑
-                const cost = breakInfo.cost;
-                if (availableCount < cost) {
-                    toast(`突破材料不足！需要 ${cost} 个同名角色，当前可用: ${availableCount}`, 'error');
-                    return;
-                }
-                if (breakInfo.maxed) {
-                    toast('已达到最大突破等级', 'warning');
-                    return;
-                }
-                
-                confirmDialog(getConfirmText(), () => {
-                    const result = breakthroughCharacterInstance(instanceId);
-                    if (result.success) {
-                        toast(result.message, 'success');
-                        // 刷新弹窗
-                        refreshDetailPopup();
-                    } else {
-                        toast(result.message, 'error');
-                    }
-                });
-            }
-        };
+		const promotionInfo = getPromotionInfo(currentTupo, currentRank);
+
+		// 创建突破/升阶按钮
+		const breakthroughBtn = document.createElement('button');
+		breakthroughBtn.className = 'ybrpg-btn';
+		breakthroughBtn.id = 'breakthrough-btn';
+		breakthroughBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;flex:1;';
+
+		// 更新按钮状态的函数
+		function updateBtnState() {
+			if (breakInfo.maxed) {
+				breakthroughBtn.textContent = '已突破至极限';
+				breakthroughBtn.disabled = true;
+				breakthroughBtn.style.opacity = '0.6';
+				breakthroughBtn.style.background = '#555';
+			} else if (needPromotion) {
+				breakthroughBtn.textContent = `升阶`;//至【${getRankLabel(needPromotion)}】
+				breakthroughBtn.style.background = '#ffaa00';
+				breakthroughBtn.style.color = '#000';
+				breakthroughBtn.disabled = false;
+			} else {
+				breakthroughBtn.textContent = `突破 `;//(消耗${breakInfo.cost}个同名)
+				breakthroughBtn.style.background = '#44aaff';
+				breakthroughBtn.style.color = '#fff';
+				breakthroughBtn.disabled = false;
+			}
+		}
+
+		// 获取消耗文本（分离升阶和突破的说明）
+		function getConfirmText() {
+			if (needPromotion) {
+				const targetRankLabel = getRankLabel(needPromotion);
+				const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
+					if (id === instanceId) return false;
+					const inst = window.charBagData[id];
+					return inst && (inst.charId === charId || id === charId);
+				});
+				const availableCount = availableFodderIds.length;
+				return `确定要将【${char.name}】升阶至【${targetRankLabel}】吗？\n` +
+					`当前突破等级: ${currentTupo}阶\n` +
+					`可用同名材料: ${availableCount}个`;
+			} else {
+				const cost = breakInfo.cost;
+				const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
+					if (id === instanceId) return false;
+					const inst = window.charBagData[id];
+					return inst && (inst.charId === charId || id === charId);
+				});
+				const availableCount = availableFodderIds.length;
+				return `确定要突破【${char.name}】吗？\n` +
+					`当前突破等级: ${currentTupo}阶 → 目标: ${currentTupo + 1}阶\n` +
+					`消耗: ${cost}个同名角色 (可用: ${availableCount}个)`;
+			}
+		}
+
+		// 初始化按钮状态
+		updateBtnState();
+
+		// 按钮点击事件
+		breakthroughBtn.onclick = () => {
+			// 检查材料是否足够
+			const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
+				if (id === instanceId) return false;
+				const inst = window.charBagData[id];
+				return inst && (inst.charId === charId || id === charId);
+			});
+			const availableCount = availableFodderIds.length;
+
+			if (needPromotion) {
+				// 升阶逻辑
+				const promotionCost = Math.floor(currentTupo / 4) + 1;
+				if (availableCount < promotionCost) {
+					toast(`升阶材料不足！需要 ${promotionCost} 个同名角色，当前可用: ${availableCount}`, 'error');
+					return;
+				}
+
+				confirmDialog(getConfirmText(), () => {
+					// 先执行突破（升阶前需要先消耗材料）
+					const beforeTupo = instData.tupolevel || 0;
+
+					// 执行升阶
+					const result = promoteCharacterRank(instanceId);
+					if (result.success) {
+						toast(result.message, 'success');
+						// 刷新弹窗
+						refreshDetailPopup();
+					} else {
+						toast(result.message, 'error');
+					}
+				});
+			} else {
+				// 突破逻辑
+				const cost = breakInfo.cost;
+				if (availableCount < cost) {
+					toast(`突破材料不足！需要 ${cost} 个同名角色，当前可用: ${availableCount}`, 'error');
+					return;
+				}
+				if (breakInfo.maxed) {
+					toast('已达到最大突破等级', 'warning');
+					return;
+				}
+
+				confirmDialog(getConfirmText(), () => {
+					const result = breakthroughCharacterInstance(instanceId);
+					if (result.success) {
+						toast(result.message, 'success');
+						// 刷新弹窗
+						refreshDetailPopup();
+					} else {
+						toast(result.message, 'error');
+					}
+				});
+			}
+		};
 		// 刷新弹窗内容的函数
 		function refreshDetailPopup() {
 			// 重新获取最新的实例数据
 			const latestInstData = window.charBagData && window.charBagData[instanceId];
 			if (!latestInstData) return;
-			
+
 			// 更新 saveData 引用
 			saveData.tupolevel = latestInstData.tupolevel || 0;
 			saveData.rank = latestInstData.rank || char.rank || 'common';
@@ -6776,7 +6776,7 @@ function showBagCharDetailPopup(instanceId, charId) {
 			saveData.atk = latestInstData.atk;
 			saveData.def = latestInstData.def;
 			saveData.spe = latestInstData.spe;
-			
+
 			// 更新等级显示
 			const rankEl = dialog.querySelector('.gallery-detail-rank');
 			if (rankEl) {
@@ -6795,39 +6795,39 @@ function showBagCharDetailPopup(instanceId, charId) {
 			attrRows.forEach((el, i) => {
 				if (i < newValues.length) el.textContent = newValues[i];
 			});
-			
+
 			// 重新获取突破信息和升阶信息
 			const newCurrentTupo = saveData.tupolevel || 0;
 			const newCurrentRank = saveData.rank || char.rank || 'common';
 			breakInfo = getBreakthroughInfo(char, newCurrentTupo);
 			needPromotion = needUpgrade(saveData);
-			
+
 			// 更新按钮状态
 			updateBtnState();
-			
+
 			// 刷新背包视图
 			if (typeof renderBagView === 'function') {
 				const bagView = document.getElementById('bag-view');
 				if (bagView) renderBagView(bagView);
 			}
 		}
-		
-        
-        // 将按钮添加到按钮行
-        if (btnRow) {
-            btnRow.appendChild(breakthroughBtn);
-        }
-    }
-    // --- 👆 突破/升阶按钮逻辑结束 👆 ---
-    // --- 👆 插入结束 👆 ---
-    dialog.appendChild(btnRow);
 
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
 
-    overlay.onclick = (e) => {
-        if (e.target === overlay) overlay.remove();
-    };
+		// 将按钮添加到按钮行
+		if (btnRow) {
+			btnRow.appendChild(breakthroughBtn);
+		}
+	}
+	// --- 👆 突破/升阶按钮逻辑结束 👆 ---
+	// --- 👆 插入结束 👆 ---
+	dialog.appendChild(btnRow);
+
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
+
+	overlay.onclick = (e) => {
+		if (e.target === overlay) overlay.remove();
+	};
 }
 /**
  * 检查角色是否需要升阶
@@ -6835,38 +6835,38 @@ function showBagCharDetailPopup(instanceId, charId) {
  * @returns {string|false} 如果需要升阶，返回目标品质；否则返回 false
  */
 function needUpgrade(character) {
-    const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
-    const tupolevel = character.tupolevel || 0;
-    const currentRank = character.rank || 'common';
-    
-    const promotionInfo = getPromotionInfo(tupolevel, currentRank);
-    if (!promotionInfo) return false;
-    
-    return promotionInfo.targetRank;
+	const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
+	const tupolevel = character.tupolevel || 0;
+	const currentRank = character.rank || 'common';
+
+	const promotionInfo = getPromotionInfo(tupolevel, currentRank);
+	if (!promotionInfo) return false;
+
+	return promotionInfo.targetRank;
 }
 
 /** 辅助函数：构建技能片段 */
 function buildSkillSection(label, sData, color) {
-    const section = document.createElement('div');
-    section.className = 'gallery-skill-section';
-    const title = document.createElement('div');
-    title.className = 'gallery-skill-title';
-    title.textContent = label;
-    title.style.color = color;
-    section.appendChild(title);
-    const nameEl = document.createElement('div');
-    nameEl.className = 'gallery-skill-name';
-    nameEl.textContent = sData.name;
-    section.appendChild(nameEl);
-    const intro = document.createElement('div');
-    intro.className = 'gallery-skill-intro';
-    intro.textContent = sData.intro;
-    section.appendChild(intro);
-    const aiIntro = document.createElement('div');
-    aiIntro.className = 'gallery-skill-ai';
-    aiIntro.textContent = 'AI倾向：' + sData.ai_intro;
-    section.appendChild(aiIntro);
-    return section;
+	const section = document.createElement('div');
+	section.className = 'gallery-skill-section';
+	const title = document.createElement('div');
+	title.className = 'gallery-skill-title';
+	title.textContent = label;
+	title.style.color = color;
+	section.appendChild(title);
+	const nameEl = document.createElement('div');
+	nameEl.className = 'gallery-skill-name';
+	nameEl.textContent = sData.name;
+	section.appendChild(nameEl);
+	const intro = document.createElement('div');
+	intro.className = 'gallery-skill-intro';
+	intro.textContent = sData.intro;
+	section.appendChild(intro);
+	const aiIntro = document.createElement('div');
+	aiIntro.className = 'gallery-skill-ai';
+	aiIntro.textContent = 'AI倾向：' + sData.ai_intro;
+	section.appendChild(aiIntro);
+	return section;
 }
 
 // function updateCharacterSP(current,target){
@@ -6897,52 +6897,52 @@ function buildSkillSection(label, sData, color) {
  * @param {Object} current - 角色实例对象 (必须包含 charId, rank, template, level)
  */
 function updateCharacterSP(current) {
-    if (!current) return;
-    console.log('current', current)
-    // 1. 安全获取基础信息，提供默认值防止 undefined
-    const rank = current.rank || 'common';
-    const temp = current.template || 'balanced';
-    const level = Number(current.level) || 1; // 确保 level 是数字，默认 1
-    const tupolevel = current.tupolevel || 0;
+	if (!current) return;
+	console.log('current', current)
+	// 1. 安全获取基础信息，提供默认值防止 undefined
+	const rank = current.rank || 'common';
+	const temp = current.template || 'balanced';
+	const level = Number(current.level) || 1; // 确保 level 是数字，默认 1
+	const tupolevel = current.tupolevel || 0;
 
-    // 2. 查找模板数据
-    // 确保 characterTemplate 已定义，且路径存在
-    const templateData = window.characterTemplate || characterTemplate;
-    const rankData = templateData?.[temp]?.[rank];
+	// 2. 查找模板数据
+	// 确保 characterTemplate 已定义，且路径存在
+	const templateData = window.characterTemplate || characterTemplate;
+	const rankData = templateData?.[temp]?.[rank];
 
-    if (!rankData) {
-        console.warn(`[属性更新] 未找到模板数据: template=${temp}, rank=${rank}`);
-        // 可选：设置一个保底的基础数值，防止 NaN
-        // current.hp = 500; current.atk = 50; ...
-        return;
-    }
-    // console.log('rankData',rankData)
+	if (!rankData) {
+		console.warn(`[属性更新] 未找到模板数据: template=${temp}, rank=${rank}`);
+		// 可选：设置一个保底的基础数值，防止 NaN
+		// current.hp = 500; current.atk = 50; ...
+		return;
+	}
+	// console.log('rankData',rankData)
 
-    // 3. 提取基础属性，使用 || 0 防止模板中缺少某项属性导致 NaN
-    const baseHp = Number(rankData.hp) || 0;
-    const baseAtk = Number(rankData.atk) || 0;
-    const baseDef = Number(rankData.def) || 0;
-    const baseSpe = Number(rankData.spe) || 0;
-    // console.log('4属性',[baseHp, baseAtk, baseDef, baseSpe])
+	// 3. 提取基础属性，使用 || 0 防止模板中缺少某项属性导致 NaN
+	const baseHp = Number(rankData.hp) || 0;
+	const baseAtk = Number(rankData.atk) || 0;
+	const baseDef = Number(rankData.def) || 0;
+	const baseSpe = Number(rankData.spe) || 0;
+	// console.log('4属性',[baseHp, baseAtk, baseDef, baseSpe])
 
-    // 4. 计算成长系数
-    // 公式: (100 + 10 * (等级 - 1)) / 100
-    // Lv1 -> 1.0, Lv2 -> 1.1, Lv10 -> 1.9
-    const mag = (100 + 10 * (level - 1)) / 100;
-    // console.log('mag',mag)
-    var newcurrent = { ...current }
-    // 5. 应用属性 (向下取整，避免小数血量)
-    newcurrent.hp = Math.floor(baseHp * mag);
-    newcurrent.atk = Math.floor(baseAtk * mag);
-    newcurrent.def = Math.floor(baseDef * mag);
-    newcurrent.spe = Math.floor(baseSpe * mag);
-    // console.log('newcurrent',newcurrent)
+	// 4. 计算成长系数
+	// 公式: (100 + 10 * (等级 - 1)) / 100
+	// Lv1 -> 1.0, Lv2 -> 1.1, Lv10 -> 1.9
+	const mag = (100 + 10 * (level - 1)) / 100;
+	// console.log('mag',mag)
+	var newcurrent = { ...current }
+	// 5. 应用属性 (向下取整，避免小数血量)
+	newcurrent.hp = Math.floor(baseHp * mag);
+	newcurrent.atk = Math.floor(baseAtk * mag);
+	newcurrent.def = Math.floor(baseDef * mag);
+	newcurrent.spe = Math.floor(baseSpe * mag);
+	// console.log('newcurrent',newcurrent)
 
-    // 6. 如果有突破等级逻辑，可以在这里处理
-    if (tupolevel > 0 && current.tupoList) {
-        newcurrent.tupoList = current.tupoList.slice(0, tupolevel);
-    }
-    return newcurrent;
+	// 6. 如果有突破等级逻辑，可以在这里处理
+	if (tupolevel > 0 && current.tupoList) {
+		newcurrent.tupoList = current.tupoList.slice(0, tupolevel);
+	}
+	return newcurrent;
 }
 /**
  * 升级选择面板（仅消耗同品质武将）
@@ -6951,254 +6951,254 @@ function updateCharacterSP(current) {
  * @param {number} currentLevel - 当前等级
  */
 function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
-    // const requiredExp = currentLevel; // 所需经验值 = 当前等级
+	// const requiredExp = currentLevel; // 所需经验值 = 当前等级
 
-    // 获取目标角色的品质
-    const targetRank = characterList[targetCharId]?.rank;
-    if (!targetRank) {
-        toast('目标角色品质异常', 'error');
-        return;
-    }
+	// 获取目标角色的品质
+	const targetRank = characterList[targetCharId]?.rank;
+	if (!targetRank) {
+		toast('目标角色品质异常', 'error');
+		return;
+	}
 
-    // 获取所有可用消耗品（同品质角色，不能是自身）
-    const allInstIds = Object.keys(window.charBagData || {});
-    const consumables = allInstIds.filter(id => {
-        if (id === targetInstId) return false;
-        if (window.currentTeam && window.currentTeam.includes(id)) return false;
-        const inst = window.charBagData[id];
-        const charId = inst.charId || id;
-        const baseChar = characterList[charId];
-        return baseChar && baseChar.rank === targetRank;
-    }).map(id => {
-        const inst = window.charBagData[id];
-        const charId = inst.charId || id;
-        const baseChar = characterList[charId];
-        return {
-            instanceId: id,
-            charId: charId,
-            name: baseChar.name,
-            level: inst.level || 1,
-            selected: false
-        };
-    });
+	// 获取所有可用消耗品（同品质角色，不能是自身）
+	const allInstIds = Object.keys(window.charBagData || {});
+	const consumables = allInstIds.filter(id => {
+		if (id === targetInstId) return false;
+		if (window.currentTeam && window.currentTeam.includes(id)) return false;
+		const inst = window.charBagData[id];
+		const charId = inst.charId || id;
+		const baseChar = characterList[charId];
+		return baseChar && baseChar.rank === targetRank;
+	}).map(id => {
+		const inst = window.charBagData[id];
+		const charId = inst.charId || id;
+		const baseChar = characterList[charId];
+		return {
+			instanceId: id,
+			charId: charId,
+			name: baseChar.name,
+			level: inst.level || 1,
+			selected: false
+		};
+	});
 
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
-    overlay.style.zIndex = '10001';
-
-
-    const popup = document.createElement('div');
-    popup.className = 'char-select-popup';
-    popup.style.maxWidth = '300px';
-
-    const title = document.createElement('div');
-    title.className = 'char-select-title';
-    title.textContent = `选择同品质材料`;
-    popup.appendChild(title);
-
-    const scrollDiv = document.createElement('div');
-    scrollDiv.className = 'char-select-scroll';
-    scrollDiv.style.maxHeight = '40vh';
-
-    const listContainer = document.createElement('div');
-    listContainer.id = 'upgrade-consumable-list';
-    scrollDiv.appendChild(listContainer);
-    popup.appendChild(scrollDiv);
-
-    // 底部信息栏
-    const infoBar = document.createElement('div');
-    infoBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px;border-top:1px solid #444;';
-    infoBar.id = 'upgrade-info-bar';
-    const countLabel = document.createElement('div');
-    countLabel.style.color = '#aaa';
-    countLabel.id = 'upgrade-count-label';
-    countLabel.textContent = '已选: 0 将升至'+currentLevel+'级';
-    infoBar.appendChild(countLabel);
-
-    const confirmBtn = document.createElement('button');
-    confirmBtn.className = 'ybrpg-btn';
-    confirmBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;';
-    confirmBtn.textContent = '确认升级';
-    confirmBtn.disabled = true;
-    confirmBtn.id = 'upgrade-confirm-btn';
-    confirmBtn.onclick = () => {
-        const selected = consumables.filter(c => c.selected);
-        const totalLevel = selected.reduce((s, c) => s + c.level, 0);
-        const newLevel = currentLevel + totalLevel;
-        // 消耗选中的角色
-        selected.forEach(c => {
-            delete window.charBagData[c.instanceId];
-            if (window.currentTeam) {
-                const idx = window.currentTeam.indexOf(c.instanceId);
-                if (idx !== -1) {
-                    window.currentTeam[idx] = null;
-                    refreshTeamSlot(idx);
-                }
-            }
-        });
-
-        // 升级目标角色
-        const targetData = window.charBagData[targetInstId];
-        targetData.level = newLevel;
-        const ratio = (100 + 10 * (newLevel - 1)) / 100; // 提升比例
-
-        var base = characterList[targetCharId];
-        // if (base) {
-        // }
-        var newcurrent = updateCharacterSP(targetData)
-
-        // overlay.remove();
-        // toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！`, 'success');
-
-        // 刷新队伍视图（如果武将上阵）
-        if (window.currentTeam && window.currentTeam.includes(targetInstId)) {
-            const gridIdx = window.currentTeam.indexOf(targetInstId);
-            refreshTeamSlot(gridIdx);
-            // 如果当前选中的是该格子，刷新详情
-            if (window._selectedSlotIndex === gridIdx) {
-                showTeamCharInfo(gridIdx, targetInstId, targetCharId);
-            }
-        }
-        // 刷新视图
-        // const bagView = document.getElementById('bag-view');
-        // if (bagView) renderBagView(bagView);
-        // if (window.currentTeam && window.currentTeam.includes(targetInstId)) {
-        //     const gridIdx = window.currentTeam.indexOf(targetInstId);
-        //     refreshTeamSlot(gridIdx);
-        //     if (window._selectedSlotIndex === gridIdx) {
-        //         showTeamCharInfo(gridIdx, targetInstId, targetCharId);
-        //     }
-        // }
-        // syncTreasureEquipData();
-        const newHp = newcurrent.hp;
-        const newAtk = newcurrent.atk;
-        const newDef = newcurrent.def;
-        const newSpe = newcurrent.spe;
-        if (typeof onUpgrade === 'function') {
-            onUpgrade(newLevel, newHp, newAtk, newDef, newSpe);
-        }
-
-        overlay.remove();
-        toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！`, 'success');
-
-        // 刷新背包视图（如果有）
-        const bagView = document.getElementById('bag-view');
-        if (bagView) renderBagView(bagView);
-        if (window.currentTeam && window.currentTeam.includes(targetInstId)) {
-            const gridIdx = window.currentTeam.indexOf(targetInstId);
-            refreshTeamSlot(gridIdx);
-            if (window._selectedSlotIndex === gridIdx) {
-                showTeamCharInfo(gridIdx, targetInstId, targetCharId);
-            }
-        }
-        syncTreasureEquipData();
-        SaveManager.autoSave();
-    };
-    infoBar.appendChild(confirmBtn);
-    popup.appendChild(infoBar);
-
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'char-select-close-btn';
-    closeBtn.textContent = '取消';
-    closeBtn.onclick = () => overlay.remove();
-    popup.appendChild(closeBtn);
-
-    overlay.appendChild(popup);
-    document.body.appendChild(overlay);
-
-    function renderConsumableList() {
-        listContainer.innerHTML = '';
-        if (consumables.length === 0) {
-            listContainer.innerHTML = '<div style="color:#666;padding:20px;text-align:center;">没有同品质的可消耗武将</div>';
-            return;
-        }
-        consumables.forEach((c) => {
-            const row = document.createElement('div');
-            row.className = 'char-select-row' + (c.selected ? ' in-team' : '');
-            row.style.cursor = 'pointer';
-
-            const iconDiv = document.createElement('div');
-            iconDiv.className = 'char-select-icon';
-            iconDiv.style.width = '40px';
-            iconDiv.style.height = '40px';
-            const img = document.createElement('img');
-            img.className = 'gallery-char-img';
-            img.src = `./image/character/${c.charId}.jpg`;
-            img.alt = c.name;
-            img.onerror = function () {
-                this.style.display = 'none';
-                const p = document.createElement('div');
-                p.className = 'gallery-char-placeholder';
-                p.textContent = c.name.charAt(0);
-                this.parentNode.appendChild(p);
-            };
-            iconDiv.appendChild(img);
-            row.appendChild(iconDiv);
-
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'char-select-info';
-            const nameEl = document.createElement('div');
-            nameEl.className = 'char-select-name';
-            const tupoText = c.tupolevel ? `+${c.tupolevel}` : ''
-            nameEl.textContent = c.name + tupoText;
-            infoDiv.appendChild(nameEl);
-            const detailEl = document.createElement('div');
-            detailEl.className = 'char-select-detail';
-            detailEl.textContent = `Lv.${c.level}  经验值: ${c.level}`;
-            infoDiv.appendChild(detailEl);
-            row.appendChild(infoDiv);
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '10001';
 
 
-            const checkMark = document.createElement('div');
-            checkMark.style.cssText = 'min-width:20px;text-align:center;font-size:16px;';
-            checkMark.textContent = c.selected ? '✓' : '';
-            row.appendChild(checkMark);
+	const popup = document.createElement('div');
+	popup.className = 'char-select-popup';
+	popup.style.maxWidth = '300px';
 
-            row.onclick = () => {
-                c.selected = !c.selected;
-                renderConsumableList();
-                updateInfoBar();
-            };
+	const title = document.createElement('div');
+	title.className = 'char-select-title';
+	title.textContent = `选择同品质材料`;
+	popup.appendChild(title);
 
-            listContainer.appendChild(row);
-        });
-    }
+	const scrollDiv = document.createElement('div');
+	scrollDiv.className = 'char-select-scroll';
+	scrollDiv.style.maxHeight = '40vh';
 
-    function updateInfoBar() {
-        const selected = consumables.filter(c => c.selected);
-        const totalLevel = selected.reduce((s, c) => s + c.level, 0);
-        const countLabel = document.getElementById('upgrade-count-label');
-        const confirmBtn = document.getElementById('upgrade-confirm-btn');
-        const newLevel = currentLevel + totalLevel;
-        if (countLabel) countLabel.textContent = `已选: ${totalLevel} 将升至 ${newLevel}级`;
-        if (confirmBtn) {
-            confirmBtn.disabled = !totalLevel;
-            confirmBtn.style.opacity = !totalLevel ? '0.5' : '1';
-        }
-    }
+	const listContainer = document.createElement('div');
+	listContainer.id = 'upgrade-consumable-list';
+	scrollDiv.appendChild(listContainer);
+	popup.appendChild(scrollDiv);
 
-    renderConsumableList();
-    updateInfoBar();
+	// 底部信息栏
+	const infoBar = document.createElement('div');
+	infoBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px;border-top:1px solid #444;';
+	infoBar.id = 'upgrade-info-bar';
+	const countLabel = document.createElement('div');
+	countLabel.style.color = '#aaa';
+	countLabel.id = 'upgrade-count-label';
+	countLabel.textContent = '已选: 0 将升至' + currentLevel + '级';
+	infoBar.appendChild(countLabel);
 
-    overlay.onclick = (e) => {
-        if (e.target === overlay) overlay.remove();
-    };
+	const confirmBtn = document.createElement('button');
+	confirmBtn.className = 'ybrpg-btn';
+	confirmBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;';
+	confirmBtn.textContent = '确认升级';
+	confirmBtn.disabled = true;
+	confirmBtn.id = 'upgrade-confirm-btn';
+	confirmBtn.onclick = () => {
+		const selected = consumables.filter(c => c.selected);
+		const totalLevel = selected.reduce((s, c) => s + c.level, 0);
+		const newLevel = currentLevel + totalLevel;
+		// 消耗选中的角色
+		selected.forEach(c => {
+			delete window.charBagData[c.instanceId];
+			if (window.currentTeam) {
+				const idx = window.currentTeam.indexOf(c.instanceId);
+				if (idx !== -1) {
+					window.currentTeam[idx] = null;
+					refreshTeamSlot(idx);
+				}
+			}
+		});
+
+		// 升级目标角色
+		const targetData = window.charBagData[targetInstId];
+		targetData.level = newLevel;
+		const ratio = (100 + 10 * (newLevel - 1)) / 100; // 提升比例
+
+		var base = characterList[targetCharId];
+		// if (base) {
+		// }
+		var newcurrent = updateCharacterSP(targetData)
+
+		// overlay.remove();
+		// toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！`, 'success');
+
+		// 刷新队伍视图（如果武将上阵）
+		if (window.currentTeam && window.currentTeam.includes(targetInstId)) {
+			const gridIdx = window.currentTeam.indexOf(targetInstId);
+			refreshTeamSlot(gridIdx);
+			// 如果当前选中的是该格子，刷新详情
+			if (window._selectedSlotIndex === gridIdx) {
+				showTeamCharInfo(gridIdx, targetInstId, targetCharId);
+			}
+		}
+		// 刷新视图
+		// const bagView = document.getElementById('bag-view');
+		// if (bagView) renderBagView(bagView);
+		// if (window.currentTeam && window.currentTeam.includes(targetInstId)) {
+		//     const gridIdx = window.currentTeam.indexOf(targetInstId);
+		//     refreshTeamSlot(gridIdx);
+		//     if (window._selectedSlotIndex === gridIdx) {
+		//         showTeamCharInfo(gridIdx, targetInstId, targetCharId);
+		//     }
+		// }
+		// syncTreasureEquipData();
+		const newHp = newcurrent.hp;
+		const newAtk = newcurrent.atk;
+		const newDef = newcurrent.def;
+		const newSpe = newcurrent.spe;
+		if (typeof onUpgrade === 'function') {
+			onUpgrade(newLevel, newHp, newAtk, newDef, newSpe);
+		}
+
+		overlay.remove();
+		toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！`, 'success');
+
+		// 刷新背包视图（如果有）
+		const bagView = document.getElementById('bag-view');
+		if (bagView) renderBagView(bagView);
+		if (window.currentTeam && window.currentTeam.includes(targetInstId)) {
+			const gridIdx = window.currentTeam.indexOf(targetInstId);
+			refreshTeamSlot(gridIdx);
+			if (window._selectedSlotIndex === gridIdx) {
+				showTeamCharInfo(gridIdx, targetInstId, targetCharId);
+			}
+		}
+		syncTreasureEquipData();
+		SaveManager.autoSave();
+	};
+	infoBar.appendChild(confirmBtn);
+	popup.appendChild(infoBar);
+
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'char-select-close-btn';
+	closeBtn.textContent = '取消';
+	closeBtn.onclick = () => overlay.remove();
+	popup.appendChild(closeBtn);
+
+	overlay.appendChild(popup);
+	document.body.appendChild(overlay);
+
+	function renderConsumableList() {
+		listContainer.innerHTML = '';
+		if (consumables.length === 0) {
+			listContainer.innerHTML = '<div style="color:#666;padding:20px;text-align:center;">没有同品质的可消耗武将</div>';
+			return;
+		}
+		consumables.forEach((c) => {
+			const row = document.createElement('div');
+			row.className = 'char-select-row' + (c.selected ? ' in-team' : '');
+			row.style.cursor = 'pointer';
+
+			const iconDiv = document.createElement('div');
+			iconDiv.className = 'char-select-icon';
+			iconDiv.style.width = '40px';
+			iconDiv.style.height = '40px';
+			const img = document.createElement('img');
+			img.className = 'gallery-char-img';
+			img.src = `./image/character/${c.charId}.jpg`;
+			img.alt = c.name;
+			img.onerror = function () {
+				this.style.display = 'none';
+				const p = document.createElement('div');
+				p.className = 'gallery-char-placeholder';
+				p.textContent = c.name.charAt(0);
+				this.parentNode.appendChild(p);
+			};
+			iconDiv.appendChild(img);
+			row.appendChild(iconDiv);
+
+			const infoDiv = document.createElement('div');
+			infoDiv.className = 'char-select-info';
+			const nameEl = document.createElement('div');
+			nameEl.className = 'char-select-name';
+			const tupoText = c.tupolevel ? `+${c.tupolevel}` : ''
+			nameEl.textContent = c.name + tupoText;
+			infoDiv.appendChild(nameEl);
+			const detailEl = document.createElement('div');
+			detailEl.className = 'char-select-detail';
+			detailEl.textContent = `Lv.${c.level}  经验值: ${c.level}`;
+			infoDiv.appendChild(detailEl);
+			row.appendChild(infoDiv);
+
+
+			const checkMark = document.createElement('div');
+			checkMark.style.cssText = 'min-width:20px;text-align:center;font-size:16px;';
+			checkMark.textContent = c.selected ? '✓' : '';
+			row.appendChild(checkMark);
+
+			row.onclick = () => {
+				c.selected = !c.selected;
+				renderConsumableList();
+				updateInfoBar();
+			};
+
+			listContainer.appendChild(row);
+		});
+	}
+
+	function updateInfoBar() {
+		const selected = consumables.filter(c => c.selected);
+		const totalLevel = selected.reduce((s, c) => s + c.level, 0);
+		const countLabel = document.getElementById('upgrade-count-label');
+		const confirmBtn = document.getElementById('upgrade-confirm-btn');
+		const newLevel = currentLevel + totalLevel;
+		if (countLabel) countLabel.textContent = `已选: ${totalLevel} 将升至 ${newLevel}级`;
+		if (confirmBtn) {
+			confirmBtn.disabled = !totalLevel;
+			confirmBtn.style.opacity = !totalLevel ? '0.5' : '1';
+		}
+	}
+
+	renderConsumableList();
+	updateInfoBar();
+
+	overlay.onclick = (e) => {
+		if (e.target === overlay) overlay.remove();
+	};
 }
 
 
 // 保留旧函数作为别名
 function showBagCharDetail(charInfo) {
-    if (!charInfo || !charInfo.id) return;
-    // 查找对应的 instanceId（这里假设 charInfo 中有 instanceId 或使用第一个实例）
-    const instanceId = charInfo.instanceId || Object.keys(window.charBagData || {}).find(id => {
-        const inst = window.charBagData[id];
-        return inst && (inst.charId === charInfo.id || id === charInfo.id);
-    });
-    if (instanceId) {
-        showBagCharDetailPopup(instanceId, charInfo.id);
-    } else {
-        toast('无法找到该角色实例', 'error');
-    }
+	if (!charInfo || !charInfo.id) return;
+	// 查找对应的 instanceId（这里假设 charInfo 中有 instanceId 或使用第一个实例）
+	const instanceId = charInfo.instanceId || Object.keys(window.charBagData || {}).find(id => {
+		const inst = window.charBagData[id];
+		return inst && (inst.charId === charInfo.id || id === charInfo.id);
+	});
+	if (instanceId) {
+		showBagCharDetailPopup(instanceId, charInfo.id);
+	} else {
+		toast('无法找到该角色实例', 'error');
+	}
 }
 
 
@@ -7207,25 +7207,25 @@ function showBagCharDetail(charInfo) {
  * @param {string} rank - 内部品质标识
  */
 function getRankLabel(rank) {
-    // const map = {
-    //     'junk': '平凡',
-    //     'common': '普通',
-    //     'rare': '稀有(紫)',
-    //     'epicfake': '伪史诗(橙)',
-    //     'epic': '真史诗(橙)', // 注意：您描述中橙色分伪史诗和真史诗，这里需区分颜色或名称
-    //     'legend': '传说(红)',
-    //     'kami': '神品(金)'
-    // };
-    const map = {
-        'junk': '平凡',
-        'common': '精品',
-        'rare': '稀有',
-        'epicfake': '伪史诗',
-        'epic': '真史诗', // 注意：您描述中橙色分伪史诗和真史诗，这里需区分颜色或名称
-        'legend': '传说',
-        'kami': '神品'
-    };
-    return map[rank] || rank;
+	// const map = {
+	//     'junk': '平凡',
+	//     'common': '普通',
+	//     'rare': '稀有(紫)',
+	//     'epicfake': '伪史诗(橙)',
+	//     'epic': '真史诗(橙)', // 注意：您描述中橙色分伪史诗和真史诗，这里需区分颜色或名称
+	//     'legend': '传说(红)',
+	//     'kami': '神品(金)'
+	// };
+	const map = {
+		'junk': '平凡',
+		'common': '精品',
+		'rare': '稀有',
+		'epicfake': '伪史诗',
+		'epic': '真史诗', // 注意：您描述中橙色分伪史诗和真史诗，这里需区分颜色或名称
+		'legend': '传说',
+		'kami': '神品'
+	};
+	return map[rank] || rank;
 }
 
 /**
@@ -7235,20 +7235,20 @@ function getRankLabel(rank) {
  * @returns {Object} { cost: number, maxed: boolean }
  */
 function getBreakthroughInfo(character, currentBreakthrough) {
-    const tupoxxxx = character.tupolevel || currentBreakthrough || 0;
-    
-    // 如果已满级
-    if (tupoxxxx >= 20) {
-        return { cost: 0, maxed: true };
-    }
-    
-    // 突破消耗：每4阶增加1个材料
-    const cost = Math.floor(tupoxxxx / 4) + 1;
-    
-    return {
-        cost: character.charId === 'zhujue' ? 0 : cost,
-        maxed: false
-    };
+	const tupoxxxx = character.tupolevel || currentBreakthrough || 0;
+
+	// 如果已满级
+	if (tupoxxxx >= 20) {
+		return { cost: 0, maxed: true };
+	}
+
+	// 突破消耗：每4阶增加1个材料
+	const cost = Math.floor(tupoxxxx / 4) + 1;
+
+	return {
+		cost: character.charId === 'zhujue' ? 0 : cost,
+		maxed: false
+	};
 }
 
 
@@ -7257,32 +7257,32 @@ function getBreakthroughInfo(character, currentBreakthrough) {
  * 根据：初始品质 + 突破阶数带来的成长 + 当前品质系数
  */
 function getCharacterStats(character, breakthroughLevel) {
-    // 1. 确定当前有效品质 (Effective Rank)
-    let effectiveRank = character.initialRank;
-    if (breakthroughLevel >= 17) effectiveRank = 'kami';
-    else if (breakthroughLevel >= 13) effectiveRank = 'legend';
-    else if (breakthroughLevel >= 9) effectiveRank = 'epic'; // 真史诗
-    else if (breakthroughLevel >= 5) effectiveRank = 'epicfake'; // 伪史诗
-    // 否则保持 initialRank (如果是 rare 或更低)
+	// 1. 确定当前有效品质 (Effective Rank)
+	let effectiveRank = character.initialRank;
+	if (breakthroughLevel >= 17) effectiveRank = 'kami';
+	else if (breakthroughLevel >= 13) effectiveRank = 'legend';
+	else if (breakthroughLevel >= 9) effectiveRank = 'epic'; // 真史诗
+	else if (breakthroughLevel >= 5) effectiveRank = 'epicfake'; // 伪史诗
+	// 否则保持 initialRank (如果是 rare 或更低)
 
-    // 2. 获取基础模板
-    const baseStats = characterTemplate[character.template][effectiveRank];
+	// 2. 获取基础模板
+	const baseStats = characterTemplate[character.template][effectiveRank];
 
-    if (!baseStats) {
-        console.error(`Missing template for ${character.template} - ${effectiveRank}`);
-        return { hp: 100, atk: 10, def: 10, spe: 10 };
-    }
+	if (!baseStats) {
+		console.error(`Missing template for ${character.template} - ${effectiveRank}`);
+		return { hp: 100, atk: 10, def: 10, spe: 10 };
+	}
 
-    // 3. 计算成长 (简单线性成长示例，可根据公式调整)
-    // 每突破一阶，属性提升一定百分比，或者固定值
-    const growthFactor = 1 + (breakthroughLevel * 0.05); // 每阶提升5%
+	// 3. 计算成长 (简单线性成长示例，可根据公式调整)
+	// 每突破一阶，属性提升一定百分比，或者固定值
+	const growthFactor = 1 + (breakthroughLevel * 0.05); // 每阶提升5%
 
-    return {
-        hp: Math.floor(baseStats.hp * growthFactor),
-        atk: Math.floor(baseStats.atk * growthFactor),
-        def: Math.floor(baseStats.def * growthFactor),
-        spe: Math.floor(baseStats.spe * growthFactor) // 速度通常成长较低或固定
-    };
+	return {
+		hp: Math.floor(baseStats.hp * growthFactor),
+		atk: Math.floor(baseStats.atk * growthFactor),
+		def: Math.floor(baseStats.def * growthFactor),
+		spe: Math.floor(baseStats.spe * growthFactor) // 速度通常成长较低或固定
+	};
 }
 
 /**
@@ -7291,25 +7291,25 @@ function getCharacterStats(character, breakthroughLevel) {
  * @returns {Object} 包含 hp, atk, def, spe 的对象
  */
 function compileCharacterStats(charObj) {
-    if (!charObj) return { hp: 100, atk: 10, def: 10, spe: 10 };
+	if (!charObj) return { hp: 100, atk: 10, def: 10, spe: 10 };
 
-    // 1. 确定模板类型 (damger, defense, balanced)，默认为 balanced
-    const templateType = charObj.template || 'balanced';
+	// 1. 确定模板类型 (damger, defense, balanced)，默认为 balanced
+	const templateType = charObj.template || 'balanced';
 
-    // 2. 确定品质 (legend, epic, epicfake, rare...)，默认为 common
-    const rank = charObj.rank || 'common';
+	// 2. 确定品质 (legend, epic, epicfake, rare...)，默认为 common
+	const rank = charObj.rank || 'common';
 
-    // 3. 从 characterTemplate 中查找数值
-    // 注意：确保 characterTemplate 在当前作用域可见，如果是在另一个文件，可能需要 window.characterTemplate
-    const templateData = window.characterTemplate || characterTemplate;
+	// 3. 从 characterTemplate 中查找数值
+	// 注意：确保 characterTemplate 在当前作用域可见，如果是在另一个文件，可能需要 window.characterTemplate
+	const templateData = window.characterTemplate || characterTemplate;
 
-    if (templateData && templateData[templateType] && templateData[templateType][rank]) {
-        return { ...templateData[templateType][rank] };
-    } else {
-        console.warn(`[角色编译] 未找到模板: ${templateType}, 品质: ${rank}。使用默认值。`, charObj.name);
-        // 返回一个安全的默认值，防止游戏崩溃
-        return { hp: 500, atk: 50, def: 50, spe: 50 };
-    }
+	if (templateData && templateData[templateType] && templateData[templateType][rank]) {
+		return { ...templateData[templateType][rank] };
+	} else {
+		console.warn(`[角色编译] 未找到模板: ${templateType}, 品质: ${rank}。使用默认值。`, charObj.name);
+		// 返回一个安全的默认值，防止游戏崩溃
+		return { hp: 500, atk: 50, def: 50, spe: 50 };
+	}
 }
 
 /**
@@ -7318,27 +7318,27 @@ function compileCharacterStats(charObj) {
  * @returns {Object|null} 技能数据对象
  */
 function getSkillData(skillId) {
-    if (!skillId) return null;
+	if (!skillId) return null;
 
-    // 依次在 pugong, skill, spskill 中查找
-    const content = window.contentList || contentList;
-    if (!content) return null;
+	// 依次在 pugong, skill, spskill 中查找
+	const content = window.contentList || contentList;
+	if (!content) return null;
 
-    if (content.pugong[skillId]) return { ...content.pugong[skillId], type: 'pugong' };
-    if (content.skill[skillId]) return { ...content.skill[skillId], type: 'skill' };
-    if (content.spskill[skillId]) return { ...content.spskill[skillId], type: 'spskill' };
+	if (content.pugong[skillId]) return { ...content.pugong[skillId], type: 'pugong' };
+	if (content.skill[skillId]) return { ...content.skill[skillId], type: 'skill' };
+	if (content.spskill[skillId]) return { ...content.spskill[skillId], type: 'spskill' };
 
-    console.warn(`[技能编译] 未找到技能ID: ${skillId}`);
-    return null;
+	console.warn(`[技能编译] 未找到技能ID: ${skillId}`);
+	return null;
 }
 
 function mergeNoOverwrite(a, b) {
-    for (const key of Object.keys(b)) {
-        if (!(key in a)) {    // 仅在 a 中没有此键时添加
-            a[key] = b[key];
-        }
-    }
-    return a;
+	for (const key of Object.keys(b)) {
+		if (!(key in a)) {    // 仅在 a 中没有此键时添加
+			a[key] = b[key];
+		}
+	}
+	return a;
 }
 
 
@@ -7346,56 +7346,56 @@ function mergeNoOverwrite(a, b) {
  * 提升主角等级（每通过一个主线章节调用一次）
  */
 function levelUpMainCharacter() {
-    const mainChar = getMainCharacterInstance();
-    if (!mainChar) {
-        toast('未找到主角', 'error');
-        return;
-    }
+	const mainChar = getMainCharacterInstance();
+	if (!mainChar) {
+		toast('未找到主角', 'error');
+		return;
+	}
 
-    const instData = mainChar;
-    const baseChar = characterList['zhujue'];
+	const instData = mainChar;
+	const baseChar = characterList['zhujue'];
 
-    if (!baseChar || !instData) return;
+	if (!baseChar || !instData) return;
 
-    // 2. 提升等级
-    const oldLevel = instData.level || 1;
-    instData.level = oldLevel + 1;
+	// 2. 提升等级
+	const oldLevel = instData.level || 1;
+	instData.level = oldLevel + 1;
 
-    // 3. 重新计算属性
-    // 优先使用 updateCharacterSP (如果它存在且能处理 level)
-    if (typeof updateCharacterSP === 'function') {
-        // 确保基础字段存在
-        instData.rank = instData.rank || baseChar.rank;
-        instData.template = instData.template || baseChar.template;
+	// 3. 重新计算属性
+	// 优先使用 updateCharacterSP (如果它存在且能处理 level)
+	if (typeof updateCharacterSP === 'function') {
+		// 确保基础字段存在
+		instData.rank = instData.rank || baseChar.rank;
+		instData.template = instData.template || baseChar.template;
 
-        const updatedStats = updateCharacterSP(instData);
-        if (updatedStats) {
-            instData.hp = updatedStats.hp;
-            instData.atk = updatedStats.atk;
-            instData.def = updatedStats.def;
-            instData.spe = updatedStats.spe;
-            instData.maxHp = updatedStats.hp;
-            instData.currentHp = updatedStats.hp; // 升级回满血
-        }
-    } else {
-        // 备用方案：简单线性成长
-        const growthRate = 0.1;
-        instData.hp = Math.floor((instData.hp || baseChar.hp) * (1 + growthRate));
-        instData.atk = Math.floor((instData.atk || baseChar.atk) * (1 + growthRate));
-        instData.def = Math.floor((instData.def || baseChar.def) * (1 + growthRate));
-        instData.spe = Math.floor((instData.spe || baseChar.spe) * (1 + growthRate));
-        instData.maxHp = instData.hp;
-        instData.currentHp = instData.hp;
-    }
+		const updatedStats = updateCharacterSP(instData);
+		if (updatedStats) {
+			instData.hp = updatedStats.hp;
+			instData.atk = updatedStats.atk;
+			instData.def = updatedStats.def;
+			instData.spe = updatedStats.spe;
+			instData.maxHp = updatedStats.hp;
+			instData.currentHp = updatedStats.hp; // 升级回满血
+		}
+	} else {
+		// 备用方案：简单线性成长
+		const growthRate = 0.1;
+		instData.hp = Math.floor((instData.hp || baseChar.hp) * (1 + growthRate));
+		instData.atk = Math.floor((instData.atk || baseChar.atk) * (1 + growthRate));
+		instData.def = Math.floor((instData.def || baseChar.def) * (1 + growthRate));
+		instData.spe = Math.floor((instData.spe || baseChar.spe) * (1 + growthRate));
+		instData.maxHp = instData.hp;
+		instData.currentHp = instData.hp;
+	}
 
-    console.log(`主角升级！当前等级: ${instData.level}`);
-    toast(`主角升至 Lv.${instData.level}！`, 'success');
+	console.log(`主角升级！当前等级: ${instData.level}`);
+	toast(`主角升至 Lv.${instData.level}！`, 'success');
 
-    // 4. 刷新界面
-    refreshAllTeamSlots();
+	// 4. 刷新界面
+	refreshAllTeamSlots();
 
-    // 5. 自动保存
-    SaveManager.autoSave();
+	// 5. 自动保存
+	SaveManager.autoSave();
 }
 
 /**
@@ -7405,72 +7405,72 @@ function levelUpMainCharacter() {
  * @returns {boolean} - 是否升级成功
  */
 function upgradeCharacterInstance(instanceId, levelsToAdd = 1) {
-    // 1. 基础校验
-    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-        console.warn(`[升级失败] 无效的实例ID: ${instanceId}`);
-        return false;
-    }
+	// 1. 基础校验
+	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+		console.warn(`[升级失败] 无效的实例ID: ${instanceId}`);
+		return false;
+	}
 
-    const instData = window.charBagData[instanceId];
-    const charId = instData.charId || instanceId;
-    const baseChar = characterList[charId];
+	const instData = window.charBagData[instanceId];
+	const charId = instData.charId || instanceId;
+	const baseChar = characterList[charId];
 
-    if (!baseChar) {
-        console.warn(`[升级失败] 未找到基础角色数据: ${charId}`);
-        return false;
-    }
+	if (!baseChar) {
+		console.warn(`[升级失败] 未找到基础角色数据: ${charId}`);
+		return false;
+	}
 
-    // 2. 提升等级
-    const oldLevel = instData.level || 1;
-    const newLevel = oldLevel + levelsToAdd;
+	// 2. 提升等级
+	const oldLevel = instData.level || 1;
+	const newLevel = oldLevel + levelsToAdd;
 
-    // 可选：设置等级上限，例如 100 级
-    const MAX_LEVEL = 100;
-    if (newLevel > MAX_LEVEL) {
-        toast(`角色已达到最高等级 ${MAX_LEVEL}`, 'warning');
-        return false;
-    }
+	// 可选：设置等级上限，例如 100 级
+	const MAX_LEVEL = 100;
+	if (newLevel > MAX_LEVEL) {
+		toast(`角色已达到最高等级 ${MAX_LEVEL}`, 'warning');
+		return false;
+	}
 
-    instData.level = newLevel;
+	instData.level = newLevel;
 
-    // 3. 重新计算属性
-    // updateCharacterSP 会根据 instData 中的 level, rank, template 等字段重新计算 hp, atk, def, spe
-    if (typeof updateCharacterSP === 'function') {
-        updateCharacterSP(instData);
-    } else {
-        console.error('[升级警告] updateCharacterSP 函数未定义，属性未更新');
-        // 如果 updateCharacterSP 不存在，可能需要手动计算或报错
-        return false;
-    }
+	// 3. 重新计算属性
+	// updateCharacterSP 会根据 instData 中的 level, rank, template 等字段重新计算 hp, atk, def, spe
+	if (typeof updateCharacterSP === 'function') {
+		updateCharacterSP(instData);
+	} else {
+		console.error('[升级警告] updateCharacterSP 函数未定义，属性未更新');
+		// 如果 updateCharacterSP 不存在，可能需要手动计算或报错
+		return false;
+	}
 
-    // 4. 处理当前血量 (可选策略)
-    // 策略 A: 升级后回满血
-    // instData.currentHp = instData.hp;
+	// 4. 处理当前血量 (可选策略)
+	// 策略 A: 升级后回满血
+	// instData.currentHp = instData.hp;
 
-    // 策略 B: 保持血量百分比 (推荐)
-    if (instData.maxHp && instData.maxHp > 0 && instData.hp > 0) {
-        // 注意：updateCharacterSP 通常会更新 instData.hp 作为 maxHp
-        // 假设 updateCharacterSP 更新的是 instData.hp (即最大血量)
-        // 我们需要根据旧的最大血量比例来设置新的当前血量
-        // 但由于 updateCharacterSP 直接修改了 instData.hp，我们需要在调用前保存旧的最大血量，或者假设 currentHp 不应超过新的 maxHp
+	// 策略 B: 保持血量百分比 (推荐)
+	if (instData.maxHp && instData.maxHp > 0 && instData.hp > 0) {
+		// 注意：updateCharacterSP 通常会更新 instData.hp 作为 maxHp
+		// 假设 updateCharacterSP 更新的是 instData.hp (即最大血量)
+		// 我们需要根据旧的最大血量比例来设置新的当前血量
+		// 但由于 updateCharacterSP 直接修改了 instData.hp，我们需要在调用前保存旧的最大血量，或者假设 currentHp 不应超过新的 maxHp
 
-        // 简单处理：如果当前血量超过了新的最大血量，则修正为最大血量
-        // 如果希望保持比例，需要在调用 updateCharacterSP 之前记录 oldMaxHp
-        if (instData.currentHp > instData.hp) {
-            instData.currentHp = instData.hp;
-        }
-    } else {
-        // 如果没有 currentHp 字段，初始化它
-        if (instData.currentHp === undefined) {
-            instData.currentHp = instData.hp;
-        }
-    }
+		// 简单处理：如果当前血量超过了新的最大血量，则修正为最大血量
+		// 如果希望保持比例，需要在调用 updateCharacterSP 之前记录 oldMaxHp
+		if (instData.currentHp > instData.hp) {
+			instData.currentHp = instData.hp;
+		}
+	} else {
+		// 如果没有 currentHp 字段，初始化它
+		if (instData.currentHp === undefined) {
+			instData.currentHp = instData.hp;
+		}
+	}
 
-    // 5. 同步 maxHp 字段 (如果游戏逻辑依赖 maxHp)
-    instData.maxHp = instData.hp;
+	// 5. 同步 maxHp 字段 (如果游戏逻辑依赖 maxHp)
+	instData.maxHp = instData.hp;
 
-    console.log(`[升级成功] 实例 ${instanceId} (${baseChar.name}) 等级: ${oldLevel} -> ${newLevel}`);
-    return true;
+	console.log(`[升级成功] 实例 ${instanceId} (${baseChar.name}) 等级: ${oldLevel} -> ${newLevel}`);
+	return true;
 }
 
 /**
@@ -7479,72 +7479,72 @@ function upgradeCharacterInstance(instanceId, levelsToAdd = 1) {
  * @returns {Object} { success: boolean, message: string }
  */
 function breakthroughCharacterInstance(targetInstId) {
-    // 1. 基础校验
-    if (!targetInstId || !window.charBagData || !window.charBagData[targetInstId]) {
-        return { success: false, message: '无效的目标实例' };
-    }
+	// 1. 基础校验
+	if (!targetInstId || !window.charBagData || !window.charBagData[targetInstId]) {
+		return { success: false, message: '无效的目标实例' };
+	}
 
-    const targetInst = window.charBagData[targetInstId];
-    const charId = targetInst.charId || targetInstId;
-    const baseChar = characterList[charId];
+	const targetInst = window.charBagData[targetInstId];
+	const charId = targetInst.charId || targetInstId;
+	const baseChar = characterList[charId];
 
-    if (!baseChar) {
-        return { success: false, message: '未找到角色基础数据' };
-    }
+	if (!baseChar) {
+		return { success: false, message: '未找到角色基础数据' };
+	}
 
-    // 获取当前突破阶数，默认为 0
-    const currentTupoLevel = targetInst.tupolevel || 0;
+	// 获取当前突破阶数，默认为 0
+	const currentTupoLevel = targetInst.tupolevel || 0;
 
-    // 检查是否已满级
-    if (currentTupoLevel >= 20) {
-        return { success: false, message: '角色已达到最大突破阶数（20阶）' };
-    }
+	// 检查是否已满级
+	if (currentTupoLevel >= 20) {
+		return { success: false, message: '角色已达到最大突破阶数（20阶）' };
+	}
 
-    // 计算突破消耗（只消耗同名角色，不涉及升阶）
-    const cost = targetInst.charId === 'zhujue' ? 0 : (Math.floor(currentTupoLevel / 4) + 1);
+	// 计算突破消耗（只消耗同名角色，不涉及升阶）
+	const cost = targetInst.charId === 'zhujue' ? 0 : (Math.floor(currentTupoLevel / 4) + 1);
 
-    // 资源校验
-    const allInstIds = Object.keys(window.charBagData);
-    const fodderCandidates = allInstIds.filter(id => {
-        if (id === targetInstId) return false;
-        const inst = window.charBagData[id];
-        return inst && (inst.charId === charId || id === charId);
-    });
+	// 资源校验
+	const allInstIds = Object.keys(window.charBagData);
+	const fodderCandidates = allInstIds.filter(id => {
+		if (id === targetInstId) return false;
+		const inst = window.charBagData[id];
+		return inst && (inst.charId === charId || id === charId);
+	});
 
-    if (fodderCandidates.length < cost) {
-        return {
-            success: false,
-            message: `突破需要 ${cost} 个同名角色作为材料，当前可用: ${fodderCandidates.length}`
-        };
-    }
+	if (fodderCandidates.length < cost) {
+		return {
+			success: false,
+			message: `突破需要 ${cost} 个同名角色作为材料，当前可用: ${fodderCandidates.length}`
+		};
+	}
 
-    // 执行消耗：移除作为材料的实例
-    for (let i = 0; i < cost; i++) {
-        const fodderId = fodderCandidates[i];
-        if (window.currentTeam && window.currentTeam.includes(fodderId)) {
-            window.currentTeam = window.currentTeam.filter(id => id !== fodderId);
-        }
-        delete window.charBagData[fodderId];
-        if (window.treasureEquipData && window.treasureEquipData[fodderId]) {
-            delete window.treasureEquipData[fodderId];
-        }
-    }
+	// 执行消耗：移除作为材料的实例
+	for (let i = 0; i < cost; i++) {
+		const fodderId = fodderCandidates[i];
+		if (window.currentTeam && window.currentTeam.includes(fodderId)) {
+			window.currentTeam = window.currentTeam.filter(id => id !== fodderId);
+		}
+		delete window.charBagData[fodderId];
+		if (window.treasureEquipData && window.treasureEquipData[fodderId]) {
+			delete window.treasureEquipData[fodderId];
+		}
+	}
 
-    // 提升突破阶数
-    targetInst.tupolevel = currentTupoLevel + 1;
+	// 提升突破阶数
+	targetInst.tupolevel = currentTupoLevel + 1;
 
-    // 重新计算属性
-    if (typeof updateCharacterSP === 'function') {
-        updateCharacterSP(targetInst);
-    }
+	// 重新计算属性
+	if (typeof updateCharacterSP === 'function') {
+		updateCharacterSP(targetInst);
+	}
 
-    SaveManager.autoSave();
+	SaveManager.autoSave();
 
-    return {
-        success: true,
-        message: `突破成功！当前阶数: ${targetInst.tupolevel}`,
-        newTupoLevel: targetInst.tupolevel
-    };
+	return {
+		success: true,
+		message: `突破成功！当前阶数: ${targetInst.tupolevel}`,
+		newTupoLevel: targetInst.tupolevel
+	};
 }
 
 
@@ -7555,29 +7555,29 @@ function breakthroughCharacterInstance(targetInstId) {
  * @returns {Object|null} 如果需要升阶，返回目标品质和升阶消耗；否则返回 null
  */
 function getPromotionInfo(tupolevel, currentRank) {
-    const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
-    const currentRankIndex = rankList.indexOf(currentRank);
-    
-    // 定义各阶数对应的目标品质
-    const promotionMap = {
-        2: 'rare',
-        4: 'epicfake',
-        8: 'epic',
-        12: 'legend',
-        16: 'kami'
-    };
-    
-    const targetRank = promotionMap[tupolevel];
-    if (!targetRank) return null;
-    
-    const targetRankIndex = rankList.indexOf(targetRank);
-    if (currentRankIndex >= targetRankIndex) return null; // 品质已经足够，不需要升阶
-    
-    return {
-        targetRank: targetRank,
-        cost: Math.floor(tupolevel / 4) + 1, // 升阶消耗：根据阶数递增
-        stoneCost: 1 // 突破石消耗（可按需调整）
-    };
+	const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
+	const currentRankIndex = rankList.indexOf(currentRank);
+
+	// 定义各阶数对应的目标品质
+	const promotionMap = {
+		2: 'rare',
+		4: 'epicfake',
+		8: 'epic',
+		12: 'legend',
+		16: 'kami'
+	};
+
+	const targetRank = promotionMap[tupolevel];
+	if (!targetRank) return null;
+
+	const targetRankIndex = rankList.indexOf(targetRank);
+	if (currentRankIndex >= targetRankIndex) return null; // 品质已经足够，不需要升阶
+
+	return {
+		targetRank: targetRank,
+		cost: Math.floor(tupolevel / 4) + 1, // 升阶消耗：根据阶数递增
+		stoneCost: 1 // 突破石消耗（可按需调整）
+	};
 }
 
 /**
@@ -7586,56 +7586,56 @@ function getPromotionInfo(tupolevel, currentRank) {
  * @returns {Object} { success: boolean, message: string }
  */
 function promoteCharacterRank(targetInstId) {
-    if (!targetInstId || !window.charBagData || !window.charBagData[targetInstId]) {
-        return { success: false, message: '无效的目标实例' };
-    }
+	if (!targetInstId || !window.charBagData || !window.charBagData[targetInstId]) {
+		return { success: false, message: '无效的目标实例' };
+	}
 
-    const targetInst = window.charBagData[targetInstId];
-    const charId = targetInst.charId || targetInstId;
-    const baseChar = characterList[charId];
+	const targetInst = window.charBagData[targetInstId];
+	const charId = targetInst.charId || targetInstId;
+	const baseChar = characterList[charId];
 
-    if (!baseChar) {
-        return { success: false, message: '未找到角色基础数据' };
-    }
+	if (!baseChar) {
+		return { success: false, message: '未找到角色基础数据' };
+	}
 
-    const currentTupoLevel = targetInst.tupolevel || 0;
-    const currentRank = targetInst.rank || baseChar.rank || 'common';
-    
-    // 获取升阶信息
-    const promotionInfo = getPromotionInfo(currentTupoLevel, currentRank);
-    if (!promotionInfo) {
-        return { success: false, message: '当前突破等级无需升阶或已达到最高品质' };
-    }
+	const currentTupoLevel = targetInst.tupolevel || 0;
+	const currentRank = targetInst.rank || baseChar.rank || 'common';
 
-    // 校验资源：突破石
-    const hasStone = (window.gameItems && window.gameItems['breakthrough_stone']) 
-        ? window.gameItems['breakthrough_stone'] >= (promotionInfo.stoneCost || 0) 
-        : true; // 如果没有道具系统，默认true
-    
-    if (!hasStone) {
-        return { success: false, message: `升阶需要 ${promotionInfo.stoneCost} 个【突破石】，材料不足！` };
-    }
+	// 获取升阶信息
+	const promotionInfo = getPromotionInfo(currentTupoLevel, currentRank);
+	if (!promotionInfo) {
+		return { success: false, message: '当前突破等级无需升阶或已达到最高品质' };
+	}
 
-    // 扣除突破石
-    if (window.gameItems && window.gameItems['breakthrough_stone']) {
-        window.gameItems['breakthrough_stone'] -= promotionInfo.stoneCost || 0;
-    }
+	// 校验资源：突破石
+	const hasStone = (window.gameItems && window.gameItems['breakthrough_stone'])
+		? window.gameItems['breakthrough_stone'] >= (promotionInfo.stoneCost || 0)
+		: true; // 如果没有道具系统，默认true
 
-    // 改变品质
-    targetInst.rank = promotionInfo.targetRank;
+	if (!hasStone) {
+		return { success: false, message: `升阶需要 ${promotionInfo.stoneCost} 个【突破石】，材料不足！` };
+	}
 
-    // 重新计算属性
-    if (typeof updateCharacterSP === 'function') {
-        updateCharacterSP(targetInst);
-    }
+	// 扣除突破石
+	if (window.gameItems && window.gameItems['breakthrough_stone']) {
+		window.gameItems['breakthrough_stone'] -= promotionInfo.stoneCost || 0;
+	}
 
-    SaveManager.autoSave();
+	// 改变品质
+	targetInst.rank = promotionInfo.targetRank;
 
-    return {
-        success: true,
-        message: `升阶成功！品质提升至【${getRankLabel(promotionInfo.targetRank)}】`,
-        targetRank: promotionInfo.targetRank
-    };
+	// 重新计算属性
+	if (typeof updateCharacterSP === 'function') {
+		updateCharacterSP(targetInst);
+	}
+
+	SaveManager.autoSave();
+
+	return {
+		success: true,
+		message: `升阶成功！品质提升至【${getRankLabel(promotionInfo.targetRank)}】`,
+		targetRank: promotionInfo.targetRank
+	};
 }
 
 /**
@@ -7643,88 +7643,88 @@ function promoteCharacterRank(targetInstId) {
  * @param {number} targetTupoLevel - 目标突破等级，如果低于当前等级则不执行
  */
 function breakthroughMainCharacter(targetTupoLevel) {
-    const mainCharId = 'zhujue';
-    if (!window.charBagData) return false;
+	const mainCharId = 'zhujue';
+	if (!window.charBagData) return false;
 
-    // 1. 找到主角的 Instance ID
-    const mainInstId = Object.keys(window.charBagData).find(id =>
-        window.charBagData[id].charId === mainCharId
-    );
+	// 1. 找到主角的 Instance ID
+	const mainInstId = Object.keys(window.charBagData).find(id =>
+		window.charBagData[id].charId === mainCharId
+	);
 
-    if (!mainInstId) {
-        console.warn('未找到主角实例，无法突破');
-        return false;
-    }
+	if (!mainInstId) {
+		console.warn('未找到主角实例，无法突破');
+		return false;
+	}
 
-    const instData = window.charBagData[mainInstId];
-    const currentTupoLevel = instData.tupolevel || 0;
-    
-    // 2. 参数校验：如果目标等级低于或等于当前等级，则不执行
-    if (targetTupoLevel !== undefined && targetTupoLevel !== null) {
-        if (targetTupoLevel <= currentTupoLevel) {
-            console.log(`主角当前突破等级(${currentTupoLevel})已达到或超过目标(${targetTupoLevel})，无需突破`);
-            return true; // 返回 true 表示无需操作但未出错
-        }
-        if (targetTupoLevel > 20) {
-            console.warn('目标突破等级不能超过20');
-            toast('目标突破等级不能超过20', 'warning');
-            return false;
-        }
-    }
+	const instData = window.charBagData[mainInstId];
+	const currentTupoLevel = instData.tupolevel || 0;
 
-    // 3. 计算需要突破的次数
-    let breakCount = 0;
-    if (targetTupoLevel !== undefined && targetTupoLevel !== null) {
-        breakCount = targetTupoLevel - currentTupoLevel;
-    } else {
-        breakCount = 1; // 默认突破1次
-    }
+	// 2. 参数校验：如果目标等级低于或等于当前等级，则不执行
+	if (targetTupoLevel !== undefined && targetTupoLevel !== null) {
+		if (targetTupoLevel <= currentTupoLevel) {
+			console.log(`主角当前突破等级(${currentTupoLevel})已达到或超过目标(${targetTupoLevel})，无需突破`);
+			return true; // 返回 true 表示无需操作但未出错
+		}
+		if (targetTupoLevel > 20) {
+			console.warn('目标突破等级不能超过20');
+			toast('目标突破等级不能超过20', 'warning');
+			return false;
+		}
+	}
 
-    // 4. 执行多次突破
-    for (let i = 0; i < breakCount; i++) {
-        const result = breakthroughCharacterInstance(mainInstId);
-        if (!result.success) {
-            console.warn(`主角第${i + 1}次突破失败:`, result.message);
-            return false;
-        }
-    }
+	// 3. 计算需要突破的次数
+	let breakCount = 0;
+	if (targetTupoLevel !== undefined && targetTupoLevel !== null) {
+		breakCount = targetTupoLevel - currentTupoLevel;
+	} else {
+		breakCount = 1; // 默认突破1次
+	}
 
-    // 5. 更新属性
-    const baseChar = characterList[mainCharId];
-    if (!baseChar || !instData) return false;
+	// 4. 执行多次突破
+	for (let i = 0; i < breakCount; i++) {
+		const result = breakthroughCharacterInstance(mainInstId);
+		if (!result.success) {
+			console.warn(`主角第${i + 1}次突破失败:`, result.message);
+			return false;
+		}
+	}
 
-    if (typeof updateCharacterSP === 'function') {
-        instData.rank = instData.rank || baseChar.rank;
-        instData.template = instData.template || baseChar.template;
+	// 5. 更新属性
+	const baseChar = characterList[mainCharId];
+	if (!baseChar || !instData) return false;
 
-        const updatedStats = updateCharacterSP(instData);
-        if (updatedStats) {
-            instData.hp = updatedStats.hp;
-            instData.atk = updatedStats.atk;
-            instData.def = updatedStats.def;
-            instData.spe = updatedStats.spe;
-            instData.maxHp = updatedStats.hp;
-            instData.currentHp = updatedStats.hp;
-        }
-    } else {
-        // 备用方案
-        const growthRate = 0.1;
-        instData.hp = Math.floor((instData.hp || baseChar.hp) * (1 + growthRate * breakCount));
-        instData.atk = Math.floor((instData.atk || baseChar.atk) * (1 + growthRate * breakCount));
-        instData.def = Math.floor((instData.def || baseChar.def) * (1 + growthRate * breakCount));
-        instData.spe = Math.floor((instData.spe || baseChar.spe) * (1 + growthRate * breakCount));
-        instData.maxHp = instData.hp;
-        instData.currentHp = instData.hp;
-    }
+	if (typeof updateCharacterSP === 'function') {
+		instData.rank = instData.rank || baseChar.rank;
+		instData.template = instData.template || baseChar.template;
 
-    // 6. 刷新界面
-    refreshAllTeamSlots();
+		const updatedStats = updateCharacterSP(instData);
+		if (updatedStats) {
+			instData.hp = updatedStats.hp;
+			instData.atk = updatedStats.atk;
+			instData.def = updatedStats.def;
+			instData.spe = updatedStats.spe;
+			instData.maxHp = updatedStats.hp;
+			instData.currentHp = updatedStats.hp;
+		}
+	} else {
+		// 备用方案
+		const growthRate = 0.1;
+		instData.hp = Math.floor((instData.hp || baseChar.hp) * (1 + growthRate * breakCount));
+		instData.atk = Math.floor((instData.atk || baseChar.atk) * (1 + growthRate * breakCount));
+		instData.def = Math.floor((instData.def || baseChar.def) * (1 + growthRate * breakCount));
+		instData.spe = Math.floor((instData.spe || baseChar.spe) * (1 + growthRate * breakCount));
+		instData.maxHp = instData.hp;
+		instData.currentHp = instData.hp;
+	}
 
-    // 7. 自动保存
-    SaveManager.autoSave();
-    
-    console.log(`主角突破成功！从 ${currentTupoLevel} 阶突破至 ${instData.tupolevel || currentTupoLevel + breakCount} 阶`);
-    return true;
+	// 6. 刷新界面
+	refreshAllTeamSlots();
+
+	// 7. 自动保存
+	SaveManager.autoSave();
+
+	console.log(`主角突破成功！从 ${currentTupoLevel} 阶突破至 ${instData.tupolevel || currentTupoLevel + breakCount} 阶`);
+	return true;
 }
 
 
@@ -7734,119 +7734,119 @@ function breakthroughMainCharacter(targetTupoLevel) {
  *                            可选值: 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'
  */
 function promoteMainCharacter(targetRank) {
-    const mainCharId = 'zhujue';
-    if (!window.charBagData) return false;
+	const mainCharId = 'zhujue';
+	if (!window.charBagData) return false;
 
-    // 1. 找到主角的 Instance ID
-    const mainInstId = Object.keys(window.charBagData).find(id =>
-        window.charBagData[id].charId === mainCharId
-    );
+	// 1. 找到主角的 Instance ID
+	const mainInstId = Object.keys(window.charBagData).find(id =>
+		window.charBagData[id].charId === mainCharId
+	);
 
-    if (!mainInstId) {
-        console.warn('未找到主角实例，无法升阶');
-        return false;
-    }
+	if (!mainInstId) {
+		console.warn('未找到主角实例，无法升阶');
+		return false;
+	}
 
-    const instData = window.charBagData[mainInstId];
-    const currentRank = instData.rank || 'common';
-    
-    // 2. 品质排序表
-    const rankOrder = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
-    const currentRankIndex = rankOrder.indexOf(currentRank);
-    
-    // 3. 参数校验
-    if (targetRank) {
-        const targetRankIndex = rankOrder.indexOf(targetRank);
-        if (targetRankIndex === -1) {
-            console.warn(`无效的目标品质: ${targetRank}`);
-            toast(`无效的目标品质: ${targetRank}`, 'error');
-            return false;
-        }
-        
-        // 如果目标品质低于或等于当前品质，则不执行
-        if (targetRankIndex <= currentRankIndex) {
-            console.log(`主角当前品质(${getRankLabel(currentRank)})已达到或超过目标(${getRankLabel(targetRank)})，无需升阶`);
-            return true; // 返回 true 表示无需操作但未出错
-        }
-    }
+	const instData = window.charBagData[mainInstId];
+	const currentRank = instData.rank || 'common';
 
-    // 4. 获取当前突破等级，检查升阶条件
-    const currentTupoLevel = instData.tupolevel || 0;
-    
-    // 5. 如果指定了目标品质，可能需要多次升阶
-    // 从当前品质开始，逐级提升到目标品质
-    let currentEffectiveRank = currentRank;
-    let promoted = false;
-    
-    while (true) {
-        // 检查当前是否可以升阶
-        const promotionInfo = getPromotionInfo(currentTupoLevel, currentEffectiveRank);
-        if (!promotionInfo) {
-            // 无法继续升阶（可能突破等级不够）
-            break;
-        }
-        
-        // 如果指定了目标品质，检查是否已达到或超过
-        if (targetRank) {
-            const effectiveRankIndex = rankOrder.indexOf(promotionInfo.targetRank);
-            const targetRankIndex = rankOrder.indexOf(targetRank);
-            if (effectiveRankIndex > targetRankIndex) {
-                // 已经达到或超过目标品质
-                break;
-            }
-        }
-        
-        // 执行升阶
-        const result = promoteCharacterRank(mainInstId);
-        if (!result.success) {
-            console.warn('主角升阶失败:', result.message);
-            break;
-        }
-        
-        currentEffectiveRank = result.targetRank || currentEffectiveRank;
-        promoted = true;
-    }
+	// 2. 品质排序表
+	const rankOrder = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
+	const currentRankIndex = rankOrder.indexOf(currentRank);
 
-    if (!promoted) {
-        console.log('主角无需升阶或升阶条件不满足');
-        return false;
-    }
+	// 3. 参数校验
+	if (targetRank) {
+		const targetRankIndex = rankOrder.indexOf(targetRank);
+		if (targetRankIndex === -1) {
+			console.warn(`无效的目标品质: ${targetRank}`);
+			toast(`无效的目标品质: ${targetRank}`, 'error');
+			return false;
+		}
 
-    // 6. 更新属性
-    const baseChar = characterList[mainCharId];
-    if (!baseChar || !instData) return true;
+		// 如果目标品质低于或等于当前品质，则不执行
+		if (targetRankIndex <= currentRankIndex) {
+			console.log(`主角当前品质(${getRankLabel(currentRank)})已达到或超过目标(${getRankLabel(targetRank)})，无需升阶`);
+			return true; // 返回 true 表示无需操作但未出错
+		}
+	}
 
-    if (typeof updateCharacterSP === 'function') {
-        instData.rank = instData.rank || baseChar.rank;
-        instData.template = instData.template || baseChar.template;
+	// 4. 获取当前突破等级，检查升阶条件
+	const currentTupoLevel = instData.tupolevel || 0;
 
-        const updatedStats = updateCharacterSP(instData);
-        if (updatedStats) {
-            instData.hp = updatedStats.hp;
-            instData.atk = updatedStats.atk;
-            instData.def = updatedStats.def;
-            instData.spe = updatedStats.spe;
-            instData.maxHp = updatedStats.hp;
-            instData.currentHp = updatedStats.hp;
-        }
-    } else {
-        const growthRate = 0.1;
-        instData.hp = Math.floor((instData.hp || baseChar.hp) * (1 + growthRate));
-        instData.atk = Math.floor((instData.atk || baseChar.atk) * (1 + growthRate));
-        instData.def = Math.floor((instData.def || baseChar.def) * (1 + growthRate));
-        instData.spe = Math.floor((instData.spe || baseChar.spe) * (1 + growthRate));
-        instData.maxHp = instData.hp;
-        instData.currentHp = instData.hp;
-    }
+	// 5. 如果指定了目标品质，可能需要多次升阶
+	// 从当前品质开始，逐级提升到目标品质
+	let currentEffectiveRank = currentRank;
+	let promoted = false;
 
-    // 7. 刷新界面
-    refreshAllTeamSlots();
+	while (true) {
+		// 检查当前是否可以升阶
+		const promotionInfo = getPromotionInfo(currentTupoLevel, currentEffectiveRank);
+		if (!promotionInfo) {
+			// 无法继续升阶（可能突破等级不够）
+			break;
+		}
 
-    // 8. 自动保存
-    SaveManager.autoSave();
+		// 如果指定了目标品质，检查是否已达到或超过
+		if (targetRank) {
+			const effectiveRankIndex = rankOrder.indexOf(promotionInfo.targetRank);
+			const targetRankIndex = rankOrder.indexOf(targetRank);
+			if (effectiveRankIndex > targetRankIndex) {
+				// 已经达到或超过目标品质
+				break;
+			}
+		}
 
-    console.log(`主角升阶成功！当前品质: ${getRankLabel(instData.rank)}`);
-    return true;
+		// 执行升阶
+		const result = promoteCharacterRank(mainInstId);
+		if (!result.success) {
+			console.warn('主角升阶失败:', result.message);
+			break;
+		}
+
+		currentEffectiveRank = result.targetRank || currentEffectiveRank;
+		promoted = true;
+	}
+
+	if (!promoted) {
+		console.log('主角无需升阶或升阶条件不满足');
+		return false;
+	}
+
+	// 6. 更新属性
+	const baseChar = characterList[mainCharId];
+	if (!baseChar || !instData) return true;
+
+	if (typeof updateCharacterSP === 'function') {
+		instData.rank = instData.rank || baseChar.rank;
+		instData.template = instData.template || baseChar.template;
+
+		const updatedStats = updateCharacterSP(instData);
+		if (updatedStats) {
+			instData.hp = updatedStats.hp;
+			instData.atk = updatedStats.atk;
+			instData.def = updatedStats.def;
+			instData.spe = updatedStats.spe;
+			instData.maxHp = updatedStats.hp;
+			instData.currentHp = updatedStats.hp;
+		}
+	} else {
+		const growthRate = 0.1;
+		instData.hp = Math.floor((instData.hp || baseChar.hp) * (1 + growthRate));
+		instData.atk = Math.floor((instData.atk || baseChar.atk) * (1 + growthRate));
+		instData.def = Math.floor((instData.def || baseChar.def) * (1 + growthRate));
+		instData.spe = Math.floor((instData.spe || baseChar.spe) * (1 + growthRate));
+		instData.maxHp = instData.hp;
+		instData.currentHp = instData.hp;
+	}
+
+	// 7. 刷新界面
+	refreshAllTeamSlots();
+
+	// 8. 自动保存
+	SaveManager.autoSave();
+
+	console.log(`主角升阶成功！当前品质: ${getRankLabel(instData.rank)}`);
+	return true;
 }
 
 
@@ -7855,24 +7855,24 @@ function promoteMainCharacter(targetRank) {
  * @returns {Object|null} 主角的实例数据对象，如果未找到则返回 null
  */
 function getMainCharacterInstance() {
-    if (!window.charBagData) return null;
+	if (!window.charBagData) return null;
 
-    // 方法1: 如果主角一定在队伍中，可以通过 getMainCharacterSlotIndex 快速定位
-    // 但为了健壮性（防止主角不在队伍中但仍存在于背包），建议直接遍历 charBagData
-    
-    const mainCharId = 'zhujue'; // 确保与 initNewGame 中的定义一致
-    
-    // 查找 charId 为 'zhujue' 的实例 ID
-    const mainInstId = Object.keys(window.charBagData).find(instId => {
-        const inst = window.charBagData[instId];
-        return inst && inst.charId === mainCharId;
-    });
+	// 方法1: 如果主角一定在队伍中，可以通过 getMainCharacterSlotIndex 快速定位
+	// 但为了健壮性（防止主角不在队伍中但仍存在于背包），建议直接遍历 charBagData
 
-    if (mainInstId && window.charBagData[mainInstId]) {
-        return window.charBagData[mainInstId];
-    }
+	const mainCharId = 'zhujue'; // 确保与 initNewGame 中的定义一致
 
-    return null;
+	// 查找 charId 为 'zhujue' 的实例 ID
+	const mainInstId = Object.keys(window.charBagData).find(instId => {
+		const inst = window.charBagData[instId];
+		return inst && inst.charId === mainCharId;
+	});
+
+	if (mainInstId && window.charBagData[mainInstId]) {
+		return window.charBagData[mainInstId];
+	}
+
+	return null;
 }
 
 /**
@@ -7880,11 +7880,11 @@ function getMainCharacterInstance() {
  * @returns {Object|null} 主角的基础配置对象
  */
 function getMainCharacterBaseData() {
-    const mainCharId = 'zhujue';
-    if (window.characterList && window.characterList[mainCharId]) {
-        return window.characterList[mainCharId];
-    }
-    return null;
+	const mainCharId = 'zhujue';
+	if (window.characterList && window.characterList[mainCharId]) {
+		return window.characterList[mainCharId];
+	}
+	return null;
 }
 
 /**
@@ -7892,17 +7892,17 @@ function getMainCharacterBaseData() {
  * @returns {Object|null} 合并后的主角数据
  */
 function getMainCharacterFullData() {
-    const instData = getMainCharacterInstance();
-    const baseData = getMainCharacterBaseData();
+	const instData = getMainCharacterInstance();
+	const baseData = getMainCharacterBaseData();
 
-    if (!instData || !baseData) return null;
+	if (!instData || !baseData) return null;
 
-    // 合并数据，实例数据优先（因为包含等级、突破等动态变化）
-    return {
-        ...baseData,
-        ...instData,
-        instanceId: Object.keys(window.charBagData).find(id => window.charBagData[id] === instData) // 附加 instanceId
-    };
+	// 合并数据，实例数据优先（因为包含等级、突破等动态变化）
+	return {
+		...baseData,
+		...instData,
+		instanceId: Object.keys(window.charBagData).find(id => window.charBagData[id] === instData) // 附加 instanceId
+	};
 }
 
 /**
@@ -7911,51 +7911,51 @@ function getMainCharacterFullData() {
  * @returns {boolean} - 是否成功同步
  */
 function syncInstanceTupoList(instanceId) {
-    // 1. 校验输入和全局数据
-    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-        console.warn(`[同步突破] 实例 ${instanceId} 不存在`);
-        return false;
-    }
+	// 1. 校验输入和全局数据
+	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+		console.warn(`[同步突破] 实例 ${instanceId} 不存在`);
+		return false;
+	}
 
-    const instData = window.charBagData[instanceId];
-    const charId = instData.charId || instanceId;
+	const instData = window.charBagData[instanceId];
+	const charId = instData.charId || instanceId;
 
-    // 2. 从角色库获取最新定义
-    const baseChar = characterList[charId];
-    if (!baseChar) {
-        console.warn(`[同步突破] 角色库中找不到基础角色 ${charId}`);
-        return false;
-    }
+	// 2. 从角色库获取最新定义
+	const baseChar = characterList[charId];
+	if (!baseChar) {
+		console.warn(`[同步突破] 角色库中找不到基础角色 ${charId}`);
+		return false;
+	}
 
-    // 3. 获取最新的突破列表
-    // 假设突破列表存储在 baseChar.tupoList 中
-    // 如果角色库中没有定义 tupoList，则使用空数组或默认模板
-    const newTupoList = baseChar.tupoList || [];
+	// 3. 获取最新的突破列表
+	// 假设突破列表存储在 baseChar.tupoList 中
+	// 如果角色库中没有定义 tupoList，则使用空数组或默认模板
+	const newTupoList = baseChar.tupoList || [];
 
-    // 4. 判断是否需要更新
-    // 如果实例中完全没有 tupoList，或者我们强制每次进入战斗前都刷新（防止角色库修改后存档没变）
-    // 这里建议：只要角色库有定义，就覆盖存档中的旧定义，确保逻辑一致
-    if (newTupoList.length > 0) {
-        // 【关键】深拷贝，防止引用指向同一对象导致意外修改
-        instData.tupoList = JSON.parse(JSON.stringify(newTupoList));
-        
-        // 如果实例中没有记录当前突破等级，初始化为 0
-        if (instData.tupolevel === undefined || instData.tupolevel === null) {
-            instData.tupolevel = 0;
-        }
-        
-        // 确保突破等级不超过列表长度-1
-        if (instData.tupolevel >= newTupoList.length+1) {
-            instData.tupolevel = newTupoList.length;
-        }
+	// 4. 判断是否需要更新
+	// 如果实例中完全没有 tupoList，或者我们强制每次进入战斗前都刷新（防止角色库修改后存档没变）
+	// 这里建议：只要角色库有定义，就覆盖存档中的旧定义，确保逻辑一致
+	if (newTupoList.length > 0) {
+		// 【关键】深拷贝，防止引用指向同一对象导致意外修改
+		instData.tupoList = JSON.parse(JSON.stringify(newTupoList));
 
-        console.log(`[同步突破] 角色 ${baseChar.name} (${instanceId}) 已同步最新突破列表，共 ${newTupoList.length} 阶`);
-        return true;
-    } else {
-        // 如果新定义也没有突破列表，清空旧的，避免报错
-        instData.tupoList = [];
-        return true;
-    }
+		// 如果实例中没有记录当前突破等级，初始化为 0
+		if (instData.tupolevel === undefined || instData.tupolevel === null) {
+			instData.tupolevel = 0;
+		}
+
+		// 确保突破等级不超过列表长度-1
+		if (instData.tupolevel >= newTupoList.length + 1) {
+			instData.tupolevel = newTupoList.length;
+		}
+
+		console.log(`[同步突破] 角色 ${baseChar.name} (${instanceId}) 已同步最新突破列表，共 ${newTupoList.length} 阶`);
+		return true;
+	} else {
+		// 如果新定义也没有突破列表，清空旧的，避免报错
+		instData.tupoList = [];
+		return true;
+	}
 }
 
 /**
@@ -7963,22 +7963,22 @@ function syncInstanceTupoList(instanceId) {
  * 建议在进入战斗前、打开角色详情时调用
  */
 function syncTeamTupoLists() {
-    if (!window.currentTeam) return;
-    
-    let syncedCount = 0;
-    window.currentTeam.forEach(instId => {
-        if (instId && window.charBagData[instId]) {
-            if (syncInstanceTupoList(instId)) {
-                syncedCount++;
-            }
-        }
-    });
-    
-    if (syncedCount > 0) {
-        console.log(`[同步突破] 共同步了 ${syncedCount} 个队伍角色的突破数据`);
-        // 可选：自动保存
-        // SaveManager.autoSave(); 
-    }
+	if (!window.currentTeam) return;
+
+	let syncedCount = 0;
+	window.currentTeam.forEach(instId => {
+		if (instId && window.charBagData[instId]) {
+			if (syncInstanceTupoList(instId)) {
+				syncedCount++;
+			}
+		}
+	});
+
+	if (syncedCount > 0) {
+		console.log(`[同步突破] 共同步了 ${syncedCount} 个队伍角色的突破数据`);
+		// 可选：自动保存
+		// SaveManager.autoSave(); 
+	}
 }
 
 
@@ -7992,36 +7992,36 @@ function syncTeamTupoLists() {
 /**
  * 获取宝物定义列表（从 TREASURE_DEFS）
  */
-window.getTreasureDefs = function() {
-    return window.TREASURE_DEFS || TREASURE_DEFS || {};
+window.getTreasureDefs = function () {
+	return window.TREASURE_DEFS || TREASURE_DEFS || {};
 };
 
 /**
  * 生成宝物实例ID
  * @param {string} baseId - 宝物基础ID
  */
-window.generateTreasureInstanceId = function(baseId) {
-    return `${baseId}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+window.generateTreasureInstanceId = function (baseId) {
+	return `${baseId}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 };
 
 /**
  * 初始化宝物背包（如果不存在）
  * 如果已有旧数据（包含 equippedBy），可以在这里做迁移清理
  */
-window.ensureTreasureInventory = function() {
-    if (!window.treasureInventory) {
-        window.treasureInventory = {};
-    }
-    
-    // 可选：清理旧数据中的 equippedBy 字段
-    // 如果确认所有旧存档都已迁移，可以启用以下代码
-    /*
-    Object.values(window.treasureInventory).forEach(data => {
-        if ('equippedBy' in data) {
-            delete data.equippedBy;
-        }
-    });
-    */
+window.ensureTreasureInventory = function () {
+	if (!window.treasureInventory) {
+		window.treasureInventory = {};
+	}
+
+	// 可选：清理旧数据中的 equippedBy 字段
+	// 如果确认所有旧存档都已迁移，可以启用以下代码
+	/*
+	Object.values(window.treasureInventory).forEach(data => {
+		if ('equippedBy' in data) {
+			delete data.equippedBy;
+		}
+	});
+	*/
 };
 
 
@@ -8029,13 +8029,13 @@ window.ensureTreasureInventory = function() {
  * 获取所有宝物实例列表
  * @returns {Array} 宝物实例数组 [{ instanceId, baseId, ...defProps }]
  */
-window.getTreasureInstanceList = function() {
-    ensureTreasureInventory();
-    const defs = getTreasureDefs();
-    return Object.entries(window.treasureInventory).map(([instanceId, data]) => {
-        const def = defs[data.baseId];
-        return def ? { instanceId, baseId: data.baseId, ...def, equippedBy: data.equippedBy } : null;
-    }).filter(Boolean);
+window.getTreasureInstanceList = function () {
+	ensureTreasureInventory();
+	const defs = getTreasureDefs();
+	return Object.entries(window.treasureInventory).map(([instanceId, data]) => {
+		const def = defs[data.baseId];
+		return def ? { instanceId, baseId: data.baseId, ...def, equippedBy: data.equippedBy } : null;
+	}).filter(Boolean);
 };
 
 /**
@@ -8044,31 +8044,31 @@ window.getTreasureInstanceList = function() {
  * @param {string} instanceId - 角色实例ID
  * @returns {Array} 宝物实例ID数组，长度固定为6
  */
-window.getCharEquippedTreasures = function(instanceId) {
-    window.ensureCharTreasureSlots();
-    const slots = window.charTreasureSlots[instanceId];
-    if (slots) {
-        return [...slots]; // 返回副本，避免外部修改原数据
-    }
-    return [null, null, null, null, null, null];
+window.getCharEquippedTreasures = function (instanceId) {
+	window.ensureCharTreasureSlots();
+	const slots = window.charTreasureSlots[instanceId];
+	if (slots) {
+		return [...slots]; // 返回副本，避免外部修改原数据
+	}
+	return [null, null, null, null, null, null];
 };
 
 
 /**
  * 确保 charTreasureSlots 数据结构存在
  */
-window.ensureCharTreasureSlots = function() {
-    if (!window.charTreasureSlots) {
-        window.charTreasureSlots = {};
-    }
-    // 为每个有实例的角色初始化6个空槽位
-    if (window.charBagData) {
-        Object.keys(window.charBagData).forEach(instId => {
-            if (!window.charTreasureSlots[instId]) {
-                window.charTreasureSlots[instId] = [null, null, null, null, null, null];
-            }
-        });
-    }
+window.ensureCharTreasureSlots = function () {
+	if (!window.charTreasureSlots) {
+		window.charTreasureSlots = {};
+	}
+	// 为每个有实例的角色初始化6个空槽位
+	if (window.charBagData) {
+		Object.keys(window.charBagData).forEach(instId => {
+			if (!window.charTreasureSlots[instId]) {
+				window.charTreasureSlots[instId] = [null, null, null, null, null, null];
+			}
+		});
+	}
 };
 
 /**
@@ -8078,58 +8078,58 @@ window.ensureCharTreasureSlots = function() {
  * @param {number} slotIndex - 宝物槽位 (0-5)
  * @param {string|null} treasureInstanceId - 宝物实例ID，传 null 为卸下
  */
-window.equipTreasure = function(charInstanceId, slotIndex, treasureInstanceId) {
-    window.ensureTreasureInventory();
-    window.ensureCharTreasureSlots();
+window.equipTreasure = function (charInstanceId, slotIndex, treasureInstanceId) {
+	window.ensureTreasureInventory();
+	window.ensureCharTreasureSlots();
 
-    // 1. 校验参数
-    if (slotIndex < 0 || slotIndex > 5) {
-        console.warn(`无效的宝物槽位索引: ${slotIndex}`);
-        toast('无效的宝物槽位', 'error');
-        return;
-    }
+	// 1. 校验参数
+	if (slotIndex < 0 || slotIndex > 5) {
+		console.warn(`无效的宝物槽位索引: ${slotIndex}`);
+		toast('无效的宝物槽位', 'error');
+		return;
+	}
 
-    const currentSlots = window.charTreasureSlots[charInstanceId];
-    if (!currentSlots) {
-        console.warn(`角色实例 ${charInstanceId} 没有初始化宝物槽位`);
-        return;
-    }
+	const currentSlots = window.charTreasureSlots[charInstanceId];
+	if (!currentSlots) {
+		console.warn(`角色实例 ${charInstanceId} 没有初始化宝物槽位`);
+		return;
+	}
 
-    // 2. 如果该槽位已有宝物，只清除槽位记录
-    const oldTreasureId = currentSlots[slotIndex];
+	// 2. 如果该槽位已有宝物，只清除槽位记录
+	const oldTreasureId = currentSlots[slotIndex];
 
-    // 3. 如果要装备新的宝物
-    if (treasureInstanceId) {
-        const newTreasureData = window.treasureInventory[treasureInstanceId];
-        if (!newTreasureData) {
-            console.warn(`宝物实例 ${treasureInstanceId} 不存在`);
-            toast('宝物数据异常', 'error');
-            return;
-        }
+	// 3. 如果要装备新的宝物
+	if (treasureInstanceId) {
+		const newTreasureData = window.treasureInventory[treasureInstanceId];
+		if (!newTreasureData) {
+			console.warn(`宝物实例 ${treasureInstanceId} 不存在`);
+			toast('宝物数据异常', 'error');
+			return;
+		}
 
-        // 3a. 检查这个宝物实例是否已经被装备在其他角色的任何槽位上
-        for (const [ownerId, ownerSlots] of Object.entries(window.charTreasureSlots)) {
-            const existingSlotIndex = ownerSlots.indexOf(treasureInstanceId);
-            if (existingSlotIndex !== -1) {
-                // 如果被装备在自己的其他槽位，清除旧槽位
-                if (ownerId === charInstanceId) {
-                    ownerSlots[existingSlotIndex] = null;
-                } else {
-                    // 被其他角色装备，阻止装备
-                    toast('该宝物已被其他角色装备', 'warning');
-                    return;
-                }
-            }
-        }
-    }
+		// 3a. 检查这个宝物实例是否已经被装备在其他角色的任何槽位上
+		for (const [ownerId, ownerSlots] of Object.entries(window.charTreasureSlots)) {
+			const existingSlotIndex = ownerSlots.indexOf(treasureInstanceId);
+			if (existingSlotIndex !== -1) {
+				// 如果被装备在自己的其他槽位，清除旧槽位
+				if (ownerId === charInstanceId) {
+					ownerSlots[existingSlotIndex] = null;
+				} else {
+					// 被其他角色装备，阻止装备
+					toast('该宝物已被其他角色装备', 'warning');
+					return;
+				}
+			}
+		}
+	}
 
-    // 4. 更新槽位
-    currentSlots[slotIndex] = treasureInstanceId;
+	// 4. 更新槽位
+	currentSlots[slotIndex] = treasureInstanceId;
 
-    // 5. 自动保存
-    if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
-        SaveManager.autoSave();
-    }
+	// 5. 自动保存
+	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+		SaveManager.autoSave();
+	}
 };
 
 /**
@@ -8138,24 +8138,24 @@ window.equipTreasure = function(charInstanceId, slotIndex, treasureInstanceId) {
  * @param {number} count - 数量，默认1
  * @returns {string[]} 创建的实例ID数组
  */
-window.addTreasureInstance = function(baseId, count = 1) {
-    ensureTreasureInventory();
-    const defs = getTreasureDefs();
-    if (!defs[baseId]) {
-        console.warn(`宝物 ${baseId} 定义不存在`);
-        return [];
-    }
-    
-    const createdIds = [];
-    for (let i = 0; i < count; i++) {
-        const instanceId = generateTreasureInstanceId(baseId);
-        window.treasureInventory[instanceId] = {
-            baseId: baseId,
-            level: 1 // 新增：初始等级为1
-        };
-        createdIds.push(instanceId);
-    }
-    return createdIds;
+window.addTreasureInstance = function (baseId, count = 1) {
+	ensureTreasureInventory();
+	const defs = getTreasureDefs();
+	if (!defs[baseId]) {
+		console.warn(`宝物 ${baseId} 定义不存在`);
+		return [];
+	}
+
+	const createdIds = [];
+	for (let i = 0; i < count; i++) {
+		const instanceId = generateTreasureInstanceId(baseId);
+		window.treasureInventory[instanceId] = {
+			baseId: baseId,
+			level: 1 // 新增：初始等级为1
+		};
+		createdIds.push(instanceId);
+	}
+	return createdIds;
 };
 
 
@@ -8164,13 +8164,13 @@ window.addTreasureInstance = function(baseId, count = 1) {
  * 移除宝物实例
  * @param {string} instanceId - 宝物实例ID
  */
-window.removeTreasureInstance = function(instanceId) {
-    ensureTreasureInventory();
-    if (window.treasureInventory[instanceId]) {
-        delete window.treasureInventory[instanceId];
-        return true;
-    }
-    return false;
+window.removeTreasureInstance = function (instanceId) {
+	ensureTreasureInventory();
+	if (window.treasureInventory[instanceId]) {
+		delete window.treasureInventory[instanceId];
+		return true;
+	}
+	return false;
 };
 
 /**
@@ -8178,24 +8178,24 @@ window.removeTreasureInstance = function(instanceId) {
  * @param {string} instanceId - 宝物实例ID
  * @returns {Object} { atk: 0, def: 0, hp: 0, spe: 0 }
  */
-window.getTreasureStats = function(instanceId) {
-    ensureTreasureInventory();
-    const data = window.treasureInventory[instanceId];
-    if (!data) return { atk: 0, def: 0, hp: 0, spe: 0 };
-    
-    const defs = getTreasureDefs();
-    const def = defs[data.baseId];
-    if (!def) return { atk: 0, def: 0, hp: 0, spe: 0 };
-    
-    const level = data.level || 1;
-    const multiplier = level; // 等级倍数
-    
-    return {
-        atk: (def.atk || 0) * multiplier,
-        def: (def.def || 0) * multiplier,
-        hp: (def.hp || 0) * multiplier,
-        spe: (def.spe || 0) * multiplier
-    };
+window.getTreasureStats = function (instanceId) {
+	ensureTreasureInventory();
+	const data = window.treasureInventory[instanceId];
+	if (!data) return { atk: 0, def: 0, hp: 0, spe: 0 };
+
+	const defs = getTreasureDefs();
+	const def = defs[data.baseId];
+	if (!def) return { atk: 0, def: 0, hp: 0, spe: 0 };
+
+	const level = data.level || 1;
+	const multiplier = level; // 等级倍数
+
+	return {
+		atk: (def.atk || 0) * multiplier,
+		def: (def.def || 0) * multiplier,
+		hp: (def.hp || 0) * multiplier,
+		spe: (def.spe || 0) * multiplier
+	};
 };
 
 
@@ -8204,32 +8204,32 @@ window.getTreasureStats = function(instanceId) {
  * 从 charTreasureSlots 获取装备的宝物
  * @param {Object} unit - 角色对象（包含 instanceId）
  */
-window.applyTreasureStatsToUnit = function(unit) {
-    if (!unit || !unit.instanceId) return;
-    
-    // 从角色槽位获取装备的宝物ID
-    const equippedTreasureIds = getCharEquippedTreasures(unit.instanceId);
-    let totalAtk = 0, totalDef = 0, totalHp = 0, totalSpe = 0;
-    
-    equippedTreasureIds.forEach(tid => {
-        if (!tid) return;
-        const stats = getTreasureStats(tid);
-        totalAtk += stats.atk;
-        totalDef += stats.def;
-        totalHp += stats.hp;
-        totalSpe += stats.spe;
-    });
-    
-    // 应用加成
-    unit.atk = (unit.atk || 0) + totalAtk;
-    unit.def = (unit.def || 0) + totalDef;
-    unit.hp = (unit.hp || 0) + totalHp;
-    unit.spe = (unit.spe || 0) + totalSpe;
-    
-    // 确保最大血量同步
-    unit.maxHp = unit.hp;
-    
-    return unit;
+window.applyTreasureStatsToUnit = function (unit) {
+	if (!unit || !unit.instanceId) return;
+
+	// 从角色槽位获取装备的宝物ID
+	const equippedTreasureIds = getCharEquippedTreasures(unit.instanceId);
+	let totalAtk = 0, totalDef = 0, totalHp = 0, totalSpe = 0;
+
+	equippedTreasureIds.forEach(tid => {
+		if (!tid) return;
+		const stats = getTreasureStats(tid);
+		totalAtk += stats.atk;
+		totalDef += stats.def;
+		totalHp += stats.hp;
+		totalSpe += stats.spe;
+	});
+
+	// 应用加成
+	unit.atk = (unit.atk || 0) + totalAtk;
+	unit.def = (unit.def || 0) + totalDef;
+	unit.hp = (unit.hp || 0) + totalHp;
+	unit.spe = (unit.spe || 0) + totalSpe;
+
+	// 确保最大血量同步
+	unit.maxHp = unit.hp;
+
+	return unit;
 };
 
 
@@ -8238,38 +8238,38 @@ window.applyTreasureStatsToUnit = function(unit) {
  * 更新 buildPlayerTeamForBattle 以应用宝物属性
  */
 window.originalBuildPlayerTeamForBattle = window.buildPlayerTeamForBattle;
-window.buildPlayerTeamForBattle = function() {
-    const team = (window.originalBuildPlayerTeamForBattle || function() {
-        return (window.currentTeam || []).map(instanceId => {
-            const instData = window.charBagData && window.charBagData[instanceId];
-            if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] };
-            const charId = instData.charId || instanceId;
-            const base = characterList[charId];
-            return {
-                id: charId,
-                instanceId: instanceId,
-                name: base ? base.name : charId,
-                hp: instData.hp || (base ? base.hp : 0),
-                atk: instData.atk || (base ? base.atk : 0),
-                def: instData.def || (base ? base.def : 0),
-                spe: instData.spe || (base ? base.spe : 0),
-                skills: instData.skills || (base ? base.skills : []),
-                buff: instData.buff || [],
-                rank: instData.rank || (base ? base.rank : 'common'),
-                tupolevel: instData.tupolevel || 0,
-                tupoList: instData.tupoList || (base ? base.tupoList : []),
-            };
-        });
-    })();
-    
-    // 应用宝物属性加成
-    team.forEach(unit => {
-        if (unit && unit.instanceId) {
-            applyTreasureStatsToUnit(unit);
-        }
-    });
-    
-    return team;
+window.buildPlayerTeamForBattle = function () {
+	const team = (window.originalBuildPlayerTeamForBattle || function () {
+		return (window.currentTeam || []).map(instanceId => {
+			const instData = window.charBagData && window.charBagData[instanceId];
+			if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] };
+			const charId = instData.charId || instanceId;
+			const base = characterList[charId];
+			return {
+				id: charId,
+				instanceId: instanceId,
+				name: base ? base.name : charId,
+				hp: instData.hp || (base ? base.hp : 0),
+				atk: instData.atk || (base ? base.atk : 0),
+				def: instData.def || (base ? base.def : 0),
+				spe: instData.spe || (base ? base.spe : 0),
+				skills: instData.skills || (base ? base.skills : []),
+				buff: instData.buff || [],
+				rank: instData.rank || (base ? base.rank : 'common'),
+				tupolevel: instData.tupolevel || 0,
+				tupoList: instData.tupoList || (base ? base.tupoList : []),
+			};
+		});
+	})();
+
+	// 应用宝物属性加成
+	team.forEach(unit => {
+		if (unit && unit.instanceId) {
+			applyTreasureStatsToUnit(unit);
+		}
+	});
+
+	return team;
 };
 
 // ====== 宝物升级系统 ======
@@ -8280,28 +8280,28 @@ window.buildPlayerTeamForBattle = function() {
  * @returns {Object} { atk, def, hp, spe, desc }
  */
 function getTreasureStatsWithLevel(instanceId) {
-    const data = window.treasureInventory[instanceId];
-    if (!data) return { atk: 0, def: 0, hp: 0, spe: 0, desc: '' };
-    
-    const defs = getTreasureDefs();
-    const def = defs[data.baseId];
-    if (!def) return { atk: 0, def: 0, hp: 0, spe: 0, desc: '' };
-    
-    const level = data.level || 1;
-    const multiplier = level; // 1级=1倍, 2级=2倍, ... 10级=10倍
-    
-    return {
-        atk: (def.atk || 0) * multiplier,
-        def: (def.def || 0) * multiplier,
-        hp: (def.hp || 0) * multiplier,
-        spe: (def.spe || 0) * multiplier,
-        desc: def.desc || '',
-        name: def.name || '',
-        icon: def.icon || '',
-        baseId: data.baseId,
-        level: level,
-        maxLevel: 10
-    };
+	const data = window.treasureInventory[instanceId];
+	if (!data) return { atk: 0, def: 0, hp: 0, spe: 0, desc: '' };
+
+	const defs = getTreasureDefs();
+	const def = defs[data.baseId];
+	if (!def) return { atk: 0, def: 0, hp: 0, spe: 0, desc: '' };
+
+	const level = data.level || 1;
+	const multiplier = level; // 1级=1倍, 2级=2倍, ... 10级=10倍
+
+	return {
+		atk: (def.atk || 0) * multiplier,
+		def: (def.def || 0) * multiplier,
+		hp: (def.hp || 0) * multiplier,
+		spe: (def.spe || 0) * multiplier,
+		desc: def.desc || '',
+		name: def.name || '',
+		icon: def.icon || '',
+		baseId: data.baseId,
+		level: level,
+		maxLevel: 10
+	};
 }
 
 /**
@@ -8311,38 +8311,38 @@ function getTreasureStatsWithLevel(instanceId) {
  */
 function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slotIndex = null) {
 
-    // 检查宝物是否存在
-    const treasureData = window.treasureInventory[treasureInstanceId];
-    if (!treasureData) {
-        toast('宝物数据异常', 'error');
-        return;
-    }
-    
-    const stats = getTreasureStatsWithLevel(treasureInstanceId);
-    var currentLevel = stats.level;
-    const baseId = stats.baseId;
-    const defs = getTreasureDefs();
-    const def = defs[baseId];
-    
-    if (!def) {
-        toast('宝物定义缺失', 'error');
-        return;
-    }
-    
-    // 检查是否已达到最大等级
-    // if (currentLevel >= 10) {
-    //     toast('该宝物已达到最高等级', 'warning');
-    //     return;
-    // }
-    
-    // 查找同名宝物实例（作为升级材料）
-    // 查找同名宝物实例（作为升级材料）
+	// 检查宝物是否存在
+	const treasureData = window.treasureInventory[treasureInstanceId];
+	if (!treasureData) {
+		toast('宝物数据异常', 'error');
+		return;
+	}
+
+	const stats = getTreasureStatsWithLevel(treasureInstanceId);
+	var currentLevel = stats.level;
+	const baseId = stats.baseId;
+	const defs = getTreasureDefs();
+	const def = defs[baseId];
+
+	if (!def) {
+		toast('宝物定义缺失', 'error');
+		return;
+	}
+
+	// 检查是否已达到最大等级
+	// if (currentLevel >= 10) {
+	//     toast('该宝物已达到最高等级', 'warning');
+	//     return;
+	// }
+
+	// 查找同名宝物实例（作为升级材料）
+	// 查找同名宝物实例（作为升级材料）
 	// 规则：排除自身、排除已被装备的、排除已升级过的（等级>1）
 	const fodderInstanceIds = Object.keys(window.treasureInventory).filter(id => {
 		if (id === treasureInstanceId) return false; // 排除自身
 		const inv = window.treasureInventory[id];
 		if (!inv || inv.baseId !== baseId) return false; // 必须是同名宝物
-		
+
 		// 排除已被装备的宝物
 		if (window.charTreasureSlots) {
 			for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
@@ -8351,28 +8351,28 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 				}
 			}
 		}
-		
+
 		// 排除已升级过的宝物（等级>1）
 		if (inv.level && inv.level > 1) {
 			return false; // 已升级过的宝物不能作为材料
 		}
-		
+
 		return true;
 	});
 
 	// 计算可用材料数量
 	const fodderCount = fodderInstanceIds.length;
 
-    
-    
-    // 创建遮罩层
-    const overlay = document.createElement('div');
-    overlay.className = 'ybrpg-confirm-overlay';
-    overlay.id = 'treasure-upgrade-overlay';
-    
-    // 创建弹窗
-    const popup = document.createElement('div');
-    popup.style.cssText = `
+
+
+	// 创建遮罩层
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.id = 'treasure-upgrade-overlay';
+
+	// 创建弹窗
+	const popup = document.createElement('div');
+	popup.style.cssText = `
         background: #1a1a1a;
         border: 2px solid #ffd700;
         border-radius: 12px;
@@ -8384,142 +8384,142 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
         animation: dialogIn 0.2s ease;
         color: #fff;
     `;
-    
-    // 标题
-    const title = document.createElement('div');
-    title.style.cssText = 'color:#ffd700;font-size:18px;font-weight:bold;text-align:center;margin-bottom:15px;';
-    title.textContent = `宝物升级 - ${def.name}`;
-    popup.appendChild(title);
-    
-    // 当前宝物信息
-    const infoSection = document.createElement('div');
-    infoSection.style.cssText = 'background:#2a2a2a;border-radius:8px;padding:12px;margin-bottom:12px;';
-    
-    // 宝物图标和名称
-    const headerRow = document.createElement('div');
-    headerRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
-    
-    if (def.icon) {
-        const icon = document.createElement('img');
-        icon.src = def.icon;
-        icon.style.cssText = 'width:40px;height:40px;object-fit:contain;border-radius:4px;';
-        icon.onerror = function() { this.style.display = 'none'; };
-        headerRow.appendChild(icon);
-    }
-    
-    const nameLevel = document.createElement('div');
-    nameLevel.style.cssText = 'flex:1;';
+
+	// 标题
+	const title = document.createElement('div');
+	title.style.cssText = 'color:#ffd700;font-size:18px;font-weight:bold;text-align:center;margin-bottom:15px;';
+	title.textContent = `宝物升级 - ${def.name}`;
+	popup.appendChild(title);
+
+	// 当前宝物信息
+	const infoSection = document.createElement('div');
+	infoSection.style.cssText = 'background:#2a2a2a;border-radius:8px;padding:12px;margin-bottom:12px;';
+
+	// 宝物图标和名称
+	const headerRow = document.createElement('div');
+	headerRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:8px;';
+
+	if (def.icon) {
+		const icon = document.createElement('img');
+		icon.src = def.icon;
+		icon.style.cssText = 'width:40px;height:40px;object-fit:contain;border-radius:4px;';
+		icon.onerror = function () { this.style.display = 'none'; };
+		headerRow.appendChild(icon);
+	}
+
+	const nameLevel = document.createElement('div');
+	nameLevel.style.cssText = 'flex:1;';
 	nameLevel.innerHTML = `
 		<div style="font-size:16px;font-weight:bold;color:#fff;">${def.name}</div>
 		<div style="font-size:13px;color:#ffd700;" data-level-display>Lv.${currentLevel}/10</div>
 	`;
-    headerRow.appendChild(nameLevel);
-    infoSection.appendChild(headerRow);
-    
-    // 属性展示
-    const attrRow = document.createElement('div');
+	headerRow.appendChild(nameLevel);
+	infoSection.appendChild(headerRow);
+
+	// 属性展示
+	const attrRow = document.createElement('div');
 	attrRow.setAttribute('data-attr-display', 'true');
-    attrRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;';
-    
-    const baseAtk = def.atk || 0;
-    const baseDef = def.def || 0;
-    const baseHp = def.hp || 0;
-    const baseSpe = def.spe || 0;
-    
-    if (baseAtk > 0) {
-        attrRow.innerHTML += `<div style="color:#ff4444;">攻击: ${baseAtk} → ${baseAtk * (currentLevel + 1)}</div>`;
-    }
-    if (baseDef > 0) {
-        attrRow.innerHTML += `<div style="color:#88cc88;">防御: ${baseDef} → ${baseDef * (currentLevel + 1)}</div>`;
-    }
-    if (baseHp > 0) {
-        attrRow.innerHTML += `<div style="color:#44aaff;">生命: ${baseHp} → ${baseHp * (currentLevel + 1)}</div>`;
-    }
-    if (baseSpe > 0) {
-        attrRow.innerHTML += `<div style="color:#ffff44;">速度: ${baseSpe} → ${baseSpe * (currentLevel + 1)}</div>`;
-    }
-    
-    infoSection.appendChild(attrRow);
+	attrRow.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;';
+
+	const baseAtk = def.atk || 0;
+	const baseDef = def.def || 0;
+	const baseHp = def.hp || 0;
+	const baseSpe = def.spe || 0;
+
+	if (baseAtk > 0) {
+		attrRow.innerHTML += `<div style="color:#ff4444;">攻击: ${baseAtk} → ${baseAtk * (currentLevel + 1)}</div>`;
+	}
+	if (baseDef > 0) {
+		attrRow.innerHTML += `<div style="color:#88cc88;">防御: ${baseDef} → ${baseDef * (currentLevel + 1)}</div>`;
+	}
+	if (baseHp > 0) {
+		attrRow.innerHTML += `<div style="color:#44aaff;">生命: ${baseHp} → ${baseHp * (currentLevel + 1)}</div>`;
+	}
+	if (baseSpe > 0) {
+		attrRow.innerHTML += `<div style="color:#ffff44;">速度: ${baseSpe} → ${baseSpe * (currentLevel + 1)}</div>`;
+	}
+
+	infoSection.appendChild(attrRow);
 	// ==============================
-    // 【添加位置】在这里插入宝物对角色总加成的显示
-    // ==============================
-    if (charInstanceId) {
-        const charStats = calculateInstanceFinalStats(charInstanceId);
-        const bonusInfo = document.createElement('div');
-        bonusInfo.style.cssText = 'font-size:11px;color:#aaa;margin-top:8px;padding-top:6px;border-top:1px solid #444;';
-        
-        // 只显示有加成的属性
-        let bonusParts = [];
-        if (charStats.treasureBonus.atk > 0) bonusParts.push(`攻击+${charStats.treasureBonus.atk}`);
-        if (charStats.treasureBonus.def > 0) bonusParts.push(`防御+${charStats.treasureBonus.def}`);
-        if (charStats.treasureBonus.hp > 0) bonusParts.push(`生命+${charStats.treasureBonus.hp}`);
-        if (charStats.treasureBonus.spe > 0) bonusParts.push(`速度+${charStats.treasureBonus.spe}`);
-        
-        if (bonusParts.length > 0) {
-            bonusInfo.innerHTML = `对角色加成: ${bonusParts.join(' · ')}`;
-        } else {
-            bonusInfo.innerHTML = `当前宝物无属性加成`;
-        }
-        
-        infoSection.appendChild(bonusInfo);
-    }
-    // ==============================
-    popup.appendChild(infoSection);
-    
-    // 材料信息
-    const materialSection = document.createElement('div');
-    materialSection.style.cssText = 'background:#2a2a2a;border-radius:8px;padding:12px;margin-bottom:12px;';
-    
-    const materialTitle = document.createElement('div');
-    materialTitle.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:6px;';
-    materialTitle.textContent = '升级材料（同名宝物）';
-    materialSection.appendChild(materialTitle);
-    
-    const materialCount = document.createElement('div');
+	// 【添加位置】在这里插入宝物对角色总加成的显示
+	// ==============================
+	if (charInstanceId) {
+		const charStats = calculateInstanceFinalStats(charInstanceId);
+		const bonusInfo = document.createElement('div');
+		bonusInfo.style.cssText = 'font-size:11px;color:#aaa;margin-top:8px;padding-top:6px;border-top:1px solid #444;';
+
+		// 只显示有加成的属性
+		let bonusParts = [];
+		if (charStats.treasureBonus.atk > 0) bonusParts.push(`攻击+${charStats.treasureBonus.atk}`);
+		if (charStats.treasureBonus.def > 0) bonusParts.push(`防御+${charStats.treasureBonus.def}`);
+		if (charStats.treasureBonus.hp > 0) bonusParts.push(`生命+${charStats.treasureBonus.hp}`);
+		if (charStats.treasureBonus.spe > 0) bonusParts.push(`速度+${charStats.treasureBonus.spe}`);
+
+		if (bonusParts.length > 0) {
+			bonusInfo.innerHTML = `对角色加成: ${bonusParts.join(' · ')}`;
+		} else {
+			bonusInfo.innerHTML = `当前宝物无属性加成`;
+		}
+
+		infoSection.appendChild(bonusInfo);
+	}
+	// ==============================
+	popup.appendChild(infoSection);
+
+	// 材料信息
+	const materialSection = document.createElement('div');
+	materialSection.style.cssText = 'background:#2a2a2a;border-radius:8px;padding:12px;margin-bottom:12px;';
+
+	const materialTitle = document.createElement('div');
+	materialTitle.style.cssText = 'font-size:14px;color:#aaa;margin-bottom:6px;';
+	materialTitle.textContent = '升级材料（同名宝物）';
+	materialSection.appendChild(materialTitle);
+
+	const materialCount = document.createElement('div');
 	materialCount.setAttribute('data-material-count', 'true');
-    const needCount = currentLevel; // 升到下一级需要当前等级数量的同名宝物
-    materialCount.style.cssText = 'font-size:13px;color:#ddd;';
-    materialCount.innerHTML = `需要: <span style="color:#ffd700;">${needCount}</span> 个 · 可用: <span style="color:${fodderCount >= needCount ? '#44ff88' : '#ff4444'};">${fodderCount}</span> 个`;
-    materialSection.appendChild(materialCount);
-    
-    // 如果可用材料不足，显示提示
-    if (fodderCount < needCount) {
-        const shortageTip = document.createElement('div');
-        shortageTip.style.cssText = 'font-size:11px;color:#ff6666;margin-top:4px;';
-        shortageTip.textContent = `材料不足，还需 ${needCount - fodderCount} 个同名宝物`;
-        materialSection.appendChild(shortageTip);
-    }
-    
-    popup.appendChild(materialSection);
-    
-    // 下一级预览
-    if (currentLevel < 10) {
-        const previewSection = document.createElement('div');
-        previewSection.style.cssText = 'background:#2a2a3a;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #ffd700;';
-        // 在创建 previewTitle 时：
+	const needCount = currentLevel; // 升到下一级需要当前等级数量的同名宝物
+	materialCount.style.cssText = 'font-size:13px;color:#ddd;';
+	materialCount.innerHTML = `需要: <span style="color:#ffd700;">${needCount}</span> 个 · 可用: <span style="color:${fodderCount >= needCount ? '#44ff88' : '#ff4444'};">${fodderCount}</span> 个`;
+	materialSection.appendChild(materialCount);
+
+	// 如果可用材料不足，显示提示
+	if (fodderCount < needCount) {
+		const shortageTip = document.createElement('div');
+		shortageTip.style.cssText = 'font-size:11px;color:#ff6666;margin-top:4px;';
+		shortageTip.textContent = `材料不足，还需 ${needCount - fodderCount} 个同名宝物`;
+		materialSection.appendChild(shortageTip);
+	}
+
+	popup.appendChild(materialSection);
+
+	// 下一级预览
+	if (currentLevel < 10) {
+		const previewSection = document.createElement('div');
+		previewSection.style.cssText = 'background:#2a2a3a;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #ffd700;';
+		// 在创建 previewTitle 时：
 		const previewTitle = document.createElement('div');
 		previewTitle.setAttribute('data-preview-title', 'true');
 		previewTitle.style.cssText = 'font-size:14px;color:#ffd700;margin-bottom:6px;';
 		previewTitle.textContent = `升级至 Lv.${currentLevel + 1} 预览`;
-        previewSection.appendChild(previewTitle);
-        
-        const multiplier = currentLevel + 1;
-        const previewContent = document.createElement('div');
+		previewSection.appendChild(previewTitle);
+
+		const multiplier = currentLevel + 1;
+		const previewContent = document.createElement('div');
 		previewContent.setAttribute('data-preview-section', 'true');
-        previewContent.style.cssText = 'font-size:12px;color:#ccc;line-height:1.6;';
-        
-        let previewText = '';
-        if (baseAtk > 0) previewText += `攻击: ${baseAtk} → ${baseAtk * multiplier}\n`;
-        if (baseDef > 0) previewText += `防御: ${baseDef} → ${baseDef * multiplier}\n`;
-        if (baseHp > 0) previewText += `生命: ${baseHp} → ${baseHp * multiplier}\n`;
-        if (baseSpe > 0) previewText += `速度: ${baseSpe} → ${baseSpe * multiplier}\n`;
-        
-        previewContent.textContent = previewText;
-        previewSection.appendChild(previewContent);
-        popup.appendChild(previewSection);
-    }
-    
-    // 按钮区域
+		previewContent.style.cssText = 'font-size:12px;color:#ccc;line-height:1.6;';
+
+		let previewText = '';
+		if (baseAtk > 0) previewText += `攻击: ${baseAtk} → ${baseAtk * multiplier}\n`;
+		if (baseDef > 0) previewText += `防御: ${baseDef} → ${baseDef * multiplier}\n`;
+		if (baseHp > 0) previewText += `生命: ${baseHp} → ${baseHp * multiplier}\n`;
+		if (baseSpe > 0) previewText += `速度: ${baseSpe} → ${baseSpe * multiplier}\n`;
+
+		previewContent.textContent = previewText;
+		previewSection.appendChild(previewContent);
+		popup.appendChild(previewSection);
+	}
+
+	// 按钮区域
 	const btnRow = document.createElement('div');
 	btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;flex-wrap:wrap;';
 
@@ -8548,9 +8548,9 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 			toast('宝物数据异常', 'error');
 			return;
 		}
-		
+
 		const latestLevel = latestTreasureData.level || 1;
-		
+
 		if (latestLevel >= 10) {
 			toast('宝物已达到最高等级', 'warning');
 			// 更新按钮状态
@@ -8559,36 +8559,36 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 			upgradeBtn.style.opacity = '0.5';
 			return;
 		}
-		
+
 		// ===== 重新计算可用材料 =====
 		const freshFodderIds = Object.keys(window.treasureInventory).filter(id => {
 			if (id === treasureInstanceId) return false;
 			const inv = window.treasureInventory[id];
 			if (!inv || inv.baseId !== baseId) return false;
-			
+
 			// 排除已被装备的
 			for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
 				if (slots && slots.includes(id)) {
 					return false;
 				}
 			}
-			
+
 			// 排除已升级过的
 			if (inv.level && inv.level > 1) {
 				return false;
 			}
-			
+
 			return true;
 		});
-		
+
 		const freshFodderCount = freshFodderIds.length;
 		const requiredCount = latestLevel; // 升到下一级需要当前等级数量的同名宝物
-		
+
 		if (freshFodderCount < requiredCount) {
 			toast(`材料不足！需要 ${requiredCount} 个同名宝物，当前可用: ${freshFodderCount}`, 'error');
 			return;
 		}
-		
+
 		// ===== 确认弹窗 =====
 		confirmDialog(
 			`确定消耗 ${requiredCount} 个【${def.name}】升级宝物至 Lv.${latestLevel + 1} 吗？\n可用材料: ${freshFodderCount} 个`,
@@ -8599,44 +8599,44 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 					toast('宝物数据异常', 'error');
 					return;
 				}
-				
+
 				const confirmLevel = confirmTreasureData.level || 1;
 				if (confirmLevel >= 10) {
 					toast('宝物已达到最高等级', 'warning');
 					return;
 				}
-				
+
 				// 重新计算可用材料
 				const confirmFodderIds = Object.keys(window.treasureInventory).filter(id => {
 					if (id === treasureInstanceId) return false;
 					const inv = window.treasureInventory[id];
 					if (!inv || inv.baseId !== baseId) return false;
-					
+
 					for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
 						if (slots && slots.includes(id)) {
 							return false;
 						}
 					}
-					
+
 					if (inv.level && inv.level > 1) {
 						return false;
 					}
-					
+
 					return true;
 				});
-				
+
 				const confirmFodderCount = confirmFodderIds.length;
 				const confirmRequiredCount = confirmLevel;
-				
+
 				if (confirmFodderCount < confirmRequiredCount) {
 					toast(`材料不足！需要 ${confirmRequiredCount} 个同名宝物，当前可用: ${confirmFodderCount}`, 'error');
 					return;
 				}
-				
+
 				// ===== 消耗材料 =====
 				for (let i = 0; i < confirmRequiredCount; i++) {
 					const fodderId = confirmFodderIds[i];
-					
+
 					// 如果材料宝物被装备在其他角色身上，需要先卸下
 					for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
 						const slotIdx = slots.indexOf(fodderId);
@@ -8645,17 +8645,17 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 							break;
 						}
 					}
-					
+
 					delete window.treasureInventory[fodderId];
 				}
-				
+
 				// ===== 提升等级 =====
 				const newLevel = confirmLevel + 1;
 				window.treasureInventory[treasureInstanceId].level = newLevel;
-				
+
 				// ===== 刷新弹窗内容 =====
 				refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, newLevel, upgradeBtn, charInstanceId);
-				
+
 				// 找到 toast 调用前，添加：
 				if (charInstanceId) {
 					// 刷新阵容详情
@@ -8669,17 +8669,17 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 							}
 						}
 					}
-					
+
 					// 刷新队伍格子
 					const teamIndex = window.currentTeam ? window.currentTeam.indexOf(charInstanceId) : -1;
 					if (teamIndex !== -1) {
 						refreshTeamSlot(teamIndex);
 					}
 				}
-				
+
 				// ===== 更新局部变量（用于下次点击时的初始校验） =====
 				currentLevel = newLevel;
-				
+
 				toast(`【${def.name}】升级成功！当前 Lv.${newLevel}`, 'success');
 				SaveManager.autoSave();
 			}
@@ -8714,11 +8714,11 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 	};
 	btnRow.appendChild(closeBtn);
 
-    popup.appendChild(btnRow);
-    overlay.appendChild(popup);
-    document.body.appendChild(overlay);
-    
-    overlay.onclick = (e) => {
+	popup.appendChild(btnRow);
+	overlay.appendChild(popup);
+	document.body.appendChild(overlay);
+
+	overlay.onclick = (e) => {
 		if (e.target === overlay) {
 			const upgradeOverlay = document.getElementById('treasure-upgrade-overlay');
 			if (upgradeOverlay && upgradeOverlay.parentNode) {
@@ -8726,7 +8726,7 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 			}
 		}
 	};
-	
+
 }
 
 
@@ -8734,154 +8734,154 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
  * 刷新宝物升级弹窗的UI
  */
 function refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, currentLevel, upgradeBtn, charInstanceId) {
-    if (!popup) return;
-    
-    // 1. 更新等级显示
-    const levelDisplay = popup.querySelector('[data-level-display]');
-    if (levelDisplay) {
-        levelDisplay.textContent = `Lv.${currentLevel}/10`;
-    }
-    
-    // 2. 更新属性预览（当前属性 → 下一级属性）
-    const attrRow = popup.querySelector('[data-attr-display]');
-    if (attrRow) {
-        const baseAtk = def.atk || 0;
-        const baseDef = def.def || 0;
-        const baseHp = def.hp || 0;
-        const baseSpe = def.spe || 0;
-        
-        let attrsHTML = '';
-        const nextMultiplier = currentLevel + 1;
-        if (baseAtk > 0) attrsHTML += `<div style="color:#ff4444;">攻击: ${baseAtk} → ${baseAtk * nextMultiplier}</div>`;
-        if (baseDef > 0) attrsHTML += `<div style="color:#88cc88;">防御: ${baseDef} → ${baseDef * nextMultiplier}</div>`;
-        if (baseHp > 0) attrsHTML += `<div style="color:#44aaff;">生命: ${baseHp} → ${baseHp * nextMultiplier}</div>`;
-        if (baseSpe > 0) attrsHTML += `<div style="color:#ffff44;">速度: ${baseSpe} → ${baseSpe * nextMultiplier}</div>`;
-        attrRow.innerHTML = attrsHTML;
-    }
-    
-    // 3. 更新材料信息
-    const materialCount = popup.querySelector('[data-material-count]');
-    if (materialCount) {
-        const newFodderCount = Object.keys(window.treasureInventory).filter(id => {
-            if (id === treasureInstanceId) return false;
-            const inv = window.treasureInventory[id];
-            if (!inv || inv.baseId !== baseId) return false;
-            
-            for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
-                if (slots && slots.includes(id)) {
-                    return false;
-                }
-            }
-            
-            if (inv.level && inv.level > 1) {
-                return false;
-            }
-            
-            return true;
-        }).length;
-        
-        const nextNeedCount = currentLevel; // 升到下一级需要当前等级数量
-        const isSufficient = newFodderCount >= nextNeedCount;
-        materialCount.innerHTML = `需要: <span style="color:#ffd700;">${nextNeedCount}</span> 个 · 可用: <span style="color:${isSufficient ? '#44ff88' : '#ff4444'};">${newFodderCount}</span> 个`;
-        
-        // 更新或添加材料不足提示
-        let shortageTip = popup.querySelector('[data-shortage-tip]');
-        if (!isSufficient) {
-            if (!shortageTip) {
-                shortageTip = document.createElement('div');
-                shortageTip.setAttribute('data-shortage-tip', 'true');
-                shortageTip.style.cssText = 'font-size:11px;color:#ff6666;margin-top:4px;';
-                materialCount.parentElement.appendChild(shortageTip);
-            }
-            shortageTip.textContent = `材料不足，还需 ${nextNeedCount - newFodderCount} 个同名宝物`;
-        } else {
-            if (shortageTip) {
-                shortageTip.remove();
-            }
-        }
-    }
-    
-    // 4. 更新预览区
-    const previewSection = popup.querySelector('[data-preview-section]');
-    if (previewSection) {
-        if (currentLevel < 10) {
-            const multiplier = currentLevel + 1;
-            let previewText = '';
-            if (def.atk > 0) previewText += `攻击: ${def.atk} → ${def.atk * multiplier}\n`;
-            if (def.def > 0) previewText += `防御: ${def.def} → ${def.def * multiplier}\n`;
-            if (def.hp > 0) previewText += `生命: ${def.hp} → ${def.hp * multiplier}\n`;
-            if (def.spe > 0) previewText += `速度: ${def.spe} → ${def.spe * multiplier}\n`;
-            previewSection.textContent = previewText;
-            
-            // 更新预览标题
-            const previewTitle = previewSection.parentElement?.querySelector('[data-preview-title]');
-            if (previewTitle) {
-                previewTitle.textContent = `升级至 Lv.${currentLevel + 1} 预览`;
-            }
-        } else {
-            // 满级时隐藏预览区
-            previewSection.parentElement?.remove();
-        }
-    }
-    
-    // 5. 更新升级按钮
-    if (upgradeBtn) {
-        if (currentLevel >= 10) {
-            upgradeBtn.textContent = '已满级';
-            upgradeBtn.disabled = true;
-            upgradeBtn.style.opacity = '0.5';
-        } else {
-            const newFodderCount = Object.keys(window.treasureInventory).filter(id => {
-                if (id === treasureInstanceId) return false;
-                const inv = window.treasureInventory[id];
-                if (!inv || inv.baseId !== baseId) return false;
-                
-                for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
-                    if (slots && slots.includes(id)) {
-                        return false;
-                    }
-                }
-                
-                if (inv.level && inv.level > 1) {
-                    return false;
-                }
-                
-                return true;
-            }).length;
-            
-            const nextNeedCount = currentLevel;
-            if (newFodderCount < nextNeedCount) {
-                upgradeBtn.textContent = `升级材料不足`;
-                upgradeBtn.disabled = true;
-                upgradeBtn.style.opacity = '0.5';
-            } else {
-                upgradeBtn.textContent = `升级`;
-                upgradeBtn.disabled = false;
-                upgradeBtn.style.opacity = '1';
-                upgradeBtn.style.cursor = 'pointer';
-            }
-        }
-    }
-    // ===== 【新增】更新宝物对角色总加成显示 =====
-    if (charInstanceId) {
-        const charStats = calculateInstanceFinalStats(charInstanceId);
-        const bonusInfo = popup.querySelector('[data-char-treasure-bonus]');
+	if (!popup) return;
+
+	// 1. 更新等级显示
+	const levelDisplay = popup.querySelector('[data-level-display]');
+	if (levelDisplay) {
+		levelDisplay.textContent = `Lv.${currentLevel}/10`;
+	}
+
+	// 2. 更新属性预览（当前属性 → 下一级属性）
+	const attrRow = popup.querySelector('[data-attr-display]');
+	if (attrRow) {
+		const baseAtk = def.atk || 0;
+		const baseDef = def.def || 0;
+		const baseHp = def.hp || 0;
+		const baseSpe = def.spe || 0;
+
+		let attrsHTML = '';
+		const nextMultiplier = currentLevel + 1;
+		if (baseAtk > 0) attrsHTML += `<div style="color:#ff4444;">攻击: ${baseAtk} → ${baseAtk * nextMultiplier}</div>`;
+		if (baseDef > 0) attrsHTML += `<div style="color:#88cc88;">防御: ${baseDef} → ${baseDef * nextMultiplier}</div>`;
+		if (baseHp > 0) attrsHTML += `<div style="color:#44aaff;">生命: ${baseHp} → ${baseHp * nextMultiplier}</div>`;
+		if (baseSpe > 0) attrsHTML += `<div style="color:#ffff44;">速度: ${baseSpe} → ${baseSpe * nextMultiplier}</div>`;
+		attrRow.innerHTML = attrsHTML;
+	}
+
+	// 3. 更新材料信息
+	const materialCount = popup.querySelector('[data-material-count]');
+	if (materialCount) {
+		const newFodderCount = Object.keys(window.treasureInventory).filter(id => {
+			if (id === treasureInstanceId) return false;
+			const inv = window.treasureInventory[id];
+			if (!inv || inv.baseId !== baseId) return false;
+
+			for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
+				if (slots && slots.includes(id)) {
+					return false;
+				}
+			}
+
+			if (inv.level && inv.level > 1) {
+				return false;
+			}
+
+			return true;
+		}).length;
+
+		const nextNeedCount = currentLevel; // 升到下一级需要当前等级数量
+		const isSufficient = newFodderCount >= nextNeedCount;
+		materialCount.innerHTML = `需要: <span style="color:#ffd700;">${nextNeedCount}</span> 个 · 可用: <span style="color:${isSufficient ? '#44ff88' : '#ff4444'};">${newFodderCount}</span> 个`;
+
+		// 更新或添加材料不足提示
+		let shortageTip = popup.querySelector('[data-shortage-tip]');
+		if (!isSufficient) {
+			if (!shortageTip) {
+				shortageTip = document.createElement('div');
+				shortageTip.setAttribute('data-shortage-tip', 'true');
+				shortageTip.style.cssText = 'font-size:11px;color:#ff6666;margin-top:4px;';
+				materialCount.parentElement.appendChild(shortageTip);
+			}
+			shortageTip.textContent = `材料不足，还需 ${nextNeedCount - newFodderCount} 个同名宝物`;
+		} else {
+			if (shortageTip) {
+				shortageTip.remove();
+			}
+		}
+	}
+
+	// 4. 更新预览区
+	const previewSection = popup.querySelector('[data-preview-section]');
+	if (previewSection) {
+		if (currentLevel < 10) {
+			const multiplier = currentLevel + 1;
+			let previewText = '';
+			if (def.atk > 0) previewText += `攻击: ${def.atk} → ${def.atk * multiplier}\n`;
+			if (def.def > 0) previewText += `防御: ${def.def} → ${def.def * multiplier}\n`;
+			if (def.hp > 0) previewText += `生命: ${def.hp} → ${def.hp * multiplier}\n`;
+			if (def.spe > 0) previewText += `速度: ${def.spe} → ${def.spe * multiplier}\n`;
+			previewSection.textContent = previewText;
+
+			// 更新预览标题
+			const previewTitle = previewSection.parentElement?.querySelector('[data-preview-title]');
+			if (previewTitle) {
+				previewTitle.textContent = `升级至 Lv.${currentLevel + 1} 预览`;
+			}
+		} else {
+			// 满级时隐藏预览区
+			previewSection.parentElement?.remove();
+		}
+	}
+
+	// 5. 更新升级按钮
+	if (upgradeBtn) {
+		if (currentLevel >= 10) {
+			upgradeBtn.textContent = '已满级';
+			upgradeBtn.disabled = true;
+			upgradeBtn.style.opacity = '0.5';
+		} else {
+			const newFodderCount = Object.keys(window.treasureInventory).filter(id => {
+				if (id === treasureInstanceId) return false;
+				const inv = window.treasureInventory[id];
+				if (!inv || inv.baseId !== baseId) return false;
+
+				for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
+					if (slots && slots.includes(id)) {
+						return false;
+					}
+				}
+
+				if (inv.level && inv.level > 1) {
+					return false;
+				}
+
+				return true;
+			}).length;
+
+			const nextNeedCount = currentLevel;
+			if (newFodderCount < nextNeedCount) {
+				upgradeBtn.textContent = `升级材料不足`;
+				upgradeBtn.disabled = true;
+				upgradeBtn.style.opacity = '0.5';
+			} else {
+				upgradeBtn.textContent = `升级`;
+				upgradeBtn.disabled = false;
+				upgradeBtn.style.opacity = '1';
+				upgradeBtn.style.cursor = 'pointer';
+			}
+		}
+	}
+	// ===== 【新增】更新宝物对角色总加成显示 =====
+	if (charInstanceId) {
+		const charStats = calculateInstanceFinalStats(charInstanceId);
+		const bonusInfo = popup.querySelector('[data-char-treasure-bonus]');
 		bonusInfo.setAttribute('data-char-treasure-bonus', 'true');
 		bonusInfo.style.cssText = 'font-size:11px;color:#aaa;margin-top:8px;padding-top:6px;border-top:1px solid #444;';
-        if (bonusInfo) {
-            let bonusParts = [];
-            if (charStats.treasureBonus.atk > 0) bonusParts.push(`攻击+${charStats.treasureBonus.atk}`);
-            if (charStats.treasureBonus.def > 0) bonusParts.push(`防御+${charStats.treasureBonus.def}`);
-            if (charStats.treasureBonus.hp > 0) bonusParts.push(`生命+${charStats.treasureBonus.hp}`);
-            if (charStats.treasureBonus.spe > 0) bonusParts.push(`速度+${charStats.treasureBonus.spe}`);
-            
-            if (bonusParts.length > 0) {
-                bonusInfo.innerHTML = `对角色加成: ${bonusParts.join(' · ')}`;
-            } else {
-                bonusInfo.innerHTML = `当前宝物无属性加成`;
-            }
-        }
-    }
+		if (bonusInfo) {
+			let bonusParts = [];
+			if (charStats.treasureBonus.atk > 0) bonusParts.push(`攻击+${charStats.treasureBonus.atk}`);
+			if (charStats.treasureBonus.def > 0) bonusParts.push(`防御+${charStats.treasureBonus.def}`);
+			if (charStats.treasureBonus.hp > 0) bonusParts.push(`生命+${charStats.treasureBonus.hp}`);
+			if (charStats.treasureBonus.spe > 0) bonusParts.push(`速度+${charStats.treasureBonus.spe}`);
+
+			if (bonusParts.length > 0) {
+				bonusInfo.innerHTML = `对角色加成: ${bonusParts.join(' · ')}`;
+			} else {
+				bonusInfo.innerHTML = `当前宝物无属性加成`;
+			}
+		}
+	}
 }
 
 
@@ -8892,102 +8892,102 @@ function refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, currentLe
  * @returns {Object} { baseHp, baseAtk, baseDef, baseSpe, totalHp, totalAtk, totalDef, totalSpe, breakthroughBonus, treasureBonus }
  */
 function calculateInstanceFinalStats(instanceId) {
-    if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-        return {
-            baseHp: 0, baseAtk: 0, baseDef: 0, baseSpe: 0,
-            totalHp: 0, totalAtk: 0, totalDef: 0, totalSpe: 0,
-            breakthroughBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
-            treasureBonus: { hp: 0, atk: 0, def: 0, spe: 0 }
-        };
-    }
+	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+		return {
+			baseHp: 0, baseAtk: 0, baseDef: 0, baseSpe: 0,
+			totalHp: 0, totalAtk: 0, totalDef: 0, totalSpe: 0,
+			breakthroughBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
+			treasureBonus: { hp: 0, atk: 0, def: 0, spe: 0 }
+		};
+	}
 
-    const instData = window.charBagData[instanceId];
-    const charId = instData.charId || instanceId;
-    const baseChar = window.characterList && window.characterList[charId];
-    
-    if (!baseChar) {
-        return {
-            baseHp: instData.hp || 0, baseAtk: instData.atk || 0, baseDef: instData.def || 0, baseSpe: instData.spe || 0,
-            totalHp: instData.hp || 0, totalAtk: instData.atk || 0, totalDef: instData.def || 0, totalSpe: instData.spe || 0,
-            breakthroughBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
-            treasureBonus: { hp: 0, atk: 0, def: 0, spe: 0 }
-        };
-    }
+	const instData = window.charBagData[instanceId];
+	const charId = instData.charId || instanceId;
+	const baseChar = window.characterList && window.characterList[charId];
 
-    // ==== 1. 获取基础属性（等级 + 模板 + 品质） ====
-    let baseHp, baseAtk, baseDef, baseSpe;
-    
-    if (typeof updateCharacterSP === 'function') {
-        const compiled = updateCharacterSP(instData);
-        if (compiled) {
-            baseHp = compiled.hp || instData.hp || 0;
-            baseAtk = compiled.atk || instData.atk || 0;
-            baseDef = compiled.def || instData.def || 0;
-            baseSpe = compiled.spe || instData.spe || 0;
-        } else {
-            baseHp = instData.hp || 0;
-            baseAtk = instData.atk || 0;
-            baseDef = instData.def || 0;
-            baseSpe = instData.spe || 0;
-        }
-    } else {
-        baseHp = instData.hp || 0;
-        baseAtk = instData.atk || 0;
-        baseDef = instData.def || 0;
-        baseSpe = instData.spe || 0;
-    }
+	if (!baseChar) {
+		return {
+			baseHp: instData.hp || 0, baseAtk: instData.atk || 0, baseDef: instData.def || 0, baseSpe: instData.spe || 0,
+			totalHp: instData.hp || 0, totalAtk: instData.atk || 0, totalDef: instData.def || 0, totalSpe: instData.spe || 0,
+			breakthroughBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
+			treasureBonus: { hp: 0, atk: 0, def: 0, spe: 0 }
+		};
+	}
 
-    // ==== 2. 计算突破加成 ====
-    const tupolevel = instData.tupolevel || 0;
-    const tupoList = instData.tupoList || baseChar.tupoList || [];
-    let breakHp = 0, breakAtk = 0, breakDef = 0, breakSpe = 0;
-    
-    for (let i = 0; i < tupolevel; i++) {
-        const buff = tupoList[i];
-        if (!buff) continue;
-        
-        // 处理字符串引用的突破库
-        let resolvedBuff = buff;
-        if (typeof buff === 'string') {
-            const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
-            resolvedBuff = lib[buff];
-        }
-        
-        if (!resolvedBuff) continue;
-        
-        if (resolvedBuff.type === 'self_stat_flat') {
-            if (resolvedBuff.hp) breakHp += Number(resolvedBuff.hp);
-            if (resolvedBuff.atk) breakAtk += Number(resolvedBuff.atk);
-            if (resolvedBuff.def) breakDef += Number(resolvedBuff.def);
-            if (resolvedBuff.spe) breakSpe += Number(resolvedBuff.spe);
-        }
-    }
+	// ==== 1. 获取基础属性（等级 + 模板 + 品质） ====
+	let baseHp, baseAtk, baseDef, baseSpe;
 
-    // ==== 3. 计算宝物加成 ====
-    let tresHp = 0, tresAtk = 0, tresDef = 0, tresSpe = 0;
-    
-    // 从 charTreasureSlots 获取装备的宝物
-    if (window.charTreasureSlots && window.charTreasureSlots[instanceId]) {
-        const slots = window.charTreasureSlots[instanceId];
-        slots.forEach(treasureId => {
-            if (!treasureId) return;
-            const stats = window.getTreasureStats ? window.getTreasureStats(treasureId) : { hp: 0, atk: 0, def: 0, spe: 0 };
-            tresHp += stats.hp || 0;
-            tresAtk += stats.atk || 0;
-            tresDef += stats.def || 0;
-            tresSpe += stats.spe || 0;
-        });
-    }
+	if (typeof updateCharacterSP === 'function') {
+		const compiled = updateCharacterSP(instData);
+		if (compiled) {
+			baseHp = compiled.hp || instData.hp || 0;
+			baseAtk = compiled.atk || instData.atk || 0;
+			baseDef = compiled.def || instData.def || 0;
+			baseSpe = compiled.spe || instData.spe || 0;
+		} else {
+			baseHp = instData.hp || 0;
+			baseAtk = instData.atk || 0;
+			baseDef = instData.def || 0;
+			baseSpe = instData.spe || 0;
+		}
+	} else {
+		baseHp = instData.hp || 0;
+		baseAtk = instData.atk || 0;
+		baseDef = instData.def || 0;
+		baseSpe = instData.spe || 0;
+	}
 
-    return {
-        baseHp, baseAtk, baseDef, baseSpe,
-        totalHp: baseHp + breakHp + tresHp,
-        totalAtk: baseAtk + breakAtk + tresAtk,
-        totalDef: baseDef + breakDef + tresDef,
-        totalSpe: baseSpe + breakSpe + tresSpe,
-        breakthroughBonus: { hp: breakHp, atk: breakAtk, def: breakDef, spe: breakSpe },
-        treasureBonus: { hp: tresHp, atk: tresAtk, def: tresDef, spe: tresSpe }
-    };
+	// ==== 2. 计算突破加成 ====
+	const tupolevel = instData.tupolevel || 0;
+	const tupoList = instData.tupoList || baseChar.tupoList || [];
+	let breakHp = 0, breakAtk = 0, breakDef = 0, breakSpe = 0;
+
+	for (let i = 0; i < tupolevel; i++) {
+		const buff = tupoList[i];
+		if (!buff) continue;
+
+		// 处理字符串引用的突破库
+		let resolvedBuff = buff;
+		if (typeof buff === 'string') {
+			const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+			resolvedBuff = lib[buff];
+		}
+
+		if (!resolvedBuff) continue;
+
+		if (resolvedBuff.type === 'self_stat_flat') {
+			if (resolvedBuff.hp) breakHp += Number(resolvedBuff.hp);
+			if (resolvedBuff.atk) breakAtk += Number(resolvedBuff.atk);
+			if (resolvedBuff.def) breakDef += Number(resolvedBuff.def);
+			if (resolvedBuff.spe) breakSpe += Number(resolvedBuff.spe);
+		}
+	}
+
+	// ==== 3. 计算宝物加成 ====
+	let tresHp = 0, tresAtk = 0, tresDef = 0, tresSpe = 0;
+
+	// 从 charTreasureSlots 获取装备的宝物
+	if (window.charTreasureSlots && window.charTreasureSlots[instanceId]) {
+		const slots = window.charTreasureSlots[instanceId];
+		slots.forEach(treasureId => {
+			if (!treasureId) return;
+			const stats = window.getTreasureStats ? window.getTreasureStats(treasureId) : { hp: 0, atk: 0, def: 0, spe: 0 };
+			tresHp += stats.hp || 0;
+			tresAtk += stats.atk || 0;
+			tresDef += stats.def || 0;
+			tresSpe += stats.spe || 0;
+		});
+	}
+
+	return {
+		baseHp, baseAtk, baseDef, baseSpe,
+		totalHp: baseHp + breakHp + tresHp,
+		totalAtk: baseAtk + breakAtk + tresAtk,
+		totalDef: baseDef + breakDef + tresDef,
+		totalSpe: baseSpe + breakSpe + tresSpe,
+		breakthroughBonus: { hp: breakHp, atk: breakAtk, def: breakDef, spe: breakSpe },
+		treasureBonus: { hp: tresHp, atk: tresAtk, def: tresDef, spe: tresSpe }
+	};
 }
 
 /**
@@ -8998,10 +8998,10 @@ function calculateInstanceFinalStats(instanceId) {
  * @returns {string} 格式化后的HTML文本
  */
 function formatAttributeDisplay(totalValue, baseValue, bonusValue) {
-    let text = `${totalValue}`;
-    if (bonusValue > 0) {
-        text += ` <span style="color:#44ff88;font-size:11px;">(+${bonusValue})</span>`;
-    }
-    return text;
+	let text = `${totalValue}`;
+	if (bonusValue > 0) {
+		text += ` <span style="color:#44ff88;font-size:11px;">(+${bonusValue})</span>`;
+	}
+	return text;
 }
 
