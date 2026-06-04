@@ -1008,7 +1008,8 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 }
 
 /**
- * 宝物选择弹窗（适配宝物实例化系统）
+ * 宝物选择弹窗（适配宝物实例化系统 - 阵容格子存储版）
+ * 支持显示：已装备（自己）、已装备（其他角色）
  * @param {string} charInstanceId - 角色实例ID
  * @param {number} slotIndex - 宝物槽位 (0-5)
  */
@@ -1025,12 +1026,23 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
     }
 
     const defs = getTreasureDefs();
-    const allInstances = getTreasureInstanceList();
-    const equippedIds = getCharEquippedTreasures(charInstanceId);
-    const currentTreasureId = equippedIds[slotIndex] || null;
-	// const equippedIds = window.getCharEquippedTreasures ? window.getCharEquippedTreasures(instanceId) : [];
-	// const currentTreasureId = equippedIds[slotIndex] || null; // 直接索引
+    const allInstances = getTreasureInstanceList(); // 从 treasureInventory 获取所有宝物实例
+    window.ensureCharTreasureSlots();
+
+    // 获取当前角色槽位中的宝物
+    const currentSlots = window.charTreasureSlots[charInstanceId] || [null, null, null, null, null, null];
+    const currentTreasureId = currentSlots[slotIndex] || null;
     const currentDef = currentTreasureId ? defs[window.treasureInventory[currentTreasureId]?.baseId] : null;
+
+    // --- 构建快速查询表：宝物实例ID → { 装备者角色ID, 装备槽位索引 } ---
+    const treasureOwnerMap = {};
+    for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
+        slots.forEach((tId, sIdx) => {
+            if (tId) {
+                treasureOwnerMap[tId] = { ownerId, slotIndex: sIdx };
+            }
+        });
+    }
 
     const overlay = document.createElement('div');
     overlay.className = 'ybrpg-confirm-overlay';
@@ -1070,26 +1082,62 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
     const scrollDiv = document.createElement('div');
     scrollDiv.className = 'treasure-select-scroll';
 
-    // 只显示未装备且属于该角色或未装备的宝物
-    const available = allInstances.filter(item => {
-        if (item.instanceId === currentTreasureId) return true; // 当前装备的
-        if (item.equippedBy && item.equippedBy !== charInstanceId) return false; // 被其他人装备的
-        return true; // 未装备的
+    // 构建显示列表
+    const displayList = allInstances.map(item => {
+        const ownerInfo = treasureOwnerMap[item.instanceId];
+        let status = 'free'; // 空闲
+        let ownerName = null;
+        let ownerSlotIndex = -1;
+
+        if (ownerInfo) {
+            if (ownerInfo.ownerId === charInstanceId) {
+                status = 'self'; // 装备在自己身上
+                ownerSlotIndex = ownerInfo.slotIndex;
+            } else {
+                status = 'other'; // 装备在其他角色身上
+                // 获取装备者名字
+                const ownerInst = window.charBagData && window.charBagData[ownerInfo.ownerId];
+                const ownerCharId = ownerInst ? ownerInst.charId : ownerInfo.ownerId;
+                const ownerChar = characterList[ownerCharId];
+                ownerName = ownerChar ? ownerChar.name : ownerInfo.ownerId;
+                ownerSlotIndex = ownerInfo.slotIndex;
+            }
+        }
+
+        return {
+            ...item,
+            status,
+            ownerName,
+            ownerSlotIndex,
+            isSelfEquipped: (item.instanceId === currentTreasureId), // 当前槽位
+        };
     });
 
-    if (available.length === 0) {
+    // 排序：当前槽位的 → 空闲 → 装备在自己其他槽位的 → 装备在其他角色身上的
+    displayList.sort((a, b) => {
+        if (a.isSelfEquipped) return -1;
+        if (b.isSelfEquipped) return 1;
+        const order = { free: 0, self: 1, other: 2 };
+        return (order[a.status] || 3) - (order[b.status] || 3);
+    });
+
+    if (displayList.length === 0) {
         const emptyTip = document.createElement('div');
         emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
-        emptyTip.textContent = '背包中暂无可用宝物';
+        emptyTip.textContent = '背包中暂无宝物';
         scrollDiv.appendChild(emptyTip);
     }
 
-    available.forEach(item => {
-        const isEquipped = item.instanceId === currentTreasureId;
-        const isEquippedByOther = item.equippedBy && item.equippedBy !== charInstanceId;
-
+    displayList.forEach(item => {
         const row = document.createElement('div');
-        row.className = 'treasure-select-row' + (isEquipped ? ' current' : '') + (isEquippedByOther ? ' unavailable' : '');
+        row.className = 'treasure-select-row';
+
+        // 根据不同状态添加类名
+        if (item.isSelfEquipped) {
+            row.classList.add('current');
+        } else if (item.status === 'other') {
+            row.classList.add('unavailable');
+        }
 
         // 图标
         const iconDiv = document.createElement('div');
@@ -1111,31 +1159,60 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
         // 信息
         const infoDiv = document.createElement('div');
         infoDiv.className = 'treasure-select-info';
+        
         const nameEl = document.createElement('div');
         nameEl.className = 'treasure-select-name';
         nameEl.textContent = item.name;
+        
+        // ==== 需求1 & 2：显示装备状态标签 ====
+        if (item.isSelfEquipped) {
+            // 当前槽位的宝物 - 金色高亮
+            nameEl.innerHTML += ` <span style="color:#ffd700;font-size:11px;">【已装备 - 当前槽位】</span>`;
+        } else if (item.status === 'self') {
+            // 装备在自己其他槽位的宝物 - 灰色提示
+            nameEl.innerHTML += ` <span style="color:#aaa;font-size:11px;">已装备（槽位${item.ownerSlotIndex + 1}）</span>`;
+        } else if (item.status === 'other') {
+            // 被其他角色装备的宝物 - 红色提示，显示装备者名字
+            nameEl.innerHTML += ` <span style="color:#ff6666;font-size:11px;">已装备（${item.ownerName}）</span>`;
+        }
+
         infoDiv.appendChild(nameEl);
+        
         const descEl = document.createElement('div');
         descEl.className = 'treasure-select-desc';
-        descEl.textContent = item.desc  || '暂无描述';
+        descEl.textContent = item.desc || '暂无描述';
         infoDiv.appendChild(descEl);
-        if (isEquippedByOther) {
+        
+        // 被其他角色装备时，显示详细装备者信息
+        if (item.status === 'other' && item.ownerName) {
             const eqInfo = document.createElement('div');
             eqInfo.className = 'treasure-equipped-by';
-            eqInfo.textContent = '已被其他角色装备';
+            eqInfo.textContent = `· 装备者: ${item.ownerName}（槽位${item.ownerSlotIndex + 1}）`;
             infoDiv.appendChild(eqInfo);
         }
+
         row.appendChild(infoDiv);
 
         // 按钮
         const btn = document.createElement('button');
         btn.className = 'treasure-select-btn';
-        if (isEquipped) {
+
+        if (item.isSelfEquipped) {
             btn.textContent = '已装备';
             btn.disabled = true;
-        } else if (isEquippedByOther) {
+        } else if (item.status === 'other') {
             btn.textContent = '不可用';
             btn.disabled = true;
+        } else if (item.status === 'self') {
+            // 装备在自己其他槽位，允许更换
+            btn.textContent = '更换到此槽位';
+            btn.onclick = () => {
+                equipTreasure(charInstanceId, slotIndex, item.instanceId);
+                overlay.remove();
+                refreshTreasureUI(charInstanceId);
+                SaveManager.autoSave();
+                toast(`已将【${item.name}】更换到槽位${slotIndex + 1}`, 'success');
+            };
         } else {
             btn.textContent = '装备';
             btn.onclick = () => {
@@ -1167,6 +1244,8 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
         if (e.target === overlay) overlay.remove();
     };
 }
+
+
 
 /**
  * 刷新宝物UI（包括队伍视图中的宝物显示）
@@ -7426,12 +7505,24 @@ window.generateTreasureInstanceId = function(baseId) {
 
 /**
  * 初始化宝物背包（如果不存在）
+ * 如果已有旧数据（包含 equippedBy），可以在这里做迁移清理
  */
 window.ensureTreasureInventory = function() {
     if (!window.treasureInventory) {
-        window.treasureInventory = {}; // 键: instanceId, 值: { baseId, equippedBy: null | instanceId }
+        window.treasureInventory = {};
     }
+    
+    // 可选：清理旧数据中的 equippedBy 字段
+    // 如果确认所有旧存档都已迁移，可以启用以下代码
+    /*
+    Object.values(window.treasureInventory).forEach(data => {
+        if ('equippedBy' in data) {
+            delete data.equippedBy;
+        }
+    });
+    */
 };
+
 
 /**
  * 获取所有宝物实例列表
@@ -7448,14 +7539,19 @@ window.getTreasureInstanceList = function() {
 
 /**
  * 获取指定角色的已装备宝物列表（有序，按槽位索引）
+ * 从 charTreasureSlots 读取
  * @param {string} instanceId - 角色实例ID
- * @returns {Array} 宝物实例ID数组，长度可能不足6
+ * @returns {Array} 宝物实例ID数组，长度固定为6
  */
 window.getCharEquippedTreasures = function(instanceId) {
-    window.ensureCharTreasureSlots(); // 确保数据结构存在
+    window.ensureCharTreasureSlots();
     const slots = window.charTreasureSlots[instanceId];
-    return slots ? [...slots] : [null, null, null, null, null, null];
+    if (slots) {
+        return [...slots]; // 返回副本，避免外部修改原数据
+    }
+    return [null, null, null, null, null, null];
 };
+
 
 /**
  * 确保 charTreasureSlots 数据结构存在
@@ -7475,7 +7571,8 @@ window.ensureCharTreasureSlots = function() {
 };
 
 /**
- * 为角色装备/卸下宝物（修复版）
+ * 为角色的指定阵容格子装备/卸下宝物
+ * 宝物装备信息完全存储在 charTreasureSlots 中，宝物实例本身不记录装备者
  * @param {string} charInstanceId - 角色实例ID
  * @param {number} slotIndex - 宝物槽位 (0-5)
  * @param {string|null} treasureInstanceId - 宝物实例ID，传 null 为卸下
@@ -7487,70 +7584,56 @@ window.equipTreasure = function(charInstanceId, slotIndex, treasureInstanceId) {
     // 1. 校验参数
     if (slotIndex < 0 || slotIndex > 5) {
         console.warn(`无效的宝物槽位索引: ${slotIndex}`);
+        toast('无效的宝物槽位', 'error');
         return;
     }
 
-    // 2. 【关键修复】直接操作槽位
     const currentSlots = window.charTreasureSlots[charInstanceId];
     if (!currentSlots) {
         console.warn(`角色实例 ${charInstanceId} 没有初始化宝物槽位`);
         return;
     }
 
-    // 3. 如果该槽位已有宝物，先卸下它（清除 equippedBy）
+    // 2. 如果该槽位已有宝物，只清除槽位记录
     const oldTreasureId = currentSlots[slotIndex];
-    if (oldTreasureId && window.treasureInventory[oldTreasureId]) {
-        window.treasureInventory[oldTreasureId].equippedBy = null;
-    }
 
-    // 4. 装备新宝物
+    // 3. 如果要装备新的宝物
     if (treasureInstanceId) {
         const newTreasureData = window.treasureInventory[treasureInstanceId];
         if (!newTreasureData) {
             console.warn(`宝物实例 ${treasureInstanceId} 不存在`);
+            toast('宝物数据异常', 'error');
             return;
         }
-        // 如果新宝物之前被装备在别人身上，先卸下它
-        if (newTreasureData.equippedBy && newTreasureData.equippedBy !== charInstanceId) {
-            const oldOwnerSlots = window.charTreasureSlots[newTreasureData.equippedBy];
-            if (oldOwnerSlots) {
-                const oldIndex = oldOwnerSlots.indexOf(treasureInstanceId);
-                if (oldIndex !== -1) {
-                    oldOwnerSlots[oldIndex] = null;
+
+        // 3a. 检查这个宝物实例是否已经被装备在其他角色的任何槽位上
+        for (const [ownerId, ownerSlots] of Object.entries(window.charTreasureSlots)) {
+            const existingSlotIndex = ownerSlots.indexOf(treasureInstanceId);
+            if (existingSlotIndex !== -1) {
+                // 如果被装备在自己的其他槽位，清除旧槽位
+                if (ownerId === charInstanceId) {
+                    ownerSlots[existingSlotIndex] = null;
+                } else {
+                    // 被其他角色装备，阻止装备
+                    toast('该宝物已被其他角色装备', 'warning');
+                    return;
                 }
             }
         }
-        // 设置新宝物的主人
-        newTreasureData.equippedBy = charInstanceId;
     }
 
-    // 5. 更新槽位
+    // 4. 更新槽位
     currentSlots[slotIndex] = treasureInstanceId;
 
-    // 6. 更新 window.treasureInventory 中旧宝物的 equippedBy 为 null
-    // 注意：步骤3已经处理了旧宝物，步骤4处理了新宝物的旧主人
-    // 但是需要额外处理：如果新宝物 == 旧宝物（同一宝物被重新装备到同一槽位）
-    if (oldTreasureId === treasureInstanceId) {
-        // 如果相同，实际上没有变化，不用处理
-    } else {
-        // 如果新宝物之前装备在当前角色的其他槽位上，需要清除那个槽位
-        if (treasureInstanceId) {
-            const otherIndex = currentSlots.indexOf(treasureInstanceId);
-            if (otherIndex !== -1 && otherIndex !== slotIndex) {
-                currentSlots[otherIndex] = null;
-            }
-        }
-    }
-
-    // 7. 自动保存
+    // 5. 自动保存
     if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
         SaveManager.autoSave();
     }
 };
 
 /**
- * 添加宝物到背包（创建实例）
- * @param {string} baseId - 宝物基础ID (如 'lianpo')
+ * 添加宝物到背包（创建实例）- 不再设置 equippedBy
+ * @param {string} baseId - 宝物基础ID
  * @param {number} count - 数量，默认1
  * @returns {string[]} 创建的实例ID数组
  */
@@ -7566,13 +7649,14 @@ window.addTreasureInstance = function(baseId, count = 1) {
     for (let i = 0; i < count; i++) {
         const instanceId = generateTreasureInstanceId(baseId);
         window.treasureInventory[instanceId] = {
-            baseId: baseId,
-            equippedBy: null
+            baseId: baseId
+            // equippedBy 已移除 - 宝物不再知道自己被谁装备
         };
         createdIds.push(instanceId);
     }
     return createdIds;
 };
+
 
 /**
  * 移除宝物实例
@@ -7611,15 +7695,18 @@ window.getTreasureStats = function(instanceId) {
 
 /**
  * 合并宝物属性到角色属性（战斗前调用）
+ * 从 charTreasureSlots 获取装备的宝物
  * @param {Object} unit - 角色对象（包含 instanceId）
  */
 window.applyTreasureStatsToUnit = function(unit) {
     if (!unit || !unit.instanceId) return;
     
+    // 从角色槽位获取装备的宝物ID
     const equippedTreasureIds = getCharEquippedTreasures(unit.instanceId);
     let totalAtk = 0, totalDef = 0, totalHp = 0, totalSpe = 0;
     
     equippedTreasureIds.forEach(tid => {
+        if (!tid) return;
         const stats = getTreasureStats(tid);
         totalAtk += stats.atk;
         totalDef += stats.def;
@@ -7627,7 +7714,7 @@ window.applyTreasureStatsToUnit = function(unit) {
         totalSpe += stats.spe;
     });
     
-    // 应用加成（注意：这些是固定值加成，不是百分比）
+    // 应用加成
     unit.atk = (unit.atk || 0) + totalAtk;
     unit.def = (unit.def || 0) + totalDef;
     unit.hp = (unit.hp || 0) + totalHp;
@@ -7638,6 +7725,8 @@ window.applyTreasureStatsToUnit = function(unit) {
     
     return unit;
 };
+
+
 
 /**
  * 更新 buildPlayerTeamForBattle 以应用宝物属性
