@@ -998,28 +998,112 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 	// ======== 替换为如下代码 ========
 
 	// 计算最终属性（含突破和宝物加成）
-	const finalStats = calculateInstanceFinalStats(instanceId);
+
+    // ===== 【新增】计算全队突破加成 =====
+    const teamBonuses = calculateTeamBreakthroughBonuses();
+    
+    // ===== 传入全队加成 =====
+    const finalStats = calculateInstanceFinalStats(instanceId, teamBonuses);
 
 	const attrs = [
-		{ label: '生命', value: finalStats.totalHp, base: finalStats.baseHp, bonus: finalStats.breakthroughBonus.hp + finalStats.treasureBonus.hp, icon: '❤' },
-		{ label: '攻击', value: finalStats.totalAtk, base: finalStats.baseAtk, bonus: finalStats.breakthroughBonus.atk + finalStats.treasureBonus.atk, icon: '⚔' },
-		{ label: '防御', value: finalStats.totalDef, base: finalStats.baseDef, bonus: finalStats.breakthroughBonus.def + finalStats.treasureBonus.def, icon: '🛡' },
-		{ label: '速度', value: finalStats.totalSpe, base: finalStats.baseSpe, bonus: finalStats.breakthroughBonus.spe + finalStats.treasureBonus.spe, icon: '💨' },
+		{
+			label: '生命',
+			value: finalStats.totalHp,
+			base: finalStats.baseHp,
+			breakBonus: finalStats.breakthroughBonus.hp,
+			tresBonus: finalStats.treasureBonus.hp,
+			icon: '❤'
+		},
+		{
+			label: '攻击',
+			value: finalStats.totalAtk,
+			base: finalStats.baseAtk,
+			breakBonus: finalStats.breakthroughBonus.atk,
+			tresBonus: finalStats.treasureBonus.atk,
+			icon: '⚔'
+		},
+		{
+			label: '防御',
+			value: finalStats.totalDef,
+			base: finalStats.baseDef,
+			breakBonus: finalStats.breakthroughBonus.def,
+			tresBonus: finalStats.treasureBonus.def,
+			icon: '🛡'
+		},
+		{
+			label: '速度',
+			value: finalStats.totalSpe,
+			base: finalStats.baseSpe,
+			breakBonus: finalStats.breakthroughBonus.spe,
+			tresBonus: finalStats.treasureBonus.spe,
+			icon: '💨'
+		},
 	];
+//调试信息
+	// const finalStats = calculateInstanceFinalStats(instanceId);
+	console.log(`[阵容显示] ${char.name} 属性:`, finalStats);
+//↑
+	// attrs.forEach(a => {
+	// 	const row = document.createElement('div');
+	// 	row.className = 'team-info-attr-row';
 
+	// 	// 构建显示文本，区分基础值和加成值
+	// 	let displayText = `${a.value}`;
+	// 	// if (a.breakBonus > 0 && a.tresBonus > 0) {
+	// 	// 	displayText += ` <span style="color:#44ff88;font-size:11px;">(基础${a.base}+突破${a.breakBonus}+宝物${a.tresBonus})</span>`;
+	// 	// } else if (a.breakBonus > 0) {
+	// 	// 	displayText += ` <span style="color:#44ff88;font-size:11px;">(基础${a.base}+突破${a.breakBonus})</span>`;
+	// 	// } else if (a.tresBonus > 0) {
+	// 	// 	displayText += ` <span style="color:#44ff88;font-size:11px;">(基础${a.base}+宝物${a.tresBonus})</span>`;
+	// 	// }
+	// 	// 获取固定加成和百分比加成
+	// 	const flatBonus = finalStats.flatBonus ? finalStats.flatBonus[a.label === '生命' ? 'hp' : a.label === '攻击' ? 'atk' : a.label === '防御' ? 'def' : 'spe'] : 0;
+	// 	const percentBonus = finalStats.percentBonus ? finalStats.percentBonus[a.label === '生命' ? 'hp' : a.label === '攻击' ? 'atk' : a.label === '防御' ? 'def' : 'spe'] : 0;
+
+	// 	if (flatBonus > 0 || percentBonus > 0) {
+	// 		let text = `(${a.base}`;
+	// 		if (flatBonus > 0) text += `+${flatBonus}`;
+	// 		text += `)`;
+	// 		if (percentBonus > 0) text += `×${(1 + percentBonus).toFixed(2)}`;
+	// 		displayText += ` <span style="color:#44ff88;font-size:11px;">${text}</span>`;
+	// 	}
+
+	// 	row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${displayText}</span>`;
+	// 	attrDiv.appendChild(row);
+	// });
+
+	// 定义属性名称映射
+	const ATTR_MAP = { '生命': 'hp', '攻击': 'atk', '防御': 'def', '速度': 'spe' };
+
+	// 在显示循环中
 	attrs.forEach(a => {
 		const row = document.createElement('div');
 		row.className = 'team-info-attr-row';
 
 		let displayText = `${a.value}`;
-		if (a.bonus > 0) {
-			displayText += ` <span style="color:#44ff88;font-size:11px;">(+${a.bonus})</span>`;
+		
+		
+		// ===== 【修改】根据设置决定是否显示公式 =====
+		if (window.showFormulaDetail) {
+			// 使用映射获取对应的 key
+			const attrKey = ATTR_MAP[a.label];
+			if (attrKey && finalStats.flatBonus) {
+				const flatBonus = finalStats.flatBonus[attrKey] || 0;
+				const percentBonus = finalStats.percentBonus[attrKey] || 0;
+				
+				if (flatBonus > 0 || percentBonus > 0) {
+					let text = `(${a.base}`;
+					if (flatBonus > 0) text += `+${flatBonus}`;
+					text += `)`;
+					if (percentBonus > 0) text += `×${(1 + percentBonus).toFixed(2)}`;
+					displayText += ` <span style="color:#44ff88;font-size:11px;">${text}</span>`;
+				}
+			}
 		}
 
 		row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${displayText}</span>`;
 		attrDiv.appendChild(row);
 	});
-
 
 	// 技能详细描述
 	const skillIds = char.skills || [];
@@ -1334,11 +1418,15 @@ function refreshTreasureUI(charInstanceId) {
 			if (instId) {
 				const instData = window.charBagData && window.charBagData[instId];
 				const charId = instData ? instData.charId : instId;
+
+				// ===== 【修改】强制重新计算并显示 =====
 				showTeamCharInfo(idx, instId, charId);
+				// =====================================
 			}
 		}
 	}
 }
+
 
 
 
@@ -3153,6 +3241,41 @@ function renderSettingsView(container) {
 	autoSettingRow.appendChild(autoToggle);
 	groupDiv.appendChild(autoSettingRow);
 
+
+	
+	// ===== 【新增】公式显示设置 =====
+	const formulaSettingRow = document.createElement('div');
+	formulaSettingRow.style.cssText = 'display:flex;gap:15px;justify-content:center;align-items:center;width:100%;margin-top:10px;';
+
+	const formulaLabel = document.createElement('span');
+	formulaLabel.style.color = '#ccc';
+	formulaLabel.style.fontSize = '14px';
+	formulaLabel.textContent = '面板显示属性公式: ';
+
+	const formulaToggle = document.createElement('button');
+	formulaToggle.className = 'ybrpg-settings-btn';
+	formulaToggle.style.cssText = 'width:70px;height:40px;font-size:14px;';
+	formulaToggle.textContent = window.showFormulaDetail ? '开启' : '关闭';
+	formulaToggle.onclick = () => {
+		window.showFormulaDetail = !window.showFormulaDetail;
+		formulaToggle.textContent = window.showFormulaDetail ? '开启' : '关闭';
+		toast(`属性公式显示已${window.showFormulaDetail ? '开启' : '关闭'}`, 'info');
+		
+		// 如果当前在队伍视图，刷新显示
+		const teamView = document.getElementById('team-view');
+		if (teamView && teamView.style.display !== 'none' && window._selectedSlotIndex !== null) {
+			const idx = window._selectedSlotIndex;
+			const instanceId = window.currentTeam[idx];
+			if (instanceId) {
+				const instData = window.charBagData && window.charBagData[instanceId];
+				const charId = instData ? instData.charId : instanceId;
+				showTeamCharInfo(idx, instanceId, charId);
+			}
+		}
+	};
+	formulaSettingRow.appendChild(formulaLabel);
+	formulaSettingRow.appendChild(formulaToggle);
+	groupDiv.appendChild(formulaSettingRow);
 	// ... 存档管理按钮 ...
 
 
@@ -3166,7 +3289,7 @@ function renderSettingsView(container) {
 
 	container.appendChild(groupDiv);
 
-	
+
 	const versionInfo = document.createElement('div');
 	versionInfo.style.cssText = 'color:#888;font-size:12px;margin-top:20px;text-align:center;';
 	versionInfo.textContent = `版本: ${window.GAME_VERSION || 'v1.0'}`;
@@ -4215,32 +4338,47 @@ function getEventForDifficulty(chapterKey, eventId, difficulty) {
  * 返回包含 treasures 字段的单位数组
  */
 function buildPlayerTeamForBattle() {
-	return (window.currentTeam || []).map(instanceId => {
-		const instData = window.charBagData && window.charBagData[instanceId];
-		if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
+    return (window.currentTeam || []).map(instanceId => {
+        const instData = window.charBagData && window.charBagData[instanceId];
+        if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
 
-		const charId = instData.charId || instanceId;
-		const base = characterList[charId];
+        const charId = instData.charId || instanceId;
+        const base = characterList[charId];
+        
+        // ===== 【关键修改】优先使用编译后的属性 =====
+        let hp, atk, def, spe;
+        
+        if (instData._compiledStats) {
+            // 已经有编译结果，直接使用
+            hp = instData._compiledStats.totalHp;
+            atk = instData._compiledStats.totalAtk;
+            def = instData._compiledStats.totalDef;
+            spe = instData._compiledStats.totalSpe;
+        } else {
+            // 没有编译结果，从原始数据读取
+            hp = instData.hp || (base ? base.hp : 0);
+            atk = instData.atk || (base ? base.atk : 0);
+            def = instData.def || (base ? base.def : 0);
+            spe = instData.spe || (base ? base.spe : 0);
+        }
 
-		// 获取实例独立的宝物列表（使用 instanceId）
-		const treasures = (window.treasureEquipData && window.treasureEquipData[instanceId]) || [];
-
-		return {
-			id: charId,                             // 战斗内技能查找仍用 charId
-			instanceId: instanceId,                  // 传递实例ID供宝物系统使用
-			name: base ? base.name : charId,
-			hp: instData.hp || (base ? base.hp : 0),
-			atk: instData.atk || (base ? base.atk : 0),
-			def: instData.def || (base ? base.def : 0),
-			spe: instData.spe || (base ? base.spe : 0),
-			skills: instData.skills || (base ? base.skills : []),
-			buff: instData.buff || [],
-			treasures: treasures,
-			rank: instData.rank || (base ? base.rank : 'conmon'),
-			tupolevel: instData.tupolevel || 0,
-			tupoList: instData.tupoList || (base ? base.tupoList : []),        // 宝物数组，用于战斗内时点触发
-		};
-	});
+        return {
+            id: charId,
+            instanceId: instanceId,
+            name: base ? base.name : charId,
+            hp: hp,
+            atk: atk,
+            def: def,
+            spe: spe,
+            maxHp: hp,
+            skills: instData.skills || (base ? base.skills : []),
+            buff: instData.buff || [],
+            treasures: [],
+            rank: instData.rank || (base ? base.rank : 'common'),
+            tupolevel: instData.tupolevel || 0,
+            tupoList: instData.tupoList || (base ? base.tupoList : []),
+        };
+    });
 }
 
 
@@ -5632,6 +5770,7 @@ function initNewGame() {
 	window.treasureEquipData = {}; // 宝物装备数据
 	window.treasureBagData = {}; // 宝物背包数据
 	window.autoBattle = false;
+	window.showFormulaDetail = true; // 属性面板显示公式，默认开启
 
 	// 初始化宝物背包
 	window.ensureTreasureInventory();
@@ -5845,6 +5984,7 @@ const SaveManager = {
 			gameGold: window.gameGold || 1000,
 			charTreasureSlots: window.charTreasureSlots || {},
 			charBagData: window.charBagData || {},
+			showFormulaDetail: window.showFormulaDetail || false,
 			treasureEquipData: window.treasureEquipData || {},
 			treasureBagData: window.treasureBagData || {},
 			autoBattle: window.autoBattle || false,
@@ -5856,9 +5996,9 @@ const SaveManager = {
 			}
 		};
 		localStorage.setItem(`ybrpg_save_${slot}`, JSON.stringify(compatData));
-			console.log(`已保存到槽位${slot}`);
-			return compatData;
-		},
+		console.log(`已保存到槽位${slot}`);
+		return compatData;
+	},
 
 	// 从指定槽位读取（同步到 GameData 和 window）
 	loadFromSlot(slot) {
@@ -5876,7 +6016,7 @@ const SaveManager = {
 			// ===== 【新增】版本兼容性检查 =====
 			const saveVersion = parsed.gameVersion;
 			const compatibility = checkSaveCompatibility(saveVersion);
-			
+
 			if (!compatibility.compatible) {
 				console.warn(`[存档加载] ${compatibility.message}`);
 				// 可以在这里处理不兼容情况，比如显示警告
@@ -5888,7 +6028,7 @@ const SaveManager = {
 			} else if (compatibility.message) {
 				console.log(`[存档加载] ${compatibility.message}`);
 			}
-			
+
 			// 【新增】恢复背包Tab
 			if (parsed.playerPreferences?.bagTab) {
 				window.bagTab = parsed.playerPreferences.bagTab;
@@ -5931,7 +6071,7 @@ const SaveManager = {
 			window.shopData = parsed.shopData || { items: [], refreshCost: 50 };
 			window.gameGold = parsed.gameGold || 1000;
 			window.charBagData = charBag;
-
+			window.showFormulaDetail = parsed.showFormulaDetail !== undefined ? parsed.showFormulaDetail : true;
 			// window.charTreasureSlots = (data && data._charTreasureSlots) || parsed.charTreasureSlots || {};
 			window.treasureEquipData = parsed.treasureEquipData || {};
 			window.treasureBagData = parsed.treasureBagData || {};
@@ -6036,7 +6176,7 @@ const SaveManager = {
 		if (typeof window.ensureCharTreasureSlots === 'function') {
 			window.ensureCharTreasureSlots();
 		}
-			
+
 		// 同步 GameData 数据
 		gameData.data.team.members = (window.currentTeam || []).filter(Boolean);
 		gameData.data.bag.gold = window.gameGold || 1000;
@@ -6050,7 +6190,7 @@ const SaveManager = {
 
 		gameData.save(0);
 
-		
+
 		// 兼容格式
 		const compatData = {
 			gameVersion: window.GAME_VERSION || 'v1.0',  // 【新增】
@@ -6064,6 +6204,7 @@ const SaveManager = {
 			treasureEquipData: window.treasureEquipData || {},
 			treasureBagData: window.treasureBagData || {},
 			autoBattle: window.autoBattle || false,
+			showFormulaDetail: window.showFormulaDetail || false,
 			saveTime: new Date().toLocaleString(),
 			saveName: '自动存档',
 			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
@@ -6100,7 +6241,7 @@ const SaveManager = {
 				// ===== 【新增】版本兼容性检查 =====
 				const saveVersion = parsed.gameVersion;
 				const compatibility = checkSaveCompatibility(saveVersion);
-				
+
 				if (!compatibility.compatible) {
 					console.warn(`[存档加载] ${compatibility.message}`);
 					// 可以在这里处理不兼容情况，比如显示警告
@@ -6149,7 +6290,7 @@ const SaveManager = {
 						return instId || charId;
 					});
 				}
-
+				window.showFormulaDetail = parsed.showFormulaDetail !== undefined ? parsed.showFormulaDetail : true;
 				window.currentDifficulty = parsed.currentDifficulty || 'normal';
 				window.shopMode = parsed.shopMode || 'normal';
 				window.shopData = parsed.shopData || { items: [], refreshCost: 50 };
@@ -6599,29 +6740,108 @@ function showBagCharDetailPopup(instanceId, charId) {
 	// ];
 
 	// ======== 替换为如下代码 ========
+	// 在 showBagCharDetailPopup 函数中，找到 attrs 数组定义处
 
-	// 计算最终属性
-	const finalStats = calculateInstanceFinalStats(instanceId);
+    // ===== 【新增】计算全队突破加成 =====
+    const teamBonuses = calculateTeamBreakthroughBonuses();
+    
+    // ===== 传入全队加成 =====
+    const finalStats = calculateInstanceFinalStats(instanceId, teamBonuses);
 
 	const attrs = [
-		{ label: '生命', value: finalStats.totalHp, base: finalStats.baseHp, bonus: finalStats.breakthroughBonus.hp + finalStats.treasureBonus.hp },
-		{ label: '攻击', value: finalStats.totalAtk, base: finalStats.baseAtk, bonus: finalStats.breakthroughBonus.atk + finalStats.treasureBonus.atk },
-		{ label: '防御', value: finalStats.totalDef, base: finalStats.baseDef, bonus: finalStats.breakthroughBonus.def + finalStats.treasureBonus.def },
-		{ label: '速度', value: finalStats.totalSpe, base: finalStats.baseSpe, bonus: finalStats.breakthroughBonus.spe + finalStats.treasureBonus.spe },
+		{
+			label: '生命',
+			value: finalStats.totalHp,
+			base: finalStats.baseHp,
+			breakBonus: finalStats.breakthroughBonus.hp,
+			tresBonus: finalStats.treasureBonus.hp
+		},
+		{
+			label: '攻击',
+			value: finalStats.totalAtk,
+			base: finalStats.baseAtk,
+			breakBonus: finalStats.breakthroughBonus.atk,
+			tresBonus: finalStats.treasureBonus.atk
+		},
+		{
+			label: '防御',
+			value: finalStats.totalDef,
+			base: finalStats.baseDef,
+			breakBonus: finalStats.breakthroughBonus.def,
+			tresBonus: finalStats.treasureBonus.def
+		},
+		{
+			label: '速度',
+			value: finalStats.totalSpe,
+			base: finalStats.baseSpe,
+			breakBonus: finalStats.breakthroughBonus.spe,
+			tresBonus: finalStats.treasureBonus.spe
+		},
 	];
 
+	// attrs.forEach(a => {
+	// 	const row = document.createElement('div');
+	// 	row.className = 'gallery-detail-attr-row';
+
+	// 	// 构建显示文本
+	// 	let displayText = `${a.value}`;
+	// 	// if (a.breakBonus > 0 && a.tresBonus > 0) {
+	// 	// 	displayText += ` <span style="color:#44ff88;font-size:11px;">(基础${a.base}+突破${a.breakBonus}+宝物${a.tresBonus})</span>`;
+	// 	// } else if (a.breakBonus > 0) {
+	// 	// 	displayText += ` <span style="color:#44ff88;font-size:11px;">(基础${a.base}+突破${a.breakBonus})</span>`;
+	// 	// } else if (a.tresBonus > 0) {
+	// 	// 	displayText += ` <span style="color:#44ff88;font-size:11px;">(基础${a.base}+宝物${a.tresBonus})</span>`;
+	// 	// }
+	// 	// 获取固定加成和百分比加成
+	// 	const flatBonus = finalStats.flatBonus ? finalStats.flatBonus[a.label === '生命' ? 'hp' : a.label === '攻击' ? 'atk' : a.label === '防御' ? 'def' : 'spe'] : 0;
+	// 	const percentBonus = finalStats.percentBonus ? finalStats.percentBonus[a.label === '生命' ? 'hp' : a.label === '攻击' ? 'atk' : a.label === '防御' ? 'def' : 'spe'] : 0;
+
+	// 	if (flatBonus > 0 || percentBonus > 0) {
+	// 		let text = `(${a.base}`;
+	// 		if (flatBonus > 0) text += `+${flatBonus}`;
+	// 		text += `)`;
+	// 		if (percentBonus > 0) text += `×${(1 + percentBonus).toFixed(2)}`;
+	// 		displayText += ` <span style="color:#44ff88;font-size:11px;">${text}</span>`;
+	// 	}
+
+
+	// 	row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${displayText}</span>`;
+	// 	attrDiv.appendChild(row);
+	// });
+
+	// 定义属性名称映射
+	const ATTR_MAP = { '生命': 'hp', '攻击': 'atk', '防御': 'def', '速度': 'spe' };
+
+	// 在显示循环中
 	attrs.forEach(a => {
 		const row = document.createElement('div');
-		row.className = 'gallery-detail-attr-row';
+		row.className = 'team-info-attr-row';
 
 		let displayText = `${a.value}`;
-		if (a.bonus > 0) {
-			displayText += ` <span style="color:#44ff88;font-size:11px;">(+${a.bonus})</span>`;
+		
+		// 使用映射获取对应的 key
+				
+		// ===== 根据设置决定是否显示公式 =====
+		if (window.showFormulaDetail) {
+			const attrKey = ATTR_MAP[a.label];
+			if (attrKey && finalStats.flatBonus) {
+				const flatBonus = finalStats.flatBonus[attrKey] || 0;
+				const percentBonus = finalStats.percentBonus[attrKey] || 0;
+				
+				if (flatBonus > 0 || percentBonus > 0) {
+					let text = `(${a.base}`;
+					if (flatBonus > 0) text += `+${flatBonus}`;
+					text += `)`;
+					if (percentBonus > 0) text += `×${(1 + percentBonus).toFixed(2)}`;
+					displayText += ` <span style="color:#44ff88;font-size:11px;">${text}</span>`;
+				}
+			}
 		}
 
 		row.innerHTML = `<span class="attr-label">${a.label}</span><span class="attr-value">${displayText}</span>`;
 		attrDiv.appendChild(row);
 	});
+
 
 
 	topDiv.appendChild(attrDiv);
@@ -7933,8 +8153,8 @@ function getMainCharacterInstance() {
  */
 function getMainCharacterBaseData() {
 	const mainCharId = 'zhujue';
-	if (window.characterList && window.characterList[mainCharId]) {
-		return window.characterList[mainCharId];
+	if (characterList && characterList[mainCharId]) {
+		return characterList[mainCharId];
 	}
 	return null;
 }
@@ -8241,7 +8461,7 @@ window.getTreasureStats = function (instanceId) {
 
 	const level = data.level || 1;
 	const multiplier = level; // 等级倍数
-
+	// console.log('宝物属性:', window.getTreasureStats(instanceId));
 	return {
 		atk: (def.atk || 0) * multiplier,
 		def: (def.def || 0) * multiplier,
@@ -8265,7 +8485,7 @@ window.applyTreasureStatsToUnit = function (unit) {
 
 	equippedTreasureIds.forEach(tid => {
 		if (!tid) return;
-		const stats = getTreasureStats(tid);
+		const stats = window.getTreasureStats(tid);
 		totalAtk += stats.atk;
 		totalDef += stats.def;
 		totalHp += stats.hp;
@@ -8479,16 +8699,16 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 	const baseSpe = def.spe || 0;
 
 	if (baseAtk > 0) {
-		attrRow.innerHTML += `<div style="color:#ff4444;">攻击: ${baseAtk} → ${baseAtk * (currentLevel + 1)}</div>`;
+		attrRow.innerHTML += `<div style="color:#ff4444;">攻击: ${baseAtk*currentLevel} </div>`;
 	}
 	if (baseDef > 0) {
-		attrRow.innerHTML += `<div style="color:#88cc88;">防御: ${baseDef} → ${baseDef * (currentLevel + 1)}</div>`;
+		attrRow.innerHTML += `<div style="color:#88cc88;">防御: ${baseDef*currentLevel}</div>`;
 	}
 	if (baseHp > 0) {
-		attrRow.innerHTML += `<div style="color:#44aaff;">生命: ${baseHp} → ${baseHp * (currentLevel + 1)}</div>`;
+		attrRow.innerHTML += `<div style="color:#44aaff;">生命: ${baseHp*currentLevel}</div>`;
 	}
 	if (baseSpe > 0) {
-		attrRow.innerHTML += `<div style="color:#ffff44;">速度: ${baseSpe} → ${baseSpe * (currentLevel + 1)}</div>`;
+		attrRow.innerHTML += `<div style="color:#ffff44;">速度: ${baseSpe*currentLevel}</div>`;
 	}
 
 	infoSection.appendChild(attrRow);
@@ -8496,25 +8716,32 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 	// 【添加位置】在这里插入宝物对角色总加成的显示
 	// ==============================
 	if (charInstanceId) {
-		const charStats = calculateInstanceFinalStats(charInstanceId);
 		const bonusInfo = document.createElement('div');
+		bonusInfo.setAttribute('data-char-treasure-bonus', 'true');
 		bonusInfo.style.cssText = 'font-size:11px;color:#aaa;margin-top:8px;padding-top:6px;border-top:1px solid #444;';
-
-		// 只显示有加成的属性
+		
+		// 直接使用当前宝物的属性
+		const baseAtk = def.atk || 0;
+		const baseDef = def.def || 0;
+		const baseHp = def.hp || 0;
+		const baseSpe = def.spe || 0;
+		const level = currentLevel; // 注意：这里的 currentLevel 需要从外部获取
+		
 		let bonusParts = [];
-		if (charStats.treasureBonus.atk > 0) bonusParts.push(`攻击+${charStats.treasureBonus.atk}`);
-		if (charStats.treasureBonus.def > 0) bonusParts.push(`防御+${charStats.treasureBonus.def}`);
-		if (charStats.treasureBonus.hp > 0) bonusParts.push(`生命+${charStats.treasureBonus.hp}`);
-		if (charStats.treasureBonus.spe > 0) bonusParts.push(`速度+${charStats.treasureBonus.spe}`);
-
+		if (baseAtk > 0) bonusParts.push(`攻击+${baseAtk * level}`);
+		if (baseDef > 0) bonusParts.push(`防御+${baseDef * level}`);
+		if (baseHp > 0) bonusParts.push(`生命+${baseHp * level}`);
+		if (baseSpe > 0) bonusParts.push(`速度+${baseSpe * level}`);
+		
 		if (bonusParts.length > 0) {
-			bonusInfo.innerHTML = `对角色加成: ${bonusParts.join(' · ')}`;
+			bonusInfo.innerHTML = `当前宝物加成: ${bonusParts.join(' · ')}`;
 		} else {
 			bonusInfo.innerHTML = `当前宝物无属性加成`;
 		}
-
+		
 		infoSection.appendChild(bonusInfo);
 	}
+	
 	// ==============================
 	popup.appendChild(infoSection);
 
@@ -8561,10 +8788,10 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 		previewContent.style.cssText = 'font-size:12px;color:#ccc;line-height:1.6;';
 
 		let previewText = '';
-		if (baseAtk > 0) previewText += `攻击: ${baseAtk} → ${baseAtk * multiplier}\n`;
-		if (baseDef > 0) previewText += `防御: ${baseDef} → ${baseDef * multiplier}\n`;
-		if (baseHp > 0) previewText += `生命: ${baseHp} → ${baseHp * multiplier}\n`;
-		if (baseSpe > 0) previewText += `速度: ${baseSpe} → ${baseSpe * multiplier}\n`;
+		if (baseAtk > 0) previewText += `攻击: ${baseAtk*currentLevel} → ${baseAtk * multiplier}\n`;
+		if (baseDef > 0) previewText += `防御: ${baseDef*currentLevel} → ${baseDef * multiplier}\n`;
+		if (baseHp > 0) previewText += `生命: ${baseHp*currentLevel} → ${baseHp * multiplier}\n`;
+		if (baseSpe > 0) previewText += `速度: ${baseSpe*currentLevel} → ${baseSpe * multiplier}\n`;
 
 		previewContent.textContent = previewText;
 		previewSection.appendChild(previewContent);
@@ -8710,23 +8937,39 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 
 				// 找到 toast 调用前，添加：
 				if (charInstanceId) {
-					// 刷新阵容详情
-					if (window._selectedSlotIndex !== undefined && window.currentTeam) {
-						const currentInstId = window.currentTeam[window._selectedSlotIndex];
-						if (currentInstId && currentInstId === charInstanceId) {
+					refreshTreasureUI(charInstanceId);
+					// ===== 【新增】强制刷新阵容详情面板 =====
+					const teamIndex = window.currentTeam ? window.currentTeam.indexOf(charInstanceId) : -1;
+					if (teamIndex !== -1) {
+						// 如果在阵容中，刷新详情
+						if (window._selectedSlotIndex !== undefined && window._selectedSlotIndex === teamIndex) {
 							const instData = window.charBagData && window.charBagData[charInstanceId];
 							if (instData) {
 								const charId = instData.charId || charInstanceId;
-								showTeamCharInfo(window._selectedSlotIndex, charInstanceId, charId);
+								showTeamCharInfo(teamIndex, charInstanceId, charId);
 							}
 						}
-					}
-
-					// 刷新队伍格子
-					const teamIndex = window.currentTeam ? window.currentTeam.indexOf(charInstanceId) : -1;
-					if (teamIndex !== -1) {
+						// 刷新格子图标
 						refreshTeamSlot(teamIndex);
 					}
+					// ======================================
+					// 刷新阵容详情
+					// if (window._selectedSlotIndex !== undefined && window.currentTeam) {
+					// 	const currentInstId = window.currentTeam[window._selectedSlotIndex];
+					// 	if (currentInstId && currentInstId === charInstanceId) {
+					// 		const instData = window.charBagData && window.charBagData[charInstanceId];
+					// 		if (instData) {
+					// 			const charId = instData.charId || charInstanceId;
+					// 			showTeamCharInfo(window._selectedSlotIndex, charInstanceId, charId);
+					// 		}
+					// 	}
+					// }
+
+					// 刷新队伍格子
+					// const teamIndex = window.currentTeam ? window.currentTeam.indexOf(charInstanceId) : -1;
+					// if (teamIndex !== -1) {
+					// 	refreshTeamSlot(teamIndex);
+					// }
 				}
 
 				// ===== 更新局部变量（用于下次点击时的初始校验） =====
@@ -8804,10 +9047,10 @@ function refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, currentLe
 
 		let attrsHTML = '';
 		const nextMultiplier = currentLevel + 1;
-		if (baseAtk > 0) attrsHTML += `<div style="color:#ff4444;">攻击: ${baseAtk} → ${baseAtk * nextMultiplier}</div>`;
-		if (baseDef > 0) attrsHTML += `<div style="color:#88cc88;">防御: ${baseDef} → ${baseDef * nextMultiplier}</div>`;
-		if (baseHp > 0) attrsHTML += `<div style="color:#44aaff;">生命: ${baseHp} → ${baseHp * nextMultiplier}</div>`;
-		if (baseSpe > 0) attrsHTML += `<div style="color:#ffff44;">速度: ${baseSpe} → ${baseSpe * nextMultiplier}</div>`;
+		if (baseAtk > 0) attrsHTML += `<div style="color:#ff4444;">攻击: ${baseAtk*currentLevel}</div>`;
+		if (baseDef > 0) attrsHTML += `<div style="color:#88cc88;">防御: ${baseDef*currentLevel}</div>`;
+		if (baseHp > 0) attrsHTML += `<div style="color:#44aaff;">生命: ${baseHp*currentLevel}</div>`;
+		if (baseSpe > 0) attrsHTML += `<div style="color:#ffff44;">速度: ${baseSpe*currentLevel}</div>`;
 		attrRow.innerHTML = attrsHTML;
 	}
 
@@ -8859,10 +9102,10 @@ function refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, currentLe
 		if (currentLevel < 10) {
 			const multiplier = currentLevel + 1;
 			let previewText = '';
-			if (def.atk > 0) previewText += `攻击: ${def.atk} → ${def.atk * multiplier}\n`;
-			if (def.def > 0) previewText += `防御: ${def.def} → ${def.def * multiplier}\n`;
-			if (def.hp > 0) previewText += `生命: ${def.hp} → ${def.hp * multiplier}\n`;
-			if (def.spe > 0) previewText += `速度: ${def.spe} → ${def.spe * multiplier}\n`;
+			if (def.atk > 0) previewText += `攻击: ${def.atk*currentLevel} → ${def.atk * multiplier}\n`;
+			if (def.def > 0) previewText += `防御: ${def.def*currentLevel} → ${def.def * multiplier}\n`;
+			if (def.hp > 0) previewText += `生命: ${def.hp*currentLevel} → ${def.hp * multiplier}\n`;
+			if (def.spe > 0) previewText += `速度: ${def.spe*currentLevel} → ${def.spe * multiplier}\n`;
 			previewSection.textContent = previewText;
 
 			// 更新预览标题
@@ -8914,26 +9157,31 @@ function refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, currentLe
 			}
 		}
 	}
-	// ===== 【新增】更新宝物对角色总加成显示 =====
+	// ===== 【修改】只显示当前宝物的属性增幅 =====
 	if (charInstanceId) {
-		const charStats = calculateInstanceFinalStats(charInstanceId);
 		const bonusInfo = popup.querySelector('[data-char-treasure-bonus]');
-		bonusInfo.setAttribute('data-char-treasure-bonus', 'true');
-		bonusInfo.style.cssText = 'font-size:11px;color:#aaa;margin-top:8px;padding-top:6px;border-top:1px solid #444;';
 		if (bonusInfo) {
+			// 直接使用当前宝物的属性（def 是当前宝物定义，由外部传入）
+			const baseAtk = def.atk || 0;
+			const baseDef = def.def || 0;
+			const baseHp = def.hp || 0;
+			const baseSpe = def.spe || 0;
+			const level = currentLevel; // 当前宝物等级
+			
 			let bonusParts = [];
-			if (charStats.treasureBonus.atk > 0) bonusParts.push(`攻击+${charStats.treasureBonus.atk}`);
-			if (charStats.treasureBonus.def > 0) bonusParts.push(`防御+${charStats.treasureBonus.def}`);
-			if (charStats.treasureBonus.hp > 0) bonusParts.push(`生命+${charStats.treasureBonus.hp}`);
-			if (charStats.treasureBonus.spe > 0) bonusParts.push(`速度+${charStats.treasureBonus.spe}`);
+			if (baseAtk > 0) bonusParts.push(`攻击+${baseAtk * level}`);
+			if (baseDef > 0) bonusParts.push(`防御+${baseDef * level}`);
+			if (baseHp > 0) bonusParts.push(`生命+${baseHp * level}`);
+			if (baseSpe > 0) bonusParts.push(`速度+${baseSpe * level}`);
 
 			if (bonusParts.length > 0) {
-				bonusInfo.innerHTML = `对角色加成: ${bonusParts.join(' · ')}`;
+				bonusInfo.innerHTML = `当前宝物加成: ${bonusParts.join(' · ')}`;
 			} else {
 				bonusInfo.innerHTML = `当前宝物无属性加成`;
 			}
 		}
 	}
+
 }
 
 
@@ -8943,7 +9191,7 @@ function refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, currentLe
  * @param {string} instanceId - 角色实例ID
  * @returns {Object} { baseHp, baseAtk, baseDef, baseSpe, totalHp, totalAtk, totalDef, totalSpe, breakthroughBonus, treasureBonus }
  */
-function calculateInstanceFinalStats(instanceId) {
+function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
 		return {
 			baseHp: 0, baseAtk: 0, baseDef: 0, baseSpe: 0,
@@ -8955,7 +9203,7 @@ function calculateInstanceFinalStats(instanceId) {
 
 	const instData = window.charBagData[instanceId];
 	const charId = instData.charId || instanceId;
-	const baseChar = window.characterList && window.characterList[charId];
+	const baseChar = characterList && characterList[charId];
 
 	if (!baseChar) {
 		return {
@@ -8966,81 +9214,243 @@ function calculateInstanceFinalStats(instanceId) {
 		};
 	}
 
-	// ==== 1. 获取基础属性（等级 + 模板 + 品质） ====
-	let baseHp, baseAtk, baseDef, baseSpe;
+	console.log('instData', instData);
+	// ========== 【关键修复】直接从 charBagData 读取最新数据 ==========
+	const currentLevel = instData.level || 1;
+	const currentRank = instData.rank || baseChar.rank || 'common';
+	const currentTemplate = instData.template || baseChar.template || 'balanced';
 
-	if (typeof updateCharacterSP === 'function') {
-		const compiled = updateCharacterSP(instData);
-		if (compiled) {
-			baseHp = compiled.hp || instData.hp || 0;
-			baseAtk = compiled.atk || instData.atk || 0;
-			baseDef = compiled.def || instData.def || 0;
-			baseSpe = compiled.spe || instData.spe || 0;
-		} else {
-			baseHp = instData.hp || 0;
-			baseAtk = instData.atk || 0;
-			baseDef = instData.def || 0;
-			baseSpe = instData.spe || 0;
-		}
+	// 1. 从 characterTemplate 获取基础属性（使用当前品质和模板）
+	const templateData = window.characterTemplate || characterTemplate;
+	let baseStats;
+
+	if (templateData && templateData[currentTemplate] && templateData[currentTemplate][currentRank]) {
+		baseStats = { ...templateData[currentTemplate][currentRank] };
 	} else {
-		baseHp = instData.hp || 0;
-		baseAtk = instData.atk || 0;
-		baseDef = instData.def || 0;
-		baseSpe = instData.spe || 0;
+		// fallback：使用存档中的数据
+		baseStats = {
+			hp: instData.hp || baseChar.hp || 100,
+			atk: instData.atk || baseChar.atk || 10,
+			def: instData.def || baseChar.def || 0,
+			spe: instData.spe || baseChar.spe || 0
+		};
 	}
 
-	// ==== 2. 计算突破加成 ====
-	const tupolevel = instData.tupolevel || 0;
-	const tupoList = instData.tupoList || baseChar.tupoList || [];
-	let breakHp = 0, breakAtk = 0, breakDef = 0, breakSpe = 0;
+	// 2. 计算等级成长因子（不使用 updateCharacterSP，避免依赖不可靠函数）
+	const growthFactor = (100 + 10 * (currentLevel - 1)) / 100;
 
-	for (let i = 0; i < tupolevel; i++) {
-		const buff = tupoList[i];
-		if (!buff) continue;
+	const baseHp = Math.floor(baseStats.hp * growthFactor);
+	const baseAtk = Math.floor(baseStats.atk * growthFactor);
+	const baseDef = Math.floor(baseStats.def * growthFactor);
+	const baseSpe = Math.floor(baseStats.spe * growthFactor);
 
-		// 处理字符串引用的突破库
-		let resolvedBuff = buff;
-		if (typeof buff === 'string') {
-			const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
-			resolvedBuff = lib[buff];
-		}
+	console.log(`[属性计算] ${baseChar.name} Lv.${currentLevel} ${currentRank}:`, {
+		基础: `HP:${baseHp} ATK:${baseAtk} DEF:${baseDef} SPE:${baseSpe}`,
+		模板: currentTemplate,
+		品质: currentRank,
+		成长因子: growthFactor
+	});
 
-		if (!resolvedBuff) continue;
+    // 3. 计算突破加成（支持多种类型）
+    const tupolevel = instData.tupolevel || 0;
+    const tupoList = instData.tupoList || baseChar.tupoList || [];
+    
+    // 初始化各类加成
+    let selfFlat = { hp: 0, atk: 0, def: 0, spe: 0 };
+    let teamFlat = { hp: 0, atk: 0, def: 0, spe: 0 };
+    let selfPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
+    let teamPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
 
-		if (resolvedBuff.type === 'self_stat_flat') {
-			if (resolvedBuff.hp) breakHp += Number(resolvedBuff.hp);
-			if (resolvedBuff.atk) breakAtk += Number(resolvedBuff.atk);
-			if (resolvedBuff.def) breakDef += Number(resolvedBuff.def);
-			if (resolvedBuff.spe) breakSpe += Number(resolvedBuff.spe);
-		}
-	}
+	 // ===== 【新增】如果传入了外部全队加成，直接使用 =====
+	 if (externalTeamBonuses) {
+        teamFlat.hp = externalTeamBonuses.teamFlat.hp || 0;
+        teamFlat.atk = externalTeamBonuses.teamFlat.atk || 0;
+        teamFlat.def = externalTeamBonuses.teamFlat.def || 0;
+        teamFlat.spe = externalTeamBonuses.teamFlat.spe || 0;
+        
+        teamPercent.hp = externalTeamBonuses.teamPercent.hp || 0;
+        teamPercent.atk = externalTeamBonuses.teamPercent.atk || 0;
+        teamPercent.def = externalTeamBonuses.teamPercent.def || 0;
+        teamPercent.spe = externalTeamBonuses.teamPercent.spe || 0;
+    } else {
+        // 如果没有传入外部全队加成，从自身突破中读取（兼容旧逻辑）
+        // 注意：这里只读取自身突破中的 team_stat，但自身 team_stat 本身就代表全队加成
+        // 所以我们需要汇总全队
+    }
+    
+    // ===== 【修改】突破循环：改为只计算 self 部分 =====
+    for (let i = 0; i < tupolevel; i++) {
+        const buff = tupoList[i];
+        if (!buff) continue;
 
-	// ==== 3. 计算宝物加成 ====
-	let tresHp = 0, tresAtk = 0, tresDef = 0, tresSpe = 0;
+        let resolvedBuff = buff;
+        if (typeof buff === 'string') {
+            const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+            resolvedBuff = lib[buff];
+        }
+        if (!resolvedBuff) continue;
 
-	// 从 charTreasureSlots 获取装备的宝物
-	if (window.charTreasureSlots && window.charTreasureSlots[instanceId]) {
-		const slots = window.charTreasureSlots[instanceId];
-		slots.forEach(treasureId => {
-			if (!treasureId) return;
-			const stats = window.getTreasureStats ? window.getTreasureStats(treasureId) : { hp: 0, atk: 0, def: 0, spe: 0 };
-			tresHp += stats.hp || 0;
-			tresAtk += stats.atk || 0;
-			tresDef += stats.def || 0;
-			tresSpe += stats.spe || 0;
-		});
-	}
+        const type = resolvedBuff.type;
 
-	return {
-		baseHp, baseAtk, baseDef, baseSpe,
-		totalHp: baseHp + breakHp + tresHp,
-		totalAtk: baseAtk + breakAtk + tresAtk,
-		totalDef: baseDef + breakDef + tresDef,
-		totalSpe: baseSpe + breakSpe + tresSpe,
-		breakthroughBonus: { hp: breakHp, atk: breakAtk, def: breakDef, spe: breakSpe },
-		treasureBonus: { hp: tresHp, atk: tresAtk, def: tresDef, spe: tresSpe }
-	};
+        switch (type) {
+            case 'self_stat_flat':
+                // 自身固定数值（保持不变）
+                if (resolvedBuff.atk !== undefined) selfFlat.atk += Number(resolvedBuff.atk);
+                if (resolvedBuff.def !== undefined) selfFlat.def += Number(resolvedBuff.def);
+                if (resolvedBuff.hp !== undefined) selfFlat.hp += Number(resolvedBuff.hp);
+                if (resolvedBuff.spe !== undefined) selfFlat.spe += Number(resolvedBuff.spe);
+                // 兼容旧格式
+                if (resolvedBuff.stat && resolvedBuff.value) {
+                    // ... 旧格式处理 ...
+                }
+                break;
+
+            case 'self_stat_percent':
+                // 自身百分比（保持不变）
+                if (resolvedBuff.atk !== undefined) selfPercent.atk += Number(resolvedBuff.atk);
+                if (resolvedBuff.def !== undefined) selfPercent.def += Number(resolvedBuff.def);
+                if (resolvedBuff.hp !== undefined) selfPercent.hp += Number(resolvedBuff.hp);
+                if (resolvedBuff.spe !== undefined) selfPercent.spe += Number(resolvedBuff.spe);
+                break;
+
+            case 'team_stat_flat':
+            case 'team_stat_percent':
+                // ===== 【关键】如果没有传入外部全队加成，才从自身突破读取 =====
+                // 但自身读取的 team_stat 实际上代表全队，不应该只加给自己
+                // 所以如果 externalTeamBonuses 为 null，我们忽略自身中的 team_stat（由调用方汇总）
+                if (!externalTeamBonuses) {
+                    // 如果没传外部加成，fallback：还是从自身读取（保证兼容性）
+                    if (type === 'team_stat_flat') {
+                        if (resolvedBuff.atk !== undefined) teamFlat.atk += Number(resolvedBuff.atk);
+                        if (resolvedBuff.def !== undefined) teamFlat.def += Number(resolvedBuff.def);
+                        if (resolvedBuff.hp !== undefined) teamFlat.hp += Number(resolvedBuff.hp);
+                        if (resolvedBuff.spe !== undefined) teamFlat.spe += Number(resolvedBuff.spe);
+                    } else if (type === 'team_stat_percent') {
+                        if (resolvedBuff.atk !== undefined) teamPercent.atk += Number(resolvedBuff.atk);
+                        if (resolvedBuff.def !== undefined) teamPercent.def += Number(resolvedBuff.def);
+                        if (resolvedBuff.hp !== undefined) teamPercent.hp += Number(resolvedBuff.hp);
+                        if (resolvedBuff.spe !== undefined) teamPercent.spe += Number(resolvedBuff.spe);
+                    }
+                }
+                break;
+
+            case 'self_energy':
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    // 4. 计算宝物加成（保持不变）
+    let tresHp = 0, tresAtk = 0, tresDef = 0, tresSpe = 0;
+    if (window.charTreasureSlots && window.charTreasureSlots[instanceId]) {
+        const slots = window.charTreasureSlots[instanceId];
+        slots.forEach(treasureId => {
+            if (!treasureId) return;
+            const stats = window.getTreasureStats(treasureId);
+            tresHp += stats.hp || 0;
+            tresAtk += stats.atk || 0;
+            tresDef += stats.def || 0;
+            tresSpe += stats.spe || 0;
+        });
+    }
+
+    // 5. 按照公式计算最终属性
+    // 总属性 = (基础属性 + 自身固定 + 全队固定 + 宝物) × (1 + 自身百分比 + 全队百分比)
+
+	console.log('selfFlat', selfFlat);
+	console.log('teamFlat', teamFlat);
+	console.log('selfPercent', selfPercent);
+	console.log('teamPercent', teamPercent);
+    const calcTotal = (base, selfF, teamF, tres, selfP, teamP) => {
+        const flatTotal = base + selfF + teamF + tres;
+        const percentTotal = 1 + selfP + teamP;
+        return Math.floor(flatTotal * percentTotal);
+    };
+
+    const totalHp = calcTotal(baseHp, selfFlat.hp, teamFlat.hp, tresHp, selfPercent.hp, teamPercent.hp);
+    const totalAtk = calcTotal(baseAtk, selfFlat.atk, teamFlat.atk, tresAtk, selfPercent.atk, teamPercent.atk);
+    const totalDef = calcTotal(baseDef, selfFlat.def, teamFlat.def, tresDef, selfPercent.def, teamPercent.def);
+    const totalSpe = calcTotal(baseSpe, selfFlat.spe, teamFlat.spe, tresSpe, selfPercent.spe, teamPercent.spe);
+
+    // 分离各类型加成（用于显示）
+    const getBonus = (base, selfF, teamF, tres, selfP, teamP) => {
+        const flatBeforePercent = base + selfF + teamF + tres;
+        const percentMult = (1 + selfP + teamP);
+        const breakBonus = Math.floor((base + selfF) * percentMult) - base;
+        const treasureBonus = Math.floor(tres * percentMult);
+        return {
+            breakBonus: breakBonus > 0 ? breakBonus : 0,
+            treasureBonus: treasureBonus > 0 ? treasureBonus : 0
+        };
+    };
+    // 获取各类加成明细（用于显示）
+    const totalFlatHp = selfFlat.hp + teamFlat.hp + tresHp;
+    const totalFlatAtk = selfFlat.atk + teamFlat.atk + tresAtk;
+    const totalFlatDef = selfFlat.def + teamFlat.def + tresDef;
+    const totalFlatSpe = selfFlat.spe + teamFlat.spe + tresSpe;
+    
+    const totalPercentHp = selfPercent.hp + teamPercent.hp;
+    const totalPercentAtk = selfPercent.atk + teamPercent.atk;
+    const totalPercentDef = selfPercent.def + teamPercent.def;
+    const totalPercentSpe = selfPercent.spe + teamPercent.spe;
+
+    const result = {
+        baseHp, baseAtk, baseDef, baseSpe,
+        totalHp, totalAtk, totalDef, totalSpe,
+        // 新增：分离固定值和百分比
+        flatBonus: {
+            hp: totalFlatHp,
+            atk: totalFlatAtk,
+            def: totalFlatDef,
+            spe: totalFlatSpe
+        },
+        percentBonus: {
+            hp: totalPercentHp,
+            atk: totalPercentAtk,
+            def: totalPercentDef,
+            spe: totalPercentSpe
+        },
+        // 保持向后兼容
+        breakthroughBonus: {
+            hp: Math.floor((baseHp + totalFlatHp) * (1 + totalPercentHp)) - baseHp,
+            atk: Math.floor((baseAtk + totalFlatAtk) * (1 + totalPercentAtk)) - baseAtk,
+            def: Math.floor((baseDef + totalFlatDef) * (1 + totalPercentDef)) - baseDef,
+            spe: Math.floor((baseSpe + totalFlatSpe) * (1 + totalPercentSpe)) - baseSpe
+        },
+        treasureBonus: {
+            hp: 0,  // 宝物已包含在 flatBonus 中
+            atk: 0,
+            def: 0,
+            spe: 0
+        },
+        growthFactor
+    };
+
+    // ===== 【新增】将编译结果写回 charBagData =====
+    instData._compiledStats = result;
+    
+    // 同时更新基础属性字段（供兼容使用）
+    instData.hp = result.totalHp;
+    instData.atk = result.totalAtk;
+    instData.def = result.totalDef;
+    instData.spe = result.totalSpe;
+    instData.maxHp = result.totalHp;
+	
+    console.log(`[属性计算] ${baseChar.name} 最终:`, {
+        总HP: result.totalHp,
+        总ATK: result.totalAtk,
+        基础: `HP:${baseHp} ATK:${baseAtk}`,
+        固定加成: `HP+${totalFlatHp} ATK+${totalFlatAtk}`,
+        百分比: `HP+${(totalPercentHp*100).toFixed(0)}% ATK+${(totalPercentAtk*100).toFixed(0)}%`
+    });
+
+    return result;
+
+
 }
+
 
 /**
  * 格式化属性显示文本（基础值 + 总加成）
@@ -9064,26 +9474,26 @@ function formatAttributeDisplay(totalValue, baseValue, bonusValue) {
  * @returns {number} -1: v1 < v2, 0: v1 === v2, 1: v1 > v2
  */
 function compareVersions(v1, v2) {
-    if (!v1 || !v2) return 0;
-    
-    // 移除 'v' 前缀
-    const cleanV1 = v1.replace(/^v/, '');
-    const cleanV2 = v2.replace(/^v/, '');
-    
-    const parts1 = cleanV1.split('.').map(Number);
-    const parts2 = cleanV2.split('.').map(Number);
-    
-    const maxLen = Math.max(parts1.length, parts2.length);
-    
-    for (let i = 0; i < maxLen; i++) {
-        const p1 = parts1[i] || 0;
-        const p2 = parts2[i] || 0;
-        
-        if (p1 < p2) return -1;
-        if (p1 > p2) return 1;
-    }
-    
-    return 0;
+	if (!v1 || !v2) return 0;
+
+	// 移除 'v' 前缀
+	const cleanV1 = v1.replace(/^v/, '');
+	const cleanV2 = v2.replace(/^v/, '');
+
+	const parts1 = cleanV1.split('.').map(Number);
+	const parts2 = cleanV2.split('.').map(Number);
+
+	const maxLen = Math.max(parts1.length, parts2.length);
+
+	for (let i = 0; i < maxLen; i++) {
+		const p1 = parts1[i] || 0;
+		const p2 = parts2[i] || 0;
+
+		if (p1 < p2) return -1;
+		if (p1 > p2) return 1;
+	}
+
+	return 0;
 }
 
 /**
@@ -9094,34 +9504,108 @@ function compareVersions(v1, v2) {
  * @returns {Object} { compatible: boolean, message: string }
  */
 function checkSaveCompatibility(saveVersion) {
-    const currentVersion = window.GAME_VERSION || 'v1.0';
+	const currentVersion = window.GAME_VERSION || 'v1.0';
+
+	if (!saveVersion) {
+		return {
+			compatible: true, // 旧存档没有版本号，视为兼容
+			message: '旧版存档，建议重新保存以更新版本信息'
+		};
+	}
+
+	const result = compareVersions(saveVersion, currentVersion);
+
+	if (result > 0) {
+		// 存档版本比当前版本新（理论上不应该发生）
+		return {
+			compatible: false,
+			message: `存档版本(${saveVersion})高于当前版本(${currentVersion})，可能不兼容`
+		};
+	} else if (result < 0) {
+		// 存档版本比当前版本旧
+		return {
+			compatible: true,
+			message: `旧版存档(${saveVersion})，将升级至当前版本(${currentVersion})`
+		};
+	} else {
+		// 版本相同
+		return {
+			compatible: true,
+			message: ''
+		};
+	}
+}
+/**
+ * 计算全队突破增益汇总（team_stat_flat + team_stat_percent）
+ * @returns {Object} { teamFlat: {hp, atk, def, spe}, teamPercent: {hp, atk, def, spe} }
+ */
+function calculateTeamBreakthroughBonuses() {
+    const teamFlat = { hp: 0, atk: 0, def: 0, spe: 0 };
+    const teamPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
     
-    if (!saveVersion) {
-        return {
-            compatible: true, // 旧存档没有版本号，视为兼容
-            message: '旧版存档，建议重新保存以更新版本信息'
-        };
-    }
+    if (!window.currentTeam) return { teamFlat, teamPercent };
     
-    const result = compareVersions(saveVersion, currentVersion);
+    // 遍历队伍中所有成员
+    window.currentTeam.forEach(instId => {
+        if (!instId) return;
+        
+        const instData = window.charBagData && window.charBagData[instId];
+        if (!instData) return;
+        
+        const charId = instData.charId || instId;
+        const baseChar = characterList && characterList[charId];
+        if (!baseChar) return;
+        
+        const tupoList = instData.tupoList || baseChar.tupoList || [];
+        const tupolevel = instData.tupolevel || 0;
+        
+        // 遍历该角色的所有已解锁突破
+        for (let i = 0; i < tupolevel; i++) {
+            const buff = tupoList[i];
+            if (!buff) continue;
+            
+            // 处理字符串引用
+            let resolvedBuff = buff;
+            if (typeof buff === 'string') {
+                const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+                resolvedBuff = lib[buff];
+            }
+            if (!resolvedBuff) continue;
+            
+            const type = resolvedBuff.type;
+            
+            switch (type) {
+                case 'team_stat_flat':
+                    // 您的格式: atk: 200, def: 100 等
+                    if (resolvedBuff.atk !== undefined) teamFlat.atk += Number(resolvedBuff.atk);
+                    if (resolvedBuff.def !== undefined) teamFlat.def += Number(resolvedBuff.def);
+                    if (resolvedBuff.hp !== undefined) teamFlat.hp += Number(resolvedBuff.hp);
+                    if (resolvedBuff.spe !== undefined) teamFlat.spe += Number(resolvedBuff.spe);
+                    break;
+                    
+                case 'team_stat_percent':
+                    // 您的格式: atk: 0.1, def: 0.1, hp: 0.1
+                    if (resolvedBuff.atk !== undefined) teamPercent.atk += Number(resolvedBuff.atk);
+                    if (resolvedBuff.def !== undefined) teamPercent.def += Number(resolvedBuff.def);
+                    if (resolvedBuff.hp !== undefined) teamPercent.hp += Number(resolvedBuff.hp);
+                    if (resolvedBuff.spe !== undefined) teamPercent.spe += Number(resolvedBuff.spe);
+                    break;
+            }
+        }
+    });
     
-    if (result > 0) {
-        // 存档版本比当前版本新（理论上不应该发生）
-        return {
-            compatible: false,
-            message: `存档版本(${saveVersion})高于当前版本(${currentVersion})，可能不兼容`
-        };
-    } else if (result < 0) {
-        // 存档版本比当前版本旧
-        return {
-            compatible: true,
-            message: `旧版存档(${saveVersion})，将升级至当前版本(${currentVersion})`
-        };
-    } else {
-        // 版本相同
-        return {
-            compatible: true,
-            message: ''
-        };
-    }
+    return { teamFlat, teamPercent };
+}
+/**
+ * 生成角色的战斗力
+ * @param {*} finalStats 
+ * @returns 
+ */
+function calculatePower(finalStats) {
+    const atk = finalStats.totalAtk || 0;
+    const def = finalStats.totalDef || 0;
+    const hp = finalStats.totalHp || 0;
+    
+    // 攻击权重4，防御权重2.5，生命权重1
+    return Math.floor(atk * 4 + def * 2.5 + hp);
 }
