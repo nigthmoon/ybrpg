@@ -505,6 +505,7 @@ function showBreakthroughPreviewPopup() {
 
 	// 4. 标题
 	const title = document.createElement('div');
+	title.className = 'bp-popup-title';  // 添加这个
 	title.style.cssText = 'color:#ffd700;font-size:18px;font-weight:bold;text-align:center;margin-bottom:15px;';
 	const currentTupoLevel = instData.tupolevel || 0;
 	const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
@@ -531,6 +532,7 @@ function showBreakthroughPreviewPopup() {
 	charInfo.appendChild(charName);
 
 	const charLevel = document.createElement('div');
+	charLevel.className = 'bp-char-level';  // 添加这个
 	charLevel.style.cssText = 'color:#aaa;font-size:12px;margin-top:2px;';
 	charLevel.textContent = `当前突破: ${currentTupoLevel} 阶 · 等级: Lv.${instData.level || 1}`;
 	charInfo.appendChild(charLevel);
@@ -540,6 +542,7 @@ function showBreakthroughPreviewPopup() {
 
 	// 6. 突破列表滚动区
 	const listContainer = document.createElement('div');
+	listContainer.className = 'bp-list-container';  // 添加这个
 	listContainer.style.cssText = 'flex:1;overflow-y:auto;padding-right:4px;';
 	listContainer.style.scrollbarWidth = 'thin';
 	listContainer.style.scrollbarColor = '#555 #222';
@@ -638,6 +641,7 @@ function showBreakthroughPreviewPopup() {
 	// ===== 【新增】突破/升阶操作按钮 =====
 	if (instanceId && instData) {
 		const actionBtnRow = document.createElement('div');
+		actionBtnRow.className = 'bp-action-row';  // 添加这个
 		actionBtnRow.style.cssText = 'display:flex;gap:10px;margin-top:12px;';
 
 		const currentTupoForAction = instData.tupolevel || 0;
@@ -759,8 +763,9 @@ function showBreakthroughPreviewPopup() {
 							const result = promoteCharacterRank(instanceId);
 							if (result.success) {
 								toast(result.message, 'success');
-								if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-								showBreakthroughPreviewPopup();
+								// if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+								// showBreakthroughPreviewPopup();
+								refreshBreakthroughPopupContent(popup, instanceId);
 							} else {
 								toast(result.message, 'error');
 							}
@@ -845,6 +850,225 @@ function refreshBreakthroughPopupContent(popup, instanceId) {
 		actionBtnRow.innerHTML = '';
 		renderBreakthroughActions(actionBtnRow, instanceId, instData, baseChar, currentTupoLevel, popup);
 	}
+}
+/**
+ * 渲染突破列表到指定容器
+ * @param {HTMLElement} container - 列表容器
+ * @param {Object} baseChar - 角色基础数据
+ * @param {number} currentTupoLevel - 当前突破等级
+ */
+function renderBreakthroughList(container, baseChar, currentTupoLevel) {
+    const tupoList = baseChar.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
+
+    if (tupoList.length === 0) {
+        const emptyTip = document.createElement('div');
+        emptyTip.style.cssText = 'color:#666;text-align:center;padding:30px;font-size:14px;';
+        emptyTip.textContent = '该角色暂无突破数据';
+        container.appendChild(emptyTip);
+        return;
+    }
+
+    tupoList.forEach((buff, index) => {
+        const isUnlocked = (index + 1) <= currentTupoLevel;
+
+        const item = document.createElement('div');
+        item.style.cssText = `
+            background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
+            border: 1px solid ${isUnlocked ? '#d000ff' : '#333'};
+            border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 8px;
+            opacity: ${isUnlocked ? 1 : 0.6};
+            transition: all 0.2s;
+            cursor: ${isUnlocked ? 'pointer' : 'default'};
+        `;
+
+        // 标题行
+        const headerRow = document.createElement('div');
+        headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;';
+
+        const levelTitle = document.createElement('span');
+        levelTitle.style.cssText = `font-weight:bold;font-size:14px;color:${isUnlocked ? '#ffd700' : '#888'};`;
+        levelTitle.textContent = `突破 ${index + 1} 阶`;
+
+        const statusIcon = document.createElement('span');
+        statusIcon.style.cssText = 'font-size:12px;';
+        statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
+        statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
+
+        headerRow.appendChild(levelTitle);
+        headerRow.appendChild(statusIcon);
+        item.appendChild(headerRow);
+
+        // 描述内容
+        const descDiv = document.createElement('div');
+        descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#666'};`;
+
+        if (!buff) {
+            descDiv.textContent = '暂无详细描述';
+        } else {
+            let resolvedBuff = buff;
+            if (typeof buff === 'string') {
+                const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+                resolvedBuff = lib[buff];
+                if (!resolvedBuff) resolvedBuff = { desc: '暂无详细描述' };
+            } else if (typeof buff === 'object') {
+                // 已经是对象，保持不变
+            } else {
+                resolvedBuff = { desc: '暂无详细描述' };
+            }
+
+            if (resolvedBuff.desc) {
+                descDiv.textContent = resolvedBuff.desc;
+            } else if (resolvedBuff.type) {
+                let typeDesc = '';
+                if (resolvedBuff.type === 'self_stat_flat') {
+                    const val = Array.isArray(resolvedBuff.value) ? resolvedBuff.value.join('/') : resolvedBuff.value;
+                    const stat = Array.isArray(resolvedBuff.stat) ? resolvedBuff.stat.join('/') : resolvedBuff.stat;
+                    typeDesc = `永久增加 ${stat}: ${val}`;
+                } else if (resolvedBuff.type === 'passive_effect') {
+                    typeDesc = `获得被动效果: ${resolvedBuff.effectId || '未知'}`;
+                } else if (resolvedBuff.type === 'skill_effect') {
+                    typeDesc = `技能效果增强: ${resolvedBuff.desc || '未知效果'}`;
+                } else {
+                    typeDesc = `效果类型: ${resolvedBuff.type}`;
+                }
+                descDiv.textContent = typeDesc;
+            } else {
+                descDiv.textContent = '暂无详细描述';
+            }
+        }
+
+        item.appendChild(descDiv);
+
+        // 已解锁项的悬停效果
+        if (isUnlocked) {
+            item.onmouseover = () => { item.style.background = '#33334a'; };
+            item.onmouseout = () => { item.style.background = '#2a2a3a'; };
+        }
+
+        container.appendChild(item);
+    });
+}
+/**
+ * 渲染突破/升阶操作按钮到指定容器
+ * @param {HTMLElement} container - 按钮容器
+ * @param {string} instanceId - 角色实例ID
+ * @param {Object} instData - 角色实例数据
+ * @param {Object} baseChar - 角色基础数据
+ * @param {number} currentTupoLevel - 当前突破等级
+ * @param {HTMLElement} popup - 弹窗容器（用于刷新）
+ */
+function renderBreakthroughActions(container, instanceId, instData, baseChar, currentTupoLevel, popup) {
+    if (!instanceId || !instData) return;
+
+    const charIdForAction = instData.charId || instanceId;
+
+    let breakInfo = getBreakthroughInfo(baseChar, currentTupoLevel);
+    let needPromotion = needUpgrade(instData);
+
+    // 计算可用材料数量
+    const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
+        if (id === instanceId) return false;
+        const inst = window.charBagData[id];
+        return inst && (inst.charId === charIdForAction || id === charIdForAction);
+    });
+    const availableCount = availableFodderIds.length;
+
+    // 突破按钮
+    if (!breakInfo.maxed && !needPromotion) {
+        const doBreakBtn = document.createElement('button');
+        doBreakBtn.style.cssText = `
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #44aaff;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            transition: all 0.2s;
+        `;
+        doBreakBtn.textContent = `突破（${availableCount}/${breakInfo.cost}）`;
+
+        if (availableCount < breakInfo.cost) {
+            doBreakBtn.style.background = '#555';
+            doBreakBtn.style.cursor = 'not-allowed';
+            doBreakBtn.style.opacity = '0.6';
+        } else {
+            doBreakBtn.onmouseover = () => { doBreakBtn.style.background = '#55bbff'; };
+            doBreakBtn.onmouseout = () => { doBreakBtn.style.background = '#44aaff'; };
+            doBreakBtn.onclick = (e) => {
+                e.stopPropagation();
+                confirmDialog(
+                    `确定要突破【${baseChar.name}】吗？\n当前突破等级: ${currentTupoLevel}阶 → 目标: ${currentTupoLevel + 1}阶\n消耗: ${breakInfo.cost}个同名角色`,
+                    () => {
+                        const result = breakthroughCharacterInstance(instanceId);
+                        if (result.success) {
+                            toast(result.message, 'success');
+                            // 原地刷新弹窗内容
+                            refreshBreakthroughPopupContent(popup, instanceId);
+                        } else {
+                            toast(result.message, 'error');
+                        }
+                    }
+                );
+            };
+        }
+        container.appendChild(doBreakBtn);
+    }
+
+    // 升阶按钮
+    if (needPromotion) {
+        const promotionCost = Math.floor(currentTupoLevel / 4) + 1;
+        const promoteBtn = document.createElement('button');
+        promoteBtn.style.cssText = `
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            background: #ffaa00;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            transition: all 0.2s;
+        `;
+        promoteBtn.textContent = `升阶（${availableCount}/${promotionCost}）`;
+
+        if (availableCount < promotionCost) {
+            promoteBtn.style.background = '#555';
+            promoteBtn.style.cursor = 'not-allowed';
+            promoteBtn.style.opacity = '0.6';
+        } else {
+            promoteBtn.onmouseover = () => { promoteBtn.style.background = '#ffbb22'; };
+            promoteBtn.onmouseout = () => { promoteBtn.style.background = '#ffaa00'; };
+            promoteBtn.onclick = (e) => {
+                e.stopPropagation();
+                confirmDialog(
+                    `确定要将【${baseChar.name}】升阶至【${getRankLabel(needPromotion)}】吗？`,
+                    () => {
+                        const result = promoteCharacterRank(instanceId);
+                        if (result.success) {
+                            toast(result.message, 'success');
+                            refreshBreakthroughPopupContent(popup, instanceId);
+                        } else {
+                            toast(result.message, 'error');
+                        }
+                    }
+                );
+            };
+        }
+        container.appendChild(promoteBtn);
+    }
+
+    // 已满级提示
+    if (breakInfo.maxed) {
+        const maxedLabel = document.createElement('div');
+        maxedLabel.style.cssText = 'flex:1;padding:8px;text-align:center;color:#ffd700;font-size:13px;';
+        maxedLabel.textContent = '✨ 已突破至极限';
+        container.appendChild(maxedLabel);
+    }
 }
 
 /**
