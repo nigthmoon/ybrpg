@@ -146,34 +146,42 @@ function updateBattleUI() {
  * 
  * @param {*} unit 目标
  * @param {*} value 数值
- * @param {boolean} isHeal 类型，通常治疗为true，显示绿色（以后可能会有其他改动
- * @param {boolean} isCrit 是否暴击
- * @param {boolean} isBlock 是否格挡
- * @param {boolean} isTrue 是否真实伤害
+ * @param {object} type 类型
  * @returns 显示伤害数字
  */
-function showDamageNumber(unit, value, isHeal, isCrit, isBlock, isTrue) {
+function showDamageNumber(unit, value, type) {
 	const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
 	if (!slotEl) return;
 	const float = document.createElement('div');
 	float.className = 'damage-float ' + (isHeal ? 'heal' : 'damage');
 
-	if (isHeal) {
+	if(type.isHeal){
 		float.style.color = '#00ff00';
 		float.textContent = '+' + value;
-	} else if (isCrit) {
+	} else if (type.isShanbi) {
+		float.style.color = '#28e3ce';
+		float.textContent = '闪避';
+	} else if (type.isCrit) {
 		float.style.color = '#ffdd00'; // 暴击偏黄色
 		float.textContent = '暴击 ' + value;
-	} else if (isBlock) {
+	} else if (type.isBlock) {
 		float.style.color = '#4488ff'; // 格挡偏蓝色
 		float.textContent = '格挡 ' + value;
 	} else {
 		float.style.color = '#ff0000';
 		float.textContent = value;
 	}
-	if (isTrue) {
+	if(type.isPoison){
+		float.style.color = '#ff00ff';
+		float.textContent = '中毒 ' + value;
+	}
+	if (type.isTrue) {
 		float.style.color = '#fff';
 	}
+
+	// ===== 【新增】统一添加1px黑色描边 =====
+	float.style.textShadow = '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000';
+
 	float.style.position = 'absolute';
 	float.style.left = '50%';
 	float.style.top = '50%';
@@ -184,6 +192,8 @@ function showDamageNumber(unit, value, isHeal, isCrit, isBlock, isTrue) {
 	slotEl.appendChild(float);
 	setTimeout(() => float.remove(), 800);
 }
+
+
 
 
 /**
@@ -287,7 +297,8 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
 
 	if (isMiss) {
 		addBattleLog(`${attacker.name} 攻击 ${defender.name}，但被闪避了！`);
-		return 0; // 闪避，不造成伤害
+		showDamageNumber(defender, 0, { isShanbi: true });  // 修改这里
+		return 0;
 	}
 
 	// ===== 第二步：暴击/抗暴判定 =====
@@ -302,7 +313,6 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
 		finalDmg = baseDmg * 2;
 	} else {
 		// ===== 第三步：格挡判定（仅当不暴击时） =====
-		// 注意：用攻击方破击 - 被攻击方格挡来算格挡率
 		const blockRate = Math.max(0, ((defender.block ?? 0) - (attacker.pierce ?? 0))) / 10000;
 		isBlock = Math.random() < blockRate;
 
@@ -314,10 +324,8 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
 
 	// ===== 第四步：防御减免（格挡时也减半防御） =====
 	if (isBlock) {
-		// 格挡时：防御减半
 		finalDmg = Math.max(1, Math.floor(finalDmg - Math.floor(def * 0.5)));
 	} else {
-		// 正常减防
 		finalDmg = Math.max(1, Math.floor(finalDmg - def));
 	}
 
@@ -348,6 +356,7 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
 
 	return { damage: finalDmg, isCrit, isBlock };
 }
+
 
 
 
@@ -405,7 +414,7 @@ function applyDamage(target, dmgResult, attacker, callback, skillContext = {}) {
 
 	target.hp -= finalDmg;
 	addBattleLog(`${target.name} 受到 ${finalDmg} 点伤害`);
-	showDamageNumber(target, finalDmg, false, isCrit, isBlock); // 传递暴击/格挡标记
+	showDamageNumber(target, finalDmg, { isCrit: isCrit, isBlock: isBlock });
 	updateBattleUI();
 
 	// ======== 执行攻击者的命中效果 ========
@@ -502,7 +511,7 @@ function applyHeal(target, healAmount, callback) {
 	if (finalHeal > 0) {
 		target.hp += Math.min(finalHeal, maxHp - currentHp);
 		addBattleLog(`${target.name} 恢复了 ${finalHeal} 点生命值`);
-		showDamageNumber(target, finalHeal, true);
+		showDamageNumber(target, finalHeal, { isHeal: true });
 		updateBattleUI();
 	}
 
@@ -648,38 +657,32 @@ function nextTurn() {
 
 	try {
 		isProcessing = true;
-		/**@type {battleState} */
 		const bs = battleState;
 		if (!bs || bs.phase === 'ended') { isProcessing = false; return; }
-		//判断某一方是否团灭决定胜负
 		if (isSideDefeated('player')) { endBattle('enemy'); isProcessing = false; return; }
 		if (isSideDefeated('enemy')) { endBattle('player'); isProcessing = false; return; }
-		/**后手 */
+
 		const secondSide = bs.firstSide === 'player' ? 'enemy' : 'player';
 
-		// 确定下一个行动方（明晰流程：先手方1，后手方1，先手方2，后手方2...）
+		// 确定下一个行动方
 		let nextSide = null;
-		const lastSide = bs.currentTurnSide; // 上一次行动的阵营
+		const lastSide = bs.currentTurnSide;
 
 		if (!lastSide) {
-			// 第一回合，选择先手方
 			nextSide = bs.firstSide;
 		} else {
-			// 尝试切换到另一方
 			const otherSide = lastSide === bs.firstSide ? secondSide : bs.firstSide;
 			const otherActor = findNextActor(otherSide);
 			if (otherActor) {
 				nextSide = otherSide;
 			} else {
-				// 另一方没有可行动角色，继续当前方
 				nextSide = lastSide;
 			}
 		}
 
-		// 寻找下一个行动角色
 		let nextActor = findNextActor(nextSide);
+
 		if (!nextActor) {
-			// 当前阵营没有可行动角色，尝试另一方（如果之前没有尝试过）
 			if (lastSide && nextSide === lastSide) {
 				const otherSide = lastSide === bs.firstSide ? secondSide : bs.firstSide;
 				nextActor = findNextActor(otherSide);
@@ -687,7 +690,6 @@ function nextTurn() {
 					nextSide = otherSide;
 				}
 			}
-			// 如果仍然没有找到，说明双方都没有可行动角色，结束本轮
 			if (!nextActor) {
 				endRound();
 				isProcessing = false;
@@ -695,10 +697,20 @@ function nextTurn() {
 			}
 		}
 
-		// 标记该角色已行动（立即标记，防止重复选取）
+		// ===== 【新增】在标记已行动前获取当前行动编号 =====
+		const currentActorNumberInSide = (bs.actedSlots[nextSide]?.size || 0) + 1;
+
+		// ===== 【新增】处理buff衰减：当前行动位次施加的buff，轮次-1 =====
+		const sideLabel = nextSide === 'player' ? '先手' : '后手';
+		const actionSlotKey = `${sideLabel}${currentActorNumberInSide}`;
+		// 标记该角色已行动
 		bs.actedSlots[nextSide].add(nextActor.slotIndex);
 		bs.currentTurnSide = nextSide;
 		bs.currentTurnIndex = nextActor.slotIndex;
+		// 在 nextTurn 中，标记完 actedSlots 后：
+		nextActor._currentActionSlotKey = `${sideLabel}${currentActorNumberInSide}`;
+
+		processBuffDecayBySlotKey(actionSlotKey);
 
 		// 触发 beforeTurn 事件
 		BattleEvents.emit(BattleEvents.BEFORE_TURN, {
@@ -707,15 +719,11 @@ function nextTurn() {
 			round: bs.round
 		});
 
-		// ======== 新增：触发全局行动开始效果 ========
 		triggerGlobalEffect('actionStartGlobal', nextActor);
-		// ======== 新增：触发自身行动开始效果 ========
 		triggerSelfEffect(nextActor, 'actionStartSelf');
-		// ==========================================
 
-		// 记录日志明确流程
 		const sideName = nextSide === 'player' ? '我方' : '敌方';
-		const turnNumber = Array.from(bs.actedSlots[nextSide]).length;
+		const turnNumber = currentActorNumberInSide;
 		addBattleLog(`${sideName}第${turnNumber}个角色行动：${nextActor.name}`);
 
 		updateBattleUI();
@@ -746,6 +754,7 @@ function nextTurn() {
 }
 
 
+
 /**
  * 
  * @returns 回合结束
@@ -765,9 +774,23 @@ function afterAction() {
 			? bs.playerUnits[bs.currentTurnIndex]
 			: bs.enemyUnits[bs.currentTurnIndex];
 
-		// ======== 新增：触发自身行动结束效果 ========
+		// ======== 触发自身行动结束效果 ========
 		if (unit && unit.alive) {
 			triggerSelfEffect(unit, 'actionEndSelf');
+		}
+
+		// ===== 【新增】中毒伤害：角色行动结束后触发真实伤害 =====
+		if (unit && unit.alive && unit.poisonDamage && unit.poisonDamage > 0) {
+			const poisonDmg = unit.poisonDamage;
+			unit.hp -= poisonDmg;
+			addBattleLog(`${unit.name} 中毒发作，失去 ${poisonDmg} 生命`);
+			showDamageNumber(unit, poisonDmg, { isPoison: true });
+			if (unit.hp <= 0) {
+				unit.hp = 0;
+				unit.alive = false;
+				addBattleLog(`${unit.name} 因中毒阵亡！`);
+			}
+			updateBattleUI();
 		}
 		// ==========================================
 
@@ -776,11 +799,10 @@ function afterAction() {
 			actor: unit,
 			side: bs.currentTurnSide
 		}, () => {
-			// ======== 新增：触发全局行动结束效果 ========
+			// ======== 触发全局行动结束效果 ========
 			if (unit && unit.alive) {
 				triggerGlobalEffect('actionEndGlobal', unit);
 			}
-			// ==========================================
 
 			// 检查额外回合
 			if (unit && unit.alive && (unit.extraTurnCount > 0 || unit.extraTurn)) {
@@ -812,39 +834,55 @@ function afterAction() {
 }
 
 
+
 /**
  * 一轮结束进入下一轮
  */
 function endRound() {
 	const bs = battleState;
 
-	// ======== 新增：触发轮次结束效果（重置前） ========
+	// // ===== 【新增】轮次结束前处理中毒伤害 =====
+	// const allUnits = [...bs.playerUnits, ...bs.enemyUnits].filter(u => u && u.alive);
+	// allUnits.forEach(unit => {
+	// 	if (unit.poisonDamage && unit.poisonDamage > 0) {
+	// 		unit.hp -= unit.poisonDamage;
+	// 		addBattleLog(`${unit.name} 中毒失去 ${unit.poisonDamage} 生命`);
+	// 		showDamageNumber(unit, unit.poisonDamage, { isPoison: true });
+	// 		if (unit.hp <= 0) {
+	// 			unit.hp = 0;
+	// 			unit.alive = false;
+	// 			addBattleLog(`${unit.name} 因中毒阵亡！`);
+	// 		}
+	// 		updateBattleUI();
+	// 	}
+	// });
+
+	// ===== 【新增】轮次结束时处理 buff 存续 =====
+	// processBuffExpiryOnRoundEnd();
+
+	// ===== 【新增】触发轮次结束效果 =====
 	triggerGlobalEffect('roundEnd', bs.round);
-	// ================================================
 
 	// 触发 beforeRound 事件
 	BattleEvents.emit(BattleEvents.BEFORE_ROUND, { round: bs.round + 1 });
 
 	bs.round++;
 	resetActedSlots();
-	// 重置当前回合信息，确保新一轮从先手方开始
 	bs.currentTurnSide = null;
 	bs.currentTurnIndex = 0;
 
-	// ======== 新增：触发轮次开始效果（重置后） ========
 	triggerGlobalEffect('roundStart', bs.round);
-	// ================================================
 
 	addBattleLog(`—— 第 ${bs.round} 轮 ——`);
 	updateBattleUI();
 
-	// 触发 afterRound 事件
 	BattleEvents.emitAsync(BattleEvents.AFTER_ROUND, { round: bs.round }, () => {
 		setTimeout(() => {
 			nextTurn();
 		}, 100);
 	});
 }
+
 
 
 /**
@@ -1792,6 +1830,9 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			spe: finalSpe,
 			energy: Math.min(8, finalEnergy),
 			buff: Array.isArray(data.buff) ? [...data.buff] : [],
+
+			// ===== 【新增】结构化 buff 列表 =====
+			buffList: [],  // 用于存储结构化的 buff 对象
 			skills: allSkills,
 			alive: true,
 			treasures: activeTreasures,
@@ -2271,4 +2312,319 @@ function getSkillEffectInfo(action) {
 		default:
 			return { emoji: '🔥', effectClass: 'fire-effect' };
 	}
+}
+/**
+ * 获取角色在当前轮次的行动位次编号
+ * @param {string} side - 'player' 或 'enemy'
+ * @param {number} slotIndex - 角色在阵营中的索引
+ * @returns {number} 在本轮中的行动顺序编号，从1开始
+ */
+function getActionOrderInRound(side, slotIndex) {
+	const bs = battleState;
+	if (!bs) return 0;
+
+	// 先手方所有存活角色的行动顺序
+	const firstSide = bs.firstSide;
+	const secondSide = firstSide === 'player' ? 'enemy' : 'player';
+
+	// 当前方在 actedSlots 中的已行动数量 + 1 就是本方的行动编号
+	const actedCount = bs.actedSlots[side]?.size || 0;
+	const actorNumber = actedCount + 1;
+
+	return actorNumber;
+}
+
+/**
+ * 获取角色在本轮唯一的行动位次标识
+ * @param {string} side - 'player' 或 'enemy'
+ * @param {number} slotIndex - 角色索引
+ * @returns {string} 如 'player1', 'enemy2' 等
+ */
+function getActionSlotKey(side, actorNumber) {
+	const bs = battleState;
+	if (!bs) return `${side}0`;
+
+	const firstSide = bs.firstSide;
+	const secondSide = firstSide === 'player' ? 'enemy' : 'player';
+
+	// 先手方的编号就是 actorNumber
+	// 后手方的编号也是 actorNumber
+	// 但全局轮次中，先手1→后手1→先手2→后手2...
+	// 所以这里直接用 actorNumber 作为位次编号
+	return `${side}${actorNumber}`;
+}
+/**
+ * 为角色添加一个 buff
+ * @param {Object} target - 目标角色
+ * @param {Object} buffConfig - buff 配置
+ * @param {string} buffConfig.id - buff 唯一标识
+ * @param {string} buffConfig.name - buff 名称
+ * @param {string} buffConfig.type - buff 类型（'seal', 'stun', 'healBlock', 'poison' 等）
+ * @param {number} buffConfig.remainRounds - 持续轮次（-1 永久）
+ * @param {string} buffConfig.sourceSide - 施加者阵营（可选）
+ * @param {string} buffConfig.sourceId - 施加者 instanceId
+ * @param {any} buffConfig.value - 附加数值
+ * @param {string} buffConfig.ownerSlot - 施加者行动位次（可选，如不传则自动获取）
+ */
+function addBuff(target, buffConfig) {
+	if (!target || !target.buffList) {
+		target.buffList = [];
+	}
+
+	const bs = battleState;
+	if (!bs) return;
+
+	// 获取施加者的行动位次
+	let ownerSlot = buffConfig.ownerSlot;
+	if (!ownerSlot) {
+		const currentActor = bs.currentTurnSide === 'player'
+			? bs.playerUnits[bs.currentTurnIndex]
+			: bs.enemyUnits[bs.currentTurnIndex];
+		if (currentActor && currentActor._currentActionSlotKey) {
+			ownerSlot = currentActor._currentActionSlotKey;
+		} else {
+			const sourceSide = buffConfig.sourceSide || bs.currentTurnSide;
+			const actorNumber = (bs.actedSlots[sourceSide]?.size || 0);
+			const sideLabel = sourceSide === 'player' ? '先手' : '后手';
+			ownerSlot = `${sideLabel}${actorNumber}`;
+		}
+	}
+
+	// 检查是否已存在同ID的 buff
+	const existingIndex = target.buffList.findIndex(b => b.id === buffConfig.id);
+
+	if (existingIndex !== -1) {
+		const existing = target.buffList[existingIndex];
+		// 如果已有的buff剩余轮次 >= 新buff的轮次，则不覆盖
+		if (existing.remainRounds >= buffConfig.remainRounds && buffConfig.remainRounds !== -1) {
+			return;
+		}
+		// 否则替换
+		target.buffList[existingIndex] = {
+			id: buffConfig.id,
+			name: buffConfig.name,
+			type: buffConfig.type,
+			remainRounds: buffConfig.remainRounds,
+			ownerSlot: ownerSlot,
+			sourceId: buffConfig.sourceId || '',
+			value: buffConfig.value || null,
+		};
+	} else {
+		target.buffList.push({
+			id: buffConfig.id,
+			name: buffConfig.name,
+			type: buffConfig.type,
+			remainRounds: buffConfig.remainRounds,
+			ownerSlot: ownerSlot,
+			sourceId: buffConfig.sourceId || '',
+			value: buffConfig.value || null,
+		});
+	}
+
+	// 立即应用buff效果
+	applyBuffEffect(target, buffConfig);
+}
+
+
+/**
+ * 应用 buff 的即时效果
+ */
+function applyBuffEffect(target, buffConfig) {
+	switch (buffConfig.type) {
+		case 'seal':
+			target.sealed = true;
+			addBattleLog(`${target.name} 被封印${buffConfig.remainRounds === -1 ? '（永久）' : buffConfig.remainRounds + '回合'}`);
+			break;
+		case 'stun':
+			target.stunned = true;
+			addBattleLog(`${target.name} 被眩晕${buffConfig.remainRounds === -1 ? '（永久）' : buffConfig.remainRounds + '回合'}`);
+			break;
+		case 'healBlock':
+			target.healBlocked = true;
+			addBattleLog(`${target.name} 被禁疗${buffConfig.remainRounds === -1 ? '（永久）' : buffConfig.remainRounds + '回合'}`);
+			break;
+		case 'poison':
+			// 中毒伤害叠加
+			target.poisonDamage = (target.poisonDamage || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 中毒，每回合失去 ${buffConfig.value} 生命`);
+			break;
+		case 'dmgUp':
+			target.pctDmgUp = (target.pctDmgUp || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 增伤${(buffConfig.value * 100).toFixed(0)}%`);
+			break;
+		case 'dmgDown':
+			target.pctDmgDown = (target.pctDmgDown || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 减伤${(buffConfig.value * 100).toFixed(0)}%`);
+			break;
+		// 可以扩展更多 buff 类型
+	}
+	updateBattleUI();
+}
+
+/**
+ * 移除角色的指定 buff
+ */
+function removeBuff(target, buffId) {
+	if (!target || !target.buffList) return;
+
+	const index = target.buffList.findIndex(b => b.id === buffId);
+	if (index === -1) return;
+
+	const buff = target.buffList[index];
+	target.buffList.splice(index, 1);
+
+	// 移除 buff 效果
+	removeBuffEffect(target, buff);
+}
+
+/**
+ * 移除 buff 效果
+ */
+function removeBuffEffect(target, buff) {
+	switch (buff.type) {
+		case 'seal':
+			target.sealed = false;
+			addBattleLog(`${target.name} 的封印已解除`);
+			break;
+		case 'stun':
+			target.stunned = false;
+			addBattleLog(`${target.name} 的眩晕已解除`);
+			break;
+		case 'healBlock':
+			target.healBlocked = false;
+			addBattleLog(`${target.name} 的禁疗已解除`);
+			break;
+		case 'poison':
+			// ===== 【修改】中毒移除时，减去对应数值 =====
+			if (buff.value) {
+				target.poisonDamage = Math.max(0, (target.poisonDamage || 0) - buff.value);
+				if (target.poisonDamage <= 0) {
+					addBattleLog(`${target.name} 的中毒已解除`);
+				} else {
+					addBattleLog(`${target.name} 的中毒效果部分解除，剩余中毒伤害 ${target.poisonDamage}`);
+				}
+			}
+			break;
+		case 'dmgUp':
+			target.pctDmgUp = Math.max(0, (target.pctDmgUp || 0) - (buff.value || 0));
+			break;
+		case 'dmgDown':
+			target.pctDmgDown = Math.max(0, (target.pctDmgDown || 0) - (buff.value || 0));
+			break;
+	}
+	updateBattleUI();
+}
+
+
+/**
+ * 轮次结算时处理所有 buff 的存续
+ * 在 endRound 中调用
+ */
+function processBuffExpiryOnRoundEnd() {
+	const bs = battleState;
+	if (!bs) return;
+
+	const allUnits = [...bs.playerUnits, ...bs.enemyUnits].filter(u => u && u.alive);
+
+	allUnits.forEach(unit => {
+		if (!unit.buffList || unit.buffList.length === 0) return;
+
+		const expiredBuffs = [];
+
+		unit.buffList.forEach((buff, index) => {
+			if (buff.remainRounds === -1) return; // 永久 buff 不处理
+
+			// buff 持续轮次 -1
+			buff.remainRounds--;
+
+			if (buff.remainRounds <= 0) {
+				expiredBuffs.push(index);
+			}
+		});
+
+		// 从后往前移除过期 buff
+		expiredBuffs.reverse().forEach(index => {
+			const buff = unit.buffList[index];
+			unit.buffList.splice(index, 1);
+			removeBuffEffect(unit, buff);
+		});
+	});
+}
+
+/**
+ * 在角色行动开始时处理 buff 的存续
+ * 在 nextTurn 中找到行动角色后调用
+ */
+function processBuffExpiryOnActionStart(actor) {
+	if (!actor || !actor.buffList) return;
+
+	const bs = battleState;
+	if (!bs) return;
+
+	const expiredBuffs = [];
+
+	actor.buffList.forEach((buff, index) => {
+		if (buff.remainRounds === -1) return;
+
+		// 获取施加者的行动位次信息
+		const ownerSide = buff.ownerSlot.replace(/\d+$/, '');
+		const ownerNumber = parseInt(buff.ownerSlot.match(/\d+$/)[0]);
+
+		// 获取当前角色的行动位次
+		const currentSide = actor.side;
+		const actorNumber = bs.actedSlots[currentSide]?.size || 0;
+
+		// 判断：如果当前角色的位次与施加者位次相同（同编号），则 buff 轮次 -1
+		// 即：施加者位次编号 == 当前角色位次编号，且阵营相同
+		if (ownerSide === currentSide && ownerNumber === actorNumber) {
+			buff.remainRounds--;
+
+			if (buff.remainRounds <= 0) {
+				expiredBuffs.push(index);
+			}
+		}
+	});
+
+	// 从后往前移除过期 buff
+	expiredBuffs.reverse().forEach(index => {
+		const buff = actor.buffList[index];
+		actor.buffList.splice(index, 1);
+		removeBuffEffect(actor, buff);
+	});
+}
+/**
+ * 根据行动位次标识，处理所有角色身上由该位次施加的buff衰减
+ * @param {string} actionSlotKey - 如 '先手1', '后手3' 等
+ */
+function processBuffDecayBySlotKey(actionSlotKey) {
+	const bs = battleState;
+	if (!bs) return;
+
+	const allUnits = [...bs.playerUnits, ...bs.enemyUnits].filter(u => u && u.alive);
+
+	allUnits.forEach(unit => {
+		if (!unit.buffList || unit.buffList.length === 0) return;
+
+		const expiredBuffs = [];
+
+		unit.buffList.forEach((buff, index) => {
+			if (buff.remainRounds === -1) return; // 永久buff不衰减
+
+			// 判断：buff的施加者位次是否等于当前行动位次
+			if (buff.ownerSlot === actionSlotKey) {
+				buff.remainRounds--;
+
+				if (buff.remainRounds <= 0) {
+					expiredBuffs.push(index);
+				}
+			}
+		});
+
+		// 从后往前移除过期buff
+		expiredBuffs.reverse().forEach(index => {
+			const buff = unit.buffList[index];
+			unit.buffList.splice(index, 1);
+			removeBuffEffect(unit, buff);
+		});
+	});
 }

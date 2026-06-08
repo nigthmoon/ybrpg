@@ -175,11 +175,18 @@ function renderTeamView(container) {
 	const navBtns = [
 		{ id: 'btn-team-change', text: '更换', action: () => onTeamNavChange() },
 		{ id: 'btn-team-train', text: '培养', action: () => onTeamNavTrain() },
+		// {
+		// 	id: 'btn-team-other',
+		// 	text: '突破预览', // 建议修改文字
+		// 	action: () => {
+		// 		showBreakthroughPreviewPopup();
+		// 	}
+		// },
 		{
 			id: 'btn-team-other',
-			text: '突破预览', // 建议修改文字
+			text: '详细属性', // 修改这里
 			action: () => {
-				showBreakthroughPreviewPopup();
+				showCharacterDetailPopup(); // 调用新函数
 			}
 		},
 	];
@@ -199,6 +206,255 @@ function renderTeamView(container) {
 	// 记录当前选中的方格索引
 	window._selectedSlotIndex = null;
 }
+/**
+ * 显示角色详细属性弹窗（阵容界面使用）
+ * 展示：名字、等级、品质、攻防血速、六大特殊属性、增伤减伤等
+ */
+function showCharacterDetailPopup() {
+	// 1. 获取当前选中的角色
+	const selectedIdx = window._selectedSlotIndex;
+	let instanceId = null;
+
+	if (selectedIdx !== null && selectedIdx !== undefined && window.currentTeam[selectedIdx]) {
+		instanceId = window.currentTeam[selectedIdx];
+	} else if (window.currentTeam && window.currentTeam.length > 0) {
+		instanceId = window.currentTeam.find(id => id);
+	}
+
+	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
+		toast('请先在队伍中选择一个角色', 'warning');
+		return;
+	}
+
+	const instData = window.charBagData[instanceId];
+	const charId = instData.charId || instanceId;
+	const baseChar = characterList[charId];
+
+	if (!baseChar) {
+		toast('角色数据异常', 'error');
+		return;
+	}
+
+	// 2. 计算最终属性
+	const teamBonuses = calculateTeamBreakthroughBonuses();
+	const finalStats = calculateInstanceFinalStats(instanceId, teamBonuses);
+
+	// 3. 品质信息
+	const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+	const RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+	const TIP_LABELS = { damger: '偏攻', defense: '偏防', balanced: '均衡' };
+
+	const level = instData.level || 1;
+	const tupoText = instData.tupolevel > 0 ? `+${instData.tupolevel}` : '';
+	const rankColor = RANK_COLORS[instData.rank] || '#888';
+	const rankLabel = RANK_LABELS[instData.rank] || instData.rank;
+	const tipLabel = TIP_LABELS[instData.template] || '';
+
+	// 4. 创建遮罩层
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+
+	// 5. 创建弹窗容器
+	const popup = document.createElement('div');
+	popup.style.cssText = `
+        background: #1a1a1a;
+        border: 2px solid #ffd700;
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 360px;
+        width: 90%;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        animation: dialogIn 0.2s ease;
+    `;
+
+	// ===== 标题：名字 + 突破等级 =====
+	const title = document.createElement('div');
+	title.style.cssText = `
+        color: ${rankColor};
+        font-size: 20px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #333;
+    `;
+	title.innerHTML = `${baseChar.name}${tupoText ? `<span style="color:#ffd700;"> ${tupoText}</span>` : ''}`;
+	popup.appendChild(title);
+
+	// ===== 角色基础信息（一行显示） =====
+	const infoRow = document.createElement('div');
+	infoRow.style.cssText = `
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        margin-bottom: 12px;
+        font-size: 13px;
+        color: #ccc;
+    `;
+	infoRow.innerHTML = `
+        <span>品质: <span style="color:${rankColor};font-weight:bold;">${rankLabel}</span></span>
+        <span>等级: Lv.${level}</span>
+        <span>类型: ${tipLabel}</span>
+    `;
+	popup.appendChild(infoRow);
+
+	// ===== 四维属性（两列显示） =====
+	const attrSection = document.createElement('div');
+	attrSection.style.cssText = `
+        background: #222;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+    `;
+
+	const attrTitle = document.createElement('div');
+	attrTitle.style.cssText = 'color:#ffd700;font-size:14px;font-weight:bold;margin-bottom:8px;';
+	attrTitle.textContent = '基础属性';
+	attrSection.appendChild(attrTitle);
+
+	const attrGrid = document.createElement('div');
+	attrGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;';
+
+	const attrs = [
+		{ label: '生命', value: finalStats.totalHp, color: '#44aaff' },
+		{ label: '攻击', value: finalStats.totalAtk, color: '#ff4444' },
+		{ label: '防御', value: finalStats.totalDef, color: '#88cc88' },
+		{ label: '速度', value: finalStats.totalSpe, color: '#ffff44' },
+	];
+
+	attrs.forEach(attr => {
+		const row = document.createElement('div');
+		row.style.cssText = 'display:flex;justify-content:space-between;font-size:13px;padding:3px 4px;';
+		row.innerHTML = `
+            <span style="color:#999;">${attr.label}</span>
+            <span style="color:${attr.color};font-weight:bold;">${attr.value}</span>
+        `;
+		attrGrid.appendChild(row);
+	});
+
+	attrSection.appendChild(attrGrid);
+	popup.appendChild(attrSection);
+
+	// ===== 战斗属性（两列） =====
+	const battleSection = document.createElement('div');
+	battleSection.style.cssText = `
+        background: #222;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+    `;
+
+	const battleTitle = document.createElement('div');
+	battleTitle.style.cssText = 'color:#ffd700;font-size:14px;font-weight:bold;margin-bottom:8px;';
+	battleTitle.textContent = '战斗属性';
+	battleSection.appendChild(battleTitle);
+
+	const battleGrid = document.createElement('div');
+	battleGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;';
+
+	const battleAttrs = [
+		{ label: '命中', value: finalStats.hit ?? 10000, color: '#aaa' },
+		{ label: '闪避', value: finalStats.dodge ?? 0, color: '#44ff88' },
+		{ label: '暴击', value: finalStats.crit ?? 0, color: '#ffdd00' },
+		{ label: '抗暴', value: finalStats.critResist ?? 0, color: '#88aaff' },
+		{ label: '破击', value: finalStats.pierce ?? 0, color: '#ff8844' },
+		{ label: '格挡', value: finalStats.block ?? 0, color: '#4488ff' },
+	];
+
+	battleAttrs.forEach(attr => {
+		const row = document.createElement('div');
+		row.style.cssText = 'display:flex;justify-content:space-between;font-size:13px;padding:3px 4px;';
+		row.innerHTML = `
+            <span style="color:#999;">${attr.label}</span>
+            <span style="color:${attr.color};font-weight:bold;">${attr.value}</span>
+        `;
+		battleGrid.appendChild(row);
+	});
+
+	battleSection.appendChild(battleGrid);
+	popup.appendChild(battleSection);
+
+	// ===== 增伤减伤属性（两列） =====
+	const dmgSection = document.createElement('div');
+	dmgSection.style.cssText = `
+        background: #222;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+    `;
+
+	const dmgTitle = document.createElement('div');
+	dmgTitle.style.cssText = 'color:#ffd700;font-size:14px;font-weight:bold;margin-bottom:8px;';
+	dmgTitle.textContent = '增伤/减伤';
+	dmgSection.appendChild(dmgTitle);
+
+	const dmgGrid = document.createElement('div');
+	dmgGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;';
+
+	const dmgAttrs = [
+		{ label: '固定增伤', value: finalStats.fixedDmgUp ?? 0, color: '#ff6666' },
+		{ label: '固定减伤', value: finalStats.fixedDmgDown ?? 0, color: '#66cc66' },
+		{ label: '百分比增伤', value: ((finalStats.pctDmgUp ?? 0) * 100).toFixed(1) + '%', color: '#ff8866' },
+		{ label: '百分比减伤', value: ((finalStats.pctDmgDown ?? 0) * 100).toFixed(1) + '%', color: '#66cc88' },
+		{ label: '固定治疗量', value: finalStats.fixedHeal ?? 0, color: '#66ff66' },
+		{ label: '固定被治疗量', value: finalStats.fixedBeHeal ?? 0, color: '#88ff88' },
+		{ label: '百分比治疗量', value: ((finalStats.pctHeal ?? 0) * 100).toFixed(1) + '%', color: '#44dd44' },
+		{ label: '百分比被治疗量', value: ((finalStats.pctBeHeal ?? 0) * 100).toFixed(1) + '%', color: '#44ee44' },
+	];
+
+	dmgAttrs.forEach(attr => {
+		const row = document.createElement('div');
+		row.style.cssText = 'display:flex;justify-content:space-between;font-size:13px;padding:3px 4px;';
+		row.innerHTML = `
+            <span style="color:#999;">${attr.label}</span>
+            <span style="color:${attr.color};font-weight:bold;">${attr.value}</span>
+        `;
+		dmgGrid.appendChild(row);
+	});
+
+	dmgSection.appendChild(dmgGrid);
+	popup.appendChild(dmgSection);
+
+	// ===== 战斗力 =====
+	const power = calculatePower(finalStats);
+	const powerSection = document.createElement('div');
+	powerSection.style.cssText = `
+        text-align: center;
+        margin-bottom: 12px;
+        padding: 8px;
+        background: #1a1a2e;
+        border-radius: 6px;
+        border: 1px solid #ffd70044;
+    `;
+	powerSection.innerHTML = `
+        <span style="color:#aaa;font-size:13px;">战斗力：</span>
+        <span style="color:#ffd700;font-size:18px;font-weight:bold;">${power}</span>
+    `;
+	popup.appendChild(powerSection);
+
+	// ===== 关闭按钮 =====
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-btn';
+	closeBtn.textContent = '关闭';
+	closeBtn.style.cssText = 'width:100%;padding:10px;font-size:14px;margin-top:5px;';
+	closeBtn.onclick = () => {
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+	};
+	popup.appendChild(closeBtn);
+
+	overlay.appendChild(popup);
+	document.body.appendChild(overlay);
+
+	// 点击遮罩关闭
+	overlay.onclick = (e) => {
+		if (e.target === overlay) {
+			if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		}
+	};
+}
+
 /**
  * 显示突破预览弹窗
  */
@@ -8487,7 +8743,7 @@ window.removeTreasureInstance = function (instanceId) {
 /**
  * 获取宝物的属性加成（用于战斗时合并）
  * @param {string} instanceId - 宝物实例ID
- * @returns {Object} { atk: 0, def: 0, hp: 0, spe: 0 }
+ * @returns {Object} { atk: 0, def: 0, hp: 0, spe: 0, hit: 0, dodge: 0, crit: 0, critResist: 0, pierce: 0, block: 0}
  */
 window.getTreasureStats = function (instanceId) {
 	ensureTreasureInventory();
@@ -8500,12 +8756,19 @@ window.getTreasureStats = function (instanceId) {
 
 	const level = data.level || 1;
 	const multiplier = level; // 等级倍数
-	// console.log('宝物属性:', window.getTreasureStats(instanceId));
+
 	return {
 		atk: (def.atk || 0) * multiplier,
 		def: (def.def || 0) * multiplier,
 		hp: (def.hp || 0) * multiplier,
-		spe: (def.spe || 0) * multiplier
+		spe: (def.spe || 0) * multiplier,
+		// ===== 【新增】六大特殊属性（等级倍数） =====
+		hit: (def.hit || 0) * multiplier,
+		dodge: (def.dodge || 0) * multiplier,
+		crit: (def.crit || 0) * multiplier,
+		critResist: (def.critResist || 0) * multiplier,
+		pierce: (def.pierce || 0) * multiplier,
+		block: (def.block || 0) * multiplier,
 	};
 };
 
@@ -9436,6 +9699,9 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 
 	// 5. 计算宝物加成
 	let tresHp = 0, tresAtk = 0, tresDef = 0, tresSpe = 0;
+	// ===== 【新增】宝物特殊属性加成 =====
+	let tresHit = 0, tresDodge = 0, tresCrit = 0, tresCritResist = 0, tresPierce = 0, tresBlock = 0;
+
 	if (window.charTreasureSlots && window.charTreasureSlots[instanceId]) {
 		const slots = window.charTreasureSlots[instanceId];
 		slots.forEach(treasureId => {
@@ -9445,8 +9711,16 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 			tresAtk += stats.atk || 0;
 			tresDef += stats.def || 0;
 			tresSpe += stats.spe || 0;
+			// ===== 【新增】累加宝物特殊属性 =====
+			tresHit += stats.hit || 0;
+			tresDodge += stats.dodge || 0;
+			tresCrit += stats.crit || 0;
+			tresCritResist += stats.critResist || 0;
+			tresPierce += stats.pierce || 0;
+			tresBlock += stats.block || 0;
 		});
 	}
+
 
 	// 6. 计算最终属性
 	const calcTotal = (base, selfF, teamF, tres, selfP, teamP) => {
@@ -9500,13 +9774,13 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 		},
 		growthFactor,
 
-		// ===== 【新增】新属性最终值 =====
-		hit: 10000 + breakHit + teamFlatHit,
-		dodge: 0 + breakDodge + teamFlatDodge,
-		crit: 0 + breakCrit + teamFlatCrit,
-		critResist: 0 + breakCritResist + teamFlatCritResist,
-		pierce: 0 + breakPierce + teamFlatPierce,
-		block: 0 + breakBlock + teamFlatBlock,
+		// ===== 【修改】六大特殊属性 =====
+		hit: 10000 + breakHit + teamFlatHit + tresHit,
+		dodge: 0 + breakDodge + teamFlatDodge + tresDodge,
+		crit: 0 + breakCrit + teamFlatCrit + tresCrit,
+		critResist: 0 + breakCritResist + teamFlatCritResist + tresCritResist,
+		pierce: 0 + breakPierce + teamFlatPierce + tresPierce,
+		block: 0 + breakBlock + teamFlatBlock + tresBlock,
 
 		fixedDmgUp: 0 + breakFixedDmgUp + teamFlatFixedDmgUp,
 		fixedDmgDown: 0 + breakFixedDmgDown + teamFlatFixedDmgDown,
@@ -9623,14 +9897,14 @@ function checkSaveCompatibility(saveVersion) {
 function calculateTeamBreakthroughBonuses() {
 	const teamFlat = { hp: 0, atk: 0, def: 0, spe: 0 };
 	const teamPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
-	
+
 	// ===== 【新增】全队新属性 =====
 	teamFlat.hit = 0; teamFlat.dodge = 0; teamFlat.crit = 0; teamFlat.critResist = 0; teamFlat.pierce = 0; teamFlat.block = 0;
 	teamFlat.fixedDmgUp = 0; teamFlat.fixedDmgDown = 0; teamFlat.fixedHeal = 0; teamFlat.fixedBeHeal = 0;
 	teamPercent.pctDmgUp = 0; teamPercent.pctDmgDown = 0; teamPercent.pctHeal = 0; teamPercent.pctBeHeal = 0;
-	
+
 	if (!window.currentTeam) return { teamFlat, teamPercent };
-	
+
 	window.currentTeam.forEach(instId => {
 		if (!instId) return;
 		const instData = window.charBagData && window.charBagData[instId];
@@ -9638,23 +9912,23 @@ function calculateTeamBreakthroughBonuses() {
 		const charId = instData.charId || instId;
 		const baseChar = characterList && characterList[charId];
 		if (!baseChar) return;
-		
+
 		const tupoList = instData.tupoList || baseChar.tupoList || [];
 		const tupolevel = instData.tupolevel || 0;
-		
+
 		for (let i = 0; i < tupolevel; i++) {
 			const buff = tupoList[i];
 			if (!buff) continue;
-			
+
 			let resolvedBuff = buff;
 			if (typeof buff === 'string') {
 				const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
 				resolvedBuff = lib[buff];
 			}
 			if (!resolvedBuff) continue;
-			
+
 			const type = resolvedBuff.type;
-			
+
 			switch (type) {
 				case 'team_stat_flat':
 					if (resolvedBuff.atk !== undefined) teamFlat.atk += Number(resolvedBuff.atk);
@@ -9673,7 +9947,7 @@ function calculateTeamBreakthroughBonuses() {
 					if (resolvedBuff.fixedHeal !== undefined) teamFlat.fixedHeal += Number(resolvedBuff.fixedHeal);
 					if (resolvedBuff.fixedBeHeal !== undefined) teamFlat.fixedBeHeal += Number(resolvedBuff.fixedBeHeal);
 					break;
-					
+
 				case 'team_stat_percent':
 					if (resolvedBuff.atk !== undefined) teamPercent.atk += Number(resolvedBuff.atk);
 					if (resolvedBuff.def !== undefined) teamPercent.def += Number(resolvedBuff.def);

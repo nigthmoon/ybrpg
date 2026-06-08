@@ -478,8 +478,17 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.05);
-				target.poisonDamage = (target.poisonDamage || 0) + poisonDmg;
-				addBattleLog(`${target.name} 中毒，每回合失去 ${poisonDmg} 生命（可叠加）`);
+				// ===== 【修改】使用 addBuff 系统 =====
+				addBuff(target, {
+					id: 'poison',
+					name: '中毒',
+					type: 'poison',
+					remainRounds: -1,  // -1 表示永久持续（直到战斗结束或被清除）
+					sourceSide: this.side,
+					sourceId: this.instanceId || this.id,
+					value: poisonDmg,
+				});
+				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
 				updateBattleUI();
 			}
 		}
@@ -492,8 +501,17 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.05);
-				target.poisonDamage = (target.poisonDamage || 0) + poisonDmg;
-				addBattleLog(`${target.name} 中毒，每回合失去 ${poisonDmg} 生命（可叠加）`);
+				// ===== 【修改】使用 addBuff 系统 =====
+				addBuff(target, {
+					id: 'poison',
+					name: '中毒',
+					type: 'poison',
+					remainRounds: -1,  // -1 表示永久持续（直到战斗结束或被清除）
+					sourceSide: this.side,
+					sourceId: this.instanceId || this.id,
+					value: poisonDmg,
+				});
+				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
 				updateBattleUI();
 			}
 		}
@@ -506,8 +524,17 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.05);
-				target.poisonDamage = (target.poisonDamage || 0) + poisonDmg;
-				addBattleLog(`${target.name} 中毒，每回合失去 ${poisonDmg} 生命（可叠加）`);
+				// ===== 【修改】使用 addBuff 系统 =====
+				addBuff(target, {
+					id: 'poison',
+					name: '中毒',
+					type: 'poison',
+					remainRounds: -1,  // -1 表示永久持续（直到战斗结束或被清除）
+					sourceSide: this.side,
+					sourceId: this.instanceId || this.id,
+					value: poisonDmg,
+				});
+				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
 				updateBattleUI();
 			}
 		}
@@ -520,8 +547,17 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.10);
-				target.poisonDamage = (target.poisonDamage || 0) + poisonDmg;
-				addBattleLog(`${target.name} 中毒，每回合失去 ${poisonDmg} 生命（可叠加）`);
+				// ===== 【修改】使用 addBuff 系统 =====
+				addBuff(target, {
+					id: 'poison',
+					name: '中毒',
+					type: 'poison',
+					remainRounds: -1,  // -1 表示永久持续（直到战斗结束或被清除）
+					sourceSide: this.side,
+					sourceId: this.instanceId || this.id,
+					value: poisonDmg,
+				});
+				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
 				updateBattleUI();
 			}
 		}
@@ -534,8 +570,17 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.10);
-				target.poisonDamage = (target.poisonDamage || 0) + poisonDmg;
-				addBattleLog(`${target.name} 中毒，每回合失去 ${poisonDmg} 生命（可叠加）`);
+				// ===== 【修改】使用 addBuff 系统 =====
+				addBuff(target, {
+					id: 'poison',
+					name: '中毒',
+					type: 'poison',
+					remainRounds: -1,  // -1 表示永久持续（直到战斗结束或被清除）
+					sourceSide: this.side,
+					sourceId: this.instanceId || this.id,
+					value: poisonDmg,
+				});
+				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
 				updateBattleUI();
 			}
 		}
@@ -548,8 +593,17 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.10);
-				target.poisonDamage = (target.poisonDamage || 0) + poisonDmg;
-				addBattleLog(`${target.name} 中毒，每回合失去 ${poisonDmg} 生命（可叠加）`);
+				// ===== 【修改】使用 addBuff 系统 =====
+				addBuff(target, {
+					id: 'poison',
+					name: '中毒',
+					type: 'poison',
+					remainRounds: -1,  // -1 表示永久持续（直到战斗结束或被清除）
+					sourceSide: this.side,
+					sourceId: this.instanceId || this.id,
+					value: poisonDmg,
+				});
+				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
 				updateBattleUI();
 			}
 		}
@@ -1009,7 +1063,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		value: 1,
 		desc: '初始能量+1'
 	},
-	tupo4:{
+	tupo4: {
 		type: 'self_stat_flat',
 		hp: 200,
 		desc: '初始化时血量+200固定数值'
@@ -1021,51 +1075,51 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		hp: 0.1,
 		desc: '初始化时获得10%的攻防血加成'
 	},
-	tupo7:{
+	tupo7: {
 		type: 'self_energy',
 		value: 1,
 		desc: '初始能量+1'
 	},
-	tupo9:{
+	tupo9: {
 		type: 'team_stat_flat',
 		atk: 200,
 		desc: '初始化时全队获得攻击+200固定数值'
 	},
-	tupo11:{
+	tupo11: {
 		type: 'self_energy',
 		value: 1,
 		desc: '初始能量+1'
 	},
-	tupo12:{
+	tupo12: {
 		type: 'team_stat_flat',
 		def: 100,
 		desc: '初始化时全队获得防御+100固定数值'
 	},
-	tupo14:{
+	tupo14: {
 		type: 'team_stat_flat',
 		hp: 300,
 		desc: '初始化时全队获得血量+300固定数值'
 	},
-	tupo15:{
+	tupo15: {
 		type: 'self_energy',
 		value: 1,
 		desc: '初始能量+1'
 	},
-	tupo16:{
+	tupo16: {
 		type: "self_stat_flat",
 		atk: 1000,
 		def: 500,
 		hp: 2000,
 		desc: "攻击+1000，防御+500，血量+2000",
 	},
-	tupo17:{
+	tupo17: {
 		type: 'team_stat_percent',
 		atk: 0.1,
 		def: 0.1,
 		hp: 0.1,
 		desc: '初始化时全队获得10%的攻防血加成'
 	},
-	tupo19:{
+	tupo19: {
 		type: 'self_energy',
 		value: 1,
 		desc: '初始能量+1'
