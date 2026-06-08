@@ -605,3 +605,31 @@ const characterList = {
 		tupoList: generateTupoList([null, null, null, null, null])
 	},
 };
+
+const characterTemplate = {
+	damger: {
+		kami: { hp: 896, atk: 200, def: 42, spe: 160 },
+		legend: { hp: 896, atk: 200, def: 42, spe: 160 },
+		epic: { hp: 840, atk: 187, def: 40, spe: 150 },
+		epicfake: { hp: 672, atk: 150, def: 32, spe: 120 },
+		rare: { hp: 560, atk: 125, def: 26, spe: 100 },
+	},
+	defense: {
+		kami: { hp: 1400, atk: 128, def: 66, spe: 160 },
+		legend: { hp: 1400, atk: 128, def: 66, spe: 160 },
+		epic: { hp: 1312, atk: 120, def: 62, spe: 150 },
+		epicfake: { hp: 1050, atk: 96, def: 50, spe: 120 },
+		rare: { hp: 875, atk: 80, def: 41, spe: 100 },
+		common: { hp: 420, atk: 60, def: 20, spe: 60 },
+		junk: { hp: 210, atk: 30, def: 10, spe: 30 },
+	},
+	balanced: {
+		kami: { hp: 1120, atk: 160, def: 53, spe: 160 },
+		legend: { hp: 1120, atk: 160, def: 53, spe: 160 },
+		epic: { hp: 1050, atk: 150, def: 50, spe: 150 },
+		epicfake: { hp: 840, atk: 120, def: 40, spe: 120 },
+		rare: { hp: 700, atk: 100, def: 33, spe: 100 },
+		common: { hp: 336, atk: 75, def: 16, spe: 60 },
+		junk: { hp: 168, atk: 37, def: 8, spe: 30 },
+	},
+};

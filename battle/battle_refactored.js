@@ -153,7 +153,7 @@ function showDamageNumber(unit, value, type) {
 	const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
 	if (!slotEl) return;
 	const float = document.createElement('div');
-	float.className = 'damage-float ' + (isHeal ? 'heal' : 'damage');
+	float.className = 'damage-float ' + (type.isHeal ? 'heal' : 'damage');
 
 	if(type.isHeal){
 		float.style.color = '#00ff00';

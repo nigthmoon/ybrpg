@@ -2877,7 +2877,7 @@ h1, h2 {
 
 .ybrpg-btn {
 	/* 确保按钮有最小宽度，避免文字过多时挤压 */
-	min-width: 80px;
+	min-width: 20%;
 	/* padding: 8px 16px; */
 }
 .ybrpg-confirm-overlay {
