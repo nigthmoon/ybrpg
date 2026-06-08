@@ -147,15 +147,33 @@ function updateBattleUI() {
  * @param {*} unit 目标
  * @param {*} value 数值
  * @param {boolean} isHeal 类型，通常治疗为true，显示绿色（以后可能会有其他改动
+ * @param {boolean} isCrit 是否暴击
+ * @param {boolean} isBlock 是否格挡
+ * @param {boolean} isTrue 是否真实伤害
  * @returns 显示伤害数字
  */
-function showDamageNumber(unit, value, isHeal) {
+function showDamageNumber(unit, value, isHeal, isCrit, isBlock, isTrue) {
 	const slotEl = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
 	if (!slotEl) return;
 	const float = document.createElement('div');
 	float.className = 'damage-float ' + (isHeal ? 'heal' : 'damage');
-	float.style.color = isHeal ? '#00ff00' : '#ff0000';
-	float.textContent = (isHeal ? '+' : '-') + value;
+
+	if (isHeal) {
+		float.style.color = '#00ff00';
+		float.textContent = '+' + value;
+	} else if (isCrit) {
+		float.style.color = '#ffdd00'; // 暴击偏黄色
+		float.textContent = '暴击 ' + value;
+	} else if (isBlock) {
+		float.style.color = '#4488ff'; // 格挡偏蓝色
+		float.textContent = '格挡 ' + value;
+	} else {
+		float.style.color = '#ff0000';
+		float.textContent = value;
+	}
+	if (isTrue) {
+		float.style.color = '#fff';
+	}
 	float.style.position = 'absolute';
 	float.style.left = '50%';
 	float.style.top = '50%';
@@ -166,6 +184,7 @@ function showDamageNumber(unit, value, isHeal) {
 	slotEl.appendChild(float);
 	setTimeout(() => float.remove(), 800);
 }
+
 
 /**
  * 暂时不清晰，疑似是进入某角色回合或者游戏结算时调用，最终会清除高亮
@@ -261,9 +280,76 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
 	if (extraEnergy > 0) {
 		baseDmg = Math.floor(baseDmg * (1 + extraEnergy * 0.1));
 	}
-	let finalDmg = baseDmg - def;
-	return Math.max(1, Math.floor(finalDmg));
+
+	// ===== 第一步：命中/闪避判定 =====
+	const hitRate = Math.max(0, ((attacker.hit ?? 10000) - (defender.dodge ?? 0))) / 10000;
+	const isMiss = Math.random() > hitRate;
+
+	if (isMiss) {
+		addBattleLog(`${attacker.name} 攻击 ${defender.name}，但被闪避了！`);
+		return 0; // 闪避，不造成伤害
+	}
+
+	// ===== 第二步：暴击/抗暴判定 =====
+	const critRate = Math.max(0, ((attacker.crit ?? 0) - (defender.critResist ?? 0))) / 10000;
+	const isCrit = Math.random() < critRate;
+
+	let finalDmg = baseDmg;
+	let isBlock = false;
+
+	if (isCrit) {
+		// 暴击成功：伤害×2，不进行格挡判定
+		finalDmg = baseDmg * 2;
+	} else {
+		// ===== 第三步：格挡判定（仅当不暴击时） =====
+		// 注意：用攻击方破击 - 被攻击方格挡来算格挡率
+		const blockRate = Math.max(0, ((defender.block ?? 0) - (attacker.pierce ?? 0))) / 10000;
+		isBlock = Math.random() < blockRate;
+
+		if (isBlock) {
+			// 格挡成功：伤害减半
+			finalDmg = Math.floor(baseDmg * 0.5);
+		}
+	}
+
+	// ===== 第四步：防御减免（格挡时也减半防御） =====
+	if (isBlock) {
+		// 格挡时：防御减半
+		finalDmg = Math.max(1, Math.floor(finalDmg - Math.floor(def * 0.5)));
+	} else {
+		// 正常减防
+		finalDmg = Math.max(1, Math.floor(finalDmg - def));
+	}
+
+	// ===== 第五步：增伤/减伤 =====
+	const totalPctDmg = (attacker.pctDmgUp ?? 0) - (defender.pctDmgDown ?? 0);
+	if (totalPctDmg !== 0) {
+		finalDmg = Math.floor(finalDmg * (1 + totalPctDmg));
+	}
+
+	const totalFixedDmg = (attacker.fixedDmgUp ?? 0) - (defender.fixedDmgDown ?? 0);
+	finalDmg += totalFixedDmg;
+
+	finalDmg = Math.max(1, Math.floor(finalDmg));
+
+	// ===== 日志输出 =====
+	if (isCrit) {
+		addBattleLog(`${attacker.name} 暴击 ${defender.name}，造成 ${finalDmg} 点伤害！`);
+	} else if (isBlock) {
+		addBattleLog(`${attacker.name} 攻击 ${defender.name}，${defender.name} 格挡，受到 ${finalDmg} 点伤害`);
+	} else {
+		addBattleLog(`${attacker.name} 攻击 ${defender.name}，造成 ${finalDmg} 点伤害`);
+	}
+
+	// ===== 记录战斗信息用于后续效果 =====
+	attacker._lastHitIsCrit = isCrit;
+	defender._lastHitIsBlock = isBlock;
+	defender._lastDamage = finalDmg;
+
+	return { damage: finalDmg, isCrit, isBlock };
 }
+
+
 
 /**
  * 
@@ -274,10 +360,23 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
  * @param {*} skillContext 技能上下文（新增）
  * @returns 结算伤害事件
  */
-function applyDamage(target, dmg, attacker, callback, skillContext = {}) {
+function applyDamage(target, dmgResult, attacker, callback, skillContext = {}) {
 	if (!target || !target.alive) {
 		if (callback) callback();
 		return;
+	}
+
+	// 解构伤害结果
+	let dmg, isCrit, isBlock;
+	if (typeof dmgResult === 'object') {
+		dmg = dmgResult.damage;
+		isCrit = dmgResult.isCrit;
+		isBlock = dmgResult.isBlock;
+	} else {
+		// 兼容旧格式
+		dmg = dmgResult;
+		isCrit = false;
+		isBlock = false;
 	}
 
 	let finalDmg = dmg;
@@ -292,9 +391,8 @@ function applyDamage(target, dmg, attacker, callback, skillContext = {}) {
 			}
 		}
 	});
-	// ================================================
 
-	// 触发 beforeDamage 事件，允许修改伤害值
+	// 触发 beforeDamage 事件
 	const damageEvent = BattleEvents.emit(BattleEvents.BEFORE_DAMAGE, {
 		target,
 		attacker,
@@ -307,10 +405,10 @@ function applyDamage(target, dmg, attacker, callback, skillContext = {}) {
 
 	target.hp -= finalDmg;
 	addBattleLog(`${target.name} 受到 ${finalDmg} 点伤害`);
-	showDamageNumber(target, finalDmg, false);
+	showDamageNumber(target, finalDmg, false, isCrit, isBlock); // 传递暴击/格挡标记
 	updateBattleUI();
 
-	// ======== 执行攻击者的命中效果（pugongHit / skillHit / spskillHit） ========
+	// ======== 执行攻击者的命中效果 ========
 	const trigger = skillContext.trigger || 'pugongHit';
 	const attackEffects = getEffectsByTrigger(attacker, trigger);
 	attackEffects.forEach(effect => {
@@ -318,36 +416,26 @@ function applyDamage(target, dmg, attacker, callback, skillContext = {}) {
 			effect.content.call(attacker, target);
 		}
 	});
-	// ================================================================
 
-	// 触发 afterDamage 事件（异步）
+	// 触发 afterDamage 事件
 	BattleEvents.emitAsync(BattleEvents.AFTER_DAMAGE, {
 		target,
 		attacker,
 		damage: finalDmg,
-		killed: target.hp <= 0
+		killed: target.hp <= 0,
+		isCrit,
+		isBlock
 	}, () => {
-		// 在 applyDamage 中，角色阵亡时
 		if (target.hp <= 0) {
 			target.hp = 0;
 			target.alive = false;
 			addBattleLog(`${target.name} 阵亡！`);
 
-			// ======== 使用新增的统一函数触发亡语效果 ========
-			// 触发自身亡语效果
 			triggerSelfEffect(target, 'dieSelf', attacker);
-			// 触发全局阵亡效果
 			triggerGlobalEffect('dieGlobal', target, attacker);
-			// ==============================================
-
-			// 旧的亡语效果触发逻辑可以移除
-			// const deathEffects = getEffectsByTrigger(target, 'dieSelf');
-			// ...
 
 			if (attacker && attacker.alive) {
-				// 触发击杀者的击杀效果
 				triggerSelfEffect(attacker, 'onKill', target);
-
 				attacker.energy = Math.min(8, attacker.energy + 1);
 				addBattleLog(`${attacker.name} 击杀目标，恢复 1 能量`);
 			}
@@ -364,6 +452,7 @@ function applyDamage(target, dmg, attacker, callback, skillContext = {}) {
 		}
 	});
 }
+
 
 
 
@@ -387,6 +476,11 @@ function applyHeal(target, healAmount, callback) {
 		return;
 	}
 
+	// ===== 【新增】治疗者自身的固定/百分比治疗加成 =====
+	// 注意：applyHeal 不直接知道治疗者是谁，需要从调用方传递
+	// 这里假设 healAmount 已经是算上了治疗者加成的数值
+	// 被治疗者的加成在这里应用
+
 	// 触发 beforeHeal 事件，允许修改治疗量
 	const healEvent = BattleEvents.emit(BattleEvents.BEFORE_HEAL, {
 		target,
@@ -395,6 +489,12 @@ function applyHeal(target, healAmount, callback) {
 		type: 'heal'
 	});
 	let finalHeal = healEvent.finalHeal;
+
+	// ===== 【新增】被治疗者自身的加成 =====
+	// 固定被治疗量增加
+	finalHeal += (target.fixedBeHeal ?? 0);
+	// 百分比被治疗量增加
+	finalHeal = Math.floor(finalHeal * (1 + (target.pctBeHeal ?? 0)));
 
 	const maxHp = Number(target.maxHp) || 1;
 	const currentHp = Number(target.hp) || 0;
@@ -411,12 +511,10 @@ function applyHeal(target, healAmount, callback) {
 		target,
 		heal: finalHeal
 	}, () => {
-		// setTimeout(() => {
 		if (callback) callback();
-		// }, 300);
-		//取消延迟
 	});
 }
+
 
 // ====== 4. 行动执行模块 ======
 
@@ -459,10 +557,10 @@ function executePugong(actor, targets, callback) {
 			let healAmt = Math.floor(actor.atk * coeff);
 			applyHeal(target, healAmt, processNextTarget);
 		} else {
-			const dmg = calculateDamage(actor, target, coeff, 0);
-			applyDamage(target, dmg, actor, processNextTarget, {
+			const dmgResult = calculateDamage(actor, target, coeff, 0);
+			applyDamage(target, dmgResult, actor, processNextTarget, {
 				skillData: sData,
-				trigger: 'pugongHit',  // 传递 trigger
+				trigger: 'pugongHit',
 				skillId: skillId
 			});
 		}
@@ -524,9 +622,9 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
 			}
 			applyHeal(target, healAmt, processNextTarget);
 		} else {
-			const dmg = calculateDamage(actor, target, coeff, extraEnergy);
-			// ======== 传递 trigger 给 applyDamage ========
-			applyDamage(target, dmg, actor, processNextTarget, {
+			// 在 executeSkill 中：
+			const dmgResult = calculateDamage(actor, target, coeff, extraEnergy);
+			applyDamage(target, dmgResult, actor, processNextTarget, {
 				skillData: sData,
 				trigger: trigger,
 				skillId: skillId
@@ -1432,250 +1530,317 @@ function normalizeBreakthroughData(data, index) {
  * @param {*} options 
  */
 function startBattle(playerTeam, enemyTeam, options = {}) {
-    // ===== 【新增】刷新全队编译属性 =====
-    const teamBonuses = calculateTeamBreakthroughBonuses();
-    (window.currentTeam || []).forEach(instId => {
-        if (instId && window.charBagData) {
-            calculateInstanceFinalStats(instId, teamBonuses);
-        }
-    });
-    
-    const buildUnit = (data, side, slotIndex) => {
-        if (!data || !data.id) return null;
-    
-        const isPreCompiled = data.statsPreCompiled === true || !data.instanceId;
-    
-        let rank = data.rank;
-        let template = data.template;
-        if (!rank || !template) {
-            const baseDef = window.characterList && window.characterList[data.id];
-            if (baseDef) {
-                rank = rank || baseDef.rank || 'common';
-                template = template || baseDef.template || 'balanced';
-            } else {
-                rank = rank || 'common';
-                template = template || 'balanced';
-            }
-        }
-    
-        const rawTupoList = data.tupoList || [];
-        const tupolevel = data.tupolevel || 0;
-        const normalizedTupoList = rawTupoList.map((item, index) => normalizeBreakthroughData(item, index));
-    
-        // ========== 只处理非属性类突破效果 ==========
-        let bonusEnergy = 0;
-        let passiveBuffs = [];
-    
-        // 存储编译后的效果到 skills 数组
-        const effectSkills = [];
-    
-        // 辅助函数：从技能数据中提取 effect 到 skills
-        function extractSkillContentsToSkills(skillType, skillIndex) {
-            const baseSkills = Array.isArray(data.skills) ? data.skills : ['attack1', null, null];
-            const skillId = baseSkills[skillIndex];
-            if (!skillId || typeof skillId !== 'string') return;
-    
-            const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
-            if (!sData || !sData.contents || !Array.isArray(sData.contents)) return;
-    
-            const triggerMap = { 'pugong': 'pugongHit', 'skill': 'skillHit', 'spskill': 'spskillHit' };
-            const trigger = triggerMap[skillType];
-            if (!trigger) return;
-    
-            sData.contents.forEach(content => {
-                if (content.content && typeof content.content === 'function') {
-                    effectSkills.push({
-                        trigger: trigger,
-                        filter: content.filter || function () { return true; },
-                        content: content.content,
-                        desc: content.desc || ''
-                    });
-                }
-            });
-        }
-    
-        // 提取普攻、技能、必杀的效果
-        extractSkillContentsToSkills('pugong', 0);
-        extractSkillContentsToSkills('skill', 1);
-        extractSkillContentsToSkills('spskill', 2);
-    
-        // ===== 所有角色：只编译非属性类的突破效果（技能效果、亡语、能量等） =====
-        for (let i = 0; i <= tupolevel; i++) {
-            if (!normalizedTupoList[i]) continue;
-            const buff = normalizedTupoList[i];
-            const type = buff.type;
-    
-            switch (type) {
-                case 'self_energy':
-                    bonusEnergy += Number(buff.value || 0);
-                    break;
-                    
-                case 'passive_effect':
-                    if (buff.effectId) passiveBuffs.push(buff.effectId);
-                    break;
-    
-                case 'skill_effect':
-                    {
-                        const skillIndex = buff.skillIndex;
-                        const triggerMap = { 0: 'pugongHit', 1: 'skillHit', 2: 'spskillHit' };
-                        const trigger = triggerMap[skillIndex];
-                        if (trigger) {
-                            effectSkills.push({
-                                trigger: trigger,
-                                filter: function () { return Math.random() < (buff.chance || 0.2); },
-                                content: function (target) {
-                                    if (buff.effects && Array.isArray(buff.effects)) {
-                                        buff.effects.forEach(effect => {
-                                            switch (effect.type) {
-                                                case 'stun':
-                                                    target.stunned = true;
-                                                    addBattleLog(`${target.name} 被眩晕${effect.turns || 1}回合`);
-                                                    break;
-                                                case 'reduceEnergy':
-                                                    target.energy = Math.max(0, target.energy - (effect.amount || 1));
-                                                    addBattleLog(`${target.name} 损失 ${effect.amount || 1} 点能量`);
-                                                    break;
-                                                case 'seal':
-                                                    target.sealed = true;
-                                                    addBattleLog(`${target.name} 被封印`);
-                                                    break;
-                                            }
-                                        });
-                                    }
-                                    updateBattleUI();
-                                }
-                            });
-                        }
-                    }
-                    break;
-    
-                case 'death_effect':
-                    effectSkills.push({
-                        trigger: 'dieSelf',
-                        filter: function () { return true; },
-                        content: function (killer) {
-                            if (buff.effects && Array.isArray(buff.effects)) {
-                                buff.effects.forEach(effect => {
-                                    if (effect.type === 'seal_killer' && killer && killer.alive) {
-                                        if (effect.permanent) {
-                                            killer.permanentlySealed = true;
-                                        } else {
-                                            killer.sealed = true;
-                                        }
-                                        addBattleLog(`${this.name} 阵亡时封印了 ${killer.name}`);
-                                        updateBattleUI();
-                                    }
-                                });
-                            }
-                        }
-                    });
-                    break;
-    
-                case 'behit_effect':
-                    effectSkills.push({
-                        trigger: 'onHitSelf',
-                        filter: function (attacker, damage) {
-                            if (buff.effects && Array.isArray(buff.effects)) {
-                                return buff.effects.some(effect => {
-                                    if (effect.type === 'damage_reduce' && effect.condition === 'self_hp_gt_50') {
-                                        return this.hp / this.maxHp > 0.5;
-                                    }
-                                    return false;
-                                });
-                            }
-                            return false;
-                        },
-                        content: function (attacker, damage) {
-                            if (buff.effects && Array.isArray(buff.effects)) {
-                                for (const effect of buff.effects) {
-                                    if (effect.type === 'damage_reduce') {
-                                        const reduced = Math.floor(damage * (1 - (effect.value || 0.5)));
-                                        addBattleLog(`${this.name} 触发减伤，伤害降低 ${Math.floor((effect.value || 0.5) * 100)}%`);
-                                        return reduced;
-                                    }
-                                }
-                            }
-                            return damage;
-                        }
-                    });
-                    break;
-                    
-                // 属性类突破（self_stat_flat, self_stat_percent, team_stat_flat, team_stat_percent）
-                // 已经在 calculateInstanceFinalStats 中编译完成，这里跳过
-                default:
-                    break;
-            }
-        }
-    
-        // ========== 计算最终属性 ==========
-        let finalHp, finalAtk, finalDef, finalSpe;
-        let finalEnergy = 2;
-    
-        // ===== 优先使用编译结果 =====
-        if (data._compiledStats) {
-            // 直接使用编译结果
-            finalHp = data._compiledStats.totalHp;
-            finalAtk = data._compiledStats.totalAtk;
-            finalDef = data._compiledStats.totalDef;
-            finalSpe = data._compiledStats.totalSpe;
-        } else {
-            // 没有编译结果，使用原始数据（敌方角色）
-            finalHp = Number(data.hp) || 100;
-            finalAtk = Number(data.atk) || 10;
-            finalDef = Number(data.def) || 0;
-            finalSpe = Number(data.spe) || 0;
-        }
-    
-        finalEnergy += bonusEnergy;
-    
-        let activeTreasures = [];
-    
-        const baseSkills = Array.isArray(data.skills) ? [...data.skills] : ['attack1', null, null];
-        const allSkills = [...baseSkills, ...effectSkills];
-    
-        const unit = {
-            id: data.id,
-            instanceId: data.instanceId || data.id,
-            name: data.name || '未知单位',
-            side,
-            slotIndex,
-            rank,
-            template,
-            maxHp: finalHp,
-            hp: finalHp,
-            atk: finalAtk,
-            def: finalDef,
-            spe: finalSpe,
-            energy: Math.min(8, finalEnergy),
-            buff: Array.isArray(data.buff) ? [...data.buff] : [],
-            skills: allSkills,
-            alive: true,
-            treasures: activeTreasures,
-            sealed: false,
-            sealTurns: 0,
-            sealOwner: null,
-            permanentlySealed: false,
-            extraTurnCount: 0,
-            tupoList: normalizedTupoList,
-            tupolevel: tupolevel,
-            hasAttacked: false
-        };
-    
-        if (passiveBuffs.length > 0) unit.buff.push(...passiveBuffs);
-        return unit;
-    };
-    
-    const playerUnits = playerTeam.map((u, i) => buildUnit(u, 'player', i));
-    const enemyUnits = enemyTeam.map((u, i) => buildUnit(u, 'enemy', i));
+	// ===== 【新增】刷新全队编译属性 =====
+	const teamBonuses = calculateTeamBreakthroughBonuses();
+	(window.currentTeam || []).forEach(instId => {
+		if (instId && window.charBagData) {
+			calculateInstanceFinalStats(instId, teamBonuses);
+		}
+	});
 
-    // ===== 【移除】不再需要 applyTeamBreakthroughBuffs，因为属性已在 calculateInstanceFinalStats 中编译 =====
-    // applyTeamBreakthroughBuffs(playerUnits);
-    // applyTeamBreakthroughBuffs(enemyUnits);
+	function buildUnit(data, side, slotIndex) {
+		if (!data || !data.id) return null;
 
-    const playerSpeSum = playerUnits.filter(u => u).reduce((s, u) => s + u.spe, 0);
-    const enemySpeSum = enemyUnits.filter(u => u).reduce((s, u) => s + u.spe, 0);
-    let firstSide = 'player';
-    if (enemySpeSum > playerSpeSum) firstSide = 'enemy';
+		const isPreCompiled = data.statsPreCompiled === true || !data.instanceId;
+
+		let rank = data.rank;
+		let template = data.template;
+		if (!rank || !template) {
+			const baseDef = window.characterList && window.characterList[data.id];
+			if (baseDef) {
+				rank = rank || baseDef.rank || 'common';
+				template = template || baseDef.template || 'balanced';
+			} else {
+				rank = rank || 'common';
+				template = template || 'balanced';
+			}
+		}
+
+		const rawTupoList = data.tupoList || [];
+		const tupolevel = data.tupolevel || 0;
+		const normalizedTupoList = rawTupoList.map((item, index) => normalizeBreakthroughData(item, index));
+
+		// 只处理非属性类突破效果
+		let bonusEnergy = 0;
+		let passiveBuffs = [];
+		const effectSkills = [];
+
+		// 辅助函数：从技能数据中提取 effect 到 skills
+		function extractSkillContentsToSkills(skillType, skillIndex) {
+			const baseSkills = Array.isArray(data.skills) ? data.skills : ['attack1', null, null];
+			const skillId = baseSkills[skillIndex];
+			if (!skillId || typeof skillId !== 'string') return;
+
+			const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
+			if (!sData || !sData.contents || !Array.isArray(sData.contents)) return;
+
+			const triggerMap = { 'pugong': 'pugongHit', 'skill': 'skillHit', 'spskill': 'spskillHit' };
+			const trigger = triggerMap[skillType];
+			if (!trigger) return;
+
+			sData.contents.forEach(content => {
+				if (content.content && typeof content.content === 'function') {
+					effectSkills.push({
+						trigger: trigger,
+						filter: content.filter || function () { return true; },
+						content: content.content,
+						desc: content.desc || ''
+					});
+				}
+			});
+		}
+
+		// 提取普攻、技能、必杀的效果
+		extractSkillContentsToSkills('pugong', 0);
+		extractSkillContentsToSkills('skill', 1);
+		extractSkillContentsToSkills('spskill', 2);
+
+		// 编译非属性类的突破效果
+		for (let i = 0; i <= tupolevel; i++) {
+			if (!normalizedTupoList[i]) continue;
+			const buff = normalizedTupoList[i];
+			const type = buff.type;
+
+			switch (type) {
+				case 'self_energy':
+					bonusEnergy += Number(buff.value || 0);
+					break;
+
+				case 'passive_effect':
+					if (buff.effectId) passiveBuffs.push(buff.effectId);
+					break;
+
+				case 'skill_effect':
+					{
+						const skillIndex = buff.skillIndex;
+						const triggerMap = { 0: 'pugongHit', 1: 'skillHit', 2: 'spskillHit' };
+						const trigger = triggerMap[skillIndex];
+						if (trigger) {
+							effectSkills.push({
+								trigger: trigger,
+								filter: function () { return Math.random() < (buff.chance || 0.2); },
+								content: function (target) {
+									if (buff.effects && Array.isArray(buff.effects)) {
+										buff.effects.forEach(effect => {
+											switch (effect.type) {
+												case 'stun':
+													target.stunned = true;
+													addBattleLog(`${target.name} 被眩晕${effect.turns || 1}回合`);
+													break;
+												case 'reduceEnergy':
+													target.energy = Math.max(0, target.energy - (effect.amount || 1));
+													addBattleLog(`${target.name} 损失 ${effect.amount || 1} 点能量`);
+													break;
+												case 'seal':
+													target.sealed = true;
+													addBattleLog(`${target.name} 被封印`);
+													break;
+											}
+										});
+									}
+									updateBattleUI();
+								}
+							});
+						}
+					}
+					break;
+
+				case 'death_effect':
+					effectSkills.push({
+						trigger: 'dieSelf',
+						filter: function () { return true; },
+						content: function (killer) {
+							if (buff.effects && Array.isArray(buff.effects)) {
+								buff.effects.forEach(effect => {
+									if (effect.type === 'seal_killer' && killer && killer.alive) {
+										if (effect.permanent) {
+											killer.permanentlySealed = true;
+										} else {
+											killer.sealed = true;
+										}
+										addBattleLog(`${this.name} 阵亡时封印了 ${killer.name}`);
+										updateBattleUI();
+									}
+								});
+							}
+						}
+					});
+					break;
+
+				case 'behit_effect':
+					effectSkills.push({
+						trigger: 'onHitSelf',
+						filter: function (attacker, damage) {
+							if (buff.effects && Array.isArray(buff.effects)) {
+								return buff.effects.some(effect => {
+									if (effect.type === 'damage_reduce' && effect.condition === 'self_hp_gt_50') {
+										return this.hp / this.maxHp > 0.5;
+									}
+									return false;
+								});
+							}
+							return false;
+						},
+						content: function (attacker, damage) {
+							if (buff.effects && Array.isArray(buff.effects)) {
+								for (const effect of buff.effects) {
+									if (effect.type === 'damage_reduce') {
+										const reduced = Math.floor(damage * (1 - (effect.value || 0.5)));
+										addBattleLog(`${this.name} 触发减伤，伤害降低 ${Math.floor((effect.value || 0.5) * 100)}%`);
+										return reduced;
+									}
+								}
+							}
+							return damage;
+						}
+					});
+					break;
+
+				default:
+					break;
+			}
+		}
+
+		// ========== 计算最终属性 ==========
+		let finalHp, finalAtk, finalDef, finalSpe;
+		let finalEnergy = 2;
+
+		// ===== 【新增】新属性初始值 =====
+		let finalHit = 10000;
+		let finalDodge = 0;
+		let finalCrit = 0;
+		let finalCritResist = 0;
+		let finalPierce = 0;
+		let finalBlock = 0;
+
+		let finalFixedDmgUp = 0;
+		let finalFixedDmgDown = 0;
+		let finalPctDmgUp = 0;
+		let finalPctDmgDown = 0;
+
+		let finalFixedHeal = 0;
+		let finalFixedBeHeal = 0;
+		let finalPctHeal = 0;
+		let finalPctBeHeal = 0;
+
+		if (data._compiledStats) {
+			finalHp = data._compiledStats.totalHp;
+			finalAtk = data._compiledStats.totalAtk;
+			finalDef = data._compiledStats.totalDef;
+			finalSpe = data._compiledStats.totalSpe;
+
+			// ===== 【新增】从编译结果读取新属性 =====
+			finalHit = data._compiledStats.hit ?? 10000;
+			finalDodge = data._compiledStats.dodge ?? 0;
+			finalCrit = data._compiledStats.crit ?? 0;
+			finalCritResist = data._compiledStats.critResist ?? 0;
+			finalPierce = data._compiledStats.pierce ?? 0;
+			finalBlock = data._compiledStats.block ?? 0;
+
+			finalFixedDmgUp = data._compiledStats.fixedDmgUp ?? 0;
+			finalFixedDmgDown = data._compiledStats.fixedDmgDown ?? 0;
+			finalPctDmgUp = data._compiledStats.pctDmgUp ?? 0;
+			finalPctDmgDown = data._compiledStats.pctDmgDown ?? 0;
+
+			finalFixedHeal = data._compiledStats.fixedHeal ?? 0;
+			finalFixedBeHeal = data._compiledStats.fixedBeHeal ?? 0;
+			finalPctHeal = data._compiledStats.pctHeal ?? 0;
+			finalPctBeHeal = data._compiledStats.pctBeHeal ?? 0;
+		} else {
+			finalHp = Number(data.hp) || 100;
+			finalAtk = Number(data.atk) || 10;
+			finalDef = Number(data.def) || 0;
+			finalSpe = Number(data.spe) || 0;
+
+			// ===== 【新增】敌方角色也初始化新属性 =====
+			if (data.hit !== undefined) finalHit = Number(data.hit);
+			if (data.dodge !== undefined) finalDodge = Number(data.dodge);
+			if (data.crit !== undefined) finalCrit = Number(data.crit);
+			if (data.critResist !== undefined) finalCritResist = Number(data.critResist);
+			if (data.pierce !== undefined) finalPierce = Number(data.pierce);
+			if (data.block !== undefined) finalBlock = Number(data.block);
+			if (data.fixedDmgUp !== undefined) finalFixedDmgUp = Number(data.fixedDmgUp);
+			if (data.fixedDmgDown !== undefined) finalFixedDmgDown = Number(data.fixedDmgDown);
+			if (data.pctDmgUp !== undefined) finalPctDmgUp = Number(data.pctDmgUp);
+			if (data.pctDmgDown !== undefined) finalPctDmgDown = Number(data.pctDmgDown);
+			if (data.fixedHeal !== undefined) finalFixedHeal = Number(data.fixedHeal);
+			if (data.fixedBeHeal !== undefined) finalFixedBeHeal = Number(data.fixedBeHeal);
+			if (data.pctHeal !== undefined) finalPctHeal = Number(data.pctHeal);
+			if (data.pctBeHeal !== undefined) finalPctBeHeal = Number(data.pctBeHeal);
+		}
+
+		finalEnergy += bonusEnergy;
+
+		let activeTreasures = [];
+
+		const baseSkills = Array.isArray(data.skills) ? [...data.skills] : ['attack1', null, null];
+		const allSkills = [...baseSkills, ...effectSkills];
+
+		// ===== 构建单位对象 =====
+		const unit = {
+			id: data.id,
+			instanceId: data.instanceId || data.id,
+			name: data.name || '未知单位',
+			side,
+			slotIndex,
+			rank,
+			template,
+			maxHp: finalHp,
+			hp: finalHp,
+			atk: finalAtk,
+			def: finalDef,
+			spe: finalSpe,
+			energy: Math.min(8, finalEnergy),
+			buff: Array.isArray(data.buff) ? [...data.buff] : [],
+			skills: allSkills,
+			alive: true,
+			treasures: activeTreasures,
+			sealed: false,
+			sealTurns: 0,
+			sealOwner: null,
+			permanentlySealed: false,
+			extraTurnCount: 0,
+			tupoList: normalizedTupoList,
+			tupolevel: tupolevel,
+			hasAttacked: false,
+
+			// ===== 【新增】战斗概率属性 =====
+			hit: finalHit,
+			dodge: finalDodge,
+			crit: finalCrit,
+			critResist: finalCritResist,
+			pierce: finalPierce,
+			block: finalBlock,
+
+			// ===== 【新增】增伤/减伤 =====
+			fixedDmgUp: finalFixedDmgUp,
+			fixedDmgDown: finalFixedDmgDown,
+			pctDmgUp: finalPctDmgUp,
+			pctDmgDown: finalPctDmgDown,
+
+			// ===== 【新增】治疗相关 =====
+			fixedHeal: finalFixedHeal,
+			fixedBeHeal: finalFixedBeHeal,
+			pctHeal: finalPctHeal,
+			pctBeHeal: finalPctBeHeal,
+		};
+
+		if (passiveBuffs.length > 0) unit.buff.push(...passiveBuffs);
+		return unit;
+	}
+
+
+	const playerUnits = playerTeam.map((u, i) => buildUnit(u, 'player', i));
+	const enemyUnits = enemyTeam.map((u, i) => buildUnit(u, 'enemy', i));
+
+	// ===== 【移除】不再需要 applyTeamBreakthroughBuffs，因为属性已在 calculateInstanceFinalStats 中编译 =====
+	// applyTeamBreakthroughBuffs(playerUnits);
+	// applyTeamBreakthroughBuffs(enemyUnits);
+
+	const playerSpeSum = playerUnits.filter(u => u).reduce((s, u) => s + u.spe, 0);
+	const enemySpeSum = enemyUnits.filter(u => u).reduce((s, u) => s + u.spe, 0);
+	let firstSide = 'player';
+	if (enemySpeSum > playerSpeSum) firstSide = 'enemy';
 
 	/**@type {battleState}战斗信息 */
 	battleState = {
