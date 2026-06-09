@@ -134,6 +134,47 @@ function showteam() {
 function renderTeamView(container) {
 	container.innerHTML = '';
 
+	// ===== 【新增】阵容总战力显示（固定在顶部） =====
+	const totalPowerBar = document.createElement('div');
+	totalPowerBar.id = 'team-total-power';
+	totalPowerBar.style.cssText = `
+		position: fixed;
+		top: 10px;
+		left: 50%;
+		transform: translateX(-50%);
+		z-index: 100;
+		text-align: center;
+		padding: 4px 16px;
+		background: rgba(26, 26, 46, 0.85);
+		border-radius: 12px;
+		border: 1px solid #ffd70044;
+		font-size: 13px;
+		pointer-events: none;
+		backdrop-filter: blur(4px);
+	`;
+
+	// 计算总战力
+	let totalPower = 0;
+	const teamBonuses = calculateTeamBreakthroughBonuses();
+	for (let i = 0; i < 6; i++) {
+		const instId = window.currentTeam[i];
+		if (instId && window.charBagData && window.charBagData[instId]) {
+			const finalStats = calculateInstanceFinalStats(instId, teamBonuses);
+			totalPower += calculatePower(finalStats);
+		}
+	}
+
+	totalPowerBar.innerHTML = `
+		<span style="color:#aaa;">阵容总战力：</span>
+		<span style="color:#ffd700;font-size:16px;font-weight:bold;">${totalPower}</span>
+	`;
+	container.appendChild(totalPowerBar);
+	// ... 后续代码保持不变 ...
+	// 在创建 gridDiv 之前，添加顶部占位，避免固定定位的总战力遮挡
+	// const topSpacer = document.createElement('div');
+	// topSpacer.style.cssText = 'height: 30px; width: 100%;';
+	// container.appendChild(topSpacer);
+
 	// 创建网格容器
 	const gridDiv = document.createElement('div');
 	gridDiv.className = 'team-grid';
@@ -454,23 +495,35 @@ function showCharacterDetailPopup() {
 		}
 	};
 }
-
 /**
  * 显示突破预览弹窗
+ * @param {string|null} targetInstanceId - 可选，指定要查看的角色实例ID
  */
-function showBreakthroughPreviewPopup() {
-	// 1. 获取当前选中的角色
-	const selectedIdx = window._selectedSlotIndex;
-	let instanceId = null;
+function showBreakthroughPreviewPopup(targetInstanceId = null) {
+	let instanceId = targetInstanceId;
 
-	if (selectedIdx !== null && selectedIdx !== undefined && window.currentTeam[selectedIdx]) {
-		instanceId = window.currentTeam[selectedIdx];
-	} else if (window.currentTeam && window.currentTeam.length > 0) {
-		instanceId = window.currentTeam.find(id => id);
+	// 如果没有传入实例ID，则从阵容中获取
+	if (!instanceId) {
+		const selectedIdx = window._selectedSlotIndex;
+		if (selectedIdx !== null && selectedIdx !== undefined && window.currentTeam[selectedIdx]) {
+			instanceId = window.currentTeam[selectedIdx];
+		} else if (window.currentTeam && window.currentTeam.length > 0) {
+			instanceId = window.currentTeam.find(id => id);
+		}
 	}
 
+	// 1. 获取当前选中的角色
+	// const selectedIdx = window._selectedSlotIndex;
+	// let instanceId = null;
+
+	// if (selectedIdx !== null && selectedIdx !== undefined && window.currentTeam[selectedIdx]) {
+	// 	instanceId = window.currentTeam[selectedIdx];
+	// } else if (window.currentTeam && window.currentTeam.length > 0) {
+	// 	instanceId = window.currentTeam.find(id => id);
+	// }
+
 	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-		toast('请先在队伍中选择一个角色', 'warning');
+		toast('请先选择一个角色，不论是背包还是阵容里', 'warning');
 		return;
 	}
 
@@ -509,7 +562,7 @@ function showBreakthroughPreviewPopup() {
 	title.style.cssText = 'color:#ffd700;font-size:18px;font-weight:bold;text-align:center;margin-bottom:15px;';
 	const currentTupoLevel = instData.tupolevel || 0;
 	const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-	title.innerHTML = `${baseChar.name} <span style="color:${rankColors[baseChar.rank] || '#888'};font-size:14px;">突破预览</span>`;
+	title.innerHTML = `${baseChar.name} 突破预览`;
 	popup.appendChild(title);
 
 	// 5. 角色概览
@@ -518,7 +571,7 @@ function showBreakthroughPreviewPopup() {
 
 	const charImg = document.createElement('img');
 	charImg.src = `./image/character/${charId}.jpg`;
-	charImg.style.cssText = 'width:48px;height:48px;border-radius:6px;border:2px solid #ffd700;object-fit:cover;';
+	charImg.style.cssText = 'width:48px;height:48px;border-radius:6px;border:2px solid #ffd700;object-fit:cover;object-position: center top;';
 	charImg.onerror = function () { this.src = './image/character/default.jpg'; };
 	header.appendChild(charImg);
 
@@ -526,9 +579,10 @@ function showBreakthroughPreviewPopup() {
 	charInfo.style.cssText = 'flex:1;';
 
 	const charName = document.createElement('div');
+	charName.className = 'bp-char-name';
 	charName.style.cssText = 'color:#fff;font-size:15px;font-weight:bold;';
-	const tupoText = currentTupoLevel > 0 ? ` <span style="color:#ffd700;font-size:13px;">+${currentTupoLevel}</span>` : '';
-	charName.innerHTML = baseChar.name + tupoText;
+	const tupoText = currentTupoLevel > 0 ? ` +${currentTupoLevel}` : '';
+	charName.innerHTML = `<span style="color:${rankColors[instData.rank] || '#888'};font-size:14px;">${instData.name}${tupoText}</span>`;
 	charInfo.appendChild(charName);
 
 	const charLevel = document.createElement('div');
@@ -706,6 +760,7 @@ function showBreakthroughPreviewPopup() {
 							const result = breakthroughCharacterInstance(instanceId);
 							if (result.success) {
 								toast(result.message, 'success');
+								refreshTeamViewDisplay();
 								// ===== 【改为】直接刷新弹窗内容，不关闭重建 =====
 								refreshBreakthroughPopupContent(popup, instanceId);
 							} else {
@@ -732,6 +787,7 @@ function showBreakthroughPreviewPopup() {
 					transition: all 0.2s;
 				`;
 				// ===== 【修改】显示当前可用/需要 =====
+				const promotionCost = Math.floor(currentTupoForAction / 4) + 1;
 				promoteBtn.textContent = `升阶（${availableCount}/${promotionCost}）`;
 				if (availableCount < promotionCost) {
 					promoteBtn.style.background = '#555';
@@ -744,7 +800,6 @@ function showBreakthroughPreviewPopup() {
 				promoteBtn.onclick = (e) => {
 					e.stopPropagation();
 
-					const promotionCost = Math.floor(currentTupoForAction / 4) + 1;
 					const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
 						if (id === instanceId) return false;
 						const inst = window.charBagData[id];
@@ -794,6 +849,8 @@ function showBreakthroughPreviewPopup() {
 	closeBtn.style.cssText = 'width:100%;margin-top:15px;padding:10px;font-size:14px;';
 	closeBtn.textContent = '关闭';
 	closeBtn.onclick = () => {
+		// 清除标记
+		window._pendingRefreshAfterBreakthrough = null;
 		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
 	};
 	popup.appendChild(closeBtn);
@@ -804,6 +861,8 @@ function showBreakthroughPreviewPopup() {
 	// 点击遮罩关闭
 	overlay.onclick = (e) => {
 		if (e.target === overlay) {
+			// 清除标记
+			window._pendingRefreshAfterBreakthrough = null;
 			if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
 		}
 	};
@@ -814,6 +873,7 @@ function showBreakthroughPreviewPopup() {
  * @param {string} instanceId - 角色实例ID
  */
 function refreshBreakthroughPopupContent(popup, instanceId) {
+	// console.log('刷新突破详情弹窗的参数',popup,instanceId)
 	if (!popup || !instanceId || !window.charBagData || !window.charBagData[instanceId]) return;
 
 	const instData = window.charBagData[instanceId];
@@ -822,15 +882,20 @@ function refreshBreakthroughPopupContent(popup, instanceId) {
 	if (!baseChar) return;
 
 	const currentTupoLevel = instData.tupolevel || 0;
-
 	// 1. 更新标题中的突破等级
-	const title = popup.querySelector('.bp-popup-title');
-	if (title) {
+	// const title = popup.querySelector('.bp-popup-title');
+	// if (title) {
+	// 	const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+	// 	const tupoText = currentTupoLevel > 0 ? ` <span style="color:#ffd700;font-size:13px;">+${currentTupoLevel}</span>` : '';
+	// 	title.innerHTML = `${baseChar.name}${tupoText} <span style="color:${rankColors[baseChar.rank] || '#888'};font-size:14px;">突破预览</span>`;
+	// }
+	// 2. 刷新角色名
+	const name = popup.querySelector('.bp-char-name');
+	if (name) {
 		const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
-		const tupoText = currentTupoLevel > 0 ? ` <span style="color:#ffd700;font-size:13px;">+${currentTupoLevel}</span>` : '';
-		title.innerHTML = `${baseChar.name}${tupoText} <span style="color:${rankColors[baseChar.rank] || '#888'};font-size:14px;">突破预览</span>`;
+		const tupoText = currentTupoLevel > 0 ? ` +${currentTupoLevel}` : '';
+		name.innerHTML = `<span style="color:${rankColors[instData.rank] || '#888'};font-size:14px;">${instData.name}${tupoText}</span>`;
 	}
-
 	// 2. 更新概览中的突破等级
 	const charLevelEl = popup.querySelector('.bp-char-level');
 	if (charLevelEl) {
@@ -850,6 +915,26 @@ function refreshBreakthroughPopupContent(popup, instanceId) {
 		actionBtnRow.innerHTML = '';
 		renderBreakthroughActions(actionBtnRow, instanceId, instData, baseChar, currentTupoLevel, popup);
 	}
+	// // ===== 【新增】刷新父弹窗和背包 =====
+	// if (window._pendingRefreshAfterBreakthrough && window._pendingRefreshAfterBreakthrough.instanceId === instanceId) {
+	// 	const pending = window._pendingRefreshAfterBreakthrough;
+	// 	if (pending.parentDialog) {
+	// 		refreshCharDetailPopupContent(instanceId, pending.parentDialog);
+	// 	}
+	// 	// 刷新阵容显示
+	// 	refreshTeamViewDisplay();
+	// 	// 刷新背包视图
+	// 	try {
+	// 		const bagView = document.getElementById('bag-view');
+	// 		if (bagView && bagView.style.display !== 'none') {
+	// 			renderBagView(bagView);
+	// 		}
+	// 	} catch (e) { }
+	// }
+	refreshAllViews({
+		instanceId: instanceId,
+		dialog: window._pendingRefreshAfterBreakthrough?.parentDialog || null
+	});
 }
 /**
  * 渲染突破列表到指定容器
@@ -858,21 +943,21 @@ function refreshBreakthroughPopupContent(popup, instanceId) {
  * @param {number} currentTupoLevel - 当前突破等级
  */
 function renderBreakthroughList(container, baseChar, currentTupoLevel) {
-    const tupoList = baseChar.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
+	const tupoList = baseChar.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
 
-    if (tupoList.length === 0) {
-        const emptyTip = document.createElement('div');
-        emptyTip.style.cssText = 'color:#666;text-align:center;padding:30px;font-size:14px;';
-        emptyTip.textContent = '该角色暂无突破数据';
-        container.appendChild(emptyTip);
-        return;
-    }
+	if (tupoList.length === 0) {
+		const emptyTip = document.createElement('div');
+		emptyTip.style.cssText = 'color:#666;text-align:center;padding:30px;font-size:14px;';
+		emptyTip.textContent = '该角色暂无突破数据';
+		container.appendChild(emptyTip);
+		return;
+	}
 
-    tupoList.forEach((buff, index) => {
-        const isUnlocked = (index + 1) <= currentTupoLevel;
+	tupoList.forEach((buff, index) => {
+		const isUnlocked = (index + 1) <= currentTupoLevel;
 
-        const item = document.createElement('div');
-        item.style.cssText = `
+		const item = document.createElement('div');
+		item.style.cssText = `
             background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
             border: 1px solid ${isUnlocked ? '#d000ff' : '#333'};
             border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
@@ -884,72 +969,72 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel) {
             cursor: ${isUnlocked ? 'pointer' : 'default'};
         `;
 
-        // 标题行
-        const headerRow = document.createElement('div');
-        headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;';
+		// 标题行
+		const headerRow = document.createElement('div');
+		headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;';
 
-        const levelTitle = document.createElement('span');
-        levelTitle.style.cssText = `font-weight:bold;font-size:14px;color:${isUnlocked ? '#ffd700' : '#888'};`;
-        levelTitle.textContent = `突破 ${index + 1} 阶`;
+		const levelTitle = document.createElement('span');
+		levelTitle.style.cssText = `font-weight:bold;font-size:14px;color:${isUnlocked ? '#ffd700' : '#888'};`;
+		levelTitle.textContent = `突破 ${index + 1} 阶`;
 
-        const statusIcon = document.createElement('span');
-        statusIcon.style.cssText = 'font-size:12px;';
-        statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
-        statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
+		const statusIcon = document.createElement('span');
+		statusIcon.style.cssText = 'font-size:12px;';
+		statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
+		statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
 
-        headerRow.appendChild(levelTitle);
-        headerRow.appendChild(statusIcon);
-        item.appendChild(headerRow);
+		headerRow.appendChild(levelTitle);
+		headerRow.appendChild(statusIcon);
+		item.appendChild(headerRow);
 
-        // 描述内容
-        const descDiv = document.createElement('div');
-        descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#666'};`;
+		// 描述内容
+		const descDiv = document.createElement('div');
+		descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#666'};`;
 
-        if (!buff) {
-            descDiv.textContent = '暂无详细描述';
-        } else {
-            let resolvedBuff = buff;
-            if (typeof buff === 'string') {
-                const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
-                resolvedBuff = lib[buff];
-                if (!resolvedBuff) resolvedBuff = { desc: '暂无详细描述' };
-            } else if (typeof buff === 'object') {
-                // 已经是对象，保持不变
-            } else {
-                resolvedBuff = { desc: '暂无详细描述' };
-            }
+		if (!buff) {
+			descDiv.textContent = '暂无详细描述';
+		} else {
+			let resolvedBuff = buff;
+			if (typeof buff === 'string') {
+				const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+				resolvedBuff = lib[buff];
+				if (!resolvedBuff) resolvedBuff = { desc: '暂无详细描述' };
+			} else if (typeof buff === 'object') {
+				// 已经是对象，保持不变
+			} else {
+				resolvedBuff = { desc: '暂无详细描述' };
+			}
 
-            if (resolvedBuff.desc) {
-                descDiv.textContent = resolvedBuff.desc;
-            } else if (resolvedBuff.type) {
-                let typeDesc = '';
-                if (resolvedBuff.type === 'self_stat_flat') {
-                    const val = Array.isArray(resolvedBuff.value) ? resolvedBuff.value.join('/') : resolvedBuff.value;
-                    const stat = Array.isArray(resolvedBuff.stat) ? resolvedBuff.stat.join('/') : resolvedBuff.stat;
-                    typeDesc = `永久增加 ${stat}: ${val}`;
-                } else if (resolvedBuff.type === 'passive_effect') {
-                    typeDesc = `获得被动效果: ${resolvedBuff.effectId || '未知'}`;
-                } else if (resolvedBuff.type === 'skill_effect') {
-                    typeDesc = `技能效果增强: ${resolvedBuff.desc || '未知效果'}`;
-                } else {
-                    typeDesc = `效果类型: ${resolvedBuff.type}`;
-                }
-                descDiv.textContent = typeDesc;
-            } else {
-                descDiv.textContent = '暂无详细描述';
-            }
-        }
+			if (resolvedBuff.desc) {
+				descDiv.textContent = resolvedBuff.desc;
+			} else if (resolvedBuff.type) {
+				let typeDesc = '';
+				if (resolvedBuff.type === 'self_stat_flat') {
+					const val = Array.isArray(resolvedBuff.value) ? resolvedBuff.value.join('/') : resolvedBuff.value;
+					const stat = Array.isArray(resolvedBuff.stat) ? resolvedBuff.stat.join('/') : resolvedBuff.stat;
+					typeDesc = `永久增加 ${stat}: ${val}`;
+				} else if (resolvedBuff.type === 'passive_effect') {
+					typeDesc = `获得被动效果: ${resolvedBuff.effectId || '未知'}`;
+				} else if (resolvedBuff.type === 'skill_effect') {
+					typeDesc = `技能效果增强: ${resolvedBuff.desc || '未知效果'}`;
+				} else {
+					typeDesc = `效果类型: ${resolvedBuff.type}`;
+				}
+				descDiv.textContent = typeDesc;
+			} else {
+				descDiv.textContent = '暂无详细描述';
+			}
+		}
 
-        item.appendChild(descDiv);
+		item.appendChild(descDiv);
 
-        // 已解锁项的悬停效果
-        if (isUnlocked) {
-            item.onmouseover = () => { item.style.background = '#33334a'; };
-            item.onmouseout = () => { item.style.background = '#2a2a3a'; };
-        }
+		// 已解锁项的悬停效果
+		if (isUnlocked) {
+			item.onmouseover = () => { item.style.background = '#33334a'; };
+			item.onmouseout = () => { item.style.background = '#2a2a3a'; };
+		}
 
-        container.appendChild(item);
-    });
+		container.appendChild(item);
+	});
 }
 /**
  * 渲染突破/升阶操作按钮到指定容器
@@ -961,25 +1046,25 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel) {
  * @param {HTMLElement} popup - 弹窗容器（用于刷新）
  */
 function renderBreakthroughActions(container, instanceId, instData, baseChar, currentTupoLevel, popup) {
-    if (!instanceId || !instData) return;
+	if (!instanceId || !instData) return;
 
-    const charIdForAction = instData.charId || instanceId;
+	const charIdForAction = instData.charId || instanceId;
 
-    let breakInfo = getBreakthroughInfo(baseChar, currentTupoLevel);
-    let needPromotion = needUpgrade(instData);
+	let breakInfo = getBreakthroughInfo(baseChar, currentTupoLevel);
+	let needPromotion = needUpgrade(instData);
 
-    // 计算可用材料数量
-    const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
-        if (id === instanceId) return false;
-        const inst = window.charBagData[id];
-        return inst && (inst.charId === charIdForAction || id === charIdForAction);
-    });
-    const availableCount = availableFodderIds.length;
+	// 计算可用材料数量
+	const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
+		if (id === instanceId) return false;
+		const inst = window.charBagData[id];
+		return inst && (inst.charId === charIdForAction || id === charIdForAction);
+	});
+	const availableCount = availableFodderIds.length;
 
-    // 突破按钮
-    if (!breakInfo.maxed && !needPromotion) {
-        const doBreakBtn = document.createElement('button');
-        doBreakBtn.style.cssText = `
+	// 突破按钮
+	if (!breakInfo.maxed && !needPromotion) {
+		const doBreakBtn = document.createElement('button');
+		doBreakBtn.style.cssText = `
             flex: 1;
             padding: 8px;
             font-size: 13px;
@@ -990,40 +1075,41 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
             border-radius: 6px;
             transition: all 0.2s;
         `;
-        doBreakBtn.textContent = `突破（${availableCount}/${breakInfo.cost}）`;
+		doBreakBtn.textContent = `突破（${availableCount}/${breakInfo.cost}）`;
 
-        if (availableCount < breakInfo.cost) {
-            doBreakBtn.style.background = '#555';
-            doBreakBtn.style.cursor = 'not-allowed';
-            doBreakBtn.style.opacity = '0.6';
-        } else {
-            doBreakBtn.onmouseover = () => { doBreakBtn.style.background = '#55bbff'; };
-            doBreakBtn.onmouseout = () => { doBreakBtn.style.background = '#44aaff'; };
-            doBreakBtn.onclick = (e) => {
-                e.stopPropagation();
-                confirmDialog(
-                    `确定要突破【${baseChar.name}】吗？\n当前突破等级: ${currentTupoLevel}阶 → 目标: ${currentTupoLevel + 1}阶\n消耗: ${breakInfo.cost}个同名角色`,
-                    () => {
-                        const result = breakthroughCharacterInstance(instanceId);
-                        if (result.success) {
-                            toast(result.message, 'success');
-                            // 原地刷新弹窗内容
-                            refreshBreakthroughPopupContent(popup, instanceId);
-                        } else {
-                            toast(result.message, 'error');
-                        }
-                    }
-                );
-            };
-        }
-        container.appendChild(doBreakBtn);
-    }
+		if (availableCount < breakInfo.cost) {
+			doBreakBtn.style.background = '#555';
+			doBreakBtn.style.cursor = 'not-allowed';
+			doBreakBtn.style.opacity = '0.6';
+		} else {
+			doBreakBtn.onmouseover = () => { doBreakBtn.style.background = '#55bbff'; };
+			doBreakBtn.onmouseout = () => { doBreakBtn.style.background = '#44aaff'; };
+			doBreakBtn.onclick = (e) => {
+				e.stopPropagation();
+				confirmDialog(
+					`确定要突破【${baseChar.name}】吗？\n当前突破等级: ${currentTupoLevel}阶 → 目标: ${currentTupoLevel + 1}阶\n消耗: ${breakInfo.cost}个同名角色`,
+					() => {
+						console.log('突破走这里了')
+						const result = breakthroughCharacterInstance(instanceId);
+						if (result.success) {
+							toast(result.message, 'success');
+							// 原地刷新弹窗内容
+							refreshBreakthroughPopupContent(popup, instanceId);
+						} else {
+							toast(result.message, 'error');
+						}
+					}
+				);
+			};
+		}
+		container.appendChild(doBreakBtn);
+	}
 
-    // 升阶按钮
-    if (needPromotion) {
-        const promotionCost = Math.floor(currentTupoLevel / 4) + 1;
-        const promoteBtn = document.createElement('button');
-        promoteBtn.style.cssText = `
+	// 升阶按钮
+	if (needPromotion) {
+		const promotionCost = Math.floor(currentTupoLevel / 4) + 1;
+		const promoteBtn = document.createElement('button');
+		promoteBtn.style.cssText = `
             flex: 1;
             padding: 8px;
             font-size: 13px;
@@ -1034,41 +1120,41 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
             border-radius: 6px;
             transition: all 0.2s;
         `;
-        promoteBtn.textContent = `升阶（${availableCount}/${promotionCost}）`;
+		promoteBtn.textContent = `升阶（${availableCount}/${promotionCost}）`;
 
-        if (availableCount < promotionCost) {
-            promoteBtn.style.background = '#555';
-            promoteBtn.style.cursor = 'not-allowed';
-            promoteBtn.style.opacity = '0.6';
-        } else {
-            promoteBtn.onmouseover = () => { promoteBtn.style.background = '#ffbb22'; };
-            promoteBtn.onmouseout = () => { promoteBtn.style.background = '#ffaa00'; };
-            promoteBtn.onclick = (e) => {
-                e.stopPropagation();
-                confirmDialog(
-                    `确定要将【${baseChar.name}】升阶至【${getRankLabel(needPromotion)}】吗？`,
-                    () => {
-                        const result = promoteCharacterRank(instanceId);
-                        if (result.success) {
-                            toast(result.message, 'success');
-                            refreshBreakthroughPopupContent(popup, instanceId);
-                        } else {
-                            toast(result.message, 'error');
-                        }
-                    }
-                );
-            };
-        }
-        container.appendChild(promoteBtn);
-    }
+		if (availableCount < promotionCost) {
+			promoteBtn.style.background = '#555';
+			promoteBtn.style.cursor = 'not-allowed';
+			promoteBtn.style.opacity = '0.6';
+		} else {
+			promoteBtn.onmouseover = () => { promoteBtn.style.background = '#ffbb22'; };
+			promoteBtn.onmouseout = () => { promoteBtn.style.background = '#ffaa00'; };
+			promoteBtn.onclick = (e) => {
+				e.stopPropagation();
+				confirmDialog(
+					`确定要将【${baseChar.name}】升阶至【${getRankLabel(needPromotion)}】吗？`,
+					() => {
+						const result = promoteCharacterRank(instanceId);
+						if (result.success) {
+							toast(result.message, 'success');
+							refreshBreakthroughPopupContent(popup, instanceId);
+						} else {
+							toast(result.message, 'error');
+						}
+					}
+				);
+			};
+		}
+		container.appendChild(promoteBtn);
+	}
 
-    // 已满级提示
-    if (breakInfo.maxed) {
-        const maxedLabel = document.createElement('div');
-        maxedLabel.style.cssText = 'flex:1;padding:8px;text-align:center;color:#ffd700;font-size:13px;';
-        maxedLabel.textContent = '✨ 已突破至极限';
-        container.appendChild(maxedLabel);
-    }
+	// 已满级提示
+	if (breakInfo.maxed) {
+		const maxedLabel = document.createElement('div');
+		maxedLabel.style.cssText = 'flex:1;padding:8px;text-align:center;color:#ffd700;font-size:13px;';
+		maxedLabel.textContent = '✨ 已突破至极限';
+		container.appendChild(maxedLabel);
+	}
 }
 
 /**
@@ -1619,6 +1705,96 @@ function refreshAllTeamSlots() {
 		if (slotEl) renderTeamSlot(slotEl, i);
 	}
 }
+/**
+ * 刷新角色详情弹窗的内容
+ * @param {string} instanceId - 角色实例ID
+ * @param {HTMLElement} dialog - 角色详情弹窗的DOM元素（可选）
+ */
+function refreshCharDetailPopupContent(instanceId, dialog) {
+	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) return;
+
+	const instData = window.charBagData[instanceId];
+	const charId = instData.charId || instanceId;
+	const baseChar = characterList[charId];
+	if (!baseChar) return;
+
+	// 计算最新属性
+	const teamBonuses = calculateTeamBreakthroughBonuses();
+	const finalStats = calculateInstanceFinalStats(instanceId, teamBonuses);
+
+	// 如果传入了dialog，直接更新该dialog的内容
+	if (dialog) {
+		// 更新等级显示
+		const rankEl = dialog.querySelector('.gallery-detail-rank');
+		if (rankEl) {
+			const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
+			const RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+			const rankText = RANK_LABELS[instData.rank] || instData.rank;
+			rankEl.innerHTML = `<span style="color:${RANK_COLORS[instData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.${instData.level || 1}</span>`;
+		}
+
+		// 更新角色名称（含突破等级）
+		const nameEl = dialog.querySelector('.gallery-detail-name');
+		if (nameEl) {
+			console.log('instData.tupolevel', instData.tupolevel)
+			const tupoText = (instData.tupolevel || 0) > 0 ? `+${instData.tupolevel}` : '';
+			nameEl.textContent = (baseChar.name || instData.name) + tupoText;
+		}
+
+		// 更新四维属性
+		const attrRows = dialog.querySelectorAll('.gallery-detail-attr-row .attr-value');
+		if (attrRows.length >= 4) {
+			attrRows[0].textContent = finalStats.totalHp;
+			attrRows[1].textContent = finalStats.totalAtk;
+			attrRows[2].textContent = finalStats.totalDef;
+			attrRows[3].textContent = finalStats.totalSpe;
+		}
+	}
+
+	// 刷新阵容界面
+	refreshTeamViewDisplay();
+}
+
+/**
+ * 刷新阵容界面的显示（包括总战力、格子和详情区）
+ */
+function refreshTeamViewDisplay() {
+	const teamView = document.getElementById('team-view');
+	if (!teamView || teamView.style.display === 'none') return;
+
+	// 刷新总战力
+	const totalPowerBar = document.getElementById('team-total-power');
+	if (totalPowerBar) {
+		let totalPower = 0;
+		const teamBonuses = calculateTeamBreakthroughBonuses();
+		for (let i = 0; i < 6; i++) {
+			const instId = window.currentTeam[i];
+			if (instId && window.charBagData && window.charBagData[instId]) {
+				const finalStats = calculateInstanceFinalStats(instId, teamBonuses);
+				totalPower += calculatePower(finalStats);
+			}
+		}
+		totalPowerBar.innerHTML = `
+			<span style="color:#aaa;">阵容总战力：</span>
+			<span style="color:#ffd700;font-size:16px;font-weight:bold;">${totalPower}</span>
+		`;
+	}
+
+	// 刷新所有格子
+	refreshAllTeamSlots();
+
+	// 刷新详情区
+	const selectedIdx = window._selectedSlotIndex;
+	if (selectedIdx !== null && selectedIdx !== undefined) {
+		const instanceId = window.currentTeam[selectedIdx];
+		if (instanceId && window.charBagData && window.charBagData[instanceId]) {
+			const instData = window.charBagData[instanceId];
+			const charId = instData.charId || instanceId;
+			showTeamCharInfo(selectedIdx, instanceId, charId);
+		}
+	}
+}
+
 
 // ========== 布阵交互逻辑 ==========
 
@@ -1992,6 +2168,26 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 		attrDiv.appendChild(row);
 	});
 
+	// 在这之前添加：
+	// ===== 【新增】角色战斗力显示 =====
+	const teamBonusesForPower = calculateTeamBreakthroughBonuses();
+	const finalStatsForPower = calculateInstanceFinalStats(instanceId, teamBonusesForPower);
+	const charPower = calculatePower(finalStatsForPower);
+
+	const powerRow = document.createElement('div');
+	powerRow.style.cssText = `
+    text-align: center;
+    padding: 6px 0;
+    margin: 4px 0 6px 0;
+    background: #1a1a2e;
+    border-radius: 6px;
+    border: 1px solid #ffd70033;
+`;
+	powerRow.innerHTML = `
+    <span style="color:#aaa;font-size:12px;">战斗力：</span>
+    <span style="color:#ffd700;font-size:16px;font-weight:bold;">${charPower}</span>
+`;
+	attrDiv.appendChild(powerRow);
 	// 技能详细描述
 	const skillIds = char.skills || [];
 	const skillSections = [
@@ -2033,6 +2229,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 
 	// 高亮选中方格
 	highlightTeamSlot(slotIndex);
+	return infoArea;
 }
 
 /**
@@ -4373,7 +4570,12 @@ function showCharDetail(_parentContainer, charData) {
 	dialog.className = 'gallery-detail-dialog';
 
 	// 角色名
-	const tupoText = charData.tupolevel ? `+${charData.tupolevel}` : '';
+	// 找到这行：
+	// const tupoText = charData.tupolevel ? `+${charData.tupolevel}` : '';
+
+	// 改为：
+	const tupoText = ''; // 图鉴中不显示突破等级
+
 	const nameDiv = document.createElement('div');
 	nameDiv.className = 'gallery-detail-name';
 	nameDiv.textContent = charData.name + tupoText;
@@ -4425,7 +4627,12 @@ function showCharDetail(_parentContainer, charData) {
 	const rankDiv = document.createElement('div');
 	rankDiv.className = 'gallery-detail-rank';
 	const rankText = rankLabels[charData.rank] || charData.rank;
-	rankDiv.innerHTML = `<span style="color:${rankColors[charData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.1</span>`;
+	// 找到 rankDiv.innerHTML 那行：
+	// rankDiv.innerHTML = `<span style="color:${rankColors[charData.rank] || '#888'}">${rankText}</span><span style="color:#ddd;font-size:13px;margin-left:8px">Lv.1</span>`;
+
+	// 改为：
+	rankDiv.innerHTML = `<span style="color:${rankColors[charData.rank] || '#888'}">${rankText}</span>`; // 图鉴不显示等级
+
 	attrDiv.appendChild(rankDiv);
 
 	// 属性标签
@@ -8005,7 +8212,8 @@ function showBagCharDetailPopup(instanceId, charId) {
 	detailBreakBtn.textContent = '🔮 突破详情';
 	detailBreakBtn.onclick = () => {
 		// 调用突破预览弹窗（不关闭当前弹窗，浮在其上）
-		showBreakthroughPreviewPopup();
+		// showBreakthroughPreviewPopup();
+		showBreakthroughPreviewPopupWithCallback(instanceId, dialog);
 	};
 	btnRow.appendChild(detailBreakBtn);
 	// --- 👆 结束 ---
@@ -8058,6 +8266,33 @@ function buildSkillSection(label, sData, color) {
 	aiIntro.textContent = 'AI倾向：' + sData.ai_intro;
 	section.appendChild(aiIntro);
 	return section;
+}
+/**
+ * 显示突破预览弹窗（支持回调，突破成功后刷新父弹窗和阵容界面）
+ * @param {string} instanceId - 角色实例ID
+ * @param {HTMLElement} parentDialog - 父弹窗（角色详情弹窗）的DOM元素，可选
+ */
+function showBreakthroughPreviewPopupWithCallback(instanceId, parentDialog) {
+	// 先保存当前选中的角色索引和instanceId
+	const savedSlotIndex = window._selectedSlotIndex;
+
+	// 调用原有的 showBreakthroughPreviewPopup
+	// 但我们需要修改它的内部逻辑——在突破成功时执行回调
+
+	// 由于 showBreakthroughPreviewPopup 内部逻辑较复杂，
+	// 我们可以采用"重写"的方式，创建一个基于 showBreakthroughPreviewPopup 但增加了回调的版本
+	// 或者更简单：复用 showBreakthroughPreviewPopup，但在它突破成功时，我们主动从外部监听
+
+	// === 方案：直接调用 showBreakthroughPreviewPopup，然后通过修改全局钩子来刷新 ===
+	// 在执行突破前，设置一个全局刷新标记
+	window._pendingRefreshAfterBreakthrough = {
+		instanceId: instanceId,
+		parentDialog: parentDialog,
+		slotIndex: savedSlotIndex
+	};
+
+	// 调用原有突破弹窗
+	showBreakthroughPreviewPopup(instanceId);
 }
 
 // function updateCharacterSP(current,target){
@@ -8290,16 +8525,20 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 		toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！`, 'success');
 
 		// 刷新背包视图（如果有）
-		const bagView = document.getElementById('bag-view');
-		if (bagView) renderBagView(bagView);
-		if (window.currentTeam && window.currentTeam.includes(targetInstId)) {
-			const gridIdx = window.currentTeam.indexOf(targetInstId);
-			refreshTeamSlot(gridIdx);
-			if (window._selectedSlotIndex === gridIdx) {
-				showTeamCharInfo(gridIdx, targetInstId, targetCharId);
-			}
-		}
-		syncTreasureEquipData();
+		// const bagView = document.getElementById('bag-view');
+		// if (bagView) renderBagView(bagView);
+		// if (window.currentTeam && window.currentTeam.includes(targetInstId)) {
+		// 	const gridIdx = window.currentTeam.indexOf(targetInstId);
+		// 	refreshTeamSlot(gridIdx);
+		// 	if (window._selectedSlotIndex === gridIdx) {
+		// 		showTeamCharInfo(gridIdx, targetInstId, targetCharId);
+		// 	}
+		// }
+		// syncTreasureEquipData();
+
+		refreshAllViews({
+			instanceId: targetInstId
+		});
 		SaveManager.autoSave();
 	};
 	infoBar.appendChild(confirmBtn);
@@ -8769,7 +9008,42 @@ function breakthroughCharacterInstance(targetInstId) {
 	}
 
 	SaveManager.autoSave();
+	// 如果有待刷新的标记，执行刷新
+	// if (window._pendingRefreshAfterBreakthrough) {
+	// 	const pending = window._pendingRefreshAfterBreakthrough;
 
+	// 	// 刷新角色详情弹窗
+	// 	if (pending.parentDialog) {
+	// 		refreshCharDetailPopupContent(pending.instanceId, pending.parentDialog);
+	// 	}
+
+	// 	// 刷新阵容显示
+	// 	refreshTeamViewDisplay();
+
+	// 	// 刷新背包视图（如果打开）
+	// 	const bagView = document.getElementById('bag-view');
+	// 	if (bagView && bagView.style.display !== 'none') {
+	// 		renderBagView(bagView);
+	// 	}
+
+	// }
+	// // 在 breakthroughCharacterInstance 函数的 return 之前，添加：
+	// // 强制刷新所有打开的界面
+	// if (typeof refreshTeamViewDisplay === 'function') {
+	// 	refreshTeamViewDisplay();
+	// }
+
+	// // 尝试刷新背包视图
+	// try {
+	// 	const bagView = document.getElementById('bag-view');
+	// 	if (bagView && bagView.style.display !== 'none') {
+	// 		renderBagView(bagView);
+	// 	}
+	// } catch (e) { }
+	refreshAllViews({
+		instanceId: targetInstId,
+		dialog: window._pendingRefreshAfterBreakthrough?.parentDialog || null
+	});
 	return {
 		success: true,
 		message: `突破成功！当前阶数: ${targetInst.tupolevel}`,
@@ -8860,12 +9134,18 @@ function promoteCharacterRank(targetInstId) {
 	}
 
 	SaveManager.autoSave();
+	// 原有的 SaveManager.autoSave(); 之后添加：
+	refreshAllViews({
+		instanceId: targetInstId,
+		dialog: window._pendingRefreshAfterBreakthrough?.parentDialog || null
+	});
 
 	return {
 		success: true,
 		message: `升阶成功！品质提升至【${getRankLabel(promotionInfo.targetRank)}】`,
 		targetRank: promotionInfo.targetRank
 	};
+
 }
 
 /**
@@ -9898,7 +10178,8 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 				window.treasureInventory[treasureInstanceId].level = newLevel;
 
 				// ===== 刷新弹窗内容 =====
-				refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, newLevel, upgradeBtn, charInstanceId);
+				// refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, newLevel, upgradeBtn, charInstanceId);
+				const refreshInstanceId = charInstanceId || null;
 
 				// 找到 toast 调用前，添加：
 				if (charInstanceId) {
@@ -9936,7 +10217,9 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 					// 	refreshTeamSlot(teamIndex);
 					// }
 				}
-
+				refreshAllViews({
+					instanceId: refreshInstanceId
+				});
 				// ===== 更新局部变量（用于下次点击时的初始校验） =====
 				currentLevel = newLevel;
 
@@ -10631,14 +10914,287 @@ function calculateTeamBreakthroughBonuses() {
 
 /**
  * 生成角色的战斗力
- * @param {*} finalStats 
- * @returns 
+ * @param {Object} finalStats - 角色的最终属性
+ * @returns {number} 计算后的战斗力值
  */
 function calculatePower(finalStats) {
+	// 提取基础属性
 	const atk = finalStats.totalAtk || 0;
 	const def = finalStats.totalDef || 0;
 	const hp = finalStats.totalHp || 0;
 
-	// 攻击权重4，防御权重2.5，生命权重1
-	return Math.floor(atk * 4 + def * 2.5 + hp);
+	// 提取暴击、命中、破击（命中需要减去初始值10000）
+	const crit = finalStats.crit || 0;
+	const hit = (finalStats.hit || 10000) - 10000;
+	const pierce = finalStats.pierce || 0;
+
+	// 提取抗暴、闪避、格挡
+	const critResist = finalStats.critResist || 0;
+	const dodge = finalStats.dodge || 0;
+	const block = finalStats.block || 0;
+
+	// 提取百分比增伤/减伤
+	const pctDmgUp = finalStats.pctDmgUp || 0;
+	const pctDmgDown = finalStats.pctDmgDown || 0;
+
+	// 提取百分比治疗量/被治疗量
+	const pctHeal = finalStats.pctHeal || 0;
+	const pctBeHeal = finalStats.pctBeHeal || 0;
+
+	// 提取固定增伤/减伤
+	const fixedDmgUp = finalStats.fixedDmgUp || 0;
+	const fixedDmgDown = finalStats.fixedDmgDown || 0;
+
+	// 提取固定治疗量/被治疗量
+	const fixedHeal = finalStats.fixedHeal || 0;
+	const fixedBeHeal = finalStats.fixedBeHeal || 0;
+
+	// 判断是否是治疗角色（通过 template 判断，或者根据是否有治疗技能）
+	// 这里沿用你的 TIP_LABELS 中的 'recover' 判断
+	// 注意：finalStats 中可能没有 template 字段，需要从实例数据中获取
+	// 如果无法判断，默认视为非治疗角色，固定治疗量不计入战力
+
+	// ===== 计算权重 =====
+
+	// 攻击权重 = 10 + (暴击 + 命中（已减10000）+ 破击) * 2 / 10000
+	const atkWeight = 10 + (crit + hit + pierce) * 2 / 10000;
+
+	// 防御权重 = 10（固定）
+	const defWeight = 10;
+
+	// 血量权重 = 1 + (抗暴 + 闪避 + 格挡) * 2 / 100000
+	const hpWeight = 1 + (critResist + dodge + block) * 2 / 100000;
+
+	// ===== 计算权重后的基础战力 =====
+
+	// 权重后的攻击力战力 = atk * atkWeight
+	let atkPower = atk * atkWeight;
+
+	// 防御力战力 = def * defWeight
+	let defPower = def * defWeight;
+
+	// 权重后的血量战力 = hp * hpWeight
+	let hpPower = hp * hpWeight;
+
+	// ===== 应用百分比加成 =====
+
+	// 最终攻击力战力 = atkPower * (1 + pctDmgUp) * (1 + pctHeal)
+	// pctHeal 只有治疗角色才适用，这里谨慎处理
+	// 如果无法判断是否是治疗角色，可以暂时乘以 (1 + pctHeal)
+	// 或者将 pctHeal 的权重设小一些
+	atkPower = atkPower * (1 + pctDmgUp) * (1 + pctHeal); // 治疗量对攻击力战力的影响减半
+
+	// 最终血量战力 = hpPower * (1 + pctDmgDown) * (1 + pctBeHeal)
+	hpPower = hpPower * (1 + pctDmgDown) * (1 + pctBeHeal);
+
+	// ===== 汇总 =====
+
+	// 基础战力 = 攻击力战力 + 防御力战力 + 血量战力
+	let totalPower = atkPower + defPower + hpPower;
+
+	// 加上固定增伤和固定减伤（各占一定权重）
+	// 固定增伤和减伤可以适当放大影响，因为它们是直接数值
+	totalPower += fixedDmgUp * 1;   // 固定增伤权重5
+	totalPower += fixedDmgDown * 1; // 固定减伤权重5
+
+	// 固定治疗量/被治疗量（非治疗角色可忽略或权重降低）
+	// 暂时统一加权重3
+	totalPower += fixedHeal * 1;
+	totalPower += fixedBeHeal * 1;
+
+	return Math.floor(totalPower);
 }
+
+// /**
+//  * 统一刷新所有视图
+//  * @param {Object} [options] - 可选参数
+//  * @param {string} [options.instanceId] - 需要刷新的角色实例ID（用于刷新详情弹窗）
+//  * @param {HTMLElement} [options.dialog] - 需要刷新的详情弹窗DOM元素
+//  */
+// function refreshAllViews(options = {}) {
+//     const { instanceId, dialog } = options;
+
+//     // 1. 刷新阵容视图（包括总战力、格子、详情区）
+//     refreshTeamViewDisplay();
+
+//     // 2. 刷新角色详情弹窗（如果有传入）
+//     if (instanceId && dialog) {
+//         refreshCharDetailPopupContent(instanceId, dialog);
+//     }
+
+//     // 3. 刷新背包视图（如果当前显示的是背包）
+//     try {
+//         const bagView = document.getElementById('bag-view');
+//         if (bagView && bagView.style.display !== 'none') {
+//             renderBagView(bagView);
+//         }
+//     } catch(e) {}
+
+//     // 4. 自动保存
+//     if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+//         SaveManager.autoSave();
+//     }
+// }
+/**
+ * 统一刷新所有视图
+ * @param {Object} [options] - 可选参数
+ * @param {string} [options.instanceId] - 需要刷新的角色实例ID（用于刷新详情弹窗）
+ * @param {HTMLElement} [options.dialog] - 需要刷新的详情弹窗DOM元素
+ * @param {boolean} [options.forceTeamRebuild] - 是否强制重建队伍视图（默认false）
+ */
+function refreshAllViews(options = {}) {
+	const { instanceId, dialog, forceTeamRebuild = false } = options;
+
+	// 1. 刷新阵容视图
+	const teamView = document.getElementById('team-view');
+	if (teamView && teamView.style.display !== 'none') {
+		if (forceTeamRebuild) {
+			renderTeamView(teamView);
+		} else {
+			refreshTeamViewDisplay();
+		}
+	}
+
+	// 2. 刷新背包视图（保留武将和宝物选中状态） - 合并到一次 renderBagView 调用
+	try {
+		const bagView = document.getElementById('bag-view');
+		if (bagView && bagView.style.display !== 'none') {
+			// 保存所有需要恢复的状态
+			const detailBar = document.getElementById('bag-detail-bar');
+			const savedState = {
+				charInstanceId: detailBar ? detailBar.dataset.instanceId || null : null,
+				charId: detailBar ? detailBar.dataset.charId || null : null,
+				treasureInstanceId: detailBar ? detailBar.dataset.treasureInstanceId || null : null,
+				baseId: detailBar ? detailBar.dataset.baseId || null : null,
+				ownerName: detailBar ? detailBar.dataset.ownerName || '' : '',
+				equippedBy: []
+			};
+
+			// 获取宝物装备信息
+			if (savedState.treasureInstanceId && window.treasureInventory && window.treasureInventory[savedState.treasureInstanceId]) {
+				if (window.charTreasureSlots) {
+					for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
+						if (slots && slots.includes(savedState.treasureInstanceId)) {
+							savedState.equippedBy = [ownerId];
+							break;
+						}
+					}
+				}
+			}
+
+			// 重新渲染背包（只执行一次）
+			renderBagView(bagView);
+
+			// 恢复选中状态
+			const newDetailBar = document.getElementById('bag-detail-bar');
+			if (!newDetailBar) return;
+
+			if (window.bagTab === 'char' && savedState.charInstanceId) {
+				// 恢复武将选中
+				newDetailBar.dataset.instanceId = savedState.charInstanceId;
+				newDetailBar.dataset.charId = savedState.charId || '';
+
+				const instData = window.charBagData && window.charBagData[savedState.charInstanceId];
+				if (instData) {
+					const charInst = {
+						instanceId: savedState.charInstanceId,
+						charId: savedState.charId || instData.charId,
+						...instData
+					};
+					updateBagCharDetailBar(charInst);
+				}
+
+				// 高亮卡片
+				const charCards = bagView.querySelectorAll('.charbag-char-card');
+				charCards.forEach(card => {
+					if (card.dataset.instanceId === savedState.charInstanceId) {
+						card.classList.add('selected');
+					}
+				});
+			}
+
+			else if (window.bagTab === 'equip' && savedState.treasureInstanceId) {
+				// 检查宝物实例是否还存在
+				if (window.treasureInventory && window.treasureInventory[savedState.treasureInstanceId]) {
+					const invData = window.treasureInventory[savedState.treasureInstanceId];
+					const baseId = invData.baseId || savedState.baseId;
+					const defs = window.getTreasureDefs ? window.getTreasureDefs() : {};
+					const tDef = defs[baseId];
+
+					if (tDef) {
+						// 手动设置 detailBar 的 dataset
+						newDetailBar.dataset.treasureInstanceId = savedState.treasureInstanceId;
+						newDetailBar.dataset.treasureId = baseId;
+						newDetailBar.dataset.baseId = baseId;
+
+						// 构造 bagItem
+						const bagItem = {
+							count: 1,
+							equippedBy: savedState.equippedBy
+						};
+
+						// 直接调用更新函数
+						updateBagEquipDetailBar(baseId, tDef, bagItem);
+
+						// 高亮卡片
+						const equipCards = bagView.querySelectorAll('.equipbag-treasure-card');
+						equipCards.forEach(card => {
+							if (card.dataset.treasureInstanceId === savedState.treasureInstanceId) {
+								card.classList.add('selected');
+							}
+						});
+					}
+				}
+			}
+		}
+	} catch (e) {
+		console.warn('[刷新] 背包刷新异常:', e);
+	}
+
+	// 3. 刷新角色详情弹窗
+	if (instanceId && dialog) {
+		refreshCharDetailPopupContent(instanceId, dialog);
+	}
+
+	// 4. 刷新所有弹窗中的角色数据
+	try {
+		const openDialogs = document.querySelectorAll('.gallery-detail-dialog');
+		openDialogs.forEach(dlg => {
+			const nameEl = dlg.querySelector('.gallery-detail-name');
+			if (nameEl && instanceId) {
+				const instData = window.charBagData && window.charBagData[instanceId];
+				if (instData) {
+					refreshCharDetailPopupContent(instanceId, dlg);
+				}
+			}
+		});
+	} catch (e) { }
+
+	// 5. 刷新突破弹窗
+	try {
+		const breakthroughOverlay = document.getElementById('breakthrough-preview-overlay');
+		if (breakthroughOverlay && breakthroughOverlay.style.display !== 'none') {
+			const breakthroughPopup = breakthroughOverlay.querySelector('[class*="bp-popup"]') ||
+				breakthroughOverlay.querySelector('.bp-list-container')?.closest('div[style*="flex"]');
+			if (breakthroughPopup && instanceId) {
+				refreshBreakthroughPopupContent(breakthroughPopup, instanceId);
+			}
+		}
+	} catch (e) { }
+
+	// 6. 刷新商店视图
+	try {
+		const shopView = document.getElementById('shop-view');
+		if (shopView && shopView.style.display !== 'none') {
+			renderShopView(shopView);
+		}
+	} catch (e) { }
+
+	// 7. 自动保存
+	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+		SaveManager.autoSave();
+	}
+
+	console.log('[刷新] 所有视图已刷新');
+}
+
