@@ -155,7 +155,7 @@ function showDamageNumber(unit, value, type) {
 	const float = document.createElement('div');
 	float.className = 'damage-float ' + (type.isHeal ? 'heal' : 'damage');
 
-	if(type.isHeal){
+	if (type.isHeal) {
 		float.style.color = '#00ff00';
 		float.textContent = '+' + value;
 	} else if (type.isShanbi) {
@@ -171,7 +171,7 @@ function showDamageNumber(unit, value, type) {
 		float.style.color = '#ff0000';
 		float.textContent = value;
 	}
-	if(type.isPoison){
+	if (type.isPoison) {
 		float.style.color = '#ff00ff';
 		float.textContent = '中毒 ' + value;
 	}
@@ -297,8 +297,17 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
 
 	if (isMiss) {
 		addBattleLog(`${attacker.name} 攻击 ${defender.name}，但被闪避了！`);
-		showDamageNumber(defender, 0, { isShanbi: true });  // 修改这里
-		return 0;
+		showDamageNumber(defender, 0, { isShanbi: true });
+
+		// ===== 【新增】闪避触发 onDodge 效果 =====
+		const dodgeEffects = getEffectsByTrigger(defender, 'onDodge');
+		dodgeEffects.forEach(effect => {
+			if (effect.filter && effect.filter.call(defender, attacker)) {
+				effect.content.call(defender, attacker);
+			}
+		});
+
+		return { damage: 0, isMiss: true };  // 修改返回值
 	}
 
 	// ===== 第二步：暴击/抗暴判定 =====
@@ -377,15 +386,28 @@ function applyDamage(target, dmgResult, attacker, callback, skillContext = {}) {
 
 	// 解构伤害结果
 	let dmg, isCrit, isBlock;
+	let isMiss = false;
 	if (typeof dmgResult === 'object') {
 		dmg = dmgResult.damage;
-		isCrit = dmgResult.isCrit;
-		isBlock = dmgResult.isBlock;
+		isCrit = dmgResult.isCrit || false;
+		isBlock = dmgResult.isBlock || false;
+		isMiss = dmgResult.isMiss || false;
 	} else {
-		// 兼容旧格式
 		dmg = dmgResult;
 		isCrit = false;
 		isBlock = false;
+	}
+
+	// ===== 【新增】闪避时触发 onDodge =====
+	if (isMiss) {
+		const dodgeEffects = getEffectsByTrigger(target, 'onDodge');
+		dodgeEffects.forEach(effect => {
+			if (effect.filter && effect.filter.call(target, attacker)) {
+				effect.content.call(target, attacker);
+			}
+		});
+		if (callback) callback();
+		return;
 	}
 
 	let finalDmg = dmg;
@@ -1785,27 +1807,32 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			finalPctHeal = data._compiledStats.pctHeal ?? 0;
 			finalPctBeHeal = data._compiledStats.pctBeHeal ?? 0;
 		} else {
-			finalHp = Number(data.hp) || 100;
-			finalAtk = Number(data.atk) || 10;
-			finalDef = Number(data.def) || 0;
-			finalSpe = Number(data.spe) || 0;
+			// ===== 【修改】使用 compileEnemyStats 编译属性 =====
+			const compiled = compileEnemyStats(data.id, data.level || 1, data.tupolevel || 0, data);
 
-			// ===== 【新增】敌方角色也初始化新属性 =====
-			if (data.hit !== undefined) finalHit = Number(data.hit);
-			if (data.dodge !== undefined) finalDodge = Number(data.dodge);
-			if (data.crit !== undefined) finalCrit = Number(data.crit);
-			if (data.critResist !== undefined) finalCritResist = Number(data.critResist);
-			if (data.pierce !== undefined) finalPierce = Number(data.pierce);
-			if (data.block !== undefined) finalBlock = Number(data.block);
-			if (data.fixedDmgUp !== undefined) finalFixedDmgUp = Number(data.fixedDmgUp);
-			if (data.fixedDmgDown !== undefined) finalFixedDmgDown = Number(data.fixedDmgDown);
-			if (data.pctDmgUp !== undefined) finalPctDmgUp = Number(data.pctDmgUp);
-			if (data.pctDmgDown !== undefined) finalPctDmgDown = Number(data.pctDmgDown);
-			if (data.fixedHeal !== undefined) finalFixedHeal = Number(data.fixedHeal);
-			if (data.fixedBeHeal !== undefined) finalFixedBeHeal = Number(data.fixedBeHeal);
-			if (data.pctHeal !== undefined) finalPctHeal = Number(data.pctHeal);
-			if (data.pctBeHeal !== undefined) finalPctBeHeal = Number(data.pctBeHeal);
+			finalHp = compiled.hp;
+			finalAtk = compiled.atk;
+			finalDef = compiled.def;
+			finalSpe = compiled.spe;
+
+			finalHit = compiled.hit;
+			finalDodge = compiled.dodge;
+			finalCrit = compiled.crit;
+			finalCritResist = compiled.critResist;
+			finalPierce = compiled.pierce;
+			finalBlock = compiled.block;
+
+			finalFixedDmgUp = compiled.fixedDmgUp;
+			finalFixedDmgDown = compiled.fixedDmgDown;
+			finalPctDmgUp = compiled.pctDmgUp;
+			finalPctDmgDown = compiled.pctDmgDown;
+
+			finalFixedHeal = compiled.fixedHeal;
+			finalFixedBeHeal = compiled.fixedBeHeal;
+			finalPctHeal = compiled.pctHeal;
+			finalPctBeHeal = compiled.pctBeHeal;
 		}
+
 
 		finalEnergy += bonusEnergy;
 
@@ -2627,4 +2654,142 @@ function processBuffDecayBySlotKey(actionSlotKey) {
 			removeBuffEffect(unit, buff);
 		});
 	});
+}
+/**
+ * 根据角色ID、等级、突破等级编译敌方角色属性
+ * @param {string} charId - 角色ID
+ * @param {number} level - 等级
+ * @param {number} tupolevel - 突破等级
+ * @param {Object} overrides - 可选，覆盖特定属性
+ * @returns {Object} 编译后的角色属性
+ */
+function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
+	const baseChar = characterList[charId];
+	if (!baseChar) {
+		return {
+			hp: 500, atk: 50, def: 25, spe: 50,
+			maxHp: 500,
+			hit: 10000, dodge: 0, crit: 0, critResist: 0, pierce: 0, block: 0,
+			fixedDmgUp: 0, fixedDmgDown: 0, pctDmgUp: 0, pctDmgDown: 0,
+			fixedHeal: 0, fixedBeHeal: 0, pctHeal: 0, pctBeHeal: 0
+		};
+	}
+
+	const rank = baseChar.rank || 'common';
+	const template = baseChar.template || 'balanced';
+
+	// 1. 获取模板基础属性
+	const templateData = window.characterTemplate || characterTemplate;
+	let baseStats;
+	if (templateData && templateData[template] && templateData[template][rank]) {
+		baseStats = { ...templateData[template][rank] };
+	} else {
+		baseStats = { hp: 500, atk: 50, def: 25, spe: 50 };
+	}
+
+	// 2. 计算等级成长
+	const growthFactor = (100 + 10 * (level - 1)) / 100;
+	let hp = Math.floor(baseStats.hp * growthFactor);
+	let atk = Math.floor(baseStats.atk * growthFactor);
+	let def = Math.floor(baseStats.def * growthFactor);
+	let spe = Math.floor(baseStats.spe * growthFactor);
+
+	// 3. 初始化特殊属性（基础值）
+	let hit = 10000;
+	let dodge = 0;
+	let crit = 0;
+	let critResist = 0;
+	let pierce = 0;
+	let block = 0;
+	let fixedDmgUp = 0;
+	let fixedDmgDown = 0;
+	let pctDmgUp = 0;
+	let pctDmgDown = 0;
+	let fixedHeal = 0;
+	let fixedBeHeal = 0;
+	let pctHeal = 0;
+	let pctBeHeal = 0;
+
+	// 4. 应用突破加成
+	const tupoList = baseChar.tupoList || [];
+	const effectiveTupoLevel = Math.min(tupolevel || 0, tupoList.length);
+
+	for (let i = 0; i < effectiveTupoLevel; i++) {
+		const buff = tupoList[i];
+		if (!buff) continue;
+
+		let resolvedBuff = buff;
+		if (typeof buff === 'string') {
+			const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+			resolvedBuff = lib[buff];
+		}
+		if (!resolvedBuff) continue;
+
+		const type = resolvedBuff.type;
+		switch (type) {
+			case 'self_stat_flat':
+				if (resolvedBuff.hp !== undefined) hp += Number(resolvedBuff.hp);
+				if (resolvedBuff.atk !== undefined) atk += Number(resolvedBuff.atk);
+				if (resolvedBuff.def !== undefined) def += Number(resolvedBuff.def);
+				if (resolvedBuff.spe !== undefined) spe += Number(resolvedBuff.spe);
+				if (resolvedBuff.hit !== undefined) hit += Number(resolvedBuff.hit);
+				if (resolvedBuff.dodge !== undefined) dodge += Number(resolvedBuff.dodge);
+				if (resolvedBuff.crit !== undefined) crit += Number(resolvedBuff.crit);
+				if (resolvedBuff.critResist !== undefined) critResist += Number(resolvedBuff.critResist);
+				if (resolvedBuff.pierce !== undefined) pierce += Number(resolvedBuff.pierce);
+				if (resolvedBuff.block !== undefined) block += Number(resolvedBuff.block);
+				if (resolvedBuff.fixedDmgUp !== undefined) fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
+				if (resolvedBuff.fixedDmgDown !== undefined) fixedDmgDown += Number(resolvedBuff.fixedDmgDown);
+				if (resolvedBuff.fixedHeal !== undefined) fixedHeal += Number(resolvedBuff.fixedHeal);
+				if (resolvedBuff.fixedBeHeal !== undefined) fixedBeHeal += Number(resolvedBuff.fixedBeHeal);
+				break;
+
+			case 'self_stat_percent':
+				if (resolvedBuff.atk !== undefined) atk = Math.floor(atk * (1 + Number(resolvedBuff.atk)));
+				if (resolvedBuff.def !== undefined) def = Math.floor(def * (1 + Number(resolvedBuff.def)));
+				if (resolvedBuff.hp !== undefined) hp = Math.floor(hp * (1 + Number(resolvedBuff.hp)));
+				if (resolvedBuff.spe !== undefined) spe = Math.floor(spe * (1 + Number(resolvedBuff.spe)));
+				if (resolvedBuff.pctDmgUp !== undefined) pctDmgUp += Number(resolvedBuff.pctDmgUp);
+				if (resolvedBuff.pctDmgDown !== undefined) pctDmgDown += Number(resolvedBuff.pctDmgDown);
+				if (resolvedBuff.pctHeal !== undefined) pctHeal += Number(resolvedBuff.pctHeal);
+				if (resolvedBuff.pctBeHeal !== undefined) pctBeHeal += Number(resolvedBuff.pctBeHeal);
+				break;
+
+			case 'team_stat_flat':
+				// 敌方全队固定加成暂不处理（每个角色独立编译）
+				break;
+
+			case 'team_stat_percent':
+				// 敌方全队百分比加成暂不处理
+				break;
+		}
+	}
+
+	// 5. 应用覆盖值
+	if (overrides.hp !== undefined) hp = overrides.hp;
+	if (overrides.atk !== undefined) atk = overrides.atk;
+	if (overrides.def !== undefined) def = overrides.def;
+	if (overrides.spe !== undefined) spe = overrides.spe;
+	if (overrides.hit !== undefined) hit = overrides.hit;
+	if (overrides.dodge !== undefined) dodge = overrides.dodge;
+	if (overrides.crit !== undefined) crit = overrides.crit;
+	if (overrides.critResist !== undefined) critResist = overrides.critResist;
+	if (overrides.pierce !== undefined) pierce = overrides.pierce;
+	if (overrides.block !== undefined) block = overrides.block;
+	if (overrides.fixedDmgUp !== undefined) fixedDmgUp = overrides.fixedDmgUp;
+	if (overrides.fixedDmgDown !== undefined) fixedDmgDown = overrides.fixedDmgDown;
+	if (overrides.fixedHeal !== undefined) fixedHeal = overrides.fixedHeal;
+	if (overrides.fixedBeHeal !== undefined) fixedBeHeal = overrides.fixedBeHeal;
+	if (overrides.pctDmgUp !== undefined) pctDmgUp = overrides.pctDmgUp;
+	if (overrides.pctDmgDown !== undefined) pctDmgDown = overrides.pctDmgDown;
+	if (overrides.pctHeal !== undefined) pctHeal = overrides.pctHeal;
+	if (overrides.pctBeHeal !== undefined) pctBeHeal = overrides.pctBeHeal;
+
+	return {
+		hp, atk, def, spe,
+		maxHp: hp,
+		hit, dodge, crit, critResist, pierce, block,
+		fixedDmgUp, fixedDmgDown, pctDmgUp, pctDmgDown,
+		fixedHeal, fixedBeHeal, pctHeal, pctBeHeal
+	};
 }

@@ -3645,20 +3645,25 @@ function renderBagEquipContent(container) {
 		emptyTip.textContent = '暂无宝物';
 		grid.appendChild(emptyTip);
 	}
-
 	allInstances.sort((a, b) => {
 		const aOwnerInfo = treasureOwnerMap[a.instanceId];
 		const bOwnerInfo = treasureOwnerMap[b.instanceId];
 		const aIsEquipped = !!aOwnerInfo;
 		const bIsEquipped = !!bOwnerInfo;
 
-		// 已装备的排前面
+		// 1. 已装备的排最前面
 		if (aIsEquipped && !bIsEquipped) return -1;
 		if (!aIsEquipped && bIsEquipped) return 1;
 
-		// 如果都没装备或都装备了，按宝物名称排序（可选）
+		// 2. 如果都装备了或都没装备，按等级降序（高等级优先）
+		const aLevel = window.treasureInventory[a.instanceId]?.level || 1;
+		const bLevel = window.treasureInventory[b.instanceId]?.level || 1;
+		if (bLevel !== aLevel) return bLevel - aLevel;
+
+		// 3. 等级相同，按名称排序
 		return (a.name || '').localeCompare(b.name || '');
 	});
+
 	// 遍历所有宝物实例，每个独立展示
 	allInstances.forEach(item => {
 		const ownerInfo = treasureOwnerMap[item.instanceId];
@@ -4786,7 +4791,8 @@ function showCharDetail(_parentContainer, charData) {
 	detailBreakBtn.onclick = () => {
 		// 关闭当前图鉴详情，调用突破预览
 		// if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-		showBreakthroughPreviewPopupByCharId(charData.id);
+		// showBreakthroughPreviewPopupByCharId(charData.id);
+		showBreakthroughPreviewPopupForGallery(charData);
 	};
 
 	// 把关闭按钮和突破按钮放在同一行
@@ -4804,6 +4810,163 @@ function showCharDetail(_parentContainer, charData) {
 	document.body.appendChild(overlay);
 
 	// 点击遮罩关闭
+	overlay.onclick = (e) => {
+		if (e.target === overlay) {
+			if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		}
+	};
+}
+/**
+ * 图鉴专用的突破预览弹窗 - 不涉及任何实例数据
+ * @param {Object} charData - 角色静态数据
+ */
+function showBreakthroughPreviewPopupForGallery(charData) {
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.id = 'breakthrough-preview-overlay';
+
+	const popup = document.createElement('div');
+	popup.style.cssText = `
+        background: #1a1a1a;
+        border: 2px solid #ffd700;
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 380px;
+        width: 90%;
+        max-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        animation: dialogIn 0.2s ease;
+    `;
+
+	// 标题 - 不显示突破等级
+	const title = document.createElement('div');
+	title.style.cssText = 'color:#ffd700;font-size:18px;font-weight:bold;text-align:center;margin-bottom:15px;';
+	const rankColors = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
+	title.innerHTML = `${charData.name} <span style="color:${rankColors[charData.rank] || '#888'};font-size:14px;">突破预览（静态）</span>`;
+	popup.appendChild(title);
+
+	// 角色头像
+	const header = document.createElement('div');
+	header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #333;';
+
+	const charImg = document.createElement('img');
+	charImg.src = `./image/character/${charData.id}.jpg`;
+	charImg.style.cssText = 'width:48px;height:48px;border-radius:6px;border:2px solid #ffd700;object-fit:cover;';
+	charImg.onerror = function () { this.src = './image/character/default.jpg'; };
+	header.appendChild(charImg);
+
+	const charInfo = document.createElement('div');
+	charInfo.style.cssText = 'flex:1;';
+	const charName = document.createElement('div');
+	charName.style.cssText = 'color:#fff;font-size:15px;font-weight:bold;';
+	charName.innerHTML = `<span style="color:${rankColors[charData.rank] || '#888'};font-size:14px;">${charData.name}</span>`;
+	charInfo.appendChild(charName);
+
+	const charLevel = document.createElement('div');
+	charLevel.style.cssText = 'color:#aaa;font-size:12px;margin-top:2px;';
+	charLevel.textContent = '基础突破预览（不含实例数据）';
+	charInfo.appendChild(charLevel);
+
+	header.appendChild(charInfo);
+	popup.appendChild(header);
+
+	// 突破列表
+	const listContainer = document.createElement('div');
+	listContainer.style.cssText = 'flex:1;overflow-y:auto;padding-right:4px;';
+	listContainer.style.scrollbarWidth = 'thin';
+	listContainer.style.scrollbarColor = '#555 #222';
+
+	const tupoList = charData.tupoList || window.STANDARD_BREAKTHROUGH_TEMPLATE || [];
+
+	if (tupoList.length === 0) {
+		const emptyTip = document.createElement('div');
+		emptyTip.style.cssText = 'color:#666;text-align:center;padding:30px;font-size:14px;';
+		emptyTip.textContent = '该角色暂无突破数据';
+		listContainer.appendChild(emptyTip);
+	} else {
+		tupoList.forEach((buff, index) => {
+			// 图鉴中所有突破项都显示为未解锁状态
+			const isUnlocked = false;
+
+			const item = document.createElement('div');
+			item.style.cssText = `
+                background: #1a1a1a;
+                border: 1px solid #333;
+                border-left: 4px solid #555;
+                border-radius: 4px;
+                padding: 10px;
+                margin-bottom: 8px;
+                opacity: 0.6;
+            `;
+
+			const headerRow = document.createElement('div');
+			headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;';
+
+			const levelTitle = document.createElement('span');
+			levelTitle.style.cssText = `font-weight:bold;font-size:14px;color:#888;`;
+			levelTitle.textContent = `突破 ${index + 1} 阶`;
+
+			const statusIcon = document.createElement('span');
+			statusIcon.style.cssText = 'font-size:12px;color:#666;';
+			statusIcon.textContent = '🔒 未解锁';
+
+			headerRow.appendChild(levelTitle);
+			headerRow.appendChild(statusIcon);
+			item.appendChild(headerRow);
+
+			const descDiv = document.createElement('div');
+			descDiv.style.cssText = 'font-size:13px;line-height:1.4;color:#666;';
+
+			if (!buff) {
+				descDiv.textContent = '暂无详细描述';
+			} else {
+				let resolvedBuff = buff;
+				if (typeof buff === 'string') {
+					const lib = window.BREAKTHROUGH_BUFF_LIBRARY || {};
+					resolvedBuff = lib[buff] || { desc: '暂无详细描述' };
+				}
+				if (resolvedBuff.desc) {
+					descDiv.textContent = resolvedBuff.desc;
+				} else if (resolvedBuff.type) {
+					let typeDesc = '';
+					if (resolvedBuff.type === 'self_stat_flat') {
+						const val = Array.isArray(resolvedBuff.value) ? resolvedBuff.value.join('/') : resolvedBuff.value;
+						const stat = Array.isArray(resolvedBuff.stat) ? resolvedBuff.stat.join('/') : resolvedBuff.stat;
+						typeDesc = `永久增加 ${stat}: ${val}`;
+					} else if (resolvedBuff.type === 'passive_effect') {
+						typeDesc = `获得被动效果: ${resolvedBuff.effectId || '未知'}`;
+					} else if (resolvedBuff.type === 'skill_effect') {
+						typeDesc = `技能效果增强: ${resolvedBuff.desc || '未知效果'}`;
+					} else {
+						typeDesc = `效果类型: ${resolvedBuff.type}`;
+					}
+					descDiv.textContent = typeDesc;
+				} else {
+					descDiv.textContent = '暂无详细描述';
+				}
+			}
+
+			item.appendChild(descDiv);
+			listContainer.appendChild(item);
+		});
+	}
+
+	popup.appendChild(listContainer);
+
+	// 关闭按钮 - 没有操作按钮，只有关闭
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-btn';
+	closeBtn.style.cssText = 'width:100%;margin-top:15px;padding:10px;font-size:14px;';
+	closeBtn.textContent = '关闭';
+	closeBtn.onclick = () => {
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+	};
+	popup.appendChild(closeBtn);
+
+	overlay.appendChild(popup);
+	document.body.appendChild(overlay);
+
 	overlay.onclick = (e) => {
 		if (e.target === overlay) {
 			if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
@@ -10178,7 +10341,7 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 				window.treasureInventory[treasureInstanceId].level = newLevel;
 
 				// ===== 刷新弹窗内容 =====
-				// refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, newLevel, upgradeBtn, charInstanceId);
+				refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, newLevel, upgradeBtn, charInstanceId);
 				const refreshInstanceId = charInstanceId || null;
 
 				// 找到 toast 调用前，添加：

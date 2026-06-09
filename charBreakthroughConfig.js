@@ -12,14 +12,55 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 	// 注意：这些是 stat_percent 类型，不适合用 trigger/filter/content。
 	// 但为了后续统一，暂时保留为 passive_effect 引用，后续在 buildUnit 中特殊处理。
 	// 如果你希望全部统一为 skill_effect，可以在战斗开始时通过 roundStart 一次性设置。
-	'dmg_up_10': { type: 'passive_effect', effectId: 'dmg_up_10', desc: '获得10%增伤' },
-	'dmg_up_20': { type: 'passive_effect', effectId: 'dmg_up_20', desc: '获得20%增伤' },
-	'dmg_up_30': { type: 'passive_effect', effectId: 'dmg_up_30', desc: '获得30%增伤' },
-	'dmg_up_50': { type: 'passive_effect', effectId: 'dmg_up_50', desc: '获得50%增伤' },
-	'dmg_reduce_10': { type: 'passive_effect', effectId: 'dmg_reduce_10', desc: '获得10%减伤' },
-	'dmg_reduce_20': { type: 'passive_effect', effectId: 'dmg_reduce_20', desc: '获得20%减伤' },
-	'dmg_reduce_30': { type: 'passive_effect', effectId: 'dmg_reduce_30', desc: '获得30%减伤' },
-	'dmg_reduce_50': { type: 'passive_effect', effectId: 'dmg_reduce_50', desc: '获得50%减伤' },
+	// 'dmg_up_10': { type: 'passive_effect', effectId: 'dmg_up_10', desc: '获得10%增伤' },
+	// 'dmg_up_20': { type: 'passive_effect', effectId: 'dmg_up_20', desc: '获得20%增伤' },
+	// 'dmg_up_30': { type: 'passive_effect', effectId: 'dmg_up_30', desc: '获得30%增伤' },
+	// 'dmg_up_50': { type: 'passive_effect', effectId: 'dmg_up_50', desc: '获得50%增伤' },
+	// 'dmg_reduce_10': { type: 'passive_effect', effectId: 'dmg_reduce_10', desc: '获得10%减伤' },
+	// 'dmg_reduce_20': { type: 'passive_effect', effectId: 'dmg_reduce_20', desc: '获得20%减伤' },
+	// 'dmg_reduce_30': { type: 'passive_effect', effectId: 'dmg_reduce_30', desc: '获得30%减伤' },
+	// 'dmg_reduce_50': { type: 'passive_effect', effectId: 'dmg_reduce_50', desc: '获得50%减伤' },
+
+	'dmg_up_10': { 
+		type: 'self_stat_percent',
+		pctDmgUp: 0.1,    // 增伤10%
+		desc: '获得10%增伤' 
+	},
+	'dmg_up_20': { 
+		type: 'self_stat_percent',
+		pctDmgUp: 0.2,    
+		desc: '获得20%增伤' 
+	},
+	'dmg_up_30': { 
+		type: 'self_stat_percent',
+		pctDmgUp: 0.3,
+		desc: '获得30%增伤' 
+	},
+	'dmg_up_50': { 
+		type: 'self_stat_percent',
+		pctDmgUp: 0.5,
+		desc: '获得50%增伤' 
+	},
+	'dmg_reduce_10': { 
+		type: 'self_stat_percent',
+		pctDmgDown: 0.1,
+		desc: '获得10%减伤' 
+	},
+	'dmg_reduce_20': { 
+		type: 'self_stat_percent',
+		pctDmgDown: 0.2,
+		desc: '获得20%减伤'
+	},
+	'dmg_reduce_30': { 
+		type: 'self_stat_percent',
+		pctDmgDown: 0.3,
+		desc: '获得30%减伤' 
+	},
+	'dmg_reduce_50': { 
+		type: 'self_stat_percent',
+		pctDmgDown: 0.5,
+		desc: '获得50%减伤' 
+	},
 
 	// --- 吸血类 ---
 	'lifesteal_pugong_50': {
@@ -1123,7 +1164,76 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'self_energy',
 		value: 1,
 		desc: '初始能量+1'
-	}
+	},
+
+	newtupo0:{
+		type: 'self_stat_flat',
+		atk: 100,
+		desc: '攻击+100固定数值'
+	},
+	newtupo1:{
+		type: 'self_stat_flat',
+		def: 50,
+		desc: '防御+50固定数值'
+	},
+	newtupo2:{
+		type: 'self_stat_flat',
+		hp: 200,
+		desc: '血量+200固定数值'
+	},
+	// newtupo3:{},//每名角色各异
+	// newtupo4:{},//每名角色各异
+	newtupo5:{
+		type: 'self_energy',
+		value: 2,
+		desc: '初始能量+2'
+	},
+	// newtupo6:{},//每名角色各异
+	// newtupo7:{},//每名角色各异
+	newtupo8:{
+		type: 'self_stat_percent',
+		atk: 0.1,
+		def: 0.1,
+		hp: 0.1,
+		desc: '获得10%的攻防血加成'
+	},
+	// newtupo9:{},//每名角色各异
+	newtupo10:{
+		type: 'team_stat_flat',
+		atk: 200,
+		desc: '全队获得攻击+200固定数值'
+	},
+	// newtupo11:{},//每名角色各异
+	newtupo12:{
+		type: 'team_stat_flat',
+		def: 100,
+		desc: '全队获得防御+100固定数值'
+	},
+	// newtupo13:{},//每名角色各异
+	newtupo14:{
+		type: 'team_stat_percent',
+		atk: 0.1,
+		def: 0.1,
+		hp: 0.1,
+		desc: '全队获得10%的攻防血加成'
+	},
+	// newtupo15:{},//每名角色各异
+	newtupo16:{
+		type: "self_stat_flat",
+		atk: 1000,
+		def: 500,
+		hp: 2000,
+		desc: "攻击+1000，防御+500，血量+2000",
+	},
+	// newtupo17:{},//每名角色各异
+	newtupo18:{
+		type: 'self_stat_percent',
+		pctDmgUp: 0.1,    // 增伤10%
+		pctDmgDown: 0.1,  // 减伤10%
+		desc: '增伤10%，减伤10%'
+	},
+	// newtupo19:{},//每名角色各异
+
 };
 
 // ==================== 标准突破等级模板 (0-19) ====================
