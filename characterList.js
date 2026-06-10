@@ -103,12 +103,7 @@ const characterList = {
 	// ===== 主角 (编号: 000) =====
 	zhujue: {
 		name: "主角", group: "zhujue", sex: "female", tupolevel: 0,
-		skills: ["pugong_000", "skill_000"],
-		spskill: {
-			id: "spskill_000",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_000", "skill_000", "spskill_000"],
 		isFixed: true,
 		template: "balanced", rank: "common", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
@@ -137,56 +132,31 @@ const characterList = {
 	// ===== 传说级 (Legend) - YB_memory (编号: 001-005) =====
 	ybsl_017xiaohong: {
 		name: "涂山小红", group: "YB_memory", sex: "female",
-		skills: ["pugong_001", "skill_001"],
-		spskill: {
-			id: "spskill_001",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_001", "skill_001", "spskill_001"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
 	},
 	ybsl_059starsFall1: {
 		name: "鞠熒", group: "YB_memory", sex: "female",
-		skills: ["pugong_002", "skill_002"],
-		spskill: {
-			id: "spskill_002",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_002", "skill_002", "spskill_002"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
 	},
 	ybsl_047shan: {
 		name: "彡", group: "YB_memory", sex: "female",
-		skills: ["pugong_003", "skill_003"],
-		spskill: {
-			id: "spskill_003",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_003", "skill_003", "spskill_003"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
 	},
 	ybsl_041mmuqin: {
 		name: "慕琴", group: "YB_memory", sex: "female",
-		skills: ["pugong_004", "skill_004"],
-		spskill: {
-			id: "spskill_004",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_004", "skill_004", "spskill_004"],
 		template: "balanced", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
 	},
 	ybsl_049waner: {
 		name: "王婉儿", group: "YB_memory", sex: "female",
-		skills: ["pugong_005", "skill_005"],
-		spskill: {
-			id: "spskill_005",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_005", "skill_005", "spskill_005"],
 		template: "balanced", rank: "legend", tip: "recover", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
 	},
@@ -194,56 +164,31 @@ const characterList = {
 	// ===== 传说级 (Legend) - YB_dream (编号: 006-010) =====
 	ybsl_048wushuang: {
 		name: "吴爽", group: "YB_dream", sex: "female",
-		skills: ["pugong_006", "skill_006"],
-		spskill: {
-			id: "spskill_006",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_006", "skill_006", "spskill_006"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
 	},
 	ybsl_076zhujun: {
 		name: "朱焌", group: "YB_dream", sex: "female",
-		skills: ["pugong_007", "skill_007"],
-		spskill: {
-			id: "spskill_007",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_007", "skill_007", "spskill_007"],
 		template: "defense", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
 	},
 	ybsl_107tushanshuili: {
 		name: "涂山水璃", group: "YB_dream", sex: "female",
-		skills: ["pugong_008", "skill_008"],
-		spskill: {
-			id: "spskill_008",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_008", "skill_008", "spskill_008"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
 	},
 	ybsl_008wuyuxin: {
 		name: "吴雨欣", group: "YB_dream", sex: "female",
-		skills: ["pugong_009", "skill_009"],
-		spskill: {
-			id: "spskill_009",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_009", "skill_009", "spskill_009"],
 		template: "balanced", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
 	},
 	ybsl_002chenailin: {
 		name: "陈爱琳", group: "YB_dream", sex: "female",
-		skills: ["pugong_010", "skill_010"],
-		spskill: {
-			id: "spskill_010",
-			unlockType: "breakthrough",
-			breakLevel: 18
-		},
+		skills: ["pugong_010", "skill_010", "spskill_010"],
 		template: "balanced", rank: "legend", tip: "recover", ties: [],
 		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
 	},

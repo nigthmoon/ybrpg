@@ -22,6 +22,11 @@ const BattleEvents = {
 	AFTER_ROUND: 'afterRound',
 	BEFORE_ACTION: 'beforeAction',
 	AFTER_ACTION: 'afterAction',
+	// ===== 【新增】事件类型 =====
+	AFTER_SKILL_EXEC: 'afterSkillExecution',  // 技能指令结算后
+	AFTER_PUGONG_EXEC: 'afterPugongExecution', // 普攻指令结算后
+	AFTER_DAMAGE_TAKEN: 'afterDamageTaken',    // 受到伤害后（指令结算后）
+	ALL_MISS: 'allMiss',                       // 全部闪避
 
 	// 监听器存储
 	_listeners: {},
@@ -468,7 +473,8 @@ function applyDamage(target, dmgResult, attacker, callback, skillContext = {}) {
 			if (attacker && attacker.alive) {
 				triggerSelfEffect(attacker, 'onKill', target);
 				attacker.energy = Math.min(8, attacker.energy + 1);
-				addBattleLog(`${attacker.name} 击杀目标，恢复 1 能量`);
+				// ===== 【移除以移除】 =====
+				// 击杀能量回复改由 onKill 效果控制
 			}
 
 			updateBattleUI();
@@ -477,7 +483,7 @@ function applyDamage(target, dmgResult, attacker, callback, skillContext = {}) {
 			}, 500);
 		}
 		else {
-			target.energy = Math.min(8, target.energy + 1);
+			// ===== 【移除】target.energy = Math.min(8, target.energy + 1); =====
 			updateBattleUI();
 			if (callback) callback();
 		}
@@ -562,18 +568,40 @@ function executePugong(actor, targets, callback) {
 		return;
 	}
 
-	actor.energy = Math.min(8, actor.energy + 1);
 	updateBattleUI();
 	addBattleLog(`${actor.name} 发动普攻`);
 
 	let index = 0;
+	let hitCount = 0;      // 命中次数
+	let missCount = 0;     // 闪避次数
 	const skillId = actor.skills[0] || 'attack1';
 	const sData = (window.contentList && window.contentList.pugong && window.contentList.pugong[skillId]);
 	const isRecover = (sData && sData.isRecover === true);
 	const coeff = (sData && sData.coefficient) ? Number(sData.coefficient) : 1.0;
+	const totalTargets = targets.filter(t => t && t.alive).length;
 
 	function processNextTarget() {
 		if (index >= targets.length) {
+			// ===== 普攻指令结算完毕 =====
+			// 触发 AFTER_PUGONG_EXEC 事件，传入命中次数和闪避次数
+			BattleEvents.emit(BattleEvents.AFTER_PUGONG_EXEC, {
+				actor: actor,
+				targets: targets,
+				skillData: sData,
+				hitCount: hitCount,
+				missCount: missCount,
+				totalTargets: totalTargets
+			});
+
+			// 普攻命中至少1个目标才回复能量
+			if (hitCount > 0) {
+				actor.energy = Math.min(8, actor.energy + 1);
+				addBattleLog(`${actor.name} 普攻命中，恢复 1 能量`);
+			} else {
+				console.log(`${actor.name} 普攻全部被闪避，未恢复能量`);
+			}
+			updateBattleUI();
+
 			if (callback) callback();
 			return;
 		}
@@ -584,21 +612,37 @@ function executePugong(actor, targets, callback) {
 			return;
 		}
 
+		function onHitComplete() {
+			processNextTarget();
+		}
+
 		if (isRecover) {
 			let healAmt = Math.floor(actor.atk * coeff);
-			applyHeal(target, healAmt, processNextTarget);
+			applyHeal(target, healAmt, () => {
+				hitCount++;  // 治疗也算命中
+				onHitComplete();
+			});
 		} else {
 			const dmgResult = calculateDamage(actor, target, coeff, 0);
-			applyDamage(target, dmgResult, actor, processNextTarget, {
+
+			if (dmgResult.isMiss) {
+				missCount++;  // 记录闪避
+			} else {
+				hitCount++;   // 记录命中
+			}
+
+			applyDamage(target, dmgResult, actor, onHitComplete, {
 				skillData: sData,
 				trigger: 'pugongHit',
-				skillId: skillId
+				skillId: skillId,
+				isPugong: true
 			});
 		}
 	}
 
 	processNextTarget();
 }
+
 
 
 /**
@@ -628,14 +672,36 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
 	const isRecover = (sData && sData.isRecover === true);
 	const extraEnergy = Math.max(0, energyCost - 4);
 
-	// ======== 映射技能类型到 trigger ========
 	const triggerMap = { 'pugong': 'pugongHit', 'skill': 'skillHit', 'spskill': 'spskillHit' };
 	const trigger = triggerMap[skillType] || 'onHit';
-	// =========================================
 
 	let index = 0;
+	let hitCount = 0;      // 命中次数
+	let missCount = 0;     // 闪避次数
+	const totalTargets = targets.filter(t => t && t.alive).length;
+
 	function processNextTarget() {
 		if (index >= targets.length) {
+			// ===== 技能指令结算完毕 =====
+			// 触发 AFTER_SKILL_EXEC 事件，传入命中次数和闪避次数
+			BattleEvents.emit(BattleEvents.AFTER_SKILL_EXEC, {
+				actor: actor,
+				targets: targets,
+				skillData: sData,
+				skillType: skillType,
+				skillId: skillId,
+				hitCount: hitCount,
+				missCount: missCount,
+				totalTargets: totalTargets
+			});
+
+			// 技能不再回复能量（无论是否命中）
+			// 仅保留日志用于调试
+			if (hitCount === 0 && missCount > 0) {
+				addBattleLog(`${actor.name} 的技能全部被闪避`);
+			}
+			updateBattleUI();
+
 			if (callback) callback();
 			return;
 		}
@@ -646,26 +712,42 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
 			return;
 		}
 
+		function onHitComplete() {
+			processNextTarget();
+		}
+
 		if (isRecover) {
 			let healAmt = Math.floor(actor.atk * coeff);
 			if (extraEnergy > 0) {
 				healAmt = Math.floor(healAmt * (1 + extraEnergy * 0.1));
 			}
-			applyHeal(target, healAmt, processNextTarget);
+			applyHeal(target, healAmt, () => {
+				hitCount++;  // 治疗也算命中
+				onHitComplete();
+			});
 		} else {
-			// 在 executeSkill 中：
 			const dmgResult = calculateDamage(actor, target, coeff, extraEnergy);
-			applyDamage(target, dmgResult, actor, processNextTarget, {
+
+			if (dmgResult.isMiss) {
+				missCount++;  // 记录闪避
+			} else {
+				hitCount++;   // 记录命中
+			}
+
+			applyDamage(target, dmgResult, actor, onHitComplete, {
 				skillData: sData,
 				trigger: trigger,
-				skillId: skillId
+				skillId: skillId,
+				isSkill: true,
+				skillType: skillType
 			});
-			// ============================================
 		}
 	}
 
 	processNextTarget();
 }
+
+
 
 
 // ====== 5. 战斗循环控制 (明晰化) ======
@@ -1100,6 +1182,7 @@ function showPlayerActionUI(actor) {
 	panel.className = 'battle-action-overlay';
 	panel.id = 'battle-action-panel';
 
+	// 普攻按钮
 	const pugongId = actor.skills[0] || 'attack1';
 	const pugongBtn = document.createElement('button');
 	pugongBtn.className = 'action-btn pugong-btn';
@@ -1110,50 +1193,44 @@ function showPlayerActionUI(actor) {
 	};
 	panel.appendChild(pugongBtn);
 
+	// 【新概念】技能/必杀按钮合并 - 统一从 skills[1] 获取
 	const skillId = actor.skills[1];
 	if (skillId) {
 		const isSealed = actor.sealed || actor.permanentlySealed;
 		const canUseSkill = actor.energy >= 4 && !isSealed;
-		const skillBtn = document.createElement('button');
-		skillBtn.className = 'action-btn skill-btn' + (canUseSkill ? '' : ' disabled');
-		skillBtn.textContent = '技能 ' + getSkillEmoji('skill', skillId);
+
+		// 判断当前 skills[1] 是否是必杀技
+		const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
+		const isSpskill = !!spData;  // 如果能在 spskill 中找到，说明是必杀技
+		// 更简单的方式：检查 skillId 是否以 'spskill_' 开头
+		const isSpskill = typeof skillId === 'string' && skillId.startsWith('spskill_');
+
+		const btn = document.createElement('button');
+		btn.className = 'action-btn skill-btn' + (canUseSkill ? '' : ' disabled');
+
+		// 【新概念】按钮文字统一显示"技能"，不区分必杀
+		btn.textContent = isSpskill ? '必杀 ' + getSkillEmoji('spskill', skillId) : '技能 ' + getSkillEmoji('skill', skillId);
+
 		if (canUseSkill) {
-			skillBtn.onclick = (e) => {
+			btn.onclick = (e) => {
 				e.stopPropagation();
-				enterTargetSelection(actor, 'skill', skillId, actor.energy);
+				// 【新概念】统一使用 'skill' 类型，trigger 统一为 'skillHit'
+				enterTargetSelection(actor, 'skill', skillId, 4);
 			};
 		} else {
-			skillBtn.onclick = (e) => {
+			btn.onclick = (e) => {
 				e.stopPropagation();
 				toast(isSealed ? '已被封印' : '能量不足', 'warning');
 			};
 		}
-		panel.appendChild(skillBtn);
+		panel.appendChild(btn);
 	}
 
-	const spId = actor.skills[2];
-	if (spId) {
-		const isSealed = actor.sealed || actor.permanentlySealed;
-		const canUseSp = actor.energy >= 8 && !isSealed;
-		const spBtn = document.createElement('button');
-		spBtn.className = 'action-btn spskill-btn' + (canUseSp ? '' : ' disabled');
-		spBtn.textContent = '必杀 ' + getSkillEmoji('spskill', spId);
-		if (canUseSp) {
-			spBtn.onclick = (e) => {
-				e.stopPropagation();
-				enterTargetSelection(actor, 'spskill', spId, actor.energy);
-			};
-		} else {
-			spBtn.onclick = (e) => {
-				e.stopPropagation();
-				toast(isSealed ? '已被封印' : '能量不足', 'warning');
-			};
-		}
-		panel.appendChild(spBtn);
-	}
+	// 【移除】不再单独显示必杀按钮
 
 	slot.appendChild(panel);
 }
+
 
 // ====== 7. 目标选择逻辑 ======
 
@@ -1320,28 +1397,27 @@ function aiChooseAction(actor) {
 		return { type: 'pugong', skillType: 'pugong', skillId: 'attack1', targets: [aliveEnemies[0]], energyCost: 0 };
 	}
 
-	if (actor.energy >= 8 && actor.skills[2]) {
-		const spId = actor.skills[2];
-		const spData = window.contentList && window.contentList.spskill && window.contentList.spskill[spId];
-		if (spData) {
-			const targets = aiSelectTargets(actor, spData, enemySide, friendlySide);
-			if (targets.length > 0) {
-				return { type: 'skill', skillType: 'spskill', skillId: spId, targets, energyCost: actor.energy };
-			}
-		}
-	}
-
+	// 【新概念】统一使用 skills[1] 作为技能，能量消耗固定为4
+	// 不再单独检查 skills[2] 的8能量必杀
 	if (actor.energy >= 4 && actor.skills[1]) {
 		const skillId = actor.skills[1];
-		const sData = window.contentList && window.contentList.skill && window.contentList.skill[skillId];
+		// 判断是否是必杀技（用于决定从哪个数据源读取）
+		const isSpskill = typeof skillId === 'string' && skillId.startsWith('spskill_');
+		const sData = isSpskill
+			? (window.contentList && window.contentList.spskill && window.contentList.spskill[skillId])
+			: (window.contentList && window.contentList.skill && window.contentList.skill[skillId]);
+
 		if (sData) {
 			const targets = aiSelectTargets(actor, sData, enemySide, friendlySide);
 			if (targets.length > 0) {
-				return { type: 'skill', skillType: 'skill', skillId, targets, energyCost: actor.energy };
+				// return { type: 'skill', skillType: 'skill', skillId, targets, energyCost: 4 };
+
+				return { type: 'skill', skillType: isSpskill ? 'spskill' : 'skill', skillId, targets, energyCost: 4 };
 			}
 		}
 	}
 
+	// 普攻
 	const pugongId = actor.skills[0] || 'attack1';
 	const pData = window.contentList && window.contentList.pugong && window.contentList.pugong[pugongId];
 	if (pData) {
@@ -1352,6 +1428,7 @@ function aiChooseAction(actor) {
 	const aliveEnemies = getAliveUnits(enemySide);
 	return { type: 'pugong', skillType: 'pugong', skillId: 'attack1', targets: [aliveEnemies[0]], energyCost: 0 };
 }
+
 
 /**
  * ai选择目标
@@ -1400,7 +1477,29 @@ function resolveSkillTargets(skillData, actor, intendedSide, options) {
 		case 'exclude_self':
 			return [selectBestSingleTarget(candidates, pref, actor, options)];
 		case 'manual_multi':
-			return shuffleArray([...candidates]).slice(0, Math.min(count, candidates.length));
+			// return shuffleArray([...candidates]).slice(0, Math.min(count, candidates.length));
+			// 根据 pref 选择
+			let selected = [...candidates];
+			switch (pref) {
+				case 'lowest':
+					// 按血量百分比升序排序（血量最低的排前面）
+					selected.sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+					break;
+				case 'highest':
+					// 按血量百分比降序排序
+					selected.sort((a, b) => (b.hp / b.maxHp) - (a.hp / a.maxHp));
+					break;
+				case 'manahighest':
+					// 按能量降序排序
+					selected.sort((a, b) => (b.energy || 0) - (a.energy || 0));
+					break;
+				case 'random':
+					// 随机打乱
+					shuffleArray(selected);
+					break;
+				// 'first' 或其他：保持原顺序
+			}
+			return selected.slice(0, Math.min(count, selected.length));
 		case 'row':
 			return selectRowTargetsSmart(candidates, pref, actor);
 		case 'column':
@@ -1420,9 +1519,34 @@ function resolveSkillTargets(skillData, actor, intendedSide, options) {
 function selectBestSingleTarget(candidates, pref, actor, options = {}) {
 	if (candidates.length === 0) return null;
 	if (candidates.length === 1) return candidates[0];
-	if (pref === 'random') return candidates[Math.floor(Math.random() * candidates.length)];
-	return candidates[0]; // 简化版：默认第一个
+
+	switch (pref) {
+		case 'random':
+			return candidates[Math.floor(Math.random() * candidates.length)];
+
+		case 'last':
+			// 选择后排/最后一个目标
+			return candidates[candidates.length - 1];
+
+		case 'lowest':
+			// 选择血量最低的目标
+			return candidates.reduce((min, c) => (c.hp / c.maxHp) < (min.hp / min.maxHp) ? c : min);
+
+		case 'highest':
+			// 选择血量最高的目标
+			return candidates.reduce((max, c) => (c.hp / c.maxHp) > (max.hp / max.maxHp) ? c : max);
+
+		case 'manahighest':
+			// 选择能量最高的目标
+			return candidates.reduce((max, c) => (c.energy || 0) > (max.energy || 0) ? c : max);
+
+		case 'first':
+		default:
+			// 默认选择第一个（前排）
+			return candidates[0];
+	}
 }
+
 /**
  * 根据选中目标补全同一行的所有存活目标
  * @param {*} candidates 候选目标列表
@@ -1433,25 +1557,34 @@ function selectBestSingleTarget(candidates, pref, actor, options = {}) {
 function selectRowTargetsSmart(candidates, pref, actor) {
 	if (candidates.length === 0) return [];
 
-	// 根据 pref 选择第一个目标
 	let seedTarget;
-	if (pref === 'random') {
-		seedTarget = candidates[Math.floor(Math.random() * candidates.length)];
-	} else if (pref === 'last') {
-		seedTarget = candidates[candidates.length - 1];
-	} else { // 'first' 或其他
-		seedTarget = candidates[0];
+	switch (pref) {
+		case 'random':
+			seedTarget = candidates[Math.floor(Math.random() * candidates.length)];
+			break;
+		case 'last':
+			seedTarget = candidates[candidates.length - 1];
+			break;
+		case 'lowest':
+			seedTarget = candidates.reduce((min, c) => (c.hp / c.maxHp) < (min.hp / min.maxHp) ? c : min);
+			break;
+		case 'highest':
+			seedTarget = candidates.reduce((max, c) => (c.hp / c.maxHp) > (max.hp / max.maxHp) ? c : max);
+			break;
+		case 'manahighest':
+			seedTarget = candidates.reduce((max, c) => (c.energy || 0) > (max.energy || 0) ? c : max);
+			break;
+		default: // 'first'
+			seedTarget = candidates[0];
 	}
 
 	if (!seedTarget) return [];
 
-	// 确定该目标所在的行（前排行: 0,1,2；后排行: 3,4,5）
 	const rowStart = seedTarget.slotIndex < 3 ? 0 : 3;
-
-	// 过滤出同一行的所有存活目标
 	const side = seedTarget.side;
 	return candidates.filter(u => u.side === side && u.slotIndex >= rowStart && u.slotIndex < rowStart + 3);
 }
+
 
 /**
  * 根据选中目标补全同一列的所有存活目标
@@ -1463,24 +1596,33 @@ function selectRowTargetsSmart(candidates, pref, actor) {
 function selectColumnTargetsSmart(candidates, pref, actor) {
 	if (candidates.length === 0) return [];
 
-	// 根据 pref 选择第一个目标
+
 	let seedTarget;
-	if (pref === 'random') {
-		seedTarget = candidates[Math.floor(Math.random() * candidates.length)];
-	} else if (pref === 'last') {
-		seedTarget = candidates[candidates.length - 1];
-	} else { // 'first' 或其他
-		seedTarget = candidates[0];
+	switch (pref) {
+		case 'random':
+			seedTarget = candidates[Math.floor(Math.random() * candidates.length)];
+			break;
+		case 'last':
+			seedTarget = candidates[candidates.length - 1];
+			break;
+		case 'lowest':
+			seedTarget = candidates.reduce((min, c) => (c.hp / c.maxHp) < (min.hp / min.maxHp) ? c : min);
+			break;
+		case 'highest':
+			seedTarget = candidates.reduce((max, c) => (c.hp / c.maxHp) > (max.hp / max.maxHp) ? c : max);
+			break;
+		case 'manahighest':
+			seedTarget = candidates.reduce((max, c) => (c.energy || 0) > (max.energy || 0) ? c : max);
+			break;
+		default: // 'first'
+			seedTarget = candidates[0];
 	}
 
 	if (!seedTarget) return [];
 
-	// 确定该目标所在的列（0:左列, 1:中列, 2:右列）
-	const col = seedTarget.slotIndex % 3;
-
-	// 过滤出同一列的所有存活目标
+	const rowStart = seedTarget.slotIndex < 3 ? 0 : 3;
 	const side = seedTarget.side;
-	return candidates.filter(u => u.side === side && u.slotIndex % 3 === col);
+	return candidates.filter(u => u.side === side && u.slotIndex >= rowStart && u.slotIndex < rowStart + 3);
 }
 // ====== 9. 结算界面 ======
 
@@ -1841,16 +1983,32 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 		// 基础技能（普攻 + 技能）
 		let baseSkills = [...(data.skills || []), null, null, null].slice(0, 3);
 
-		// 检查必杀是否解锁
-		if (data.spskill && hasSpskillUnlocked(data, instData)) {
-			baseSkills[2] = data.spskill.id;
-		} else if (data.spskill) {
-			// 未解锁时必杀位置留空
+		// ===== 【新概念】必杀技解锁后替换普通技能 =====
+		const spSkillId = baseSkills[2];  // skills[2] 是必杀ID（如 'spskill_001'）
+		const normalSkillId = baseSkills[1]; // skills[1] 是普通技能ID
+		const isSpskillUnlocked = data.openSpskill === true;
+
+		if (spSkillId && isSpskillUnlocked) {
+			// 必杀已解锁：用必杀技替换普通技能
+			baseSkills[1] = spSkillId;
+			// skills[2] 置空（必杀不再单独占用一个槽位）
 			baseSkills[2] = null;
 		} else {
-			// 没有配置必杀
+			// 必杀未解锁：保持普通技能
+			// skills[1] 保持不变
+			// skills[2] 需要置空，防止战斗系统误以为有8能量技能
 			baseSkills[2] = null;
 		}
+		// const spSkillId = baseSkills[2];  // skills[2] 已经是必杀ID
+		// const isSpskillUnlocked = data.openSpskill === true;
+
+		// // 只有在解锁状态下才将必杀加入技能数组
+		// if (spSkillId && isSpskillUnlocked) {
+		// 	// 必杀已解锁，直接使用 baseSkills[2] 中的ID
+		// } else {
+		// 	// 未解锁时，不添加必杀技能
+		// 	baseSkills[2] = null;
+		// }
 
 		const allSkills = [...baseSkills, ...effectSkills];
 
@@ -1958,13 +2116,20 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
  * @returns {Array} 匹配的效果对象数组
  */
 function getEffectsByTrigger(actor, trigger) {
-	if (!actor || !actor.skills || !Array.isArray(actor.skills)) return [];
+    if (!actor || !actor.skills || !Array.isArray(actor.skills)) return [];
 
-	console.log('actor.skills',actor.skills)
-	return actor.skills.filter(skill => {
-		if (typeof skill === 'string'||skill===null) return false; // 跳过技能ID字符串
-		return skill.trigger === trigger;
-	});
+    return actor.skills.filter(skill => {
+        if (typeof skill === 'string' || skill === null) return false; // 跳过技能ID字符串
+        
+        // ===== 【改造】支持 trigger 为数组 =====
+        if (Array.isArray(skill.trigger)) {
+            // 如果 trigger 是数组，检查是否包含当前 trigger
+            return skill.trigger.includes(trigger);
+        }
+        
+        // 单个字符串的 trigger
+        return skill.trigger === trigger;
+    });
 }
 
 /**

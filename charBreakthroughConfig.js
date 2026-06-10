@@ -1232,6 +1232,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		atk: 0.1,
 		def: 0.1,
 		hp: 0.1,
+		openSpskill: true,
 		desc:'获得10%的攻防血加成，解锁必杀（如果有必杀才会生效）'
 	},
 	// newtupo19:{},//每名角色各异

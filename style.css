@@ -404,7 +404,7 @@ body {
 	font-size: 11px;
 	color: #bbb;
 	line-height: 1.4;
-	padding: 1px 0 1px 28px;
+	padding: 1px 0 1px 1px;
 	white-space: normal;
 	word-break: break-all;
 }
@@ -412,7 +412,7 @@ body {
 .team-info-skill-ai {
 	font-size: 10px;
 	color: #888;
-	padding: 0 0 1px 28px;
+	padding: 0 0 1px 1px;
 	white-space: normal;
 	word-break: break-all;
 }
@@ -3034,3 +3034,173 @@ h1, h2 {
 	0% { opacity: 1; transform: translateX(-50%) translateY(0); }
 	100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
 }
+/* 修改队伍视图 */
+#team-view {
+    width: 100%;
+    height: 97%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding-top: 20px;
+    /* 新增：限制高度，让内部元素按比例分布 */
+    overflow: hidden;
+}
+
+/* 新增：滚动内容区（格子+详情） */
+.team-scrollable-content {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    padding-bottom: 10px;
+}
+
+/* 修改底部按钮栏 - 固定在底部 */
+.team-footer {
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+    /* 新增：固定在底部 */
+    flex-shrink: 0;
+    background: #1a1a1a;
+    border-top: 1px solid #333;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+}
+/* 修改信息区域 - 改为左右结构 */
+.team-info-area {
+    width: 100%;
+    max-width: 350px;
+    display: flex;
+    gap: 10px;
+    padding: 10px 5px;
+    min-height: 100px;
+    flex-shrink: 0;
+    /* 新增：左右结构 */
+    align-items: flex-start;
+}
+
+/* 左侧固定区域（图片+宝物） */
+.team-info-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 6px;
+    /* 新增：固定在左侧 */
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+/* 新增：右侧可滚动区域（属性+技能） */
+.team-info-right-scroll {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    max-height: 350px; /* 限制最大高度，使内容可滚动 */
+    padding-right: 4px;
+}
+
+/* 自定义滚动条 */
+.team-info-right-scroll::-webkit-scrollbar {
+    width: 3px;
+}
+.team-info-right-scroll::-webkit-scrollbar-track {
+    background: #222;
+}
+.team-info-right-scroll::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 2px;
+}/* 修改队伍视图 - 让内容不溢出屏幕 */
+#team-view {
+    width: 100%;
+    height: 97%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    padding-top: 20px;
+    overflow: hidden; /* 禁止整体滚动 */
+}
+
+/* 阵容方格容器 - 固定 */
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+    box-sizing: border-box;
+    flex-shrink: 0; /* 防止压缩 */
+}
+
+/* 信息区域 - 固定高度，内部左右布局 */
+.team-info-area {
+    width: 97%;
+    max-width: 350px;
+    display: flex;
+    gap: 10px;
+    padding: 10px 5px;
+    flex-shrink: 0;
+    align-items: flex-start;
+    /* 限制高度，让内部右侧可滚动 */
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* 左侧固定区域（图片+宝物） */
+.team-info-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 6px;
+}
+
+/* 右侧可滚动区域 */
+.team-info-right-scroll {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    max-height: 100%; /* 填满父容器高度 */
+    padding-right: 4px;
+}
+
+/* 自定义滚动条 */
+.team-info-right-scroll::-webkit-scrollbar {
+    width: 3px;
+}
+.team-info-right-scroll::-webkit-scrollbar-track {
+    background: #222;
+}
+.team-info-right-scroll::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 2px;
+}
+
+/* 底部导航栏 - 固定 */
+.team-footer {
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    padding: 10px;
+    box-sizing: border-box;
+    flex-shrink: 0; /* 防止压缩 */
+    background: #1a1a1a;
+    border-top: 1px solid #333;
+}
+
