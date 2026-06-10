@@ -298,57 +298,57 @@ function showCharacterDetailPopup() {
 	// 5. 创建弹窗容器
 	const popup = document.createElement('div');
 	popup.style.cssText = `
-        background: #1a1a1a;
-        border: 2px solid #ffd700;
-        border-radius: 12px;
-        padding: 20px;
-        max-width: 360px;
-        width: 90%;
-        max-height: 80vh;
-        display: flex;
-        flex-direction: column;
-        animation: dialogIn 0.2s ease;
-    `;
+		background: #1a1a1a;
+		border: 2px solid #ffd700;
+		border-radius: 12px;
+		padding: 20px;
+		max-width: 360px;
+		width: 90%;
+		max-height: 80vh;
+		display: flex;
+		flex-direction: column;
+		animation: dialogIn 0.2s ease;
+	`;
 
 	// ===== 标题：名字 + 突破等级 =====
 	const title = document.createElement('div');
 	title.style.cssText = `
-        color: ${rankColor};
-        font-size: 20px;
-        font-weight: bold;
-        text-align: center;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #333;
-    `;
+		color: ${rankColor};
+		font-size: 20px;
+		font-weight: bold;
+		text-align: center;
+		margin-bottom: 15px;
+		padding-bottom: 10px;
+		border-bottom: 1px solid #333;
+	`;
 	title.innerHTML = `${baseChar.name}${tupoText ? `<span style="color:#ffd700;"> ${tupoText}</span>` : ''}`;
 	popup.appendChild(title);
 
 	// ===== 角色基础信息（一行显示） =====
 	const infoRow = document.createElement('div');
 	infoRow.style.cssText = `
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        margin-bottom: 12px;
-        font-size: 13px;
-        color: #ccc;
-    `;
+		display: flex;
+		justify-content: space-around;
+		align-items: center;
+		margin-bottom: 12px;
+		font-size: 13px;
+		color: #ccc;
+	`;
 	infoRow.innerHTML = `
-        <span>品质: <span style="color:${rankColor};font-weight:bold;">${rankLabel}</span></span>
-        <span>等级: Lv.${level}</span>
-        <span>类型: ${tipLabel}</span>
-    `;
+		<span>品质: <span style="color:${rankColor};font-weight:bold;">${rankLabel}</span></span>
+		<span>等级: Lv.${level}</span>
+		<span>类型: ${tipLabel}</span>
+	`;
 	popup.appendChild(infoRow);
 
 	// ===== 四维属性（两列显示） =====
 	const attrSection = document.createElement('div');
 	attrSection.style.cssText = `
-        background: #222;
-        border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 10px;
-    `;
+		background: #222;
+		border-radius: 8px;
+		padding: 10px;
+		margin-bottom: 10px;
+	`;
 
 	const attrTitle = document.createElement('div');
 	attrTitle.style.cssText = 'color:#ffd700;font-size:14px;font-weight:bold;margin-bottom:8px;';
@@ -369,9 +369,9 @@ function showCharacterDetailPopup() {
 		const row = document.createElement('div');
 		row.style.cssText = 'display:flex;justify-content:space-between;font-size:13px;padding:3px 4px;';
 		row.innerHTML = `
-            <span style="color:#999;">${attr.label}</span>
-            <span style="color:${attr.color};font-weight:bold;">${attr.value}</span>
-        `;
+			<span style="color:#999;">${attr.label}</span>
+			<span style="color:${attr.color};font-weight:bold;">${attr.value}</span>
+		`;
 		attrGrid.appendChild(row);
 	});
 
@@ -381,11 +381,11 @@ function showCharacterDetailPopup() {
 	// ===== 战斗属性（两列） =====
 	const battleSection = document.createElement('div');
 	battleSection.style.cssText = `
-        background: #222;
-        border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 10px;
-    `;
+		background: #222;
+		border-radius: 8px;
+		padding: 10px;
+		margin-bottom: 10px;
+	`;
 
 	const battleTitle = document.createElement('div');
 	battleTitle.style.cssText = 'color:#ffd700;font-size:14px;font-weight:bold;margin-bottom:8px;';
@@ -396,21 +396,21 @@ function showCharacterDetailPopup() {
 	battleGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;';
 
 	const battleAttrs = [
-		{ label: '命中', value: finalStats.hit ?? 10000, color: '#aaa' },
-		{ label: '闪避', value: finalStats.dodge ?? 0, color: '#44ff88' },
-		{ label: '暴击', value: finalStats.crit ?? 0, color: '#ffdd00' },
-		{ label: '抗暴', value: finalStats.critResist ?? 0, color: '#88aaff' },
-		{ label: '破击', value: finalStats.pierce ?? 0, color: '#ff8844' },
-		{ label: '格挡', value: finalStats.block ?? 0, color: '#4488ff' },
+		{ label: '命中', value: finalStats.mingzhong ?? 10000, color: '#aaa' },
+		{ label: '闪避', value: finalStats.shanbi ?? 0, color: '#44ff88' },
+		{ label: '暴击', value: finalStats.baoji ?? 0, color: '#ffdd00' },
+		{ label: '抗暴', value: finalStats.kangbao ?? 0, color: '#88aaff' },
+		{ label: '破击', value: finalStats.poji ?? 0, color: '#ff8844' },
+		{ label: '格挡', value: finalStats.gedang ?? 0, color: '#4488ff' },
 	];
 
 	battleAttrs.forEach(attr => {
 		const row = document.createElement('div');
 		row.style.cssText = 'display:flex;justify-content:space-between;font-size:13px;padding:3px 4px;';
 		row.innerHTML = `
-            <span style="color:#999;">${attr.label}</span>
-            <span style="color:${attr.color};font-weight:bold;">${attr.value}</span>
-        `;
+			<span style="color:#999;">${attr.label}</span>
+			<span style="color:${attr.color};font-weight:bold;">${attr.value}</span>
+		`;
 		battleGrid.appendChild(row);
 	});
 
@@ -420,11 +420,11 @@ function showCharacterDetailPopup() {
 	// ===== 增伤减伤属性（两列） =====
 	const dmgSection = document.createElement('div');
 	dmgSection.style.cssText = `
-        background: #222;
-        border-radius: 8px;
-        padding: 10px;
-        margin-bottom: 10px;
-    `;
+		background: #222;
+		border-radius: 8px;
+		padding: 10px;
+		margin-bottom: 10px;
+	`;
 
 	const dmgTitle = document.createElement('div');
 	dmgTitle.style.cssText = 'color:#ffd700;font-size:14px;font-weight:bold;margin-bottom:8px;';
@@ -449,9 +449,9 @@ function showCharacterDetailPopup() {
 		const row = document.createElement('div');
 		row.style.cssText = 'display:flex;justify-content:space-between;font-size:13px;padding:3px 4px;';
 		row.innerHTML = `
-            <span style="color:#999;">${attr.label}</span>
-            <span style="color:${attr.color};font-weight:bold;">${attr.value}</span>
-        `;
+			<span style="color:#999;">${attr.label}</span>
+			<span style="color:${attr.color};font-weight:bold;">${attr.value}</span>
+		`;
 		dmgGrid.appendChild(row);
 	});
 
@@ -462,17 +462,17 @@ function showCharacterDetailPopup() {
 	const power = calculatePower(finalStats);
 	const powerSection = document.createElement('div');
 	powerSection.style.cssText = `
-        text-align: center;
-        margin-bottom: 12px;
-        padding: 8px;
-        background: #1a1a2e;
-        border-radius: 6px;
-        border: 1px solid #ffd70044;
-    `;
+		text-align: center;
+		margin-bottom: 12px;
+		padding: 8px;
+		background: #1a1a2e;
+		border-radius: 6px;
+		border: 1px solid #ffd70044;
+	`;
 	powerSection.innerHTML = `
-        <span style="color:#aaa;font-size:13px;">战斗力：</span>
-        <span style="color:#ffd700;font-size:18px;font-weight:bold;">${power}</span>
-    `;
+		<span style="color:#aaa;font-size:13px;">战斗力：</span>
+		<span style="color:#ffd700;font-size:18px;font-weight:bold;">${power}</span>
+	`;
 	popup.appendChild(powerSection);
 
 	// ===== 关闭按钮 =====
@@ -958,16 +958,16 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel) {
 
 		const item = document.createElement('div');
 		item.style.cssText = `
-            background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
-            border: 1px solid ${isUnlocked ? '#d000ff' : '#333'};
-            border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 8px;
-            opacity: ${isUnlocked ? 1 : 0.6};
-            transition: all 0.2s;
-            cursor: ${isUnlocked ? 'pointer' : 'default'};
-        `;
+			background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
+			border: 1px solid ${isUnlocked ? '#d000ff' : '#333'};
+			border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
+			border-radius: 4px;
+			padding: 10px;
+			margin-bottom: 8px;
+			opacity: ${isUnlocked ? 1 : 0.6};
+			transition: all 0.2s;
+			cursor: ${isUnlocked ? 'pointer' : 'default'};
+		`;
 
 		// 标题行
 		const headerRow = document.createElement('div');
@@ -1065,16 +1065,16 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 	if (!breakInfo.maxed && !needPromotion) {
 		const doBreakBtn = document.createElement('button');
 		doBreakBtn.style.cssText = `
-            flex: 1;
-            padding: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            background: #44aaff;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            transition: all 0.2s;
-        `;
+			flex: 1;
+			padding: 8px;
+			font-size: 13px;
+			cursor: pointer;
+			background: #44aaff;
+			color: #fff;
+			border: none;
+			border-radius: 6px;
+			transition: all 0.2s;
+		`;
 		doBreakBtn.textContent = `突破（${availableCount}/${breakInfo.cost}）`;
 
 		if (availableCount < breakInfo.cost) {
@@ -1110,16 +1110,16 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 		const promotionCost = Math.floor(currentTupoLevel / 4) + 1;
 		const promoteBtn = document.createElement('button');
 		promoteBtn.style.cssText = `
-            flex: 1;
-            padding: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            background: #ffaa00;
-            color: #000;
-            border: none;
-            border-radius: 6px;
-            transition: all 0.2s;
-        `;
+			flex: 1;
+			padding: 8px;
+			font-size: 13px;
+			cursor: pointer;
+			background: #ffaa00;
+			color: #000;
+			border: none;
+			border-radius: 6px;
+			transition: all 0.2s;
+		`;
 		promoteBtn.textContent = `升阶（${availableCount}/${promotionCost}）`;
 
 		if (availableCount < promotionCost) {
@@ -1191,17 +1191,17 @@ function showBreakthroughPreviewPopupByCharId(charId) {
 	// 3. 创建弹窗容器（复用 showBreakthroughPreviewPopup 的弹窗样式）
 	const popup = document.createElement('div');
 	popup.style.cssText = `
-        background: #1a1a1a;
-        border: 2px solid #ffd700;
-        border-radius: 12px;
-        padding: 20px;
-        max-width: 380px;
-        width: 90%;
-        max-height: 80vh;
-        display: flex;
-        flex-direction: column;
-        animation: dialogIn 0.2s ease;
-    `;
+		background: #1a1a1a;
+		border: 2px solid #ffd700;
+		border-radius: 12px;
+		padding: 20px;
+		max-width: 380px;
+		width: 90%;
+		max-height: 80vh;
+		display: flex;
+		flex-direction: column;
+		animation: dialogIn 0.2s ease;
+	`;
 
 	// 4. 标题
 	const title = document.createElement('div');
@@ -1257,16 +1257,16 @@ function showBreakthroughPreviewPopupByCharId(charId) {
 
 			const item = document.createElement('div');
 			item.style.cssText = `
-                background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
-                border: 1px solid ${isUnlocked ? '#d000ff' : '#333'};
-                border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
-                border-radius: 4px;
-                padding: 10px;
-                margin-bottom: 8px;
-                opacity: ${isUnlocked ? 1 : 0.6};
-                transition: all 0.2s;
-                cursor: ${isUnlocked ? 'pointer' : 'default'};
-            `;
+				background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
+				border: 1px solid ${isUnlocked ? '#d000ff' : '#333'};
+				border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
+				border-radius: 4px;
+				padding: 10px;
+				margin-bottom: 8px;
+				opacity: ${isUnlocked ? 1 : 0.6};
+				transition: all 0.2s;
+				cursor: ${isUnlocked ? 'pointer' : 'default'};
+			`;
 
 			const headerRow = document.createElement('div');
 			headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;';
@@ -2176,52 +2176,150 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 
 	const powerRow = document.createElement('div');
 	powerRow.style.cssText = `
-    text-align: center;
-    padding: 6px 0;
-    margin: 4px 0 6px 0;
-    background: #1a1a2e;
-    border-radius: 6px;
-    border: 1px solid #ffd70033;
-`;
+		text-align: center;
+		padding: 6px 0;
+		margin: 4px 0 6px 0;
+		background: #1a1a2e;
+		border-radius: 6px;
+		border: 1px solid #ffd70033;
+	`;
 	powerRow.innerHTML = `
-    <span style="color:#aaa;font-size:12px;">战斗力：</span>
-    <span style="color:#ffd700;font-size:16px;font-weight:bold;">${charPower}</span>
-`;
+		<span style="color:#aaa;font-size:12px;">战斗力：</span>
+		<span style="color:#ffd700;font-size:16px;font-weight:bold;">${charPower}</span>
+	`;
 	attrDiv.appendChild(powerRow);
 	// 技能详细描述
+	// 技能详细描述
 	const skillIds = char.skills || [];
-	const skillSections = [
-		{ key: 0, type: 'pugong', label: '普攻', color: '#5ba8ff' },
-		{ key: 1, type: 'skill', label: '技能', color: '#ff8c00' },
-		{ key: 2, type: 'spskill', label: '必杀', color: '#ffd700' },
-	];
-	for (const sec of skillSections) {
-		const sId = skillIds[sec.key];
-		const sData = sId && contentList[sec.type] && contentList[sec.type][sId];
-		if (!sData) continue;
+	const instData = saveData; // 当前角色的实例数据
 
+	// ===== 普攻 =====
+	const pugongId = skillIds[0];
+	const pgData = pugongId && contentList.pugong && contentList.pugong[pugongId];
+	if (pgData) {
 		const sectionDiv = document.createElement('div');
 		sectionDiv.className = 'team-info-skill-section';
 
 		const headerRow = document.createElement('div');
 		headerRow.className = 'team-info-skill-row';
-		headerRow.innerHTML = `<span class="skill-label" style="color:${sec.color}">${sec.label}</span><span class="skill-name">${sData.name}</span>`;
+		headerRow.innerHTML = `<span class="skill-label" style="color:#5ba8ff">普攻</span><span class="skill-name">${pgData.name}</span>`;
 		sectionDiv.appendChild(headerRow);
 
-		if (sData.intro) {
+		if (pgData.intro) {
 			const introEl = document.createElement('div');
 			introEl.className = 'team-info-skill-desc';
-			introEl.textContent = sData.intro;
+			introEl.textContent = pgData.intro;
 			sectionDiv.appendChild(introEl);
 		}
-		if (sData.ai_intro) {
+		if (pgData.ai_intro) {
 			const aiEl = document.createElement('div');
 			aiEl.className = 'team-info-skill-ai';
-			aiEl.textContent = 'AI倾向：' + sData.ai_intro;
+			aiEl.textContent = 'AI倾向：' + pgData.ai_intro;
 			sectionDiv.appendChild(aiEl);
 		}
 
 		attrDiv.appendChild(sectionDiv);
+	}
+
+	// ===== 判断是否显示技能或必杀 =====
+	// 获取角色基础定义（用于查 spskill 配置）
+	// const baseChar = characterList[charId || char.charId];
+	const baseChar = characterList[charId];
+
+	// ==== 替换为 ====
+	if (baseChar && baseChar.spskill) {
+		const sp = baseChar.spskill;
+		const spSkillId = sp.id;
+		const spData = spSkillId && contentList.spskill && contentList.spskill[spSkillId];
+
+		// 调用 getSpskillUnlockStatus
+		const unlockStatus = getSpskillUnlockStatus(baseChar, instData);
+
+		if (unlockStatus.unlocked) {
+			// === 已解锁必杀：显示必杀，隐藏普通技能 ===
+			if (spData) {
+				const sectionDiv = document.createElement('div');
+				sectionDiv.className = 'team-info-skill-section';
+
+				const headerRow = document.createElement('div');
+				headerRow.className = 'team-info-skill-row';
+				headerRow.innerHTML = `<span class="skill-label" style="color:#ffd700">必杀</span><span class="skill-name">${spData.name}</span>`;
+				sectionDiv.appendChild(headerRow);
+
+				if (spData.intro) {
+					const introEl = document.createElement('div');
+					introEl.className = 'team-info-skill-desc';
+					introEl.textContent = spData.intro;
+					sectionDiv.appendChild(introEl);
+				}
+				if (spData.ai_intro) {
+					const aiEl = document.createElement('div');
+					aiEl.className = 'team-info-skill-ai';
+					aiEl.textContent = 'AI倾向：' + spData.ai_intro;
+					sectionDiv.appendChild(aiEl);
+				}
+
+				// 使用 unlockStatus.desc
+				const unlockTag = document.createElement('div');
+				unlockTag.style.cssText = 'font-size:10px;color:#44ff88;margin-top:2px;';
+				unlockTag.textContent = `✅ ${unlockStatus.desc}`;
+				sectionDiv.appendChild(unlockTag);
+
+				attrDiv.appendChild(sectionDiv);
+			}
+		} else {
+			// === 未解锁必杀：显示普通技能 + 必杀未解锁提示 ===
+			// ...（显示普通技能的代码不变）...
+
+			// 再显示未解锁的必杀
+			if (spData) {
+				const sectionDiv = document.createElement('div');
+				sectionDiv.className = 'team-info-skill-section';
+				sectionDiv.style.opacity = '0.6';
+
+				const headerRow = document.createElement('div');
+				headerRow.className = 'team-info-skill-row';
+				headerRow.innerHTML = `<span class="skill-label" style="color:#888">必杀（未解锁）</span><span class="skill-name" style="color:#888">${spData.name}</span>`;
+				sectionDiv.appendChild(headerRow);
+
+				// 使用 unlockStatus.desc
+				const unlockInfo = document.createElement('div');
+				unlockInfo.className = 'team-info-skill-desc';
+				unlockInfo.style.color = '#ffd700';
+				unlockInfo.textContent = `🔒 ${unlockStatus.desc}`;
+				sectionDiv.appendChild(unlockInfo);
+
+				attrDiv.appendChild(sectionDiv);
+			}
+		}
+	} else {
+		// ---- 没有必杀配置：显示普通技能 ----
+		const skillId = skillIds[1];
+		const skData = skillId && contentList.skill && contentList.skill[skillId];
+		if (skData) {
+			const sectionDiv = document.createElement('div');
+			sectionDiv.className = 'team-info-skill-section';
+
+			const headerRow = document.createElement('div');
+			headerRow.className = 'team-info-skill-row';
+			headerRow.innerHTML = `<span class="skill-label" style="color:#ff8c00">技能</span><span class="skill-name">${skData.name}</span>`;
+			sectionDiv.appendChild(headerRow);
+
+			if (skData.intro) {
+				const introEl = document.createElement('div');
+				introEl.className = 'team-info-skill-desc';
+				introEl.textContent = skData.intro;
+				sectionDiv.appendChild(introEl);
+			}
+			if (skData.ai_intro) {
+				const aiEl = document.createElement('div');
+				aiEl.className = 'team-info-skill-ai';
+				aiEl.textContent = 'AI倾向：' + skData.ai_intro;
+				sectionDiv.appendChild(aiEl);
+			}
+
+			attrDiv.appendChild(sectionDiv);
+		}
 	}
 
 	infoArea.appendChild(leftDiv);
@@ -4677,100 +4775,82 @@ function showCharDetail(_parentContainer, charData) {
 	dialog.appendChild(topDiv);
 
 	// 下半部分：技能信息
+	// 下半部分：技能信息
 	const skillsDiv = document.createElement('div');
 	skillsDiv.className = 'gallery-detail-skills';
 
-	// 获取角色的 skills 数组：[普攻id, 技能id, 必杀id(可选)]
+	// 获取角色的 skills 数组：[普攻id, 技能id]
 	const skillIds = charData.skills || [];
 
-	// 普攻
+	// ===== 普攻 =====
 	if (skillIds[0] && contentList.pugong && contentList.pugong[skillIds[0]]) {
 		const pg = contentList.pugong[skillIds[0]];
-		const section = document.createElement('div');
-		section.className = 'gallery-skill-section';
-
-		const title = document.createElement('div');
-		title.className = 'gallery-skill-title pugong';
-		title.textContent = '普攻';
-		section.appendChild(title);
-
-		const nameEl = document.createElement('div');
-		nameEl.className = 'gallery-skill-name';
-		nameEl.textContent = pg.name;
-		section.appendChild(nameEl);
-
-		const intro = document.createElement('div');
-		intro.className = 'gallery-skill-intro';
-		intro.textContent = pg.intro;
-		section.appendChild(intro);
-
-		const aiIntro = document.createElement('div');
-		aiIntro.className = 'gallery-skill-ai';
-		aiIntro.textContent = 'AI倾向：' + pg.ai_intro;
-		section.appendChild(aiIntro);
-
+		const section = buildSkillSection('普攻', pg, '#5ba8ff');
 		skillsDiv.appendChild(section);
 	}
 
-	// 技能
-	if (skillIds[1] && contentList.skill && contentList.skill[skillIds[1]]) {
+	// ===== 技能 =====
+	// const hasSpskillUnlocked = charData.spskill && (
+	// 	charData.spskill.unlockType === 'none' ||
+	// 	charData.spskill.unlockType === 'breakthrough' ||
+	// 	charData.spskill.unlockType === 'treasure'
+	// );
+
+	// ==== 替换之前这段 ====
+
+	// ==== 替换为 ====
+	if (charData.spskill) {
+		const unlockStatus = getSpskillUnlockStatus(charData, {}); // 图鉴传入空实例
+
+		const spSkillId = charData.spskill.id;
+		const spData = contentList.spskill && contentList.spskill[spSkillId];
+
+		if (spData) {
+			const section = document.createElement('div');
+			section.className = 'gallery-skill-section';
+			section.style.opacity = '0.6';
+			section.style.filter = 'grayscale(0.8)';
+
+			const title = document.createElement('div');
+			title.className = 'gallery-skill-title spskill';
+			title.textContent = '必杀（未解锁）';
+			title.style.color = '#888';
+			title.style.background = 'rgba(128,128,128,0.1)';
+			section.appendChild(title);
+
+			const nameEl = document.createElement('div');
+			nameEl.className = 'gallery-skill-name';
+			nameEl.textContent = spData.name;
+			nameEl.style.color = '#888';
+			section.appendChild(nameEl);
+
+			const intro = document.createElement('div');
+			intro.className = 'gallery-skill-intro';
+			intro.textContent = spData.intro;
+			intro.style.color = '#666';
+			section.appendChild(intro);
+
+			// 使用 unlockStatus.desc 显示解锁条件
+			const unlockInfo = document.createElement('div');
+			unlockInfo.className = 'gallery-skill-ai';
+			unlockInfo.style.color = '#ffd700';
+			unlockInfo.style.fontSize = '11px';
+			unlockInfo.textContent = `🔒 ${unlockStatus.desc}`;
+			section.appendChild(unlockInfo);
+
+			skillsDiv.appendChild(section);
+		}
+	}
+	else if (skillIds[1] && contentList.skill && contentList.skill[skillIds[1]]) {
+		// 没有必杀配置：显示普通技能
 		const sk = contentList.skill[skillIds[1]];
-		const section = document.createElement('div');
-		section.className = 'gallery-skill-section';
-
-		const title = document.createElement('div');
-		title.className = 'gallery-skill-title skill';
-		title.textContent = '技能';
-		section.appendChild(title);
-
-		const nameEl = document.createElement('div');
-		nameEl.className = 'gallery-skill-name';
-		nameEl.textContent = sk.name;
-		section.appendChild(nameEl);
-
-		const intro = document.createElement('div');
-		intro.className = 'gallery-skill-intro';
-		intro.textContent = sk.intro;
-		section.appendChild(intro);
-
-		const aiIntro = document.createElement('div');
-		aiIntro.className = 'gallery-skill-ai';
-		aiIntro.textContent = 'AI倾向：' + sk.ai_intro;
-		section.appendChild(aiIntro);
-
-		skillsDiv.appendChild(section);
-	}
-
-	// 必杀
-	if (skillIds[2] && contentList.spskill && contentList.spskill[skillIds[2]]) {
-		const sp = contentList.spskill[skillIds[2]];
-		const section = document.createElement('div');
-		section.className = 'gallery-skill-section';
-
-		const title = document.createElement('div');
-		title.className = 'gallery-skill-title spskill';
-		title.textContent = '必杀';
-		section.appendChild(title);
-
-		const nameEl = document.createElement('div');
-		nameEl.className = 'gallery-skill-name';
-		nameEl.textContent = sp.name;
-		section.appendChild(nameEl);
-
-		const intro = document.createElement('div');
-		intro.className = 'gallery-skill-intro';
-		intro.textContent = sp.intro;
-		section.appendChild(intro);
-
-		const aiIntro = document.createElement('div');
-		aiIntro.className = 'gallery-skill-ai';
-		aiIntro.textContent = 'AI倾向：' + sp.ai_intro;
-		section.appendChild(aiIntro);
-
+		const section = buildSkillSection('技能', sk, '#ff8c00', false);
 		skillsDiv.appendChild(section);
 	}
 
 	dialog.appendChild(skillsDiv);
+
+
 
 	// 关闭按钮
 	const closeBtn = document.createElement('button');
@@ -4781,7 +4861,7 @@ function showCharDetail(_parentContainer, charData) {
 	closeBtn.textContent = '关闭';
 	closeBtn.onclick = () => {
 		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-	};    // 在 dialog.appendChild(closeBtn); 之前添加
+	};	// 在 dialog.appendChild(closeBtn); 之前添加
 
 	// ===== 【新增】突破详情按钮 =====
 	const detailBreakBtn = document.createElement('button');
@@ -4827,17 +4907,17 @@ function showBreakthroughPreviewPopupForGallery(charData) {
 
 	const popup = document.createElement('div');
 	popup.style.cssText = `
-        background: #1a1a1a;
-        border: 2px solid #ffd700;
-        border-radius: 12px;
-        padding: 20px;
-        max-width: 380px;
-        width: 90%;
-        max-height: 80vh;
-        display: flex;
-        flex-direction: column;
-        animation: dialogIn 0.2s ease;
-    `;
+		background: #1a1a1a;
+		border: 2px solid #ffd700;
+		border-radius: 12px;
+		padding: 20px;
+		max-width: 380px;
+		width: 90%;
+		max-height: 80vh;
+		display: flex;
+		flex-direction: column;
+		animation: dialogIn 0.2s ease;
+	`;
 
 	// 标题 - 不显示突破等级
 	const title = document.createElement('div');
@@ -4891,14 +4971,14 @@ function showBreakthroughPreviewPopupForGallery(charData) {
 
 			const item = document.createElement('div');
 			item.style.cssText = `
-                background: #1a1a1a;
-                border: 1px solid #333;
-                border-left: 4px solid #555;
-                border-radius: 4px;
-                padding: 10px;
-                margin-bottom: 8px;
-                opacity: 0.6;
-            `;
+				background: #1a1a1a;
+				border: 1px solid #333;
+				border-left: 4px solid #555;
+				border-radius: 4px;
+				padding: 10px;
+				margin-bottom: 8px;
+				opacity: 0.6;
+			`;
 
 			const headerRow = document.createElement('div');
 			headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;';
@@ -8126,25 +8206,121 @@ function showBagCharDetailPopup(instanceId, charId) {
 	dialog.appendChild(topDiv);
 
 	// 技能信息
+	// 技能信息
 	const skillsDiv = document.createElement('div');
 	skillsDiv.className = 'gallery-detail-skills';
+
+	// 获取角色基础定义（用于查 spskill 配置）
+	const baseCharForSkill = characterList[charId];
+
 	const skillIds = char.skills || [];
-	if (skillIds[0] && contentList.pugong && contentList.pugong[skillIds[0]]) {
-		const pg = contentList.pugong[skillIds[0]];
+	// ===== 普攻 =====
+	const pugongId = skillIds[0];
+	if (pugongId && contentList.pugong && contentList.pugong[pugongId]) {
+		const pg = contentList.pugong[pugongId];
 		const section = buildSkillSection('普攻', pg, '#5ba8ff');
 		skillsDiv.appendChild(section);
 	}
-	if (skillIds[1] && contentList.skill && contentList.skill[skillIds[1]]) {
-		const sk = contentList.skill[skillIds[1]];
-		const section = buildSkillSection('技能', sk, '#ff8c00');
-		skillsDiv.appendChild(section);
+
+	// ===== 判断必杀状态 =====
+	if (baseCharForSkill && baseCharForSkill.spskill) {
+		// ---- 有必杀配置 ----
+		const sp = baseCharForSkill.spskill;
+		const spSkillId = sp.id;
+		const spData = spSkillId && contentList.spskill && contentList.spskill[spSkillId];
+
+		// 调用辅助函数判断必杀解锁状态
+		const unlockStatus = getSpskillUnlockStatus(baseCharForSkill, instData);
+
+		if (unlockStatus.unlocked) {
+			// === 必杀已解锁：显示必杀，不显示普通技能 ===
+			if (spData) {
+				const section = document.createElement('div');
+				section.className = 'gallery-skill-section';
+
+				const title = document.createElement('div');
+				title.className = 'gallery-skill-title spskill';
+				title.textContent = '必杀';
+				title.style.color = '#ffd700';
+				title.style.background = 'rgba(255,215,0,0.1)';
+				section.appendChild(title);
+
+				const nameEl = document.createElement('div');
+				nameEl.className = 'gallery-skill-name';
+				nameEl.textContent = spData.name;
+				section.appendChild(nameEl);
+
+				const intro = document.createElement('div');
+				intro.className = 'gallery-skill-intro';
+				intro.textContent = spData.intro;
+				section.appendChild(intro);
+
+				// 已解锁标记
+				const unlockTag = document.createElement('div');
+				unlockTag.className = 'gallery-skill-ai';
+				unlockTag.style.color = '#44ff88';
+				unlockTag.textContent = `✅ ${unlockStatus.desc}`;
+				section.appendChild(unlockTag);
+
+				skillsDiv.appendChild(section);
+			}
+		} else {
+			// === 必杀未解锁：显示普通技能 + 必杀未解锁提示 ===
+			// 先显示普通技能
+			if (skillIds[1] && contentList.skill && contentList.skill[skillIds[1]]) {
+				const sk = contentList.skill[skillIds[1]];
+				const section = buildSkillSection('技能', sk, '#ff8c00');
+				skillsDiv.appendChild(section);
+			}
+
+			// 再显示未解锁的必杀
+			if (spData) {
+				const section = document.createElement('div');
+				section.className = 'gallery-skill-section';
+				section.style.opacity = '0.6';
+				section.style.filter = 'grayscale(0.8)';
+
+				const title = document.createElement('div');
+				title.className = 'gallery-skill-title spskill';
+				title.textContent = '必杀（未解锁）';
+				title.style.color = '#888';
+				title.style.background = 'rgba(128,128,128,0.1)';
+				section.appendChild(title);
+
+				const nameEl = document.createElement('div');
+				nameEl.className = 'gallery-skill-name';
+				nameEl.textContent = spData.name;
+				nameEl.style.color = '#888';
+				section.appendChild(nameEl);
+
+				const intro = document.createElement('div');
+				intro.className = 'gallery-skill-intro';
+				intro.textContent = spData.intro;
+				intro.style.color = '#666';
+				section.appendChild(intro);
+
+				// 解锁条件
+				const unlockInfo = document.createElement('div');
+				unlockInfo.className = 'gallery-skill-ai';
+				unlockInfo.style.color = '#ffd700';
+				unlockInfo.style.fontSize = '11px';
+				unlockInfo.textContent = `🔒 ${unlockStatus.desc}`;
+				section.appendChild(unlockInfo);
+
+				skillsDiv.appendChild(section);
+			}
+		}
+	} else {
+		// ---- 没有必杀配置：只显示普通技能 ----
+		if (skillIds[1] && contentList.skill && contentList.skill[skillIds[1]]) {
+			const sk = contentList.skill[skillIds[1]];
+			const section = buildSkillSection('技能', sk, '#ff8c00');
+			skillsDiv.appendChild(section);
+		}
 	}
-	if (skillIds[2] && contentList.spskill && contentList.spskill[skillIds[2]]) {
-		const sp = contentList.spskill[skillIds[2]];
-		const section = buildSkillSection('必杀', sp, '#ffd700');
-		skillsDiv.appendChild(section);
-	}
+
 	dialog.appendChild(skillsDiv);
+
 
 	// 底部按钮：选择升级 + 关闭
 	const btnRow = document.createElement('div');
@@ -8530,12 +8706,12 @@ function updateCharacterSP(current) {
 	}
 
 	// ===== 【新增】战斗属性不随等级成长，保持初始值 =====
-	newcurrent.hit = current.hit ?? rankData.hit ?? 10000;
-	newcurrent.dodge = current.dodge ?? rankData.dodge ?? 0;
-	newcurrent.crit = current.crit ?? rankData.crit ?? 0;
-	newcurrent.critResist = current.critResist ?? rankData.critResist ?? 0;
-	newcurrent.pierce = current.pierce ?? rankData.pierce ?? 0;
-	newcurrent.block = current.block ?? rankData.block ?? 0;
+	newcurrent.mingzhong = current.mingzhong ?? rankData.mingzhong ?? 10000;
+	newcurrent.shanbi = current.shanbi ?? rankData.shanbi ?? 0;
+	newcurrent.baoji = current.baoji ?? rankData.baoji ?? 0;
+	newcurrent.kangbao = current.kangbao ?? rankData.kangbao ?? 0;
+	newcurrent.poji = current.poji ?? rankData.poji ?? 0;
+	newcurrent.gedang = current.gedang ?? rankData.gedang ?? 0;
 
 	newcurrent.fixedDmgUp = current.fixedDmgUp ?? rankData.fixedDmgUp ?? 0;
 	newcurrent.fixedDmgDown = current.fixedDmgDown ?? rankData.fixedDmgDown ?? 0;
@@ -8923,12 +9099,12 @@ function compileCharacterStats(charObj) {
 	return {
 		...base,
 		// 战斗概率属性
-		hit: 10000,		// 命中
-		dodge: 0,		  // 闪避
-		crit: 0,		   // 暴击
-		critResist: 0,	 // 抗暴
-		pierce: 0,		 // 破击
-		block: 0,		  // 格挡
+		mingzhong: 10000,		// 命中
+		shanbi: 0,		  // 闪避
+		baoji: 0,		   // 暴击
+		kangbao: 0,	 // 抗暴
+		poji: 0,		 // 破击
+		gedang: 0,		  // 格挡
 
 		// 增伤/减伤
 		fixedDmgUp: 0,	 // 固定增伤
@@ -9849,7 +10025,7 @@ window.removeTreasureInstance = function (instanceId) {
 /**
  * 获取宝物的属性加成（用于战斗时合并）
  * @param {string} instanceId - 宝物实例ID
- * @returns {Object} { atk: 0, def: 0, hp: 0, spe: 0, hit: 0, dodge: 0, crit: 0, critResist: 0, pierce: 0, block: 0}
+ * @returns {Object} { atk: 0, def: 0, hp: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0}
  */
 window.getTreasureStats = function (instanceId) {
 	ensureTreasureInventory();
@@ -9869,12 +10045,12 @@ window.getTreasureStats = function (instanceId) {
 		hp: (def.hp || 0) * multiplier,
 		spe: (def.spe || 0) * multiplier,
 		// ===== 【新增】六大特殊属性（等级倍数） =====
-		hit: (def.hit || 0) * multiplier,
-		dodge: (def.dodge || 0) * multiplier,
-		crit: (def.crit || 0) * multiplier,
-		critResist: (def.critResist || 0) * multiplier,
-		pierce: (def.pierce || 0) * multiplier,
-		block: (def.block || 0) * multiplier,
+		mingzhong: (def.mingzhong || 0) * multiplier,
+		shanbi: (def.shanbi || 0) * multiplier,
+		baoji: (def.baoji || 0) * multiplier,
+		kangbao: (def.kangbao || 0) * multiplier,
+		poji: (def.poji || 0) * multiplier,
+		gedang: (def.gedang || 0) * multiplier,
 	};
 };
 
@@ -10610,7 +10786,7 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 			breakthroughBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
 			treasureBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
 			// ===== 【新增】新属性默认值 =====
-			hit: 10000, dodge: 0, crit: 0, critResist: 0, pierce: 0, block: 0,
+			mingzhong: 10000, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0,
 			fixedDmgUp: 0, fixedDmgDown: 0, pctDmgUp: 0, pctDmgDown: 0,
 			fixedHeal: 0, fixedBeHeal: 0, pctHeal: 0, pctBeHeal: 0,
 			flatBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
@@ -10630,7 +10806,7 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 			breakthroughBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
 			treasureBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
 			// ===== 【新增】新属性默认值 =====
-			hit: 10000, dodge: 0, crit: 0, critResist: 0, pierce: 0, block: 0,
+			mingzhong: 10000, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0,
 			fixedDmgUp: 0, fixedDmgDown: 0, pctDmgUp: 0, pctDmgDown: 0,
 			fixedHeal: 0, fixedBeHeal: 0, pctHeal: 0, pctBeHeal: 0,
 			flatBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
@@ -10695,12 +10871,12 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 		teamPercent.spe = externalTeamBonuses.teamPercent.spe || 0;
 
 		// ===== 【新增】全队新属性加成 =====
-		teamFlatHit = externalTeamBonuses.teamFlat.hit || 0;
-		teamFlatDodge = externalTeamBonuses.teamFlat.dodge || 0;
-		teamFlatCrit = externalTeamBonuses.teamFlat.crit || 0;
-		teamFlatCritResist = externalTeamBonuses.teamFlat.critResist || 0;
-		teamFlatPierce = externalTeamBonuses.teamFlat.pierce || 0;
-		teamFlatBlock = externalTeamBonuses.teamFlat.block || 0;
+		teamFlatHit = externalTeamBonuses.teamFlat.mingzhong || 0;// 命中
+		teamFlatDodge = externalTeamBonuses.teamFlat.shanbi || 0;// 闪避
+		teamFlatCrit = externalTeamBonuses.teamFlat.baoji || 0;// 暴击
+		teamFlatCritResist = externalTeamBonuses.teamFlat.kangbao || 0;// 抗暴
+		teamFlatPierce = externalTeamBonuses.teamFlat.poji || 0;// 破击
+		teamFlatBlock = externalTeamBonuses.teamFlat.gedang || 0;// 格挡
 		teamFlatFixedDmgUp = externalTeamBonuses.teamFlat.fixedDmgUp || 0;
 		teamFlatFixedDmgDown = externalTeamBonuses.teamFlat.fixedDmgDown || 0;
 		teamFlatFixedHeal = externalTeamBonuses.teamFlat.fixedHeal || 0;
@@ -10735,12 +10911,12 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 				if (resolvedBuff.hp !== undefined) selfFlat.hp += Number(resolvedBuff.hp);
 				if (resolvedBuff.spe !== undefined) selfFlat.spe += Number(resolvedBuff.spe);
 				// ===== 【新增】新属性固定加成 =====
-				if (resolvedBuff.hit !== undefined) breakHit += Number(resolvedBuff.hit);
-				if (resolvedBuff.dodge !== undefined) breakDodge += Number(resolvedBuff.dodge);
-				if (resolvedBuff.crit !== undefined) breakCrit += Number(resolvedBuff.crit);
-				if (resolvedBuff.critResist !== undefined) breakCritResist += Number(resolvedBuff.critResist);
-				if (resolvedBuff.pierce !== undefined) breakPierce += Number(resolvedBuff.pierce);
-				if (resolvedBuff.block !== undefined) breakBlock += Number(resolvedBuff.block);
+				if (resolvedBuff.mingzhong !== undefined) breakHit += Number(resolvedBuff.mingzhong);
+				if (resolvedBuff.shanbi !== undefined) breakDodge += Number(resolvedBuff.shanbi);
+				if (resolvedBuff.baoji !== undefined) breakCrit += Number(resolvedBuff.baoji);
+				if (resolvedBuff.kangbao !== undefined) breakCritResist += Number(resolvedBuff.kangbao);
+				if (resolvedBuff.poji !== undefined) breakPierce += Number(resolvedBuff.poji);
+				if (resolvedBuff.gedang !== undefined) breakBlock += Number(resolvedBuff.gedang);
 				if (resolvedBuff.fixedDmgUp !== undefined) breakFixedDmgUp += Number(resolvedBuff.fixedDmgUp);
 				if (resolvedBuff.fixedDmgDown !== undefined) breakFixedDmgDown += Number(resolvedBuff.fixedDmgDown);
 				if (resolvedBuff.fixedHeal !== undefined) breakFixedHeal += Number(resolvedBuff.fixedHeal);
@@ -10753,11 +10929,11 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 				if (resolvedBuff.hp !== undefined) selfPercent.hp += Number(resolvedBuff.hp);
 				if (resolvedBuff.spe !== undefined) selfPercent.spe += Number(resolvedBuff.spe);
 				// ===== 【新增】新属性百分比加成（概率类按固定值加，百分比类按百分比加） =====
-				if (resolvedBuff.crit !== undefined) breakCrit += Number(resolvedBuff.crit);
-				if (resolvedBuff.critResist !== undefined) breakCritResist += Number(resolvedBuff.critResist);
-				if (resolvedBuff.dodge !== undefined) breakDodge += Number(resolvedBuff.dodge);
-				if (resolvedBuff.pierce !== undefined) breakPierce += Number(resolvedBuff.pierce);
-				if (resolvedBuff.block !== undefined) breakBlock += Number(resolvedBuff.block);
+				if (resolvedBuff.baoji !== undefined) breakCrit += Number(resolvedBuff.baoji);
+				if (resolvedBuff.kangbao !== undefined) breakCritResist += Number(resolvedBuff.kangbao);
+				if (resolvedBuff.shanbi !== undefined) breakDodge += Number(resolvedBuff.shanbi);
+				if (resolvedBuff.poji !== undefined) breakPierce += Number(resolvedBuff.poji);
+				if (resolvedBuff.gedang !== undefined) breakBlock += Number(resolvedBuff.gedang);
 				if (resolvedBuff.pctDmgUp !== undefined) breakPctDmgUp += Number(resolvedBuff.pctDmgUp);
 				if (resolvedBuff.pctDmgDown !== undefined) breakPctDmgDown += Number(resolvedBuff.pctDmgDown);
 				if (resolvedBuff.pctHeal !== undefined) breakPctHeal += Number(resolvedBuff.pctHeal);
@@ -10771,12 +10947,12 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 					if (resolvedBuff.hp !== undefined) teamFlat.hp += Number(resolvedBuff.hp);
 					if (resolvedBuff.spe !== undefined) teamFlat.spe += Number(resolvedBuff.spe);
 					// ===== 【新增】全队固定新属性 =====
-					if (resolvedBuff.hit !== undefined) teamFlatHit += Number(resolvedBuff.hit);
-					if (resolvedBuff.dodge !== undefined) teamFlatDodge += Number(resolvedBuff.dodge);
-					if (resolvedBuff.crit !== undefined) teamFlatCrit += Number(resolvedBuff.crit);
-					if (resolvedBuff.critResist !== undefined) teamFlatCritResist += Number(resolvedBuff.critResist);
-					if (resolvedBuff.pierce !== undefined) teamFlatPierce += Number(resolvedBuff.pierce);
-					if (resolvedBuff.block !== undefined) teamFlatBlock += Number(resolvedBuff.block);
+					if (resolvedBuff.mingzhong !== undefined) teamFlatHit += Number(resolvedBuff.mingzhong);
+					if (resolvedBuff.shanbi !== undefined) teamFlatDodge += Number(resolvedBuff.shanbi);
+					if (resolvedBuff.baoji !== undefined) teamFlatCrit += Number(resolvedBuff.baoji);
+					if (resolvedBuff.kangbao !== undefined) teamFlatCritResist += Number(resolvedBuff.kangbao);
+					if (resolvedBuff.poji !== undefined) teamFlatPierce += Number(resolvedBuff.poji);
+					if (resolvedBuff.gedang !== undefined) teamFlatBlock += Number(resolvedBuff.gedang);
 					if (resolvedBuff.fixedDmgUp !== undefined) teamFlatFixedDmgUp += Number(resolvedBuff.fixedDmgUp);
 					if (resolvedBuff.fixedDmgDown !== undefined) teamFlatFixedDmgDown += Number(resolvedBuff.fixedDmgDown);
 					if (resolvedBuff.fixedHeal !== undefined) teamFlatFixedHeal += Number(resolvedBuff.fixedHeal);
@@ -10821,12 +10997,12 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 			tresDef += stats.def || 0;
 			tresSpe += stats.spe || 0;
 			// ===== 【新增】累加宝物特殊属性 =====
-			tresHit += stats.hit || 0;
-			tresDodge += stats.dodge || 0;
-			tresCrit += stats.crit || 0;
-			tresCritResist += stats.critResist || 0;
-			tresPierce += stats.pierce || 0;
-			tresBlock += stats.block || 0;
+			tresHit += stats.mingzhong || 0;
+			tresDodge += stats.shanbi || 0;
+			tresCrit += stats.baoji || 0;
+			tresCritResist += stats.kangbao || 0;
+			tresPierce += stats.poji || 0;
+			tresBlock += stats.gedang || 0;
 		});
 	}
 
@@ -10884,12 +11060,12 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 		growthFactor,
 
 		// ===== 【修改】六大特殊属性 =====
-		hit: 10000 + breakHit + teamFlatHit + tresHit,
-		dodge: 0 + breakDodge + teamFlatDodge + tresDodge,
-		crit: 0 + breakCrit + teamFlatCrit + tresCrit,
-		critResist: 0 + breakCritResist + teamFlatCritResist + tresCritResist,
-		pierce: 0 + breakPierce + teamFlatPierce + tresPierce,
-		block: 0 + breakBlock + teamFlatBlock + tresBlock,
+		mingzhong: 10000 + breakHit + teamFlatHit + tresHit,
+		shanbi: 0 + breakDodge + teamFlatDodge + tresDodge,
+		baoji: 0 + breakCrit + teamFlatCrit + tresCrit,
+		kangbao: 0 + breakCritResist + teamFlatCritResist + tresCritResist,
+		poji: 0 + breakPierce + teamFlatPierce + tresPierce,
+		gedang: 0 + breakBlock + teamFlatBlock + tresBlock,
 
 		fixedDmgUp: 0 + breakFixedDmgUp + teamFlatFixedDmgUp,
 		fixedDmgDown: 0 + breakFixedDmgDown + teamFlatFixedDmgDown,
@@ -11008,7 +11184,7 @@ function calculateTeamBreakthroughBonuses() {
 	const teamPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
 
 	// ===== 【新增】全队新属性 =====
-	teamFlat.hit = 0; teamFlat.dodge = 0; teamFlat.crit = 0; teamFlat.critResist = 0; teamFlat.pierce = 0; teamFlat.block = 0;
+	teamFlat.mingzhong = 0; teamFlat.shanbi = 0; teamFlat.baoji = 0; teamFlat.kangbao = 0; teamFlat.poji = 0; teamFlat.gedang = 0;
 	teamFlat.fixedDmgUp = 0; teamFlat.fixedDmgDown = 0; teamFlat.fixedHeal = 0; teamFlat.fixedBeHeal = 0;
 	teamPercent.pctDmgUp = 0; teamPercent.pctDmgDown = 0; teamPercent.pctHeal = 0; teamPercent.pctBeHeal = 0;
 
@@ -11045,12 +11221,12 @@ function calculateTeamBreakthroughBonuses() {
 					if (resolvedBuff.hp !== undefined) teamFlat.hp += Number(resolvedBuff.hp);
 					if (resolvedBuff.spe !== undefined) teamFlat.spe += Number(resolvedBuff.spe);
 					// ===== 【新增】全队固定新属性 =====
-					if (resolvedBuff.hit !== undefined) teamFlat.hit += Number(resolvedBuff.hit);
-					if (resolvedBuff.dodge !== undefined) teamFlat.dodge += Number(resolvedBuff.dodge);
-					if (resolvedBuff.crit !== undefined) teamFlat.crit += Number(resolvedBuff.crit);
-					if (resolvedBuff.critResist !== undefined) teamFlat.critResist += Number(resolvedBuff.critResist);
-					if (resolvedBuff.pierce !== undefined) teamFlat.pierce += Number(resolvedBuff.pierce);
-					if (resolvedBuff.block !== undefined) teamFlat.block += Number(resolvedBuff.block);
+					if (resolvedBuff.mingzhong !== undefined) teamFlat.mingzhong += Number(resolvedBuff.mingzhong);
+					if (resolvedBuff.shanbi !== undefined) teamFlat.shanbi += Number(resolvedBuff.shanbi);
+					if (resolvedBuff.baoji !== undefined) teamFlat.baoji += Number(resolvedBuff.baoji);
+					if (resolvedBuff.kangbao !== undefined) teamFlat.kangbao += Number(resolvedBuff.kangbao);
+					if (resolvedBuff.poji !== undefined) teamFlat.poji += Number(resolvedBuff.poji);
+					if (resolvedBuff.gedang !== undefined) teamFlat.gedang += Number(resolvedBuff.gedang);
 					if (resolvedBuff.fixedDmgUp !== undefined) teamFlat.fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
 					if (resolvedBuff.fixedDmgDown !== undefined) teamFlat.fixedDmgDown += Number(resolvedBuff.fixedDmgDown);
 					if (resolvedBuff.fixedHeal !== undefined) teamFlat.fixedHeal += Number(resolvedBuff.fixedHeal);
@@ -11087,14 +11263,14 @@ function calculatePower(finalStats) {
 	const hp = finalStats.totalHp || 0;
 
 	// 提取暴击、命中、破击（命中需要减去初始值10000）
-	const crit = finalStats.crit || 0;
-	const hit = (finalStats.hit || 10000) - 10000;
-	const pierce = finalStats.pierce || 0;
+	const baoji = finalStats.baoji || 0;
+	const mingzhong = (finalStats.mingzhong || 10000) - 10000;
+	const poji = finalStats.poji || 0;
 
 	// 提取抗暴、闪避、格挡
-	const critResist = finalStats.critResist || 0;
-	const dodge = finalStats.dodge || 0;
-	const block = finalStats.block || 0;
+	const kangbao = finalStats.kangbao || 0;
+	const shanbi = finalStats.shanbi || 0;
+	const gedang = finalStats.gedang || 0;
 
 	// 提取百分比增伤/减伤
 	const pctDmgUp = finalStats.pctDmgUp || 0;
@@ -11120,13 +11296,13 @@ function calculatePower(finalStats) {
 	// ===== 计算权重 =====
 
 	// 攻击权重 = 10 + (暴击 + 命中（已减10000）+ 破击) * 2 / 10000
-	const atkWeight = 10 + (crit + hit + pierce) * 2 / 10000;
+	const atkWeight = 10 + (baoji + mingzhong + poji) * 2 / 10000;
 
 	// 防御权重 = 10（固定）
 	const defWeight = 10;
 
 	// 血量权重 = 1 + (抗暴 + 闪避 + 格挡) * 2 / 100000
-	const hpWeight = 1 + (critResist + dodge + block) * 2 / 100000;
+	const hpWeight = 1 + (kangbao + shanbi + gedang) * 2 / 100000;
 
 	// ===== 计算权重后的基础战力 =====
 
@@ -11175,28 +11351,28 @@ function calculatePower(finalStats) {
 //  * @param {HTMLElement} [options.dialog] - 需要刷新的详情弹窗DOM元素
 //  */
 // function refreshAllViews(options = {}) {
-//     const { instanceId, dialog } = options;
+//	 const { instanceId, dialog } = options;
 
-//     // 1. 刷新阵容视图（包括总战力、格子、详情区）
-//     refreshTeamViewDisplay();
+//	 // 1. 刷新阵容视图（包括总战力、格子、详情区）
+//	 refreshTeamViewDisplay();
 
-//     // 2. 刷新角色详情弹窗（如果有传入）
-//     if (instanceId && dialog) {
-//         refreshCharDetailPopupContent(instanceId, dialog);
-//     }
+//	 // 2. 刷新角色详情弹窗（如果有传入）
+//	 if (instanceId && dialog) {
+//		 refreshCharDetailPopupContent(instanceId, dialog);
+//	 }
 
-//     // 3. 刷新背包视图（如果当前显示的是背包）
-//     try {
-//         const bagView = document.getElementById('bag-view');
-//         if (bagView && bagView.style.display !== 'none') {
-//             renderBagView(bagView);
-//         }
-//     } catch(e) {}
+//	 // 3. 刷新背包视图（如果当前显示的是背包）
+//	 try {
+//		 const bagView = document.getElementById('bag-view');
+//		 if (bagView && bagView.style.display !== 'none') {
+//			 renderBagView(bagView);
+//		 }
+//	 } catch(e) {}
 
-//     // 4. 自动保存
-//     if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
-//         SaveManager.autoSave();
-//     }
+//	 // 4. 自动保存
+//	 if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+//		 SaveManager.autoSave();
+//	 }
 // }
 /**
  * 统一刷新所有视图
@@ -11361,3 +11537,36 @@ function refreshAllViews(options = {}) {
 	console.log('[刷新] 所有视图已刷新');
 }
 
+/**
+ * 判断角色的必杀是否已解锁
+ * @param {Object} baseChar - 角色基础定义（characterList[charId]）
+ * @param {Object} instData - 角色实例数据
+ * @returns {Object} { unlocked: boolean, desc: string }
+ */
+function getSpskillUnlockStatus(baseChar, instData) {
+	const result = { unlocked: false, desc: '暂未开放' };
+
+	if (!baseChar || !baseChar.spskill) {
+		result.desc = '未配置必杀';
+		return result;
+	}
+
+	const sp = baseChar.spskill;
+
+	switch (sp.unlockType) {
+		case 'breakthrough':
+			result.unlocked = (instData.tupolevel || 0) >= sp.breakLevel;
+			result.desc = `突破${sp.breakLevel}阶${result.unlocked ? '（已解锁）' : ''}`;
+			break;
+		case 'treasure':
+			// 检查是否装备了对应宝物
+			result.unlocked = false; // 需实现 checkTreasureEquipped
+			result.desc = '宝物解锁';
+			break;
+		default:
+			result.unlocked = false;
+			result.desc = '暂未开放';
+	}
+
+	return result;
+}

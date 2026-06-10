@@ -23,12 +23,12 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 
 	'dmg_up_10': { 
 		type: 'self_stat_percent',
-		pctDmgUp: 0.1,    // 增伤10%
+		pctDmgUp: 0.1,	// 增伤10%
 		desc: '获得10%增伤' 
 	},
 	'dmg_up_20': { 
 		type: 'self_stat_percent',
-		pctDmgUp: 0.2,    
+		pctDmgUp: 0.2,	
 		desc: '获得20%增伤' 
 	},
 	'dmg_up_30': { 
@@ -1166,20 +1166,19 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		desc: '初始能量+1'
 	},
 
-	newtupo0:{
-		type: 'self_stat_flat',
-		atk: 100,
-		desc: '攻击+100固定数值'
-	},
+	// newtupo0:{
+	// },
 	newtupo1:{
 		type: 'self_stat_flat',
-		def: 50,
-		desc: '防御+50固定数值'
+		atk: 100,
+		def: 80,
+		hp: 400,
+		desc: '攻击+100，防御+80，血量+400'
 	},
 	newtupo2:{
-		type: 'self_stat_flat',
-		hp: 200,
-		desc: '血量+200固定数值'
+		type: 'team_stat_flat',
+		atk: 250,
+		desc: '全队获得攻击+250固定数值'
 	},
 	// newtupo3:{},//每名角色各异
 	// newtupo4:{},//每名角色各异
@@ -1191,46 +1190,49 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 	// newtupo6:{},//每名角色各异
 	// newtupo7:{},//每名角色各异
 	newtupo8:{
-		type: 'self_stat_percent',
-		atk: 0.1,
-		def: 0.1,
-		hp: 0.1,
-		desc: '获得10%的攻防血加成'
+		type: 'team_stat_flat',
+		hp: 2500,
+		desc: '全队获得血量+2500'
 	},
 	// newtupo9:{},//每名角色各异
 	newtupo10:{
-		type: 'team_stat_flat',
-		atk: 200,
-		desc: '全队获得攻击+200固定数值'
+		type: 'self_stat_percent',
+		atk: 0.06,
+		def: 0.06,
+		hp: 0.06,
+		desc: '获得6%的攻防血加成'
 	},
 	// newtupo11:{},//每名角色各异
 	newtupo12:{
 		type: 'team_stat_flat',
-		def: 100,
-		desc: '全队获得防御+100固定数值'
+		fixedDmgUp: 3000,
+		fixedDmgDown: 3000,
+		hp: 8000,
+		desc: '全队获得固定增伤+3000，固定减伤+3000，血量+8000'
 	},
 	// newtupo13:{},//每名角色各异
 	newtupo14:{
-		type: 'team_stat_percent',
-		atk: 0.1,
-		def: 0.1,
-		hp: 0.1,
-		desc: '全队获得10%的攻防血加成'
+		type: "self_stat_flat",
+		atk: 3000,
+		def: 1500,
+		hp: 20000,
+		desc: "攻击+3000，防御+1500，血量+20000",
 	},
 	// newtupo15:{},//每名角色各异
 	newtupo16:{
-		type: "self_stat_flat",
-		atk: 1000,
-		def: 500,
-		hp: 2000,
-		desc: "攻击+1000，防御+500，血量+2000",
+		type: 'self_stat_flat',
+		atk: 3000,
+		def: 3000,
+		hp: 24000,
+		desc: '攻击+3000，防御+3000，血量+48000'
 	},
 	// newtupo17:{},//每名角色各异
 	newtupo18:{
 		type: 'self_stat_percent',
-		pctDmgUp: 0.1,    // 增伤10%
-		pctDmgDown: 0.1,  // 减伤10%
-		desc: '增伤10%，减伤10%'
+		atk: 0.1,
+		def: 0.1,
+		hp: 0.1,
+		desc:'获得10%的攻防血加成，解锁必杀（如果有必杀才会生效）'
 	},
 	// newtupo19:{},//每名角色各异
 

@@ -292,7 +292,7 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
 	}
 
 	// ===== 第一步：命中/闪避判定 =====
-	const hitRate = Math.max(0, ((attacker.hit ?? 10000) - (defender.dodge ?? 0))) / 10000;
+	const hitRate = Math.max(0, ((attacker.mingzhong ?? 10000) - (defender.shanbi ?? 0))) / 10000;
 	const isMiss = Math.random() > hitRate;
 
 	if (isMiss) {
@@ -311,7 +311,7 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
 	}
 
 	// ===== 第二步：暴击/抗暴判定 =====
-	const critRate = Math.max(0, ((attacker.crit ?? 0) - (defender.critResist ?? 0))) / 10000;
+	const critRate = Math.max(0, ((attacker.baoji ?? 0) - (defender.kangbao ?? 0))) / 10000;
 	const isCrit = Math.random() < critRate;
 
 	let finalDmg = baseDmg;
@@ -322,7 +322,7 @@ function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
 		finalDmg = baseDmg * 2;
 	} else {
 		// ===== 第三步：格挡判定（仅当不暴击时） =====
-		const blockRate = Math.max(0, ((defender.block ?? 0) - (attacker.pierce ?? 0))) / 10000;
+		const blockRate = Math.max(0, ((defender.gedang ?? 0) - (attacker.poji ?? 0))) / 10000;
 		isBlock = Math.random() < blockRate;
 
 		if (isBlock) {
@@ -1790,12 +1790,12 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			finalSpe = data._compiledStats.totalSpe;
 
 			// ===== 【新增】从编译结果读取新属性 =====
-			finalHit = data._compiledStats.hit ?? 10000;
-			finalDodge = data._compiledStats.dodge ?? 0;
-			finalCrit = data._compiledStats.crit ?? 0;
-			finalCritResist = data._compiledStats.critResist ?? 0;
-			finalPierce = data._compiledStats.pierce ?? 0;
-			finalBlock = data._compiledStats.block ?? 0;
+			finalHit = data._compiledStats.mingzhong ?? 10000;
+			finalDodge = data._compiledStats.shanbi ?? 0;
+			finalCrit = data._compiledStats.baoji ?? 0;
+			finalCritResist = data._compiledStats.kangbao ?? 0;
+			finalPierce = data._compiledStats.poji ?? 0;
+			finalBlock = data._compiledStats.gedang ?? 0;
 
 			finalFixedDmgUp = data._compiledStats.fixedDmgUp ?? 0;
 			finalFixedDmgDown = data._compiledStats.fixedDmgDown ?? 0;
@@ -1815,12 +1815,12 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			finalDef = compiled.def;
 			finalSpe = compiled.spe;
 
-			finalHit = compiled.hit;
-			finalDodge = compiled.dodge;
-			finalCrit = compiled.crit;
-			finalCritResist = compiled.critResist;
-			finalPierce = compiled.pierce;
-			finalBlock = compiled.block;
+			finalHit = compiled.mingzhong;
+			finalDodge = compiled.shanbi;
+			finalCrit = compiled.baoji;
+			finalCritResist = compiled.kangbao;
+			finalPierce = compiled.poji;
+			finalBlock = compiled.gedang;
 
 			finalFixedDmgUp = compiled.fixedDmgUp;
 			finalFixedDmgDown = compiled.fixedDmgDown;
@@ -1838,7 +1838,20 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 
 		let activeTreasures = [];
 
-		const baseSkills = Array.isArray(data.skills) ? [...data.skills] : ['attack1', null, null];
+		// 基础技能（普攻 + 技能）
+		let baseSkills = [...(data.skills || []), null, null, null].slice(0, 3);
+
+		// 检查必杀是否解锁
+		if (data.spskill && hasSpskillUnlocked(data, instData)) {
+			baseSkills[2] = data.spskill.id;
+		} else if (data.spskill) {
+			// 未解锁时必杀位置留空
+			baseSkills[2] = null;
+		} else {
+			// 没有配置必杀
+			baseSkills[2] = null;
+		}
+
 		const allSkills = [...baseSkills, ...effectSkills];
 
 		// ===== 构建单位对象 =====
@@ -1873,12 +1886,12 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			hasAttacked: false,
 
 			// ===== 【新增】战斗概率属性 =====
-			hit: finalHit,
-			dodge: finalDodge,
-			crit: finalCrit,
-			critResist: finalCritResist,
-			pierce: finalPierce,
-			block: finalBlock,
+			mingzhong: finalHit,
+			shanbi: finalDodge,
+			baoji: finalCrit,
+			kangbao: finalCritResist,
+			poji: finalPierce,
+			gedang: finalBlock,
 
 			// ===== 【新增】增伤/减伤 =====
 			fixedDmgUp: finalFixedDmgUp,
@@ -1947,8 +1960,9 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 function getEffectsByTrigger(actor, trigger) {
 	if (!actor || !actor.skills || !Array.isArray(actor.skills)) return [];
 
+	console.log('actor.skills',actor.skills)
 	return actor.skills.filter(skill => {
-		if (typeof skill === 'string') return false; // 跳过技能ID字符串
+		if (typeof skill === 'string'||skill===null) return false; // 跳过技能ID字符串
 		return skill.trigger === trigger;
 	});
 }
@@ -2254,6 +2268,9 @@ function getEmojiClass(emoji) {
 		case '❤️' | 'heart':
 			return { emoji: '❤️', effectClass: 'heart-effect' };
 			break;
+		case '💎' | 'diamond':
+			return { emoji: '💎', effectClass: 'diamond-effect' };
+			break;
 		case '💀' | 'skull':
 			return { emoji: '💀', effectClass: 'skull-effect' };
 			break;
@@ -2283,6 +2300,12 @@ function getEmojiClass(emoji) {
 			break;
 		case '🎵' | 'music':
 			return { emoji: '🎵', effectClass: 'music-effect' };
+			break;
+		case '🌺' | 'flower':
+			return { emoji: '🌺', effectClass: 'flower-effect' };
+			break;
+		case '🍁' | 'maple':
+			return { emoji: '🍁', effectClass: 'maple-effect' };
 			break;
 		case '🪨' | 'rock':
 			return { emoji: '🪨', effectClass: 'rock-effect' };
@@ -2669,7 +2692,7 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
 		return {
 			hp: 500, atk: 50, def: 25, spe: 50,
 			maxHp: 500,
-			hit: 10000, dodge: 0, crit: 0, critResist: 0, pierce: 0, block: 0,
+			mingzhong: 10000, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0,
 			fixedDmgUp: 0, fixedDmgDown: 0, pctDmgUp: 0, pctDmgDown: 0,
 			fixedHeal: 0, fixedBeHeal: 0, pctHeal: 0, pctBeHeal: 0
 		};
@@ -2695,12 +2718,12 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
 	let spe = Math.floor(baseStats.spe * growthFactor);
 
 	// 3. 初始化特殊属性（基础值）
-	let hit = 10000;
-	let dodge = 0;
-	let crit = 0;
-	let critResist = 0;
-	let pierce = 0;
-	let block = 0;
+	let mingzhong = 10000;
+	let shanbi = 0;
+	let baoji = 0;
+	let kangbao = 0;
+	let poji = 0;
+	let gedang = 0;
 	let fixedDmgUp = 0;
 	let fixedDmgDown = 0;
 	let pctDmgUp = 0;
@@ -2732,12 +2755,12 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
 				if (resolvedBuff.atk !== undefined) atk += Number(resolvedBuff.atk);
 				if (resolvedBuff.def !== undefined) def += Number(resolvedBuff.def);
 				if (resolvedBuff.spe !== undefined) spe += Number(resolvedBuff.spe);
-				if (resolvedBuff.hit !== undefined) hit += Number(resolvedBuff.hit);
-				if (resolvedBuff.dodge !== undefined) dodge += Number(resolvedBuff.dodge);
-				if (resolvedBuff.crit !== undefined) crit += Number(resolvedBuff.crit);
-				if (resolvedBuff.critResist !== undefined) critResist += Number(resolvedBuff.critResist);
-				if (resolvedBuff.pierce !== undefined) pierce += Number(resolvedBuff.pierce);
-				if (resolvedBuff.block !== undefined) block += Number(resolvedBuff.block);
+				if (resolvedBuff.mingzhong !== undefined) mingzhong += Number(resolvedBuff.mingzhong);
+				if (resolvedBuff.shanbi !== undefined) shanbi += Number(resolvedBuff.shanbi);
+				if (resolvedBuff.baoji !== undefined) baoji += Number(resolvedBuff.baoji);
+				if (resolvedBuff.kangbao !== undefined) kangbao += Number(resolvedBuff.kangbao);
+				if (resolvedBuff.poji !== undefined) poji += Number(resolvedBuff.poji);
+				if (resolvedBuff.gedang !== undefined) gedang += Number(resolvedBuff.gedang);
 				if (resolvedBuff.fixedDmgUp !== undefined) fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
 				if (resolvedBuff.fixedDmgDown !== undefined) fixedDmgDown += Number(resolvedBuff.fixedDmgDown);
 				if (resolvedBuff.fixedHeal !== undefined) fixedHeal += Number(resolvedBuff.fixedHeal);
@@ -2770,12 +2793,12 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
 	if (overrides.atk !== undefined) atk = overrides.atk;
 	if (overrides.def !== undefined) def = overrides.def;
 	if (overrides.spe !== undefined) spe = overrides.spe;
-	if (overrides.hit !== undefined) hit = overrides.hit;
-	if (overrides.dodge !== undefined) dodge = overrides.dodge;
-	if (overrides.crit !== undefined) crit = overrides.crit;
-	if (overrides.critResist !== undefined) critResist = overrides.critResist;
-	if (overrides.pierce !== undefined) pierce = overrides.pierce;
-	if (overrides.block !== undefined) block = overrides.block;
+	if (overrides.mingzhong !== undefined) mingzhong = overrides.mingzhong;
+	if (overrides.shanbi !== undefined) shanbi = overrides.shanbi;
+	if (overrides.baoji !== undefined) baoji = overrides.baoji;
+	if (overrides.kangbao !== undefined) kangbao = overrides.kangbao;
+	if (overrides.poji !== undefined) poji = overrides.poji;
+	if (overrides.gedang !== undefined) gedang = overrides.gedang;
 	if (overrides.fixedDmgUp !== undefined) fixedDmgUp = overrides.fixedDmgUp;
 	if (overrides.fixedDmgDown !== undefined) fixedDmgDown = overrides.fixedDmgDown;
 	if (overrides.fixedHeal !== undefined) fixedHeal = overrides.fixedHeal;
@@ -2788,7 +2811,7 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
 	return {
 		hp, atk, def, spe,
 		maxHp: hp,
-		hit, dodge, crit, critResist, pierce, block,
+		mingzhong, shanbi, baoji, kangbao, poji, gedang,
 		fixedDmgUp, fixedDmgDown, pctDmgUp, pctDmgDown,
 		fixedHeal, fixedBeHeal, pctHeal, pctBeHeal
 	};

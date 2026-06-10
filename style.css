@@ -953,6 +953,20 @@ body {
 	80% { opacity: 0.8; transform: translateX(-50%) translateY(10px) scale(1); }
 	100% { opacity: 0; transform: translateX(-50%) translateY(15px) scale(0.8); }
 }
+/* 💎 单体攻击：从角色头顶降落 */
+.skill-effect.diamond-effect {
+	left: 50%;
+	top: -10px;
+	animation: diamond-drop 0.6s ease-in forwards;
+}
+
+@keyframes diamond-drop {
+	0% { opacity: 0; transform: translateX(-50%) translateY(-60px) scale(0.5); }
+	40% { opacity: 1; transform: translateX(-50%) translateY(10px) scale(1.3); }
+	60% { opacity: 1; transform: translateX(-50%) translateY(5px) scale(1.1); }
+	80% { opacity: 0.8; transform: translateX(-50%) translateY(10px) scale(1); }
+	100% { opacity: 0; transform: translateX(-50%) translateY(15px) scale(0.8); }
+}
 
 /* 🧪 治疗：从头上向下落在角色身上 */
 .skill-effect.heal-effect {
@@ -989,10 +1003,10 @@ body {
 .skill-effect.lightning-effect {
 	left: 50%;
 	top: -10px;
-	animation: bolt-pierce 0.6s ease-out forwards;
+	animation: lightning-pierce 0.6s ease-out forwards;
 }
 
-@keyframes bolt-pierce {
+@keyframes lightning-pierce {
 	0% { opacity: 0; transform: translateX(-50%) translateY(-40px) scale(0.5); }
 	20% { opacity: 1; transform: translateX(-50%) translateY(0px) scale(1.3); }
 	50% { opacity: 1; transform: translateX(-50%) translateY(40px) scale(1); }
@@ -1163,6 +1177,20 @@ body {
 	100% { opacity: 0; transform: translateX(120%) translateY(70%) scale(0.4); }
 }
 
+/* 🍁 列攻击：从前方贯穿该列最后方 */
+.skill-effect.maple-effect {
+	left: 50%;
+	top: -10px;
+	animation: maple-pierce 0.6s ease-out forwards;
+}
+
+@keyframes maple-pierce {
+	0% { opacity: 0; transform: translateX(-50%) translateY(-40px) scale(0.5); }
+	20% { opacity: 1; transform: translateX(-50%) translateY(0px) scale(1.3); }
+	50% { opacity: 1; transform: translateX(-50%) translateY(40px) scale(1); }
+	70% { opacity: 0.7; transform: translateX(-50%) translateY(70px) scale(0.8); }
+	100% { opacity: 0; transform: translateX(-50%) translateY(90px) scale(0.4); }
+}
 /* 🧪 药剂治疗：从角色头顶洒落，旋转闪烁，然后消失 */
 .skill-effect.heal-effect {
 	left: 50%;
@@ -1198,7 +1226,20 @@ body {
 	box-shadow: inset 0 0 20px 8px rgba(0, 255, 128, 0.5), 0 0 16px 4px rgba(0, 255, 128, 0.3);
 	background: radial-gradient(circle, rgba(0, 255, 128, 0.3) 0%, transparent 70%);
 }
+/* 花：出现在卡片中央，停留少许然后放大，并渐变消失 */
+.skill-effect.flower-effect {
+	left: 50%;
+	top: 50%;
+	animation: flower-center 1s ease-in-out forwards;
+}
 
+@keyframes flower-center {
+	0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+	30% { opacity: 1; transform: translate(-50%, -50%) scale(0.8); }
+	50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+	80% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.8); }
+	100% { opacity: 0; transform: translate(-50%, -50%) scale(2.5); }
+}
 
 /* 🛡️ 无敌特效*/
 .battle-unit.invincible-effect {
