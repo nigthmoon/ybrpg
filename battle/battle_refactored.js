@@ -1018,6 +1018,7 @@ function bs_animateAction(actor, action, callback) {
 
 	// 确定技能Emoji特效
 	const effectInfo = getSkillEffectInfo(action);
+	console.log('[Loop] effectInfo:', effectInfo);
 	const targets = action.targets || [];
 
 	// 延迟200ms后，在目标身上播放Emoji特效
@@ -1200,8 +1201,8 @@ function showPlayerActionUI(actor) {
 		const canUseSkill = actor.energy >= 4 && !isSealed;
 
 		// 判断当前 skills[1] 是否是必杀技
-		const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
-		const isSpskill = !!spData;  // 如果能在 spskill 中找到，说明是必杀技
+		// const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
+		// const isSpskill = !!spData;  // 如果能在 spskill 中找到，说明是必杀技
 		// 更简单的方式：检查 skillId 是否以 'spskill_' 开头
 		const isSpskill = typeof skillId === 'string' && skillId.startsWith('spskill_');
 
@@ -2116,20 +2117,20 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
  * @returns {Array} 匹配的效果对象数组
  */
 function getEffectsByTrigger(actor, trigger) {
-    if (!actor || !actor.skills || !Array.isArray(actor.skills)) return [];
+	if (!actor || !actor.skills || !Array.isArray(actor.skills)) return [];
 
-    return actor.skills.filter(skill => {
-        if (typeof skill === 'string' || skill === null) return false; // 跳过技能ID字符串
-        
-        // ===== 【改造】支持 trigger 为数组 =====
-        if (Array.isArray(skill.trigger)) {
-            // 如果 trigger 是数组，检查是否包含当前 trigger
-            return skill.trigger.includes(trigger);
-        }
-        
-        // 单个字符串的 trigger
-        return skill.trigger === trigger;
-    });
+	return actor.skills.filter(skill => {
+		if (typeof skill === 'string' || skill === null) return false; // 跳过技能ID字符串
+
+		// ===== 【改造】支持 trigger 为数组 =====
+		if (Array.isArray(skill.trigger)) {
+			// 如果 trigger 是数组，检查是否包含当前 trigger
+			return skill.trigger.includes(trigger);
+		}
+
+		// 单个字符串的 trigger
+		return skill.trigger === trigger;
+	});
 }
 
 /**
@@ -2418,63 +2419,63 @@ function showSkillEffect(unit, effectInfo) {
  */
 function getEmojiClass(emoji) {
 	switch (emoji) {
-		case '🔥' | 'fire':
+		case '🔥':
+		case 'fire':
 			return { emoji: '🔥', effectClass: 'fire-effect' };
-			break;
-		case '⚡' | 'lightning':
+		case '⚡':
+		case 'lightning':
 			return { emoji: '⚡', effectClass: 'lightning-effect' };
-			break;
-		case '🧪' | 'heal':
+		case '🧪':
+		case 'heal':
 			return { emoji: '🧪', effectClass: 'heal-effect' };
-			break;
-		case '🌙' | 'moon':
+		case '🌙':
+		case 'moon':
 			return { emoji: '🌙', effectClass: 'moon-effect' };
-			break;
-		case '❤️' | 'heart':
+		case '❤️':
+		case 'heart':
 			return { emoji: '❤️', effectClass: 'heart-effect' };
-			break;
-		case '💎' | 'diamond':
+		case '💎':
+		case 'diamond':
 			return { emoji: '💎', effectClass: 'diamond-effect' };
-			break;
-		case '💀' | 'skull':
+		case '💀':
+		case 'skull':
 			return { emoji: '💀', effectClass: 'skull-effect' };
-			break;
-		case '💥' | 'explosion':
+		case '💥':
+		case 'explosion':
 			return { emoji: '💥', effectClass: 'explosion-effect' };
-			break;
-		case '🌪️' | 'wind':
+		case '🌪️':
+		case 'wind':
 			return { emoji: '🌪️', effectClass: 'wind-effect' };
-			break;
-		case '⚔️' | 'sword':
+		case '⚔️':
+		case 'sword':
 			return { emoji: '⚔️', effectClass: 'sword-effect' };
-			break;
-		case '🧊' | 'ice':
+		case '🧊':
+		case 'ice':
 			return { emoji: '🧊', effectClass: 'ice-effect' };
-			break;
-		case '💧' | 'rain':
+		case '💧':
+		case 'rain':
 			return { emoji: '💧', effectClass: 'rain-effect' };
-			break;
-		case '❄️' | 'snow':
+		case '❄️':
+		case 'snow':
 			return { emoji: '❄️', effectClass: 'snow-effect' };
-			break;
-		case '⭐' | 'star':
+		case '⭐':
+		case 'star':
 			return { emoji: '⭐', effectClass: 'star-effect' };
-			break;
-		case '☄️' | 'comet':
+		case '☄️':
+		case 'comet':
 			return { emoji: '☄️', effectClass: 'comet-effect' };
-			break;
-		case '🎵' | 'music':
+		case '🎵':
+		case 'music':
 			return { emoji: '🎵', effectClass: 'music-effect' };
-			break;
-		case '🌺' | 'flower':
+		case '🌺':
+		case 'flower':
 			return { emoji: '🌺', effectClass: 'flower-effect' };
-			break;
-		case '🍁' | 'maple':
+		case '🍁':
+		case 'maple':
 			return { emoji: '🍁', effectClass: 'maple-effect' };
-			break;
-		case '🪨' | 'rock':
+		case '🪨':
+		case 'rock':
 			return { emoji: '🪨', effectClass: 'rock-effect' };
-			break;
 		default:
 			return { emoji: '🔥', effectClass: 'fire-effect' };
 	}
@@ -2490,6 +2491,15 @@ function getSkillEffectInfo(action) {
 	const skillId = action.type === 'pugong' ? action.skillId : action.skillId;
 	const sData = contentList[skillType] && contentList[skillType][skillId];
 
+	// const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
+
+	console.log('action', action)
+	console.log('sData', sData)
+	// ===== 【修改】优先使用技能数据中定义的 emoji =====
+	if (sData && sData.emoji) {
+		console.log('getEmojiClass(sData.emoji)', getEmojiClass(sData.emoji))
+		return getEmojiClass(sData.emoji);
+	}
 	if (action.emoji) return getEmojiClass(action.emoji);
 	if (!sData || !sData.target) {
 		// fallback: 单体攻击

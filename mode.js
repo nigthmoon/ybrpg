@@ -2133,8 +2133,9 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 		const sectionDiv = document.createElement('div');
 		sectionDiv.className = 'team-info-skill-section';
 		const headerRow = document.createElement('div');
+		const emoji = ` `+pgData.emoji || '';
 		headerRow.className = 'team-info-skill-row';
-		headerRow.innerHTML = `<span class="skill-label" style="color:#5ba8ff">普攻</span><span class="skill-name">${pgData.name}</span>`;
+		headerRow.innerHTML = `<span class="skill-label" style="color:#5ba8ff">普攻</span><span class="skill-name">${pgData.name}${emoji}</span>`;
 		sectionDiv.appendChild(headerRow);
 		if (pgData.intro) {
 			const introEl = document.createElement('div');
@@ -2163,8 +2164,9 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			const sectionDiv = document.createElement('div');
 			sectionDiv.className = 'team-info-skill-section';
 			const headerRow = document.createElement('div');
+			const emoji = ` `+spData.emoji || '';
 			headerRow.className = 'team-info-skill-row';
-			headerRow.innerHTML = `<span class="skill-label" style="color:#ffd700">必杀</span><span class="skill-name">${spData.name}</span>`;
+			headerRow.innerHTML = `<span class="skill-label" style="color:#ffd700">必杀</span><span class="skill-name">${spData.name}${emoji}</span>`;
 			sectionDiv.appendChild(headerRow);
 			if (spData.intro) {
 				const introEl = document.createElement('div');
@@ -2192,7 +2194,8 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 				sectionDiv.className = 'team-info-skill-section';
 				const headerRow = document.createElement('div');
 				headerRow.className = 'team-info-skill-row';
-				headerRow.innerHTML = `<span class="skill-label" style="color:#ff8c00">技能</span><span class="skill-name">${skData.name}</span>`;
+				const emoji = ` `+skData.emoji || '';
+				headerRow.innerHTML = `<span class="skill-label" style="color:#ff8c00">技能</span><span class="skill-name">${skData.name}${emoji}</span>`;
 				sectionDiv.appendChild(headerRow);
 				if (skData.intro) {
 					const introEl = document.createElement('div');
@@ -2213,8 +2216,9 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			sectionDiv.className = 'team-info-skill-section';
 			sectionDiv.style.opacity = '0.6';
 			const headerRow = document.createElement('div');
+			const emoji = ` `+spData.emoji || '';
 			headerRow.className = 'team-info-skill-row';
-			headerRow.innerHTML = `<span class="skill-label" style="color:#888">必杀（未解锁）</span><span class="skill-name" style="color:#888">${spData.name}</span>`;
+			headerRow.innerHTML = `<span class="skill-label" style="color:#888">必杀（未解锁）</span><span class="skill-name" style="color:#888">${spData.name}${emoji}</span>`;
 			sectionDiv.appendChild(headerRow);
 			const unlockInfo = document.createElement('div');
 			unlockInfo.className = 'team-info-skill-desc';
@@ -2231,8 +2235,9 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			const sectionDiv = document.createElement('div');
 			sectionDiv.className = 'team-info-skill-section';
 			const headerRow = document.createElement('div');
+			const emoji = ` `+skData.emoji || '';
 			headerRow.className = 'team-info-skill-row';
-			headerRow.innerHTML = `<span class="skill-label" style="color:#ff8c00">技能</span><span class="skill-name">${skData.name}</span>`;
+			headerRow.innerHTML = `<span class="skill-label" style="color:#ff8c00">技能</span><span class="skill-name">${skData.name}${emoji}</span>`;
 			sectionDiv.appendChild(headerRow);
 			if (skData.intro) {
 				const introEl = document.createElement('div');
@@ -4748,7 +4753,8 @@ function showCharDetail(_parentContainer, charData) {
 
 		const nameEl = document.createElement('div');
 		nameEl.className = 'gallery-skill-name';
-		nameEl.textContent = spData.name;
+		const emoji = spData.emoji ? ` ${spData.emoji}` : '';
+		nameEl.textContent = spData.name+emoji;
 		nameEl.style.color = '#888';
 		section.appendChild(nameEl);
 
@@ -8164,7 +8170,8 @@ function showBagCharDetailPopup(instanceId, charId) {
 
 			const nameEl = document.createElement('div');
 			nameEl.className = 'gallery-skill-name';
-			nameEl.textContent = spData.name;
+			const emoji = spData.emoji ? ` ${spData.emoji}` : '';
+			nameEl.textContent = spData.name+emoji;
 			section.appendChild(nameEl);
 
 			const intro = document.createElement('div');
@@ -8205,7 +8212,8 @@ function showBagCharDetailPopup(instanceId, charId) {
 
 			const nameEl = document.createElement('div');
 			nameEl.className = 'gallery-skill-name';
-			nameEl.textContent = spData.name;
+			const emoji = spData.emoji ? ` ${spData.emoji}` : '';
+			nameEl.textContent = spData.name+emoji;
 			nameEl.style.color = '#888';
 			section.appendChild(nameEl);
 
@@ -8511,7 +8519,8 @@ function buildSkillSection(label, sData, color) {
 	section.appendChild(title);
 	const nameEl = document.createElement('div');
 	nameEl.className = 'gallery-skill-name';
-	nameEl.textContent = sData.name;
+	const emoji = sData.emoji ? ` ${sData.emoji}` : '';
+	nameEl.textContent = sData.name+emoji;
 	section.appendChild(nameEl);
 	const intro = document.createElement('div');
 	intro.className = 'gallery-skill-intro';

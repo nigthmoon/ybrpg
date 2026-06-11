@@ -658,13 +658,14 @@ const contentList = {
 			emoji: "🔥",
 		},
 		pugong_004: {
-			name: "攻击",
-			intro: "对单体造成伤害，伤害系数为125%",
-			ai_intro: "对前排单体造成伤害，伤害系数为125%",
-			target: ["one", "first"],
-			coefficient: 1.25,
-			isRecover: false,
-			emoji: "🔥",
+			name:'攻击',
+			intro:'对一行敌人造成伤害，伤害系数为55%',//常规描述
+			ai_intro:'对敌方后排造成伤害，伤害系数为55%',//代表ai的倾向
+			//名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
+			target:['row','last'],//第一个元素代表选目标模式，第二个元素ai倾向
+			coefficient:0.55,
+			isRecover:false,
+			emoji:'🌙',
 		},
 		pugong_005: {
 			name: "回复",
