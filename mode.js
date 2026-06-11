@@ -2133,7 +2133,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 		const sectionDiv = document.createElement('div');
 		sectionDiv.className = 'team-info-skill-section';
 		const headerRow = document.createElement('div');
-		const emoji = ` `+pgData.emoji || '';
+		const emoji = ` ` + pgData.emoji || '';
 		headerRow.className = 'team-info-skill-row';
 		headerRow.innerHTML = `<span class="skill-label" style="color:#5ba8ff">普攻</span><span class="skill-name">${pgData.name}${emoji}</span>`;
 		sectionDiv.appendChild(headerRow);
@@ -2164,7 +2164,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			const sectionDiv = document.createElement('div');
 			sectionDiv.className = 'team-info-skill-section';
 			const headerRow = document.createElement('div');
-			const emoji = ` `+spData.emoji || '';
+			const emoji = ` ` + spData.emoji || '';
 			headerRow.className = 'team-info-skill-row';
 			headerRow.innerHTML = `<span class="skill-label" style="color:#ffd700">必杀</span><span class="skill-name">${spData.name}${emoji}</span>`;
 			sectionDiv.appendChild(headerRow);
@@ -2194,7 +2194,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 				sectionDiv.className = 'team-info-skill-section';
 				const headerRow = document.createElement('div');
 				headerRow.className = 'team-info-skill-row';
-				const emoji = ` `+skData.emoji || '';
+				const emoji = ` ` + skData.emoji || '';
 				headerRow.innerHTML = `<span class="skill-label" style="color:#ff8c00">技能</span><span class="skill-name">${skData.name}${emoji}</span>`;
 				sectionDiv.appendChild(headerRow);
 				if (skData.intro) {
@@ -2216,14 +2216,14 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			sectionDiv.className = 'team-info-skill-section';
 			sectionDiv.style.opacity = '0.6';
 			const headerRow = document.createElement('div');
-			const emoji = ` `+spData.emoji || '';
+			const emoji = ` ` + spData.emoji || '';
 			headerRow.className = 'team-info-skill-row';
 			headerRow.innerHTML = `<span class="skill-label" style="color:#888">必杀（未解锁）</span><span class="skill-name" style="color:#888">${spData.name}${emoji}</span>`;
 			sectionDiv.appendChild(headerRow);
 			const unlockInfo = document.createElement('div');
 			unlockInfo.className = 'team-info-skill-desc';
 			unlockInfo.style.color = '#ffd700';
-			unlockInfo.textContent = `🔒 突破18阶解锁必杀`;
+			unlockInfo.textContent = `🔒 突破19阶解锁必杀`;
 			sectionDiv.appendChild(unlockInfo);
 			attrDiv.appendChild(sectionDiv);
 		}
@@ -2235,7 +2235,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			const sectionDiv = document.createElement('div');
 			sectionDiv.className = 'team-info-skill-section';
 			const headerRow = document.createElement('div');
-			const emoji = ` `+skData.emoji || '';
+			const emoji = ` ` + skData.emoji || '';
 			headerRow.className = 'team-info-skill-row';
 			headerRow.innerHTML = `<span class="skill-label" style="color:#ff8c00">技能</span><span class="skill-name">${skData.name}${emoji}</span>`;
 			sectionDiv.appendChild(headerRow);
@@ -4754,7 +4754,7 @@ function showCharDetail(_parentContainer, charData) {
 		const nameEl = document.createElement('div');
 		nameEl.className = 'gallery-skill-name';
 		const emoji = spData.emoji ? ` ${spData.emoji}` : '';
-		nameEl.textContent = spData.name+emoji;
+		nameEl.textContent = spData.name + emoji;
 		nameEl.style.color = '#888';
 		section.appendChild(nameEl);
 
@@ -6998,7 +6998,7 @@ function showMainView() {
 		// 添加游戏标题
 		const titleDiv = document.createElement('div');
 		titleDiv.className = 'game-title';
-		titleDiv.textContent = '夜白旅程';
+		titleDiv.textContent = '星河之契';
 		mainView.appendChild(titleDiv);
 
 		// 创建按钮容器
@@ -7038,7 +7038,7 @@ function showMainView() {
 		versionDiv.style.color = '#888';
 		versionDiv.style.fontSize = '12px';
 		versionDiv.style.marginTop = '20px';
-		versionDiv.textContent = `独立版 ${window.GAME_VERSION || 'v1.0'}`;
+		versionDiv.textContent = `版本号 ${window.GAME_VERSION || 'v1.0'}`;
 		mainView.appendChild(versionDiv);
 	}
 }
@@ -8171,7 +8171,7 @@ function showBagCharDetailPopup(instanceId, charId) {
 			const nameEl = document.createElement('div');
 			nameEl.className = 'gallery-skill-name';
 			const emoji = spData.emoji ? ` ${spData.emoji}` : '';
-			nameEl.textContent = spData.name+emoji;
+			nameEl.textContent = spData.name + emoji;
 			section.appendChild(nameEl);
 
 			const intro = document.createElement('div');
@@ -8213,7 +8213,7 @@ function showBagCharDetailPopup(instanceId, charId) {
 			const nameEl = document.createElement('div');
 			nameEl.className = 'gallery-skill-name';
 			const emoji = spData.emoji ? ` ${spData.emoji}` : '';
-			nameEl.textContent = spData.name+emoji;
+			nameEl.textContent = spData.name + emoji;
 			nameEl.style.color = '#888';
 			section.appendChild(nameEl);
 
@@ -8520,7 +8520,7 @@ function buildSkillSection(label, sData, color) {
 	const nameEl = document.createElement('div');
 	nameEl.className = 'gallery-skill-name';
 	const emoji = sData.emoji ? ` ${sData.emoji}` : '';
-	nameEl.textContent = sData.name+emoji;
+	nameEl.textContent = sData.name + emoji;
 	section.appendChild(nameEl);
 	const intro = document.createElement('div');
 	intro.className = 'gallery-skill-intro';
@@ -8648,19 +8648,48 @@ function updateCharacterSP(current) {
 	newcurrent.fixedBeHeal = current.fixedBeHeal ?? rankData.fixedBeHeal ?? 0;
 	newcurrent.pctHeal = current.pctHeal ?? rankData.pctHeal ?? 0;
 	newcurrent.pctBeHeal = current.pctBeHeal ?? rankData.pctBeHeal ?? 0;
-	// 【新增】检查突破等级是否解锁必杀
+
+	// ===== 【修复】检查突破等级是否解锁必杀技 =====
 	newcurrent.openSpskill = false;
-	const tupoList = current.tupoList || [];
+
+	// 从角色基础定义中获取完整的 tupoList
+	const charId = current.charId || current.id;
+	const baseChar = characterList && characterList[charId];
+	const fullTupoList = current.tupoList || (baseChar && baseChar.tupoList) || [];
+
+	// 遍历已解锁的突破等级，检查是否有 openSpskill 标记
 	for (let i = 0; i < tupolevel; i++) {
-		const buff = tupoList[i];
+		const buff = fullTupoList[i];
 		if (!buff) continue;
+
 		let resolvedBuff = buff;
 		if (typeof buff === 'string') {
 			const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
 			resolvedBuff = lib[buff];
 		}
+
 		if (resolvedBuff && resolvedBuff.openSpskill) {
 			newcurrent.openSpskill = true;
+			break; // 找到一个就够了
+		}
+	}
+
+	// ===== 同时检查宝物是否解锁必杀技 =====
+	if (!newcurrent.openSpskill && current.instanceId) {
+		const instanceId = current.instanceId;
+		if (window.charTreasureSlots && window.charTreasureSlots[instanceId]) {
+			const slots = window.charTreasureSlots[instanceId];
+			slots.forEach(treasureId => {
+				if (!treasureId) return;
+				const treasureData = window.treasureInventory && window.treasureInventory[treasureId];
+				if (treasureData) {
+					const defs = getTreasureDefs();
+					const tDef = defs[treasureData.baseId];
+					if (tDef && tDef.openSpskill) {
+						newcurrent.openSpskill = true;
+					}
+				}
+			});
 		}
 	}
 	return newcurrent;
@@ -9087,6 +9116,9 @@ function levelUpMainCharacter() {
 			instData.spe = updatedStats.spe;
 			instData.maxHp = updatedStats.hp;
 			instData.currentHp = updatedStats.hp; // 升级回满血
+			if (updatedStats.openSpskill !== undefined) {
+				instData.openSpskill = updatedStats.openSpskill;
+			}
 		}
 	} else {
 		// 备用方案：简单线性成长
@@ -9457,6 +9489,9 @@ function breakthroughMainCharacter(targetTupoLevel) {
 			instData.spe = updatedStats.spe;
 			instData.maxHp = updatedStats.hp;
 			instData.currentHp = updatedStats.hp;
+			if (updatedStats.openSpskill !== undefined) {
+				instData.openSpskill = updatedStats.openSpskill;
+			}
 		}
 	} else {
 		// 备用方案

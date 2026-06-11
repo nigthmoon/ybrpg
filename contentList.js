@@ -1172,6 +1172,37 @@ const contentList = {
 			isRecover: false,
 			emoji: "❄️",
 		},
+
+		pugong_501:{
+			name:'攻击',
+			intro:'对全体敌人造成伤害，伤害系数为100%',//常规描述
+			ai_intro:'对全体敌人造成伤害，伤害系数为100%',//代表ai的倾向
+			//名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
+			target:['all','all'],//第一个元素代表选目标模式，第二个元素ai倾向
+			coefficient:1,
+			isRecover:false,
+			emoji:'⚡',
+		},
+		pugong_502:{
+			name:'攻击',
+			intro:'对全体敌人造成伤害，伤害系数为100%',//常规描述
+			ai_intro:'对全体敌人造成伤害，伤害系数为100%',//代表ai的倾向
+			//名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
+			target:['all','all'],//第一个元素代表选目标模式，第二个元素ai倾向
+			coefficient:1,
+			isRecover:false,
+			emoji:'🌪️',
+		},
+		pugong_503:{
+			name:'攻击',
+			intro:'对全体敌人造成伤害，伤害系数为100%',//常规描述
+			ai_intro:'对全体敌人造成伤害，伤害系数为100%',//代表ai的倾向
+			//名词解释：伤害系数，指行动的角色的攻击力乘以伤害系数即为伤害数值，治疗系数同理
+			target:['all','all'],//第一个元素代表选目标模式，第二个元素ai倾向
+			coefficient:1,
+			isRecover:false,
+			emoji:'🌺',
+		},
 	},
 	skill: {
 		skill_000: {
@@ -1232,7 +1263,7 @@ const contentList = {
 			name: "技能攻击",
 			intro: "对一列敌人造成伤害，伤害系数为225%",
 			ai_intro: "对敌方默认前排所在的一列敌人造成伤害，伤害系数为225%",
-			target: ["row", "first"],
+			target: ["column", "first"],
 			coefficient: 2.25,
 			isRecover: false,
 			emoji: '🍁',
@@ -1722,6 +1753,34 @@ const contentList = {
 			coefficient: 2.85,
 			isRecover: false,
 			emoji: "❄️",
+		},
+		
+		skill_501:{
+			name:'技能攻击',
+			intro:'对全体造成伤害，伤害系数为150%',
+			ai_intro:'对全体敌方造成伤害，伤害系数为150%',
+			target:['all','all'],
+			coefficient:1.5,
+			isRecover:false,
+			emoji:'⚡',
+		},
+		skill_502:{
+			name:'技能攻击',
+			intro:'对全体造成伤害，伤害系数为150%',
+			ai_intro:'对全体敌方造成伤害，伤害系数为150%',
+			target:['all','all'],
+			coefficient:1.5,
+			isRecover:false,
+			emoji:'🌪️',
+		},
+		skill_503:{
+			name:'技能攻击',
+			intro:'对全体造成伤害，伤害系数为150%',
+			ai_intro:'对全体敌方造成伤害，伤害系数为150%',
+			target:['all','all'],
+			coefficient:1.5,
+			isRecover:false,
+			emoji:'🌺',
 		},
 	},
 	spskill: {

@@ -1,4 +1,4 @@
-// ====== 夜白旅程 - 重构战斗核心系统 (事件驱动版) ======
+// ====== 星河之契 - 重构战斗核心系统 (事件驱动版) ======
 
 // ====== 1. 全局状态声明 ======
 
@@ -1018,7 +1018,6 @@ function bs_animateAction(actor, action, callback) {
 
 	// 确定技能Emoji特效
 	const effectInfo = getSkillEffectInfo(action);
-	console.log('[Loop] effectInfo:', effectInfo);
 	const targets = action.targets || [];
 
 	// 延迟200ms后，在目标身上播放Emoji特效
@@ -2493,11 +2492,9 @@ function getSkillEffectInfo(action) {
 
 	// const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
 
-	console.log('action', action)
-	console.log('sData', sData)
 	// ===== 【修改】优先使用技能数据中定义的 emoji =====
 	if (sData && sData.emoji) {
-		console.log('getEmojiClass(sData.emoji)', getEmojiClass(sData.emoji))
+		
 		return getEmojiClass(sData.emoji);
 	}
 	if (action.emoji) return getEmojiClass(action.emoji);

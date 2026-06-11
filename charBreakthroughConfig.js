@@ -1,5 +1,5 @@
 /**
- * 夜白旅程 - 角色突破配置与Buff库
+ * 星河之契 - 角色突破配置与Buff库
  * 
  * 所有技能统一使用 {trigger, filter, content} 格式
  * 战斗系统通过 normalizeBreakthroughData 编译后，直接推入角色的 skills 数组
