@@ -1199,23 +1199,18 @@ function showPlayerActionUI(actor) {
 		const isSealed = actor.sealed || actor.permanentlySealed;
 		const canUseSkill = actor.energy >= 4 && !isSealed;
 
-		// 判断当前 skills[1] 是否是必杀技
-		// const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
-		// const isSpskill = !!spData;  // 如果能在 spskill 中找到，说明是必杀技
-		// 更简单的方式：检查 skillId 是否以 'spskill_' 开头
 		const isSpskill = typeof skillId === 'string' && skillId.startsWith('spskill_');
 
 		const btn = document.createElement('button');
 		btn.className = 'action-btn skill-btn' + (canUseSkill ? '' : ' disabled');
 
-		// 【新概念】按钮文字统一显示"技能"，不区分必杀
 		btn.textContent = isSpskill ? '必杀 ' + getSkillEmoji('spskill', skillId) : '技能 ' + getSkillEmoji('skill', skillId);
 
 		if (canUseSkill) {
 			btn.onclick = (e) => {
 				e.stopPropagation();
-				// 【新概念】统一使用 'skill' 类型，trigger 统一为 'skillHit'
-				enterTargetSelection(actor, 'skill', skillId, 4);
+				// ===== 【修复】根据 isSpskill 传入正确的 skillType =====
+				enterTargetSelection(actor, isSpskill ? 'spskill' : 'skill', skillId, 4);
 			};
 		} else {
 			btn.onclick = (e) => {
@@ -1708,9 +1703,9 @@ function normalizeBreakthroughData(data, index) {
 	if (typeof data === 'string') {
 		const libData = BREAKTHROUGH_LIB[data];
 		if (libData) {
-			libData.level = index;
-			// 深度拷贝，避免引用问题
+			// 先深拷贝，再修改 level
 			const clone = JSON.parse(JSON.stringify(libData));
+			clone.level = index;  // 修改拷贝后的对象
 			return clone;
 		} else {
 			console.warn(`[BattleInit] Breakthrough ID '${data}' not found.`);
@@ -1723,7 +1718,6 @@ function normalizeBreakthroughData(data, index) {
 	}
 	return null;
 }
-
 
 /**
  * 战斗开始，初始化信息
@@ -1948,6 +1942,29 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			finalFixedBeHeal = data._compiledStats.fixedBeHeal ?? 0;
 			finalPctHeal = data._compiledStats.pctHeal ?? 0;
 			finalPctBeHeal = data._compiledStats.pctBeHeal ?? 0;
+		} else if (data.statsPreCompiled) {
+			// 【新增】直接从 data 读取预编译属性
+			finalHp = data.hp || 0;
+			finalAtk = data.atk || 0;
+			finalDef = data.def || 0;
+			finalSpe = data.spe || 0;
+
+			finalHit = data.mingzhong ?? 10000;
+			finalDodge = data.shanbi ?? 0;
+			finalCrit = data.baoji ?? 0;
+			finalCritResist = data.kangbao ?? 0;
+			finalPierce = data.poji ?? 0;
+			finalBlock = data.gedang ?? 0;
+
+			finalFixedDmgUp = data.fixedDmgUp ?? 0;
+			finalFixedDmgDown = data.fixedDmgDown ?? 0;
+			finalPctDmgUp = data.pctDmgUp ?? 0;
+			finalPctDmgDown = data.pctDmgDown ?? 0;
+
+			finalFixedHeal = data.fixedHeal ?? 0;
+			finalFixedBeHeal = data.fixedBeHeal ?? 0;
+			finalPctHeal = data.pctHeal ?? 0;
+			finalPctBeHeal = data.pctBeHeal ?? 0;
 		} else {
 			// ===== 【修改】使用 compileEnemyStats 编译属性 =====
 			const compiled = compileEnemyStats(data.id, data.level || 1, data.tupolevel || 0, data);
@@ -2494,7 +2511,7 @@ function getSkillEffectInfo(action) {
 
 	// ===== 【修改】优先使用技能数据中定义的 emoji =====
 	if (sData && sData.emoji) {
-		
+
 		return getEmojiClass(sData.emoji);
 	}
 	if (action.emoji) return getEmojiClass(action.emoji);

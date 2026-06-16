@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<title>星河之契</title>
-	<link rel="stylesheet" href="./style.css"></link>
+	<link rel="stylesheet" href="./style.css">
+	</link>
 	<!-- 或者用另一种方式： -->
 	<script>
 		window.GAME_VERSION = 'v2.1.5';
 	</script>
 </head>
+
 <body>
 	<!-- 游戏主容器 -->
 	<div id="ybrpg-root">
@@ -19,7 +22,7 @@
 			<div id="main-view">
 				<h2>游戏主界面</h2>
 			</div>
-						<!-- 新增存档界面 -->
+			<!-- 新增存档界面 -->
 			<div id="save-view">
 				<!-- 存档界面内容将由JS动态生成 -->
 			</div>
@@ -58,11 +61,36 @@
 			<button class="ybrpg-nav-btn" id="btn-settings">设置</button>
 		</div>
 	</div>
-	
+	<script>
+		// // ====== 页面关闭/切后台时自动存档 ======
+		// // 页面隐藏（切后台/锁屏/切标签页）
+		// document.addEventListener('visibilitychange', () => {
+		// 	if (document.hidden) {
+		// 		if (window.SaveManager && window.SaveManager._dirty) {
+		// 			window.SaveManager.flushSave();
+		// 		}
+		// 	}
+		// });
+
+		// // 页面即将关闭/刷新
+		// window.addEventListener('beforeunload', () => {
+		// 	if (window.SaveManager && window.SaveManager._dirty) {
+		// 		// 同步写入（不等待异步）
+		// 		window.SaveManager._performAutoSave();
+		// 	}
+		// });
+
+		// // 移动端页面可见性变化
+		// document.addEventListener('pagehide', () => {
+		// 	if (window.SaveManager && window.SaveManager._dirty) {
+		// 		window.SaveManager._performAutoSave();
+		// 	}
+		// });
+	</script>
 	<!-- 引入宝物定义（需在 gameData.js 之前） -->
 	<!-- <script src="./treasureList.js"></script> -->
 	<script src="./equip.js"></script>
-	
+
 	<!-- 引入游戏数据管理 -->
 	<script src="./gameData.js"></script>
 	<!-- 引入 mode.js -->
@@ -75,4 +103,5 @@
 	<script src="./battle/battle_refactored.js"></script>
 
 </body>
+
 </html>

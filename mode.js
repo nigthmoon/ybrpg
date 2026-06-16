@@ -248,6 +248,7 @@ function renderTeamView(container) {
 
 	// 记录当前选中的方格索引
 	window._selectedSlotIndex = null;
+
 }
 /**
  * 显示角色详细属性弹窗（阵容界面使用）
@@ -763,12 +764,33 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 							if (result.success) {
 								toast(result.message, 'success');
 								// refreshTeamViewDisplay();
-								refreshAllViews({
-									instanceId: instanceId,
-									forceTeamRebuild: false
-								});
-								// ===== 【改为】直接刷新弹窗内容，不关闭重建 =====
+								// refreshAllViews({
+								// 	instanceId: instanceId,
+								// 	forceTeamRebuild: false
+								// });
+
+								// 优化方案：只刷新必要的部分
+								// 1. 更新角色实例的 openSpskill
+								const instData = window.charBagData && window.charBagData[instanceId];
+								if (instData) {
+									const updatedStats = updateCharacterSP(instData);
+									if (updatedStats && updatedStats.openSpskill !== undefined) {
+										instData.openSpskill = updatedStats.openSpskill;
+									}
+								}
+
+								// 2. 只刷新阵容显示（不重新渲染整个视图）
+								refreshTeamViewDisplay();
+
+								// 3. 刷新当前弹窗
 								refreshBreakthroughPopupContent(popup, instanceId);
+
+								// 4. 自动保存
+								if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+									SaveManager.autoSave();
+								}
+								// ===== 【改为】直接刷新弹窗内容，不关闭重建 =====
+								// refreshBreakthroughPopupContent(popup, instanceId);
 							} else {
 								toast(result.message, 'error');
 							}
@@ -826,11 +848,32 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 								toast(result.message, 'success');
 								// if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
 								// showBreakthroughPreviewPopup();
-								refreshAllViews({
-									instanceId: instanceId,
-									forceTeamRebuild: false
-								});
+								// refreshAllViews({
+								// 	instanceId: instanceId,
+								// 	forceTeamRebuild: false
+								// });
+
+								// 优化方案：只刷新必要的部分
+								// 1. 更新角色实例的 openSpskill
+								const instData = window.charBagData && window.charBagData[instanceId];
+								if (instData) {
+									const updatedStats = updateCharacterSP(instData);
+									if (updatedStats && updatedStats.openSpskill !== undefined) {
+										instData.openSpskill = updatedStats.openSpskill;
+									}
+								}
+
+								// 2. 只刷新阵容显示（不重新渲染整个视图）
+								refreshTeamViewDisplay();
+
+								// 3. 刷新当前弹窗
 								refreshBreakthroughPopupContent(popup, instanceId);
+
+								// 4. 自动保存
+								if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+									SaveManager.autoSave();
+								}
+								// refreshBreakthroughPopupContent(popup, instanceId);
 							} else {
 								toast(result.message, 'error');
 							}
@@ -1106,11 +1149,32 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 						if (result.success) {
 							toast(result.message, 'success');
 							// 原地刷新弹窗内容
-							refreshAllViews({
-								instanceId: instanceId,
-								forceTeamRebuild: false
-							});
+							// refreshAllViews({
+							// 	instanceId: instanceId,
+							// 	forceTeamRebuild: false
+							// });
+
+							// 优化方案：只刷新必要的部分
+							// 1. 更新角色实例的 openSpskill
+							const instData = window.charBagData && window.charBagData[instanceId];
+							if (instData) {
+								const updatedStats = updateCharacterSP(instData);
+								if (updatedStats && updatedStats.openSpskill !== undefined) {
+									instData.openSpskill = updatedStats.openSpskill;
+								}
+							}
+
+							// 2. 只刷新阵容显示（不重新渲染整个视图）
+							refreshTeamViewDisplay();
+
+							// 3. 刷新当前弹窗
 							refreshBreakthroughPopupContent(popup, instanceId);
+
+							// 4. 自动保存
+							if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+								SaveManager.autoSave();
+							}
+							// refreshBreakthroughPopupContent(popup, instanceId);
 						} else {
 							toast(result.message, 'error');
 						}
@@ -1153,11 +1217,32 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 						const result = promoteCharacterRank(instanceId);
 						if (result.success) {
 							toast(result.message, 'success');
-							refreshAllViews({
-								instanceId: instanceId,
-								forceTeamRebuild: false
-							});
+							// refreshAllViews({
+							// 	instanceId: instanceId,
+							// 	forceTeamRebuild: false
+							// });
+
+							// 优化方案：只刷新必要的部分
+							// 1. 更新角色实例的 openSpskill
+							const instData = window.charBagData && window.charBagData[instanceId];
+							if (instData) {
+								const updatedStats = updateCharacterSP(instData);
+								if (updatedStats && updatedStats.openSpskill !== undefined) {
+									instData.openSpskill = updatedStats.openSpskill;
+								}
+							}
+
+							// 2. 只刷新阵容显示（不重新渲染整个视图）
+							refreshTeamViewDisplay();
+
+							// 3. 刷新当前弹窗
 							refreshBreakthroughPopupContent(popup, instanceId);
+
+							// 4. 自动保存
+							if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+								SaveManager.autoSave();
+							}
+							// refreshBreakthroughPopupContent(popup, instanceId);
 						} else {
 							toast(result.message, 'error');
 						}
@@ -1724,6 +1809,7 @@ function refreshAllTeamSlots() {
 		const slotEl = gridDiv.children[i];
 		if (slotEl) renderTeamSlot(slotEl, i);
 	}
+	SaveManager.autoSave();
 }
 /**
  * 刷新角色详情弹窗的内容
@@ -3108,8 +3194,11 @@ function showCharDetailPopup(charId) {
 					// 3. 重新打开详情弹窗
 					// 注意：showCharDetailPopup 内部会重新从 characterList 和 charBagData 获取数据
 					showCharDetailPopup(charId);
-					updateCharacterSP(saveData)
-
+					// updateCharacterSP(saveData)
+					const updatedStats = updateCharacterSP(saveData);
+					if (updatedStats && updatedStats.openSpskill !== undefined) {
+						saveData.openSpskill = updatedStats.openSpskill;
+					}
 					toast('升级成功！', 'success');
 				});
 			} else {
@@ -4161,7 +4250,7 @@ function updateBagCharDetailBar(charInst) {
 	const levelText = saveData ? `Lv.${saveData.level}` : 'Lv.1';
 	const attrDiv = document.createElement('div');
 	attrDiv.className = 'team-info-attr';
-
+	SaveManager.autoSave();
 }
 
 // 背包中查看宝物详情弹窗
@@ -5632,13 +5721,14 @@ function buildPlayerTeamForBattle() {
 
 		// ===== 【关键修改】优先使用编译后的属性 =====
 		let hp, atk, def, spe;
+		const compiled = instData._compiledStats;
 
-		if (instData._compiledStats) {
+		if (compiled) {
 			// 已经有编译结果，直接使用
-			hp = instData._compiledStats.totalHp;
-			atk = instData._compiledStats.totalAtk;
-			def = instData._compiledStats.totalDef;
-			spe = instData._compiledStats.totalSpe;
+			hp = compiled.totalHp;
+			atk = compiled.totalAtk;
+			def = compiled.totalDef;
+			spe = compiled.totalSpe;
 		} else {
 			// 没有编译结果，从原始数据读取
 			hp = instData.hp || (base ? base.hp : 0);
@@ -5662,6 +5752,30 @@ function buildPlayerTeamForBattle() {
 			rank: instData.rank || (base ? base.rank : 'common'),
 			tupolevel: instData.tupolevel || 0,
 			tupoList: instData.tupoList || (base ? base.tupoList : []),
+
+			// ===== 【新增】传递 openSpskill =====
+			openSpskill: instData.openSpskill === true,
+
+			// ===== 【新增】标记属性已预编译 =====
+			statsPreCompiled: !!compiled,
+
+			// ===== 【新增】从编译结果读取战斗属性（带容错） =====
+			mingzhong: compiled?.mingzhong ?? 10000,
+			shanbi: compiled?.shanbi ?? 0,
+			baoji: compiled?.baoji ?? 0,
+			kangbao: compiled?.kangbao ?? 0,
+			poji: compiled?.poji ?? 0,
+			gedang: compiled?.gedang ?? 0,
+
+			fixedDmgUp: compiled?.fixedDmgUp ?? 0,
+			fixedDmgDown: compiled?.fixedDmgDown ?? 0,
+			pctDmgUp: compiled?.pctDmgUp ?? 0,
+			pctDmgDown: compiled?.pctDmgDown ?? 0,
+
+			fixedHeal: compiled?.fixedHeal ?? 0,
+			fixedBeHeal: compiled?.fixedBeHeal ?? 0,
+			pctHeal: compiled?.pctHeal ?? 0,
+			pctBeHeal: compiled?.pctBeHeal ?? 0,
 		};
 	});
 }
@@ -8792,7 +8906,9 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 		const targetData = window.charBagData[targetInstId];
 		targetData.level = newLevel;
 		var newcurrent = updateCharacterSP(targetData);
-
+		if (newcurrent && newcurrent.openSpskill !== undefined) {
+			targetData.openSpskill = newcurrent.openSpskill;
+		}
 		const newHp = newcurrent.hp;
 		const newAtk = newcurrent.atk;
 		const newDef = newcurrent.def;
@@ -9138,7 +9254,7 @@ function levelUpMainCharacter() {
 	refreshAllTeamSlots();
 
 	// 5. 自动保存
-	SaveManager.autoSave();
+	// SaveManager.autoSave();
 }
 
 /**
@@ -9180,6 +9296,10 @@ function upgradeCharacterInstance(instanceId, levelsToAdd = 1) {
 	// updateCharacterSP 会根据 instData 中的 level, rank, template 等字段重新计算 hp, atk, def, spe
 	if (typeof updateCharacterSP === 'function') {
 		updateCharacterSP(instData);
+		const updatedStats = updateCharacterSP(instData);
+		if (updatedStats && updatedStats.openSpskill !== undefined) {
+			instData.openSpskill = updatedStats.openSpskill;
+		}
 	} else {
 		console.error('[升级警告] updateCharacterSP 函数未定义，属性未更新');
 		// 如果 updateCharacterSP 不存在，可能需要手动计算或报错
@@ -9279,6 +9399,10 @@ function breakthroughCharacterInstance(targetInstId) {
 	// 重新计算属性
 	if (typeof updateCharacterSP === 'function') {
 		updateCharacterSP(targetInst);
+		const updatedStats = updateCharacterSP(targetInst);
+		if (updatedStats && updatedStats.openSpskill !== undefined) {
+			targetInst.openSpskill = updatedStats.openSpskill;
+		}
 	}
 
 	SaveManager.autoSave();
@@ -9405,6 +9529,10 @@ function promoteCharacterRank(targetInstId) {
 	// 重新计算属性
 	if (typeof updateCharacterSP === 'function') {
 		updateCharacterSP(targetInst);
+		const updatedStats = updateCharacterSP(targetInst);
+		if (updatedStats && updatedStats.openSpskill !== undefined) {
+			targetInst.openSpskill = updatedStats.openSpskill;
+		}
 	}
 
 	SaveManager.autoSave();
@@ -9508,7 +9636,7 @@ function breakthroughMainCharacter(targetTupoLevel) {
 	refreshAllTeamSlots();
 
 	// 7. 自动保存
-	SaveManager.autoSave();
+	// SaveManager.autoSave();
 
 	console.log(`主角突破成功！从 ${currentTupoLevel} 阶突破至 ${instData.tupolevel || currentTupoLevel + breakCount} 阶`);
 	return true;
@@ -9630,7 +9758,7 @@ function promoteMainCharacter(targetRank) {
 	refreshAllTeamSlots();
 
 	// 8. 自动保存
-	SaveManager.autoSave();
+	// SaveManager.autoSave();
 
 	console.log(`主角升阶成功！当前品质: ${getRankLabel(instData.rank)}`);
 	return true;
@@ -11331,6 +11459,32 @@ function refreshAllViews(options = {}) {
 	window._isRefreshing = true;
 
 	try {
+		// 更高效的写法
+		if (window.currentTeam) {
+			const teamInstanceIds = new Set(window.currentTeam.filter(Boolean));
+
+			// 刷新队伍中的角色
+			teamInstanceIds.forEach(instId => {
+				const instData = window.charBagData && window.charBagData[instId];
+				if (instData) {
+					const updatedStats = updateCharacterSP(instData);
+					if (updatedStats && updatedStats.openSpskill !== undefined) {
+						instData.openSpskill = updatedStats.openSpskill;
+					}
+				}
+			});
+
+			// 如果有传入的 instanceId 且不在队伍中（如背包中的角色），也刷新
+			if (instanceId && !teamInstanceIds.has(instanceId)) {
+				const instData = window.charBagData && window.charBagData[instanceId];
+				if (instData) {
+					const updatedStats = updateCharacterSP(instData);
+					if (updatedStats && updatedStats.openSpskill !== undefined) {
+						instData.openSpskill = updatedStats.openSpskill;
+					}
+				}
+			}
+		}
 		// 1. 刷新阵容视图
 		const teamView = document.getElementById('team-view');
 		if (teamView && teamView.style.display !== 'none') {
@@ -11342,10 +11496,48 @@ function refreshAllViews(options = {}) {
 		}
 
 		// 2. 刷新背包视图（保留武将和宝物选中状态）
+		// 2. 刷新背包视图（保留武将和宝物选中状态）
 		try {
 			const bagView = document.getElementById('bag-view');
 			if (bagView && bagView.style.display !== 'none') {
-				// ... 原有背包刷新代码保持不变 ...
+				// 保存当前选中的卡片信息
+				const selectedCharCard = bagView.querySelector('.charbag-char-card.selected');
+				const selectedEquipCard = bagView.querySelector('.equipbag-treasure-card.selected');
+
+				const selectedCharInstanceId = selectedCharCard ? selectedCharCard.dataset.instanceId : null;
+				const selectedCharId = selectedCharCard ? selectedCharCard.dataset.charId : null;
+				const selectedTreasureInstanceId = selectedEquipCard ? selectedEquipCard.dataset.treasureInstanceId : null;
+
+				// 重新渲染背包
+				renderBagView(bagView);
+
+				// 恢复选中状态（延迟执行，等待渲染完成）
+				setTimeout(() => {
+					if (selectedCharInstanceId) {
+						const newCharCard = bagView.querySelector(`.charbag-char-card[data-instance-id="${selectedCharInstanceId}"]`);
+						if (newCharCard) {
+							newCharCard.classList.add('selected');
+							// 同时更新详情横框
+							const instData = window.charBagData && window.charBagData[selectedCharInstanceId];
+							if (instData) {
+								updateBagCharDetailBar({
+									instanceId: selectedCharInstanceId,
+									charId: selectedCharId || instData.charId,
+									...instData
+								});
+							}
+						}
+					}
+
+					if (selectedTreasureInstanceId) {
+						const newEquipCard = bagView.querySelector(`.equipbag-treasure-card[data-treasure-instance-id="${selectedTreasureInstanceId}"]`);
+						if (newEquipCard) {
+							newEquipCard.classList.add('selected');
+							// 触发点击事件更新详情横框
+							newEquipCard.click();
+						}
+					}
+				}, 50);
 			}
 		} catch (e) {
 			console.warn('[刷新] 背包刷新异常:', e);
@@ -11393,9 +11585,9 @@ function refreshAllViews(options = {}) {
 		} catch (e) { }
 
 		// 7. 自动保存
-		if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
-			SaveManager.autoSave();
-		}
+		// if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
+		// 	SaveManager.autoSave();
+		// }
 	} finally {
 		window._isRefreshing = false;
 	}
