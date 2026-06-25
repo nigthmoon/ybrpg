@@ -8,19 +8,6 @@
 
 // ==================== 全局 Buff 库定义 ====================
 const BREAKTHROUGH_BUFF_LIBRARY = {
-	// --- 增伤类 (常驻) ---
-	// 注意：这些是 stat_percent 类型，不适合用 trigger/filter/content。
-	// 但为了后续统一，暂时保留为 passive_effect 引用，后续在 buildUnit 中特殊处理。
-	// 如果你希望全部统一为 skill_effect，可以在战斗开始时通过 roundStart 一次性设置。
-	// 'dmg_up_10': { type: 'passive_effect', effectId: 'dmg_up_10', desc: '获得10%增伤' },
-	// 'dmg_up_20': { type: 'passive_effect', effectId: 'dmg_up_20', desc: '获得20%增伤' },
-	// 'dmg_up_30': { type: 'passive_effect', effectId: 'dmg_up_30', desc: '获得30%增伤' },
-	// 'dmg_up_50': { type: 'passive_effect', effectId: 'dmg_up_50', desc: '获得50%增伤' },
-	// 'dmg_reduce_10': { type: 'passive_effect', effectId: 'dmg_reduce_10', desc: '获得10%减伤' },
-	// 'dmg_reduce_20': { type: 'passive_effect', effectId: 'dmg_reduce_20', desc: '获得20%减伤' },
-	// 'dmg_reduce_30': { type: 'passive_effect', effectId: 'dmg_reduce_30', desc: '获得30%减伤' },
-	// 'dmg_reduce_50': { type: 'passive_effect', effectId: 'dmg_reduce_50', desc: '获得50%减伤' },
-
 	'dmg_up_10': { 
 		type: 'self_stat_percent',
 		pctDmgUp: 0.1,	// 增伤10%

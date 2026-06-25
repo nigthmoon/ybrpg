@@ -6375,7 +6375,7 @@ function refreshShopItems(type = 'normal') {
 						price: tData.price || 200,
 						sold: false,
 						number: 1,
-						icon: tData.icon || `./image/equip/${id}.png`,
+						icon: tData.icon || `./image/skill/${id}.png`,
 					})
 				}
 			}
@@ -6416,7 +6416,7 @@ function refreshShopItems(type = 'normal') {
 						price: (tData.price || 200) * beilv,
 						sold: false,
 						number: beilv,
-						icon: tData.icon || `./image/equip/${id}.png`,
+						icon: tData.icon || `./image/skill/${id}.png`,
 					})
 				}
 			}
@@ -10908,8 +10908,15 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 	const baseDef = Math.floor(baseStats.def * growthFactor);
 	const baseSpe = Math.floor(baseStats.spe * growthFactor);
 
+	// ===== 【新增】突破基础收益：每次突破增加模板基础值的一半 =====
+	const tupolevel = instData.tupolevel || 0;
+	const tupoBaseHp = Math.floor(baseStats.hp * 0.5 * tupolevel);
+	const tupoBaseAtk = Math.floor(baseStats.atk * 0.5 * tupolevel);
+	const tupoBaseDef = Math.floor(baseStats.def * 0.5 * tupolevel);
+	const tupoBaseSpe = Math.floor(baseStats.spe * 0.5 * tupolevel);
+
 	// 3. 初始化各类加成
-	let selfFlat = { hp: 0, atk: 0, def: 0, spe: 0 };
+	let selfFlat = { hp: tupoBaseHp, atk: tupoBaseAtk, def: tupoBaseDef, spe: tupoBaseSpe };
 	let teamFlat = { hp: 0, atk: 0, def: 0, spe: 0 };
 	let selfPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
 	let teamPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
@@ -10953,7 +10960,7 @@ function calculateInstanceFinalStats(instanceId, externalTeamBonuses = null) {
 		teamPercentPctBeHeal = externalTeamBonuses.teamPercent.pctBeHeal || 0;
 	}
 
-	const tupolevel = instData.tupolevel || 0;
+	// const tupolevel = instData.tupolevel || 0;
 	const tupoList = instData.tupoList || baseChar.tupoList || [];
 
 	// 4. 遍历突破等级，计算加成

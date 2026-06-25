@@ -1734,7 +1734,7 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 		}
 	});
 
-	function buildUnit(data, side, slotIndex) {
+	function buildUnit(data, side, slotIndex, teamBonuses = null) {
 		if (!data || !data.id) return null;
 
 		const isPreCompiled = data.statsPreCompiled === true || !data.instanceId;
@@ -1967,7 +1967,7 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			finalPctBeHeal = data.pctBeHeal ?? 0;
 		} else {
 			// ===== 【修改】使用 compileEnemyStats 编译属性 =====
-			const compiled = compileEnemyStats(data.id, data.level || 1, data.tupolevel || 0, data);
+			const compiled = compileEnemyStats(data.id, data.level || 1, data.tupolevel || 0, data, teamBonuses);
 
 			finalHp = compiled.hp;
 			finalAtk = compiled.atk;
@@ -2081,14 +2081,24 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			pctBeHeal: finalPctBeHeal,
 		};
 
+		// ===== 【新增】存储团队加成信息（用于后续 applyTeamBreakthroughBuffs） =====
+		if (compiled._teamBuffs) {
+			unit._teamBuffs = [compiled._teamBuffs];
+		}
+		if (compiled._teamPercentBuffs) {
+			unit._teamPercentBuffs = [compiled._teamPercentBuffs];
+		}
+
 		if (passiveBuffs.length > 0) unit.buff.push(...passiveBuffs);
 		return unit;
 	}
 
 
-	const playerUnits = playerTeam.map((u, i) => buildUnit(u, 'player', i));
-	const enemyUnits = enemyTeam.map((u, i) => buildUnit(u, 'enemy', i));
+	// ===== 【新增】计算敌人的全队突破加成 =====
+	const enemyTeamBonuses = calculateEnemyTeamBonuses(enemyTeam);
 
+	const playerUnits = playerTeam.map((u, i) => buildUnit(u, 'player', i));
+	const enemyUnits = enemyTeam.map((u, i) => buildUnit(u, 'enemy', i, enemyTeamBonuses));
 	// ===== 【移除】不再需要 applyTeamBreakthroughBuffs，因为属性已在 calculateInstanceFinalStats 中编译 =====
 	// applyTeamBreakthroughBuffs(playerUnits);
 	// applyTeamBreakthroughBuffs(enemyUnits);
@@ -2873,9 +2883,10 @@ function processBuffDecayBySlotKey(actionSlotKey) {
  * @param {number} level - 等级
  * @param {number} tupolevel - 突破等级
  * @param {Object} overrides - 可选，覆盖特定属性
+ * @param {Object} teamBonuses - 可选，全队突破加成汇总
  * @returns {Object} 编译后的角色属性
  */
-function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
+function compileEnemyStats(charId, level, tupolevel, overrides = {}, teamBonuses = null) {
 	const baseChar = characterList[charId];
 	if (!baseChar) {
 		return {
@@ -2887,8 +2898,8 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
 		};
 	}
 
-	const rank = baseChar.rank || 'common';
-	const template = baseChar.template || 'balanced';
+	const rank = overrides.rank || baseChar.rank || 'common';
+	const template = overrides.template || baseChar.template || 'balanced';
 
 	// 1. 获取模板基础属性
 	const templateData = window.characterTemplate || characterTemplate;
@@ -2906,6 +2917,13 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
 	let def = Math.floor(baseStats.def * growthFactor);
 	let spe = Math.floor(baseStats.spe * growthFactor);
 
+	// ===== 【新增】突破基础收益：每次突破增加模板基础值的一半 =====
+	const tupoLevel = tupolevel || 0;
+	hp += Math.floor(baseStats.hp * 0.5 * tupoLevel);
+	atk += Math.floor(baseStats.atk * 0.5 * tupoLevel);
+	def += Math.floor(baseStats.def * 0.5 * tupoLevel);
+	spe += Math.floor(baseStats.spe * 0.5 * tupoLevel);
+
 	// 3. 初始化特殊属性（基础值）
 	let mingzhong = 10000;
 	let shanbi = 0;
@@ -2922,9 +2940,13 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
 	let pctHeal = 0;
 	let pctBeHeal = 0;
 
-	// 4. 应用突破加成
+	// 4. 应用突破加成（自身）
 	const tupoList = baseChar.tupoList || [];
 	const effectiveTupoLevel = Math.min(tupolevel || 0, tupoList.length);
+
+	// 收集自身的 team_stat 加成，用于计算全队汇总
+	let selfTeamFlat = { hp: 0, atk: 0, def: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0, fixedDmgUp: 0, fixedDmgDown: 0, fixedHeal: 0, fixedBeHeal: 0 };
+	let selfTeamPercent = { atk: 0, def: 0, hp: 0, spe: 0, pctDmgUp: 0, pctDmgDown: 0, pctHeal: 0, pctBeHeal: 0 };
 
 	for (let i = 0; i < effectiveTupoLevel; i++) {
 		const buff = tupoList[i];
@@ -2968,13 +2990,70 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
 				break;
 
 			case 'team_stat_flat':
-				// 敌方全队固定加成暂不处理（每个角色独立编译）
+				// 收集全队固定加成
+				if (resolvedBuff.hp !== undefined) selfTeamFlat.hp += Number(resolvedBuff.hp);
+				if (resolvedBuff.atk !== undefined) selfTeamFlat.atk += Number(resolvedBuff.atk);
+				if (resolvedBuff.def !== undefined) selfTeamFlat.def += Number(resolvedBuff.def);
+				if (resolvedBuff.spe !== undefined) selfTeamFlat.spe += Number(resolvedBuff.spe);
+				if (resolvedBuff.mingzhong !== undefined) selfTeamFlat.mingzhong += Number(resolvedBuff.mingzhong);
+				if (resolvedBuff.shanbi !== undefined) selfTeamFlat.shanbi += Number(resolvedBuff.shanbi);
+				if (resolvedBuff.baoji !== undefined) selfTeamFlat.baoji += Number(resolvedBuff.baoji);
+				if (resolvedBuff.kangbao !== undefined) selfTeamFlat.kangbao += Number(resolvedBuff.kangbao);
+				if (resolvedBuff.poji !== undefined) selfTeamFlat.poji += Number(resolvedBuff.poji);
+				if (resolvedBuff.gedang !== undefined) selfTeamFlat.gedang += Number(resolvedBuff.gedang);
+				if (resolvedBuff.fixedDmgUp !== undefined) selfTeamFlat.fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
+				if (resolvedBuff.fixedDmgDown !== undefined) selfTeamFlat.fixedDmgDown += Number(resolvedBuff.fixedDmgDown);
+				if (resolvedBuff.fixedHeal !== undefined) selfTeamFlat.fixedHeal += Number(resolvedBuff.fixedHeal);
+				if (resolvedBuff.fixedBeHeal !== undefined) selfTeamFlat.fixedBeHeal += Number(resolvedBuff.fixedBeHeal);
 				break;
 
 			case 'team_stat_percent':
-				// 敌方全队百分比加成暂不处理
+				// 收集全队百分比加成
+				if (resolvedBuff.atk !== undefined) selfTeamPercent.atk += Number(resolvedBuff.atk);
+				if (resolvedBuff.def !== undefined) selfTeamPercent.def += Number(resolvedBuff.def);
+				if (resolvedBuff.hp !== undefined) selfTeamPercent.hp += Number(resolvedBuff.hp);
+				if (resolvedBuff.spe !== undefined) selfTeamPercent.spe += Number(resolvedBuff.spe);
+				if (resolvedBuff.pctDmgUp !== undefined) selfTeamPercent.pctDmgUp += Number(resolvedBuff.pctDmgUp);
+				if (resolvedBuff.pctDmgDown !== undefined) selfTeamPercent.pctDmgDown += Number(resolvedBuff.pctDmgDown);
+				if (resolvedBuff.pctHeal !== undefined) selfTeamPercent.pctHeal += Number(resolvedBuff.pctHeal);
+				if (resolvedBuff.pctBeHeal !== undefined) selfTeamPercent.pctBeHeal += Number(resolvedBuff.pctBeHeal);
 				break;
 		}
+	}
+
+	// ===== 【新增】应用全队突破加成 =====
+	if (teamBonuses) {
+		// 全队固定加成
+		hp += teamBonuses.teamFlat.hp || 0;
+		atk += teamBonuses.teamFlat.atk || 0;
+		def += teamBonuses.teamFlat.def || 0;
+		spe += teamBonuses.teamFlat.spe || 0;
+		mingzhong += teamBonuses.teamFlat.mingzhong || 0;
+		shanbi += teamBonuses.teamFlat.shanbi || 0;
+		baoji += teamBonuses.teamFlat.baoji || 0;
+		kangbao += teamBonuses.teamFlat.kangbao || 0;
+		poji += teamBonuses.teamFlat.poji || 0;
+		gedang += teamBonuses.teamFlat.gedang || 0;
+		fixedDmgUp += teamBonuses.teamFlat.fixedDmgUp || 0;
+		fixedDmgDown += teamBonuses.teamFlat.fixedDmgDown || 0;
+		fixedHeal += teamBonuses.teamFlat.fixedHeal || 0;
+		fixedBeHeal += teamBonuses.teamFlat.fixedBeHeal || 0;
+
+		// 全队百分比加成（在固定加成之后应用）
+		const teamPercentHp = teamBonuses.teamPercent.hp || 0;
+		const teamPercentAtk = teamBonuses.teamPercent.atk || 0;
+		const teamPercentDef = teamBonuses.teamPercent.def || 0;
+		const teamPercentSpe = teamBonuses.teamPercent.spe || 0;
+
+		if (teamPercentHp > 0) hp = Math.floor(hp * (1 + teamPercentHp));
+		if (teamPercentAtk > 0) atk = Math.floor(atk * (1 + teamPercentAtk));
+		if (teamPercentDef > 0) def = Math.floor(def * (1 + teamPercentDef));
+		if (teamPercentSpe > 0) spe = Math.floor(spe * (1 + teamPercentSpe));
+
+		pctDmgUp += teamBonuses.teamPercent.pctDmgUp || 0;
+		pctDmgDown += teamBonuses.teamPercent.pctDmgDown || 0;
+		pctHeal += teamBonuses.teamPercent.pctHeal || 0;
+		pctBeHeal += teamBonuses.teamPercent.pctBeHeal || 0;
 	}
 
 	// 5. 应用覆盖值
@@ -2983,25 +3062,81 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}) {
 	if (overrides.def !== undefined) def = overrides.def;
 	if (overrides.spe !== undefined) spe = overrides.spe;
 	if (overrides.mingzhong !== undefined) mingzhong = overrides.mingzhong;
-	if (overrides.shanbi !== undefined) shanbi = overrides.shanbi;
-	if (overrides.baoji !== undefined) baoji = overrides.baoji;
-	if (overrides.kangbao !== undefined) kangbao = overrides.kangbao;
-	if (overrides.poji !== undefined) poji = overrides.poji;
-	if (overrides.gedang !== undefined) gedang = overrides.gedang;
-	if (overrides.fixedDmgUp !== undefined) fixedDmgUp = overrides.fixedDmgUp;
-	if (overrides.fixedDmgDown !== undefined) fixedDmgDown = overrides.fixedDmgDown;
-	if (overrides.fixedHeal !== undefined) fixedHeal = overrides.fixedHeal;
-	if (overrides.fixedBeHeal !== undefined) fixedBeHeal = overrides.fixedBeHeal;
-	if (overrides.pctDmgUp !== undefined) pctDmgUp = overrides.pctDmgUp;
-	if (overrides.pctDmgDown !== undefined) pctDmgDown = overrides.pctDmgDown;
-	if (overrides.pctHeal !== undefined) pctHeal = overrides.pctHeal;
-	if (overrides.pctBeHeal !== undefined) pctBeHeal = overrides.pctBeHeal;
+	// ... 其他覆盖值保持不变 ...
 
 	return {
 		hp, atk, def, spe,
 		maxHp: hp,
 		mingzhong, shanbi, baoji, kangbao, poji, gedang,
 		fixedDmgUp, fixedDmgDown, pctDmgUp, pctDmgDown,
-		fixedHeal, fixedBeHeal, pctHeal, pctBeHeal
+		fixedHeal, fixedBeHeal, pctHeal, pctBeHeal,
+		// ===== 【新增】返回团队加成信息 =====
+		_teamBuffs: selfTeamFlat,
+		_teamPercentBuffs: selfTeamPercent
 	};
+}
+
+/**
+ * 计算敌人队伍的全队突破加成汇总
+ * @param {Array} enemyTeam - 敌人队伍数组
+ * @returns {Object} { teamFlat: {...}, teamPercent: {...} }
+ */
+function calculateEnemyTeamBonuses(enemyTeam) {
+    const teamFlat = { hp: 0, atk: 0, def: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0, fixedDmgUp: 0, fixedDmgDown: 0, fixedHeal: 0, fixedBeHeal: 0 };
+    const teamPercent = { hp: 0, atk: 0, def: 0, spe: 0, pctDmgUp: 0, pctDmgDown: 0, pctHeal: 0, pctBeHeal: 0 };
+
+    enemyTeam.forEach(data => {
+        if (!data || !data.id) return;
+        const baseChar = characterList[data.id];
+        if (!baseChar) return;
+
+        const tupoList = data.tupoList || baseChar.tupoList || [];
+        const tupolevel = data.tupolevel || 0;
+        const effectiveLevel = Math.min(tupolevel, tupoList.length);
+
+        for (let i = 0; i < effectiveLevel; i++) {
+            const buff = tupoList[i];
+            if (!buff) continue;
+
+            let resolvedBuff = buff;
+            if (typeof buff === 'string') {
+                const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+                resolvedBuff = lib[buff];
+            }
+            if (!resolvedBuff) continue;
+
+            const type = resolvedBuff.type;
+            switch (type) {
+                case 'team_stat_flat':
+                    if (resolvedBuff.hp !== undefined) teamFlat.hp += Number(resolvedBuff.hp);
+                    if (resolvedBuff.atk !== undefined) teamFlat.atk += Number(resolvedBuff.atk);
+                    if (resolvedBuff.def !== undefined) teamFlat.def += Number(resolvedBuff.def);
+                    if (resolvedBuff.spe !== undefined) teamFlat.spe += Number(resolvedBuff.spe);
+                    if (resolvedBuff.mingzhong !== undefined) teamFlat.mingzhong += Number(resolvedBuff.mingzhong);
+                    if (resolvedBuff.shanbi !== undefined) teamFlat.shanbi += Number(resolvedBuff.shanbi);
+                    if (resolvedBuff.baoji !== undefined) teamFlat.baoji += Number(resolvedBuff.baoji);
+                    if (resolvedBuff.kangbao !== undefined) teamFlat.kangbao += Number(resolvedBuff.kangbao);
+                    if (resolvedBuff.poji !== undefined) teamFlat.poji += Number(resolvedBuff.poji);
+                    if (resolvedBuff.gedang !== undefined) teamFlat.gedang += Number(resolvedBuff.gedang);
+                    if (resolvedBuff.fixedDmgUp !== undefined) teamFlat.fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
+                    if (resolvedBuff.fixedDmgDown !== undefined) teamFlat.fixedDmgDown += Number(resolvedBuff.fixedDmgDown);
+                    if (resolvedBuff.fixedHeal !== undefined) teamFlat.fixedHeal += Number(resolvedBuff.fixedHeal);
+                    if (resolvedBuff.fixedBeHeal !== undefined) teamFlat.fixedBeHeal += Number(resolvedBuff.fixedBeHeal);
+                    break;
+
+                case 'team_stat_percent':
+                    if (resolvedBuff.atk !== undefined) teamPercent.atk += Number(resolvedBuff.atk);
+                    if (resolvedBuff.def !== undefined) teamPercent.def += Number(resolvedBuff.def);
+                    if (resolvedBuff.hp !== undefined) teamPercent.hp += Number(resolvedBuff.hp);
+                    if (resolvedBuff.spe !== undefined) teamPercent.spe += Number(resolvedBuff.spe);
+                    if (resolvedBuff.pctDmgUp !== undefined) teamPercent.pctDmgUp += Number(resolvedBuff.pctDmgUp);
+                    if (resolvedBuff.pctDmgDown !== undefined) teamPercent.pctDmgDown += Number(resolvedBuff.pctDmgDown);
+                    if (resolvedBuff.pctHeal !== undefined) teamPercent.pctHeal += Number(resolvedBuff.pctHeal);
+                    if (resolvedBuff.pctBeHeal !== undefined) teamPercent.pctBeHeal += Number(resolvedBuff.pctBeHeal);
+                    break;
+            }
+        }
+    });
+
+    return { teamFlat, teamPercent };
 }
