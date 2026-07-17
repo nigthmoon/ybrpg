@@ -4009,7 +4009,7 @@ function updateBagEquipDetailBar(baseId, tDef, bagItem) {
 	// 更新描述
 	const descEl = document.getElementById('bag-detail-equip-desc');
 	if (descEl) {
-		let descText = tDef.desc || '';
+		let descText = tDef.desc(treasureLevel) || '';
 		// 【修改】这里不再单独显示等级，因为名称里已经显示了
 		// descText += ` | 持有: 1`;
 
@@ -6509,7 +6509,17 @@ function showItemDetail(item) {
 			</div>
 		`;
 	} else {
+		var str = '';
 		// 宝物详情
+		if(item.desc){
+			if(typeof item.desc === 'function'){
+				str=item.desc(item.level);
+			}
+			else str=item.desc;
+		}
+		else{
+			str='暂无描述';
+		}
 		content = `
 			<div style="text-align:center;margin-bottom:15px;">
 				<div style="width:80px;height:80px;margin:0 auto;border:3px solid #888;border-radius:8px;overflow:hidden;background:#444;">
@@ -6517,8 +6527,18 @@ function showItemDetail(item) {
 				</div>
 				<h3 style="margin:10px 0 5px;color:#fff;">${item.name}</h3>
 			</div>
-			${item.desc ? `<div style="padding:8px;background:#333;border-radius:6px;font-size:14px;color:#ccc;line-height:1.6;">${item.desc}</div>` : '<div style="color:#888;text-align:center;">暂无描述</div>'}
+			${str ? `<div style="padding:8px;background:#333;border-radius:6px;font-size:14px;color:#ccc;line-height:1.6;">${str}</div>` : '<div style="color:#888;text-align:center;">暂无描述</div>'}
 		`;
+		// 宝物详情
+		// content = `
+		// 	<div style="text-align:center;margin-bottom:15px;">
+		// 		<div style="width:80px;height:80px;margin:0 auto;border:3px solid #888;border-radius:8px;overflow:hidden;background:#444;">
+		// 			${item.icon ? `<img src="${item.icon}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='?'">` : '<span style="display:flex;align-items:center;justify-content:center;height:100%;font-size:30px;">?</span>'}
+		// 		</div>
+		// 		<h3 style="margin:10px 0 5px;color:#fff;">${item.name}</h3>
+		// 	</div>
+		// 	${item.desc ? `<div style="padding:8px;background:#333;border-radius:6px;font-size:14px;color:#ccc;line-height:1.6;">${item.desc}</div>` : '<div style="color:#888;text-align:center;">暂无描述</div>'}
+		// `;
 	}
 
 	card.innerHTML = content;
@@ -7379,10 +7399,10 @@ const SaveManager = {
 
 		// ===== 【新增】保存宝物槽位数据和背包Tab =====
 		gameData.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));
-		if (!gameData.data._playerPreferences) {
-			gameData.data._playerPreferences = {};
+		if (!gameData.data.playerPreferences) {
+			gameData.data.playerPreferences = {};
 		}
-		gameData.data._playerPreferences.bagTab = window.bagTab || 'char';
+		gameData.data.playerPreferences.bagTab = window.bagTab || 'char';
 		// ============================================
 		// 同步到 GameData
 		gameData.data.baseInfo.saveName = `存档${slot}`;
@@ -7410,7 +7430,8 @@ const SaveManager = {
 			saveName: `存档${slot}`,
 			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
 			playerPreferences: {  // 【新增】
-				bagTab: window.bagTab || 'char'
+				bagTab: window.bagTab || 'char',
+				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true
 			}
 		};
 		localStorage.setItem(`ybrpg_save_${slot}`, JSON.stringify(compatData));
@@ -7447,9 +7468,11 @@ const SaveManager = {
 				console.log(`[存档加载] ${compatibility.message}`);
 			}
 
-			// 【新增】恢复背包Tab
-			if (parsed.playerPreferences?.bagTab) {
-				window.bagTab = parsed.playerPreferences.bagTab;
+			// 【新增】恢复偏好设置
+			if (parsed.playerPreferences) {
+				window.bagTab = parsed.playerPreferences.bagTab || 'char';
+				window.showFormulaDetail = parsed.playerPreferences.showFormulaDetail !== undefined
+					? parsed.playerPreferences.showFormulaDetail : true;
 			} else {
 				window.bagTab = 'char';
 			}
@@ -7536,8 +7559,10 @@ const SaveManager = {
 			window.charBagData = data._charBag || {};
 			window.treasureEquipData = data._treasures || {};
 			window.treasureBagData = data._treasureBag || {};
-			// 【新增】
-			window.bagTab = data._playerPreferences?.bagTab || 'char';
+			// 【新增】恢复偏好设置
+			const prefs = data.playerPreferences || data._playerPreferences || {};
+			window.bagTab = prefs.bagTab || 'char';
+			window.showFormulaDetail = prefs.showFormulaDetail !== undefined ? prefs.showFormulaDetail : true;
 		}
 
 		// 确保 gameData 内存与存档数据一致
@@ -7569,11 +7594,11 @@ const SaveManager = {
 		if (!gameData.data || !gameData.data.team) {
 			gameData.data = gameData.getDefaultData();
 		}
-		// 【新增】保存当前的背包Tab状态
-		if (!gameData.data._playerPreferences) {
-			gameData.data._playerPreferences = {};
-		}
-		gameData.data._playerPreferences.bagTab = window.bagTab || 'char';
+	// 【新增】保存当前的背包Tab状态
+	if (!gameData.data.playerPreferences) {
+		gameData.data.playerPreferences = {};
+	}
+	gameData.data.playerPreferences.bagTab = window.bagTab || 'char';
 
 		// 迁移旧数据：如果索引0存的是手动存档（旧逻辑），迁移到索引1
 		const slot0Raw = localStorage.getItem(`${gameData.STORAGE_KEY}_0`);
@@ -7628,7 +7653,8 @@ const SaveManager = {
 			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
 			charTreasureSlots: window.charTreasureSlots || {},
 			playerPreferences: {
-				bagTab: window.bagTab || 'char'
+				bagTab: window.bagTab || 'char',
+				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true
 			}
 		};
 		localStorage.setItem(SaveManager.AUTO_KEY, JSON.stringify(compatData));
@@ -7671,11 +7697,13 @@ const SaveManager = {
 				} else if (compatibility.message) {
 					console.log(`[存档加载] ${compatibility.message}`);
 				}
-				// 【新增】恢复背包Tab
-				if (parsed.playerPreferences?.bagTab) {
-					window.bagTab = parsed.playerPreferences.bagTab;
+				// 【新增】恢复偏好设置
+				if (parsed.playerPreferences) {
+					window.bagTab = parsed.playerPreferences.bagTab || 'char';
+					window.showFormulaDetail = parsed.playerPreferences.showFormulaDetail !== undefined
+						? parsed.playerPreferences.showFormulaDetail : true;
 				} else {
-					window.bagTab = 'char'; // 默认值
+					window.bagTab = 'char';
 				}
 
 				// 迁移逻辑同 loadFromSlot
@@ -7763,8 +7791,10 @@ const SaveManager = {
 				window.treasureBagData = data._treasureBag || {};
 				window.autoBattle = parsed.autoBattle || false;  // ✅ 使用 window.autoBattle 保持原值
 
-				// 【新增】
-				window.bagTab = data._playerPreferences?.bagTab || 'char';
+				// 【新增】恢复偏好设置
+				const prefs2 = data.playerPreferences || data._playerPreferences || {};
+				window.bagTab = prefs2.bagTab || 'char';
+				window.showFormulaDetail = prefs2.showFormulaDetail !== undefined ? prefs2.showFormulaDetail : true;
 			}
 
 			// 同步到 gameData 内存（确保结构完整）

@@ -17,12 +17,18 @@ class GameData {
 	 */
 	getDefaultData() {
 		return {
-			// ========== 基础信息 ==========
-			baseInfo: {
-				saveName: '新存档',
-				saveTime: null,
-				version: '1.0.0'
-			},
+		// ========== 基础信息 ==========
+		baseInfo: {
+			saveName: '新存档',
+			saveTime: null,
+			version: '1.0.0'
+		},
+
+		// ========== 玩家偏好设置 ==========
+		playerPreferences: {
+			showFormulaDetail: true,
+			bagTab: 'char'
+		},
 			
 			// ========== 队伍模块 ==========
 			team: {
@@ -110,6 +116,10 @@ class GameData {
 				}
 			});
 		}
+		// 同步玩家偏好设置
+		if (!this.data.playerPreferences) this.data.playerPreferences = {};
+		this.data.playerPreferences.showFormulaDetail = window.showFormulaDetail !== undefined ? window.showFormulaDetail : true;
+		this.data.playerPreferences.bagTab = window.bagTab || 'char';
 
 		localStorage.setItem(key, JSON.stringify(this.data));
 		console.log(`[GameData] 已保存到槽位 ${slotIndex}`, this.data);
@@ -125,7 +135,14 @@ class GameData {
 		const savedData = localStorage.getItem(key);
 		if (savedData) {
 			this.data = JSON.parse(savedData);
-			
+
+			// 恢复玩家偏好设置
+			if (this.data.playerPreferences) {
+				window.showFormulaDetail = this.data.playerPreferences.showFormulaDetail !== undefined
+					? this.data.playerPreferences.showFormulaDetail : true;
+				window.bagTab = this.data.playerPreferences.bagTab || 'char';
+			}
+
 			// 恢复宝物实例化数据到 window
 			if (this.data._treasureInventory) {
 				window.treasureInventory = JSON.parse(JSON.stringify(this.data._treasureInventory));
