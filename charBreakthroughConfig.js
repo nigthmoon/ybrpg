@@ -257,6 +257,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 	'ignore_def_all_100': { type: 'passive_effect', effectId: 'ignore_def_all_100', desc: '所有伤害无视对方全部防御力' },
 
 	// --- 控制类：封印 ---
+	// 注意：封印效果通过 addBuff 系统管理，自动在对应的行动位次轮次衰减并解除
 	'seal_target_30_pugong': {
 		type: 'skill_effect',
 		desc: '普攻时，30%几率封印目标一回合',
@@ -264,9 +265,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return Math.random() < 0.3; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.sealed = true;
-				addBattleLog(`${target.name} 被封印1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'seal_pugong', name: '封印', type: 'seal', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -277,9 +280,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return Math.random() < 0.6; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.sealed = true;
-				addBattleLog(`${target.name} 被封印1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'seal_pugong', name: '封印', type: 'seal', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -290,9 +295,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return true; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.sealed = true;
-				addBattleLog(`${target.name} 被封印1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'seal_pugong', name: '封印', type: 'seal', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -303,9 +310,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return Math.random() < 0.3; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.sealed = true;
-				addBattleLog(`${target.name} 被封印1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'seal_skill', name: '封印', type: 'seal', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -316,9 +325,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return Math.random() < 0.6; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.sealed = true;
-				addBattleLog(`${target.name} 被封印1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'seal_skill', name: '封印', type: 'seal', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -329,9 +340,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return true; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.sealed = true;
-				addBattleLog(`${target.name} 被封印1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'seal_skill', name: '封印', type: 'seal', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -443,6 +456,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 	},
 
 	// --- 控制类：眩晕 ---
+	// 注意：眩晕效果通过 addBuff 系统管理，自动在对应的行动位次轮次衰减并解除
 	'stun_target_1_20_pugong': {
 		type: 'skill_effect',
 		desc: '普攻时，20%几率令目标眩晕1回合',
@@ -450,9 +464,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return Math.random() < 0.2; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.stunned = true;
-				addBattleLog(`${target.name} 被眩晕1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'stun_pugong', name: '眩晕', type: 'stun', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -463,9 +479,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return Math.random() < 0.5; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.stunned = true;
-				addBattleLog(`${target.name} 被眩晕1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'stun_pugong', name: '眩晕', type: 'stun', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -476,9 +494,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return Math.random() < 0.2; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.stunned = true;
-				addBattleLog(`${target.name} 被眩晕1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'stun_skill', name: '眩晕', type: 'stun', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -489,9 +509,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return Math.random() < 0.5; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.stunned = true;
-				addBattleLog(`${target.name} 被眩晕1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'stun_skill', name: '眩晕', type: 'stun', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -736,9 +758,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return Math.random() < 0.1; },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
-				attacker.stunned = true;
-				addBattleLog(`${attacker.name} 被眩晕1回合`);
-				updateBattleUI();
+				addBuff(attacker, {
+					id: 'stun_reflect', name: '眩晕', type: 'stun', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -749,9 +773,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return Math.random() < 0.2; },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
-				attacker.stunned = true;
-				addBattleLog(`${attacker.name} 被眩晕1回合`);
-				updateBattleUI();
+				addBuff(attacker, {
+					id: 'stun_reflect', name: '眩晕', type: 'stun', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -805,9 +831,16 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.05);
-				attacker.poisonDamage = (attacker.poisonDamage || 0) + poisonDmg;
-				addBattleLog(`${attacker.name} 中毒，每回合失去 ${poisonDmg} 生命`);
-				updateBattleUI();
+				// ===== 【修改】使用 addBuff 系统 =====
+				addBuff(attacker, {
+					id: 'poison',
+					name: '中毒',
+					type: 'poison',
+					remainRounds: -1,  // -1 表示永久持续（直到战斗结束或被清除）
+					sourceSide: this.side,
+					sourceId: this.instanceId || this.id,
+					value: poisonDmg,
+				});
 			}
 		}
 	},
@@ -819,9 +852,16 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.05);
-				attacker.poisonDamage = (attacker.poisonDamage || 0) + poisonDmg;
-				addBattleLog(`${attacker.name} 中毒，每回合失去 ${poisonDmg} 生命`);
-				updateBattleUI();
+				// ===== 【修改】使用 addBuff 系统 =====
+				addBuff(attacker, {
+					id: 'poison',
+					name: '中毒',
+					type: 'poison',
+					remainRounds: -1,  // -1 表示永久持续（直到战斗结束或被清除）
+					sourceSide: this.side,
+					sourceId: this.instanceId || this.id,
+					value: poisonDmg,
+				});
 			}
 		}
 	},
@@ -833,9 +873,16 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.05);
-				attacker.poisonDamage = (attacker.poisonDamage || 0) + poisonDmg;
-				addBattleLog(`${attacker.name} 中毒，每回合失去 ${poisonDmg} 生命`);
-				updateBattleUI();
+				// ===== 【修改】使用 addBuff 系统 =====
+				addBuff(attacker, {
+					id: 'poison',
+					name: '中毒',
+					type: 'poison',
+					remainRounds: -1,  // -1 表示永久持续（直到战斗结束或被清除）
+					sourceSide: this.side,
+					sourceId: this.instanceId || this.id,
+					value: poisonDmg,
+				});
 			}
 		}
 	},
@@ -988,9 +1035,11 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return true; },
 		content: function (target) {
 			if (target && target.alive) {
-				target.healBlocked = true;
-				addBattleLog(`${target.name} 被禁疗1回合`);
-				updateBattleUI();
+				addBuff(target, {
+					id: 'healBlock', name: '禁疗', type: 'healBlock', remainRounds: 1,
+					sourceSide: this.side, sourceId: this.instanceId,
+					ownerSlot: this._currentActionSlotKey || null
+				});
 			}
 		}
 	},
@@ -1034,11 +1083,27 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return true; },
 		content: function (target, healAmount) {
 			if (target && target.alive) {
-				// 清除负面状态
-				target.stunned = false;
-				target.sealed = false;
-				target.healBlocked = false;
-				target.poisonDamage = 0;
+				// 清除负面 buff（seal/stun/healBlock/poison）
+				const debuffTypes = ['seal', 'stun', 'healBlock', 'poison'];
+				const toRemove = [];
+				(target.buffList || []).forEach(function (buff, index) {
+					if (debuffTypes.includes(buff.type)) {
+						toRemove.push(index);
+					}
+				});
+				// 从后往前移除，避免索引错乱
+				toRemove.reverse().forEach(function (index) {
+					const buff = target.buffList[index];
+					target.buffList.splice(index, 1);
+					removeBuffEffect(target, buff);
+				});
+				if (toRemove.length === 0) {
+					// 兜底：兼容尚未走 addBuff 系统的旧数据
+					target.stunned = false;
+					target.sealed = false;
+					target.healBlocked = false;
+					target.poisonDamage = 0;
+				}
 				addBattleLog(`${target.name} 的负面效果已被清除`);
 				updateBattleUI();
 			}

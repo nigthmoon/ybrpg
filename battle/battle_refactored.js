@@ -1864,10 +1864,14 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 									if (effect.type === 'seal_killer' && killer && killer.alive) {
 										if (effect.permanent) {
 											killer.permanentlySealed = true;
+											addBattleLog(`${this.name} 阵亡时永久封印了 ${killer.name}`);
 										} else {
-											killer.sealed = true;
+											addBuff(killer, {
+												id: 'seal_death', name: '死亡封印', type: 'seal', remainRounds: 1,
+												sourceSide: this.side, sourceId: this.instanceId,
+												ownerSlot: this._currentActionSlotKey || null
+											});
 										}
-										addBattleLog(`${this.name} 阵亡时封印了 ${killer.name}`);
 										updateBattleUI();
 									}
 								});
