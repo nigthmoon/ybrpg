@@ -3590,8 +3590,9 @@ function renderBagView(container) {
 		iconDiv.style.cursor = 'pointer';
 		iconDiv.onclick = () => {
 			const tid = detailBar.dataset.treasureId;
+			const instanceId = detailBar.dataset.treasureInstanceId;
 			if (tid && gameData.getTreasureList()[tid]) {
-				showBagTreasureDetail(tid);
+				showBagTreasureDetail(tid, instanceId);
 			}
 		};
 		detailBar.appendChild(iconDiv);
@@ -4254,11 +4255,21 @@ function updateBagCharDetailBar(charInst) {
 }
 
 // 背包中查看宝物详情弹窗
-function showBagTreasureDetail(tid) {
+function showBagTreasureDetail(tid, instanceId) {
 	const tDef = gameData.getTreasureList()[tid];
 	if (!tDef) return;
 	const bagItem = gameData.getTreasureInventory()[tid] || { count: 0, equippedBy: [] };
 	const remaining = bagItem.count - (bagItem.equippedBy ? bagItem.equippedBy.length : 0);
+
+	// 从宝物实例获取等级
+	let treasureLevel = 1;
+	if (instanceId && window.treasureInventory) {
+		const invData = window.treasureInventory[instanceId];
+		if (invData && invData.level) {
+			treasureLevel = invData.level;
+		}
+	}
+
 	const typeLabels = {
 		on_kill: '击杀时触发',
 		on_any_death: '有人阵亡时触发',
@@ -4278,10 +4289,10 @@ function showBagTreasureDetail(tid) {
 	const dialog = document.createElement('div');
 	dialog.className = 'gallery-detail-dialog';
 
-	// 名称
+	// 名称（含等级）
 	const nameDiv = document.createElement('div');
 	nameDiv.className = 'gallery-detail-name';
-	nameDiv.textContent = tDef.name;
+	nameDiv.textContent = `${tDef.name} Lv.${treasureLevel}`;
 	dialog.appendChild(nameDiv);
 
 	// 上半区：图标 + 属性
@@ -4331,8 +4342,8 @@ function showBagTreasureDetail(tid) {
 
 	// 持有信息
 	const infoRows = [
-		{ label: '持有', value: bagItem.count },
-		{ label: '可用', value: remaining },
+		// { label: '持有', value: bagItem.count },
+		// { label: '可用', value: remaining },
 		{ label: '价值', value: (tDef.price || 0) + ' 金' },
 	];
 	infoRows.forEach(a => {
@@ -4373,7 +4384,13 @@ function showBagTreasureDetail(tid) {
 	descBox.appendChild(descTitle);
 	const descContent = document.createElement('div');
 	descContent.className = 'gallery-skill-intro';
-	descContent.textContent = tDef.desc || '无描述';
+	let descText;
+	if (typeof tDef.desc === 'function') {
+		descText = tDef.desc(treasureLevel) || '无描述';
+	} else {
+		descText = tDef.desc || '无描述';
+	}
+	descContent.textContent = descText;
 	descBox.appendChild(descContent);
 	descSection.appendChild(descBox);
 	dialog.appendChild(descSection);
