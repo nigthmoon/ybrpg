@@ -5974,27 +5974,25 @@ function renderChapterEventList(container, chapterKey) {
 				while (playerTeam.length < 6) {
 					playerTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
 				}
-				const enemyTeam = (event.enemy || []).map(e => {
-					if (!e || !e.id) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
-					const base = characterList[e.id] || {};
-					return {
-						id: e.id,
-						name: e.name || base.name || e.id,
-						hp: e.hp || base.hp || 0,
-						atk: e.atk || base.atk || 0,
-						def: e.def || base.def || 0,
-						spe: e.spe || base.spe || 0,
-						skills: e.skills || base.skills || [],
-						buff: e.buff || [],
-						treasures: e.treasures || [],
-						tupoList: e.tupoList || base.tupoList || [],
-						tupolevel: e.tupolevel || 0,
-						rank: e.rank || base.rank || 'conmon',
-					};
-				});
-				console.log(enemyTeam)
-				while (enemyTeam.length < 6) {
-					enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
+			const enemyTeam = (event.enemy || []).map(function (e) {
+				if (!e || !e.id) return { id: null, name: '', skills: [], buff: [], treasures: [], tupolevel: 0, tupoList: [] };
+				var base = characterList[e.id] || {};
+				return {
+					id: e.id,
+					name: e.name || base.name || e.id,
+					level: e.level || 1,
+					template: e.template || base.template || 'balanced',
+					skills: e.skills || base.skills || [],
+					buff: e.buff || [],
+					treasures: e.treasures || [],
+					tupoList: e.tupoList || base.tupoList || [],
+					tupolevel: e.tupolevel || 0,
+					rank: e.rank || base.rank || 'common',
+				};
+			});
+			console.log(enemyTeam)
+			while (enemyTeam.length < 6) {
+				enemyTeam.push({ id: null, name: '', skills: [], buff: [], tupolevel: 0, tupoList: [] });
 				}
 
 				for (var i in enemyTeam) {
@@ -6013,7 +6011,7 @@ function renderChapterEventList(container, chapterKey) {
 					// 【新增】传递事件配置的金币奖励
 					goldReward: event.gold || 0,
 					goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
-					onWin: () => {
+					onWin: function () {
 						if (!window.playerProgress) window.playerProgress = {};
 						if (!window.playerProgress[checkEventId]) {
 							window.playerProgress[checkEventId] = true;
@@ -6218,20 +6216,18 @@ function renderChapterEventList(container, chapterKey) {
 						playerTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [] });
 					}
 
-					const enemyTeam = (event.enemy || []).map(e => {
-						if (!e || !e.id) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
-						const base = characterList[e.id] || {};
+					const enemyTeam = (event.enemy || []).map(function (e) {
+						if (!e || !e.id) return { id: null, name: '', skills: [], buff: [], treasures: [], tupolevel: 0, tupoList: [] };
+						var base = characterList[e.id] || {};
 						return {
 							id: e.id,
 							name: e.name || base.name || e.id,
-							hp: e.hp || base.hp || 0,
-							atk: e.atk || base.atk || 0,
-							def: e.def || base.def || 0,
-							spe: e.spe || base.spe || 0,
+							level: e.level || 1,
+							template: e.template || base.template || 'balanced',
 							skills: e.skills || base.skills || [],
 							buff: e.buff || [],
 							treasures: e.treasures || [],
-							rank: e.rank || base.rank || 'conmon',
+							rank: e.rank || base.rank || 'common',
 							tupolevel: e.tupolevel || 0,
 							tupoList: e.tupoList || base.tupoList || [],
 						};
@@ -6241,7 +6237,7 @@ function renderChapterEventList(container, chapterKey) {
 					// }
 					// 补齐6个位置
 					while (enemyTeam.length < 6) {
-						enemyTeam.push({ id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], tupolevel: 0, tupoList: [], });
+						enemyTeam.push({ id: null, name: '', skills: [], buff: [], tupolevel: 0, tupoList: [], });
 					}
 					for (var i in enemyTeam) {
 						if (DIFFICULTY_SCALE[currentDifficulty]?.treasures?.length > 0) {
