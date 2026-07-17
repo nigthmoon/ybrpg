@@ -5755,7 +5755,21 @@ function buildPlayerTeamForBattle() {
 			maxHp: hp,
 			skills: instData.skills || (base ? base.skills : []),
 			buff: instData.buff || [],
-			treasures: [],
+			treasures: (function () {
+				var equippedDefs = [];
+				window.ensureCharTreasureSlots();
+				var slots = window.charTreasureSlots && window.charTreasureSlots[instanceId];
+				if (slots && Array.isArray(slots)) {
+					slots.forEach(function (tInstId) {
+						if (!tInstId) return;
+						var inv = window.treasureInventory && window.treasureInventory[tInstId];
+						var baseId = inv && inv.baseId;
+						var def = baseId && (window.TREASURE_DEFS || {})[baseId];
+						if (def) equippedDefs.push(def);
+					});
+				}
+				return equippedDefs;
+			})(),
 			rank: instData.rank || (base ? base.rank : 'common'),
 			tupolevel: instData.tupolevel || 0,
 			tupoList: instData.tupoList || (base ? base.tupoList : []),

@@ -84,7 +84,7 @@ const TREASURE_DEFS= {
 		desc: function(star){
 			return `攻击加${star*400}，使用技能后，100%几率封印目标一回合。`;
 		},
-		icon: './image/skill/wansha.png',
+		icon: './image/skill/wanbao.png',
 		price: 8000,
 	},
 

@@ -1720,6 +1720,46 @@ function normalizeBreakthroughData(data, index) {
 	return null;
 }
 
+// ====== 效果适配器（统一三种来源 → 契约格式） ======
+
+/**
+ * 适配器 A：突破 skill_effect → 统一契约格式
+ * BREAKTHROUGH_BUFF_LIBRARY 里的 skill_effect 已是 {trigger, filter, content} 格式，直接透传
+ */
+function adaptBreakthroughSkillEffect(buff) {
+	if (!buff || buff.type !== 'skill_effect') return null;
+	if (typeof buff.content !== 'function') return null;
+	return {
+		trigger: buff.trigger,
+		filter: typeof buff.filter === 'function' ? buff.filter : function () { return true; },
+		content: buff.content,
+		desc: buff.desc || '',
+		source: 'breakthrough',
+		id: buff.id || buff._libId || ''
+	};
+}
+
+/**
+ * 适配器 B：宝物 effectSkills（字符串 id 引用） → 统一契约格式
+ * 宝物用 effectSkills: ['库id', ...] 引用 BREAKTHROUGH_BUFF_LIBRARY 里的效果
+ */
+function adaptTreasureEffects(treasureDef) {
+	var out = [];
+	var ids = (treasureDef && treasureDef.effectSkills) || [];
+	ids.forEach(function (id) {
+		var buff = (window.BREAKTHROUGH_BUFF_LIBRARY || {})[id]
+			|| (window.TREASURE_BUFF_LIBRARY || {})[id];
+		var eff = adaptBreakthroughSkillEffect(buff);
+		if (eff) {
+			eff.source = 'treasure';
+			out.push(eff);
+		} else {
+			console.warn('[宝物] effectSkills id \'' + id + '\' 未找到');
+		}
+	});
+	return out;
+}
+
 /**
  * 战斗开始，初始化信息
  * @param {*} playerTeam 
@@ -1809,36 +1849,8 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 
 				case 'skill_effect':
 					{
-						const skillIndex = buff.skillIndex;
-						const triggerMap = { 0: 'pugongHit', 1: 'skillHit', 2: 'spskillHit' };
-						const trigger = triggerMap[skillIndex];
-						if (trigger) {
-							effectSkills.push({
-								trigger: trigger,
-								filter: function () { return Math.random() < (buff.chance || 0.2); },
-								content: function (target) {
-									if (buff.effects && Array.isArray(buff.effects)) {
-										buff.effects.forEach(effect => {
-											switch (effect.type) {
-												case 'stun':
-													target.stunned = true;
-													addBattleLog(`${target.name} 被眩晕${effect.turns || 1}回合`);
-													break;
-												case 'reduceEnergy':
-													target.energy = Math.max(0, target.energy - (effect.amount || 1));
-													addBattleLog(`${target.name} 损失 ${effect.amount || 1} 点能量`);
-													break;
-												case 'seal':
-													target.sealed = true;
-													addBattleLog(`${target.name} 被封印`);
-													break;
-											}
-										});
-									}
-									updateBattleUI();
-								}
-							});
-						}
+						var e = adaptBreakthroughSkillEffect(buff);
+						if (e) effectSkills.push(e);
 					}
 					break;
 
@@ -1999,7 +2011,10 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 
 		finalEnergy += bonusEnergy;
 
-		let activeTreasures = [];
+		var activeTreasures = Array.isArray(data.treasures) ? data.treasures : [];
+		activeTreasures.forEach(function (def) {
+			adaptTreasureEffects(def).forEach(function (e) { effectSkills.push(e); });
+		});
 
 		// 基础技能（普攻 + 技能）
 		let baseSkills = [...(data.skills || []), null, null, null].slice(0, 3);
