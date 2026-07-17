@@ -1083,8 +1083,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return true; },
 		content: function (target, healAmount) {
 			if (target && target.alive) {
-				// 清除负面 buff（seal/stun/healBlock/poison）
-				const debuffTypes = ['seal', 'stun', 'healBlock', 'poison'];
+				// 清除负面 buff（seal/stun/paralyze/healBlock/poison）
+				const debuffTypes = ['seal', 'stun', 'paralyze', 'healBlock', 'poison'];
 				const toRemove = [];
 				(target.buffList || []).forEach(function (buff, index) {
 					if (debuffTypes.includes(buff.type)) {
@@ -1101,6 +1101,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					// 兜底：兼容尚未走 addBuff 系统的旧数据
 					target.stunned = false;
 					target.sealed = false;
+					target.paralyzed = false;
 					target.healBlocked = false;
 					target.poisonDamage = 0;
 				}

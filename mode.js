@@ -5330,11 +5330,11 @@ function showTreasureGalleryDetail(tDef, isOwned, rankInfo) {
 		rankDiv.innerHTML = `<span style="color:${rankInfo.color}">${rankInfo.label}</span>`;
 		attrDiv.appendChild(rankDiv);
 
-		// 触发时点
-		const typeRow = document.createElement('div');
-		typeRow.className = 'gallery-detail-attr-row';
-		typeRow.innerHTML = `<span class="attr-label">触发时点</span><span class="attr-value" style="color:#ffd700">${TREASURE_TYPE_LABELS[tDef.type] || tDef.type}</span>`;
-		attrDiv.appendChild(typeRow);
+		// // 触发时点
+		// const typeRow = document.createElement('div');
+		// typeRow.className = 'gallery-detail-attr-row';
+		// typeRow.innerHTML = `<span class="attr-label">触发时点</span><span class="attr-value" style="color:#ffd700">${TREASURE_TYPE_LABELS[tDef.type] || tDef.type}</span>`;
+		// attrDiv.appendChild(typeRow);
 
 		// 价格
 		const priceRow = document.createElement('div');
@@ -5352,10 +5352,10 @@ function showTreasureGalleryDetail(tDef, isOwned, rankInfo) {
 			count += window.treasureBagData[tDef.id].count || 0;
 		}
 
-		const countRow = document.createElement('div');
-		countRow.className = 'gallery-detail-attr-row';
-		countRow.innerHTML = `<span class="attr-label">持有</span><span class="attr-value">${count}</span>`;
-		attrDiv.appendChild(countRow);
+		// const countRow = document.createElement('div');
+		// countRow.className = 'gallery-detail-attr-row';
+		// countRow.innerHTML = `<span class="attr-label">持有</span><span class="attr-value">${count}</span>`;
+		// attrDiv.appendChild(countRow);
 
 
 	} else {
@@ -5383,7 +5383,7 @@ function showTreasureGalleryDetail(tDef, isOwned, rankInfo) {
 	const descText = document.createElement('div');
 	descText.className = 'gallery-skill-intro';
 	descText.style.cssText = 'font-size:13px;color:#ccc;line-height:1.6;';
-	descText.textContent = isOwned ? (tDef.desc || '暂无描述') : '???';
+	descText.textContent = isOwned ? (tDef.desc(1) || '暂无描述') : '???';
 	descSection.appendChild(descText);
 
 	descDiv.appendChild(descSection);

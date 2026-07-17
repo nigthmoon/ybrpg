@@ -115,11 +115,28 @@ function updateBattleUI() {
 		const slot = document.querySelector(`.battle-unit[data-side="${unit.side}"][data-slot="${unit.slotIndex}"]`);
 		if (!slot) return;
 
-		if (!unit.alive) slot.classList.add('dead');
-		else slot.classList.remove('dead');
+		if (!unit.alive) {
+			slot.classList.add('dead');
+			// 死人不应显示任何 buff 视觉效果
+			slot.classList.remove('sealed', 'stunned', 'paralyzed', 'heal-blocked-effect', 'poisoned');
+		} else {
+			slot.classList.remove('dead');
 
-		if (unit.sealed || unit.permanentlySealed) slot.classList.add('sealed');
-		else slot.classList.remove('sealed');
+			if (unit.sealed || unit.permanentlySealed) slot.classList.add('sealed');
+			else slot.classList.remove('sealed');
+
+			if (unit.stunned) slot.classList.add('stunned');
+			else slot.classList.remove('stunned');
+
+			if (unit.paralyzed) slot.classList.add('paralyzed');
+			else slot.classList.remove('paralyzed');
+
+			if (unit.healBlocked) slot.classList.add('heal-blocked-effect');
+			else slot.classList.remove('heal-blocked-effect');
+
+			if (unit.poisonDamage > 0) slot.classList.add('poisoned');
+			else slot.classList.remove('poisoned');
+		}
 
 		if (bs.currentTurnSide === unit.side && bs.currentTurnIndex === unit.slotIndex && unit.alive) {
 			slot.classList.add('active-turn');
@@ -465,6 +482,7 @@ function applyDamage(target, dmgResult, attacker, callback, skillContext = {}) {
 		if (target.hp <= 0) {
 			target.hp = 0;
 			target.alive = false;
+			clearBuffsOnDeath(target);
 			addBattleLog(`${target.name} 阵亡！`);
 
 			triggerSelfEffect(target, 'dieSelf', attacker);
@@ -841,6 +859,15 @@ function nextTurn() {
 			return;
 		}
 
+		if (nextActor.paralyzed) {
+			addBattleLog(`${nextActor.name} 麻痹，跳过回合`);
+			setTimeout(() => {
+				isProcessing = false;
+				afterAction();
+			}, 600);
+			return;
+		}
+
 		if (nextSide === 'player') {
 			bs.phase = 'player_action';
 			showPlayerActionUI(nextActor);
@@ -892,6 +919,7 @@ function afterAction() {
 			if (unit.hp <= 0) {
 				unit.hp = 0;
 				unit.alive = false;
+				clearBuffsOnDeath(unit);
 				addBattleLog(`${unit.name} 因中毒阵亡！`);
 			}
 			updateBattleUI();
@@ -2078,6 +2106,10 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			sealTurns: 0,
 			sealOwner: null,
 			permanentlySealed: false,
+			paralyzed: false,
+			stunned: false,
+			healBlocked: false,
+			poisonDamage: 0,
 			extraTurnCount: 0,
 			tupoList: normalizedTupoList,
 			tupolevel: tupolevel,
@@ -2729,6 +2761,10 @@ function applyBuffEffect(target, buffConfig) {
 			target.stunned = true;
 			addBattleLog(`${target.name} 被眩晕${buffConfig.remainRounds === -1 ? '（永久）' : buffConfig.remainRounds + '回合'}`);
 			break;
+		case 'paralyze':
+			target.paralyzed = true;
+			addBattleLog(`${target.name} 被麻痹${buffConfig.remainRounds === -1 ? '（永久）' : buffConfig.remainRounds + '回合'}`);
+			break;
 		case 'healBlock':
 			target.healBlocked = true;
 			addBattleLog(`${target.name} 被禁疗${buffConfig.remainRounds === -1 ? '（永久）' : buffConfig.remainRounds + '回合'}`);
@@ -2780,6 +2816,10 @@ function removeBuffEffect(target, buff) {
 			target.stunned = false;
 			addBattleLog(`${target.name} 的眩晕已解除`);
 			break;
+		case 'paralyze':
+			target.paralyzed = false;
+			addBattleLog(`${target.name} 的麻痹已解除`);
+			break;
 		case 'healBlock':
 			target.healBlocked = false;
 			addBattleLog(`${target.name} 的禁疗已解除`);
@@ -2803,6 +2843,34 @@ function removeBuffEffect(target, buff) {
 			break;
 	}
 	updateBattleUI();
+}
+
+/**
+ * 角色阵亡时清除所有 buff
+ */
+function clearBuffsOnDeath(target) {
+	if (!target || !target.buffList || target.buffList.length === 0) {
+		// 即使 buffList 为空，也要清理直接状态（如 permanentlySealed）
+		if (target) {
+			target.permanentlySealed = false;
+			target.sealed = false;
+			target.stunned = false;
+			target.paralyzed = false;
+			target.healBlocked = false;
+			target.poisonDamage = 0;
+		}
+		return;
+	}
+
+	// 从后往前移除所有 buff（避免索引错乱），但不刷屏日志
+	const buffs = [...target.buffList];
+	buffs.reverse().forEach(buff => {
+		removeBuffEffect(target, buff);
+	});
+	target.buffList = [];
+
+	// 兜底清理直接状态
+	target.permanentlySealed = false;
 }
 
 

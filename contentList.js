@@ -1787,10 +1787,10 @@ const contentList = {
 
 		spskill_000: {
 			name: "技能攻击",
-			intro: "对三名敌人造成伤害，伤害系数为165%",
-			ai_intro: "对敌方随机三名敌人造成伤害，伤害系数为165%",
+			intro: "对三名敌人造成伤害，伤害系数为185%",
+			ai_intro: "对敌方随机三名敌人造成伤害，伤害系数为185%",
 			target: ["manual_multi", "random", 3],
-			coefficient: 1.65,
+			coefficient: 1.85,
 			isRecover: false,
 			emoji: "🔥",
 		},

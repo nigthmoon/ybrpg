@@ -2894,20 +2894,45 @@ h1, h2 {
 	background: #444;
 }
 
-/* 战斗中封印状态 */
+/* 战斗中封印状态 —— 锁图案居中覆盖在角色卡片上 */
 .battle-unit.sealed {
-	filter: grayscale(0.5);
 	position: relative;
 }
 
 .battle-unit.sealed::after {
 	content: '🔒';
 	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 36px;
+	z-index: 10;
+	opacity: 0.75;
+	pointer-events: none;
+	text-shadow: 0 0 6px rgba(0,0,0,0.5);
+}
+
+/* ⚡ 麻痹特效 —— 效果同原封印的灰度滤镜 */
+.battle-unit.paralyzed {
+	filter: grayscale(0.5);
+	position: relative;
+}
+
+.battle-unit.paralyzed::after {
+	content: '⚡';
+	position: absolute;
 	top: 2px;
 	right: 2px;
-	font-size: 10px;
+	font-size: 14px;
 	z-index: 5;
+	animation: zap-flicker 0.8s infinite;
 }
+
+@keyframes zap-flicker {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.3; }
+}
+
 /* 假设 btnRow 的类名是 .char-detail-btn-row */
 .char-detail-btn-row {
 	display: flex;
