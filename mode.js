@@ -2543,7 +2543,7 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
 
 		const descEl = document.createElement('div');
 		descEl.className = 'treasure-select-desc';
-		descEl.textContent = item.desc || '暂无描述';
+		descEl.textContent = item.desc(itemLevel||1) || '暂无描述';
 		infoDiv.appendChild(descEl);
 
 		// 被其他角色装备时，显示详细装备者信息
@@ -5712,6 +5712,13 @@ function getEventForDifficulty(chapterKey, eventId, difficulty) {
  * 返回包含 treasures 字段的单位数组
  */
 function buildPlayerTeamForBattle() {
+	// // ===== 【修复】战斗前强制刷新所有上阵角色的编译属性，确保宝物/突破数据最新 =====
+	// (window.currentTeam || []).forEach(instanceId => {
+	// 	if (instanceId && window.charBagData && window.charBagData[instanceId]) {
+	// 		calculateInstanceFinalStats(instanceId);
+	// 	}
+	// });
+
 	return (window.currentTeam || []).map(instanceId => {
 		const instData = window.charBagData && window.charBagData[instanceId];
 		if (!instData) return { id: null, name: '', hp: 0, atk: 0, def: 0, spe: 0, skills: [], buff: [], treasures: [] };
@@ -10096,28 +10103,30 @@ window.removeTreasureInstance = function (instanceId) {
 window.getTreasureStats = function (instanceId) {
 	ensureTreasureInventory();
 	const data = window.treasureInventory[instanceId];
-	if (!data) return { atk: 0, def: 0, hp: 0, spe: 0 };
+	if (!data) return { atk: 0, def: 0, hp: 0, };
 
 	const defs = getTreasureDefs();
 	const def = defs[data.baseId];
-	if (!def) return { atk: 0, def: 0, hp: 0, spe: 0 };
+	if (!def) return { atk: 0, def: 0, hp: 0, };
 
 	const level = data.level || 1;
 	const multiplier = level; // 等级倍数
 
-	return {
+	// 攻防血按等级倍数计算
+	const result = {
 		atk: (def.atk || 0) * multiplier,
 		def: (def.def || 0) * multiplier,
 		hp: (def.hp || 0) * multiplier,
-		spe: (def.spe || 0) * multiplier,
-		// ===== 【新增】六大特殊属性（等级倍数） =====
-		mingzhong: (def.mingzhong || 0) * multiplier,
-		shanbi: (def.shanbi || 0) * multiplier,
-		baoji: (def.baoji || 0) * multiplier,
-		kangbao: (def.kangbao || 0) * multiplier,
-		poji: (def.poji || 0) * multiplier,
-		gedang: (def.gedang || 0) * multiplier,
 	};
+
+	// 其他属性条目原封不动传下去（不乘等级倍数）
+	const metaKeys = new Set(['id', 'name', 'desc', 'icon', 'price', 'atk', 'def', 'hp']);
+	for (const key of Object.keys(def)) {
+		if (metaKeys.has(key)) continue;
+		result[key] = def[key];
+	}
+
+	return result;
 };
 
 
@@ -10377,17 +10386,18 @@ function showTreasureUpgradePopup(treasureInstanceId, charInstanceId = null, slo
 		const baseSpe = def.spe || 0;
 		const level = currentLevel; // 注意：这里的 currentLevel 需要从外部获取
 
-		let bonusParts = [];
-		if (baseAtk > 0) bonusParts.push(`攻击+${baseAtk * level}`);
-		if (baseDef > 0) bonusParts.push(`防御+${baseDef * level}`);
-		if (baseHp > 0) bonusParts.push(`生命+${baseHp * level}`);
-		if (baseSpe > 0) bonusParts.push(`速度+${baseSpe * level}`);
+		// let bonusParts = [];
+		// if (baseAtk > 0) bonusParts.push(`攻击+${baseAtk * level}`);
+		// if (baseDef > 0) bonusParts.push(`防御+${baseDef * level}`);
+		// if (baseHp > 0) bonusParts.push(`生命+${baseHp * level}`);
+		// if (baseSpe > 0) bonusParts.push(`速度+${baseSpe * level}`);
 
-		if (bonusParts.length > 0) {
-			bonusInfo.innerHTML = `当前宝物加成: ${bonusParts.join(' · ')}`;
-		} else {
-			bonusInfo.innerHTML = `当前宝物无属性加成`;
-		}
+		// if (bonusParts.length > 0) {
+		// 	bonusInfo.innerHTML = `当前宝物加成: ${def.desc(level)}`;
+		// } else {
+		// 	bonusInfo.innerHTML = `当前宝物无属性加成`;
+		// }
+		bonusInfo.innerHTML = `当前宝物加成: ${def.desc(level)}`;
 
 		infoSection.appendChild(bonusInfo);
 	}
@@ -10821,17 +10831,18 @@ function refreshUpgradePopupUI(popup, def, baseId, treasureInstanceId, currentLe
 			const baseSpe = def.spe || 0;
 			const level = currentLevel; // 当前宝物等级
 
-			let bonusParts = [];
-			if (baseAtk > 0) bonusParts.push(`攻击+${baseAtk * level}`);
-			if (baseDef > 0) bonusParts.push(`防御+${baseDef * level}`);
-			if (baseHp > 0) bonusParts.push(`生命+${baseHp * level}`);
-			if (baseSpe > 0) bonusParts.push(`速度+${baseSpe * level}`);
+			// let bonusParts = [];
+			// if (baseAtk > 0) bonusParts.push(`攻击+${baseAtk * level}`);
+			// if (baseDef > 0) bonusParts.push(`防御+${baseDef * level}`);
+			// if (baseHp > 0) bonusParts.push(`生命+${baseHp * level}`);
+			// if (baseSpe > 0) bonusParts.push(`速度+${baseSpe * level}`);
 
-			if (bonusParts.length > 0) {
-				bonusInfo.innerHTML = `当前宝物加成: ${bonusParts.join(' · ')}`;
-			} else {
-				bonusInfo.innerHTML = `当前宝物无属性加成`;
-			}
+			// if (bonusParts.length > 0) {
+			// 	bonusInfo.innerHTML = `当前宝物加成: ${bonusParts.join(' · ')}`;
+			// } else {
+			// 	bonusInfo.innerHTML = `当前宝物无属性加成`;
+			// }
+			bonusInfo.innerHTML = `当前宝物加成: ${def.desc(level)}`;
 		}
 	}
 

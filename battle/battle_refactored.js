@@ -1665,6 +1665,7 @@ function showBattleResult(winner) {
 	btn.textContent = '返回';
 	btn.onclick = () => {
 		battleState = null;
+		window.__battle = null;
 		targetSelection = null;
 		container.style.display = 'none';
 		const bottomBar = document.querySelector('.ybrpg-bottom-bar');
@@ -1919,7 +1920,10 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 		let finalPctHeal = 0;
 		let finalPctBeHeal = 0;
 
+		let compiled = null;  // 统一引用编译结果，用于后续读取 _teamBuffs
+
 		if (data._compiledStats) {
+			compiled = data._compiledStats;
 			finalHp = data._compiledStats.totalHp;
 			finalAtk = data._compiledStats.totalAtk;
 			finalDef = data._compiledStats.totalDef;
@@ -1967,7 +1971,7 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			finalPctBeHeal = data.pctBeHeal ?? 0;
 		} else {
 			// ===== 【修改】使用 compileEnemyStats 编译属性 =====
-			const compiled = compileEnemyStats(data.id, data.level || 1, data.tupolevel || 0, data, teamBonuses);
+			compiled = compileEnemyStats(data.id, data.level || 1, data.tupolevel || 0, data, teamBonuses);
 
 			finalHp = compiled.hp;
 			finalAtk = compiled.atk;
@@ -2082,10 +2086,10 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 		};
 
 		// ===== 【新增】存储团队加成信息（用于后续 applyTeamBreakthroughBuffs） =====
-		if (compiled._teamBuffs) {
+		if (compiled && compiled._teamBuffs) {
 			unit._teamBuffs = [compiled._teamBuffs];
 		}
-		if (compiled._teamPercentBuffs) {
+		if (compiled && compiled._teamPercentBuffs) {
 			unit._teamPercentBuffs = [compiled._teamPercentBuffs];
 		}
 
@@ -2127,11 +2131,29 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 		goldScale: options.goldScale || 1.0,
 		enemyCount: enemyTeam.filter(e => e && e.id).length,
 		onWin: options.onWin || null,
+		// ===== 【调试】暴露到 window 方便控制台查看 =====
+		_dumpUnits: function() {
+			[playerUnits, enemyUnits].forEach((units, sideIdx) => {
+				const label = sideIdx === 0 ? '我方' : '敌方';
+				units.forEach((u, i) => {
+					if (!u || !u.name) return;
+					console.log(
+						`[${label}][${i}] ${u.name} | HP:${u.hp}/${u.maxHp} ATK:${u.atk} DEF:${u.def} SPE:${u.spe} ` +
+						`命中:${u.mingzhong} 闪避:${u.shanbi} 暴击:${u.baoji} 抗暴:${u.kangbao} 破击:${u.poji} 格挡:${u.gedang} ` +
+						`固伤↑:${u.fixedDmgUp} 固伤↓:${u.fixedDmgDown} 百伤↑:${u.pctDmgUp} 百伤↓:${u.pctDmgDown}`,
+						u
+					);
+				});
+			});
+		},
 		onLose: options.onLose || null,
 		log: [],
 		battleStarted: false,
 		expectedGold: options.goldReward || 0,
 	};
+
+	// ===== 【调试】暴露到 window 方便控制台查看 =====
+	window.__battle = battleState;
 
 	renderBattleView();
 	showBattleIntro();
