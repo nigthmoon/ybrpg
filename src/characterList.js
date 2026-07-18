@@ -534,5 +534,5 @@ const characterTemplate = {
 };
 window.characterList = characterList;
 window.characterTemplate = characterTemplate;
-export {};
+export { characterList, characterTemplate, generateTupoList, generateTupoList_new };
 

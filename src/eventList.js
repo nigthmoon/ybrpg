@@ -2134,6 +2134,4 @@ const eventList = {//事件列表
 		}
 	},
 };
-window.SPeventList = SPeventList;
-window.eventList = eventList;
-export {};
+export { SPeventList, eventList };

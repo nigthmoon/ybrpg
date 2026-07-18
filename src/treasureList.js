@@ -281,5 +281,4 @@ const TREASURE_DEFS = {
 		},
 	},
 };
-window.TREASURE_LIST_DEFS = TREASURE_DEFS;
-export {};
+export { TREASURE_DEFS as TREASURE_LIST_DEFS };

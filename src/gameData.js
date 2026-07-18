@@ -1,3 +1,5 @@
+import { TREASURE_DEFS } from './equip.js';
+
 /**
  * 夜白旅程 - 游戏数据管理类
  * 负责管理队伍、背包、副本、商店、图鉴等模块的数据
@@ -147,7 +149,7 @@ class GameData {
 			if (this.data._treasureInventory) {
 				window.treasureInventory = JSON.parse(JSON.stringify(this.data._treasureInventory));
 			} else {
-				window.ensureTreasureInventory();
+				window.Bag.ensureInv();
 			}
 			
 			console.log(`[GameData] 已加载槽位 ${slotIndex}`, this.data);
@@ -495,7 +497,7 @@ class GameData {
 	 * 获取宝物定义列表
 	 */
 	getTreasureList() {
-		return window.TREASURE_DEFS || {};
+		return TREASURE_DEFS || {};
 	}
 
 	/**
@@ -504,8 +506,8 @@ class GameData {
 	 * @returns {Array} 宝物实例ID数组
 	 */
 	getCharTreasures(instanceId) {
-		if (window.getCharEquippedTreasures) {
-			return window.getCharEquippedTreasures(instanceId);
+		if (window.Bag.equipped) {
+			return window.Bag.equipped(instanceId);
 		}
 		return [];
 	}
@@ -517,8 +519,8 @@ class GameData {
 	 * @param {string|null} treasureInstanceId 宝物实例ID
 	 */
 	equipTreasure(instanceId, slotIndex, treasureInstanceId) {
-		if (window.equipTreasure) {
-			window.equipTreasure(instanceId, slotIndex, treasureInstanceId);
+		if (window.Bag.equip) {
+			window.Bag.equip(instanceId, slotIndex, treasureInstanceId);
 		}
 	}
 
@@ -551,8 +553,8 @@ class GameData {
 	 * @param {number} count 数量
 	 */
 	addTreasure(baseId, count = 1) {
-		if (window.addTreasureInstance) {
-			window.addTreasureInstance(baseId, count);
+		if (window.Bag.add) {
+			window.Bag.add(baseId, count);
 		}
 	}
 
@@ -562,11 +564,11 @@ class GameData {
 	 * @param {number} count 数量
 	 */
 	removeTreasure(baseId, count = 1) {
-		if (window.removeTreasureInstance && window.treasureInventory) {
+		if (window.Bag.remove && window.treasureInventory) {
 			const instances = Object.entries(window.treasureInventory)
 				.filter(([, inv]) => inv.baseId === baseId && !inv.equippedBy);
 			for (let i = 0; i < Math.min(count, instances.length); i++) {
-				window.removeTreasureInstance(instances[i][0]);
+				window.Bag.remove(instances[i][0]);
 			}
 		}
 	}
@@ -605,8 +607,8 @@ class GameData {
 	 * @param {string} toInstanceId 目标角色实例ID
 	 */
 	transferTreasures(fromInstanceId, toInstanceId) {
-		const fromTreasures = window.getCharEquippedTreasures ? window.getCharEquippedTreasures(fromInstanceId) : [];
-		const toTreasures = window.getCharEquippedTreasures ? window.getCharEquippedTreasures(toInstanceId) : [];
+		const fromTreasures = window.Bag.equipped ? window.Bag.equipped(fromInstanceId) : [];
+		const toTreasures = window.Bag.equipped ? window.Bag.equipped(toInstanceId) : [];
 		
 		// 先卸下所有
 		fromTreasures.forEach(tid => {
@@ -660,4 +662,4 @@ class GameData {
 // 创建全局实例（兼容非模块环境）
 const gameData = new GameData();
 window.gameData = gameData;
-export {};
+export { GameData, gameData };

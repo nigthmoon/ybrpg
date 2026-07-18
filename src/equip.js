@@ -89,5 +89,4 @@ const TREASURE_DEFS= {
 	},
 
 }
-window.TREASURE_DEFS = TREASURE_DEFS;
-export {};
+export { TREASURE_DEFS };

@@ -1891,7 +1891,7 @@ const contentList = {
 // ==================== 必杀 (spskill) - 留空供你自行编写 ====================
 
 // ==================== 导出 ====================
-window.contentList = contentList;
+export { contentList };
 export {};
 
 /*

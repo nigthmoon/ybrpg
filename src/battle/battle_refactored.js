@@ -1,5 +1,15 @@
 // ====== 星河之契 - 重构战斗核心系统 (事件驱动版) ======
 
+import { shared } from '../shared.js';
+import { contentList } from '../contentList.js';
+import { characterList, characterTemplate } from '../characterList.js';
+import { BREAKTHROUGH_BUFF_LIBRARY } from '../charBreakthroughConfig.js';
+import { confirmDialog } from '../ui/utils.js';
+import { Stat } from '../game/system.js';
+
+// TODO: window.autoBattle / window.currentTeam / window.charBagData 等可变状态
+// 在 mode.js 改造完成后迁移到 src/store.js 共享模块
+
 // ====== 1. 全局状态声明 ======
 
 /**@type {battleState}战斗信息 */
@@ -593,7 +603,7 @@ function executePugong(actor, targets, callback) {
 	let hitCount = 0;      // 命中次数
 	let missCount = 0;     // 闪避次数
 	const skillId = actor.skills[0] || 'attack1';
-	const sData = (window.contentList && window.contentList.pugong && window.contentList.pugong[skillId]);
+	const sData = (contentList && contentList.pugong && contentList.pugong[skillId]);
 	const isRecover = (sData && sData.isRecover === true);
 	const coeff = (sData && sData.coefficient) ? Number(sData.coefficient) : 1.0;
 	const totalTargets = targets.filter(t => t && t.alive).length;
@@ -682,7 +692,7 @@ function executeSkill(actor, skillType, skillId, targets, energyCost, callback) 
 	actor.energy = Math.max(0, actor.energy - energyCost);
 	updateBattleUI();
 
-	const sData = (window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId]);
+	const sData = (contentList && contentList[skillType] && contentList[skillType][skillId]);
 	const skillName = sData ? sData.name : skillId;
 	addBattleLog(`${actor.name} 使用了【${skillName}】`);
 
@@ -1172,7 +1182,7 @@ function endBattle(winner) {
  * @returns 确认该技能的符号
  */
 function getSkillEmoji(skillType, skillId) {
-	const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
+	const sData = contentList && contentList[skillType] && contentList[skillType][skillId];
 	if (!sData || !sData.target) return '🔥';
 	let isRecover = false;
 	if (sData.isRecover === true) isRecover = true;
@@ -1266,7 +1276,7 @@ function showPlayerActionUI(actor) {
  * @returns 选择普攻或技能后，选择目标
  */
 function enterTargetSelection(actor, skillType, skillId, energyCost) {
-	const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
+	const sData = contentList && contentList[skillType] && contentList[skillType][skillId];
 	if (!sData) return;
 
 	let isRecover = false;
@@ -1411,7 +1421,7 @@ function aiChooseAction(actor) {
 
 	if (actor.sealed || actor.permanentlySealed) {
 		const pugongId = actor.skills[0] || 'attack1';
-		const pData = window.contentList && window.contentList.pugong && window.contentList.pugong[pugongId];
+		const pData = contentList && contentList.pugong && contentList.pugong[pugongId];
 		if (pData) {
 			const targets = aiSelectTargets(actor, pData, enemySide, friendlySide);
 			return { type: 'pugong', skillType: 'pugong', skillId: pugongId, targets, energyCost: 0 };
@@ -1427,8 +1437,8 @@ function aiChooseAction(actor) {
 		// 判断是否是必杀技（用于决定从哪个数据源读取）
 		const isSpskill = typeof skillId === 'string' && skillId.startsWith('spskill_');
 		const sData = isSpskill
-			? (window.contentList && window.contentList.spskill && window.contentList.spskill[skillId])
-			: (window.contentList && window.contentList.skill && window.contentList.skill[skillId]);
+			? (contentList && contentList.spskill && contentList.spskill[skillId])
+			: (contentList && contentList.skill && contentList.skill[skillId]);
 
 		if (sData) {
 			const targets = aiSelectTargets(actor, sData, enemySide, friendlySide);
@@ -1442,7 +1452,7 @@ function aiChooseAction(actor) {
 
 	// 普攻
 	const pugongId = actor.skills[0] || 'attack1';
-	const pData = window.contentList && window.contentList.pugong && window.contentList.pugong[pugongId];
+	const pData = contentList && contentList.pugong && contentList.pugong[pugongId];
 	if (pData) {
 		const targets = aiSelectTargets(actor, pData, enemySide, friendlySide);
 		return { type: 'pugong', skillType: 'pugong', skillId: pugongId, targets, energyCost: 0 };
@@ -1693,7 +1703,6 @@ function showBattleResult(winner) {
 	btn.textContent = '返回';
 	btn.onclick = () => {
 		battleState = null;
-		window.__battle = null;
 		targetSelection = null;
 		container.style.display = 'none';
 		const bottomBar = document.querySelector('.ybrpg-bottom-bar');
@@ -1704,10 +1713,10 @@ function showBattleResult(winner) {
 		else {
 			const dungeonView = document.getElementById('dungeon-view');
 			if (dungeonView) {
-				hideOtherViews('dungeon-view');
+				shared.hideOtherViews('dungeon-view');
 				dungeonView.style.display = 'flex';
 				if (bs.chapterKey) {
-					renderDungeonView(dungeonView, bs.chapterKey);
+					shared.renderDungeonView(dungeonView, bs.chapterKey);
 				}
 			}
 		}
@@ -1719,7 +1728,7 @@ function showBattleResult(winner) {
 
 // ====== 10. 初始化与 UI 渲染 (保留原有逻辑) ======
 
-const BREAKTHROUGH_LIB = window.BREAKTHROUGH_BUFF_LIBRARY || {};
+const BREAKTHROUGH_LIB = BREAKTHROUGH_BUFF_LIBRARY || {};
 
 /**
  * 根据输入的突破信息编译成对应的突破能力对象
@@ -1775,8 +1784,7 @@ function adaptTreasureEffects(treasureDef) {
 	var out = [];
 	var ids = (treasureDef && treasureDef.effectSkills) || [];
 	ids.forEach(function (id) {
-		var buff = (window.BREAKTHROUGH_BUFF_LIBRARY || {})[id]
-			|| (window.TREASURE_BUFF_LIBRARY || {})[id];
+		var buff = (BREAKTHROUGH_BUFF_LIBRARY || {})[id];
 		var eff = adaptBreakthroughSkillEffect(buff);
 		if (eff) {
 			eff.source = 'treasure';
@@ -1796,10 +1804,10 @@ function adaptTreasureEffects(treasureDef) {
  */
 function startBattle(playerTeam, enemyTeam, options = {}) {
 	// ===== 【新增】刷新全队编译属性 =====
-	const teamBonuses = calculateTeamBreakthroughBonuses();
+	const teamBonuses = Stat.teamBonuses();
 	(window.currentTeam || []).forEach(instId => {
 		if (instId && window.charBagData) {
-			calculateInstanceFinalStats(instId, teamBonuses);
+			Stat.final(instId, teamBonuses);
 		}
 	});
 
@@ -1811,7 +1819,7 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 		let rank = data.rank;
 		let template = data.template;
 		if (!rank || !template) {
-			const baseDef = window.characterList && window.characterList[data.id];
+			const baseDef = characterList && characterList[data.id];
 			if (baseDef) {
 				rank = rank || baseDef.rank || 'common';
 				template = template || baseDef.template || 'balanced';
@@ -1836,7 +1844,7 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 			const skillId = baseSkills[skillIndex];
 			if (!skillId || typeof skillId !== 'string') return;
 
-			const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
+			const sData = contentList && contentList[skillType] && contentList[skillType][skillId];
 			if (!sData || !sData.contents || !Array.isArray(sData.contents)) return;
 
 			const triggerMap = { 'pugong': 'pugongHit', 'skill': 'skillHit', 'spskill': 'spskillHit' };
@@ -2203,9 +2211,6 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
 		expectedGold: options.goldReward || 0,
 	};
 
-	// ===== 【调试】暴露到 window 方便控制台查看 =====
-	window.__battle = battleState;
-
 	renderBattleView();
 	showBattleIntro();
 }
@@ -2383,7 +2388,7 @@ function renderBattleView() {
 
 	const bottomBar = document.querySelector('.ybrpg-bottom-bar');
 	if (bottomBar) bottomBar.style.display = 'none';
-	hideOtherViews('battle-view');
+	shared.hideOtherViews('battle-view');
 
 	const controlsDiv = document.createElement('div');
 	controlsDiv.style.cssText = 'display:flex; flex-direction:column; align-items:center; width:100%; margin-top:10px; gap:5px;';
@@ -2411,8 +2416,8 @@ function renderBattleView() {
 	escapeBtn.style.cssText = 'width:auto;padding:4px 16px;font-size:12px;background-color:#d9534f;border-color:#d43f3a;color:#fff;';
 	escapeBtn.textContent = '🏃 逃跑';
 	escapeBtn.onclick = () => {
-		if (window.confirmDialog) {
-			window.confirmDialog('确定要放弃本次战斗吗？', () => endBattle('enemy'));
+		if (confirmDialog) {
+			confirmDialog('确定要放弃本次战斗吗？', () => endBattle('enemy'));
 		} else {
 			endBattle('enemy');
 		}
@@ -2588,9 +2593,9 @@ function getEmojiClass(emoji) {
 function getSkillEffectInfo(action) {
 	const skillType = action.type === 'pugong' ? 'pugong' : action.skillType;
 	const skillId = action.type === 'pugong' ? action.skillId : action.skillId;
-	const sData = window.contentList[skillType] && window.contentList[skillType][skillId];
+	const sData = contentList[skillType] && contentList[skillType][skillId];
 
-	// const sData = window.contentList && window.contentList[skillType] && window.contentList[skillType][skillId];
+	// const sData = contentList && contentList[skillType] && contentList[skillType][skillId];
 
 	// ===== 【修改】优先使用技能数据中定义的 emoji =====
 	if (sData && sData.emoji) {
@@ -2747,6 +2752,8 @@ function addBuff(target, buffConfig) {
 	applyBuffEffect(target, buffConfig);
 }
 
+// 暴露给 charBreakthroughConfig.js 等回调模块使用（避免循环import）
+shared.addBuff = addBuff;
 
 /**
  * 应用 buff 的即时效果
@@ -3011,7 +3018,7 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}, teamBonuses
 	const template = overrides.template || baseChar.template || 'balanced';
 
 	// 1. 获取模板基础属性
-	const templateData = window.characterTemplate || characterTemplate;
+	const templateData = characterTemplate || characterTemplate;
 	let baseStats;
 	if (templateData && templateData[template] && templateData[template][rank]) {
 		baseStats = { ...templateData[template][rank] };
@@ -3063,7 +3070,7 @@ function compileEnemyStats(charId, level, tupolevel, overrides = {}, teamBonuses
 
 		let resolvedBuff = buff;
 		if (typeof buff === 'string') {
-			const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+			const lib = BREAKTHROUGH_BUFF_LIBRARY || {};
 			resolvedBuff = lib[buff];
 		}
 		if (!resolvedBuff) continue;
@@ -3209,7 +3216,7 @@ function calculateEnemyTeamBonuses(enemyTeam) {
 
             let resolvedBuff = buff;
             if (typeof buff === 'string') {
-                const lib = window.BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+                const lib = BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
                 resolvedBuff = lib[buff];
             }
             if (!resolvedBuff) continue;
@@ -3249,7 +3256,10 @@ function calculateEnemyTeamBonuses(enemyTeam) {
 
     return { teamFlat, teamPercent };
 }
+// ====== 对外暴露（window 保留兼容旧代码，export 供模块化导入） ======
 window.startBattle = startBattle;
 window.updateBattleUI = updateBattleUI;
 window.endBattle = endBattle;
-export {};
+window.addBattleLog = addBattleLog;
+
+export { startBattle, updateBattleUI, endBattle, addBattleLog, BattleEvents };

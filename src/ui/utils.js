@@ -105,10 +105,10 @@ function generateInstanceId(charId) {
 	return `${charId}_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
 }
 
-// 暴露到 window（供其他模块直接调用）
+// 暴露到 window（兼容旧代码，将在后续清理）
 window.getMainCharacterSlotIndex = getMainCharacterSlotIndex;
 window.toast = toast;
 window.confirmDialog = confirmDialog;
 window.generateInstanceId = generateInstanceId;
 
-export {};
+export { getMainCharacterSlotIndex, toast, confirmDialog, generateInstanceId };
