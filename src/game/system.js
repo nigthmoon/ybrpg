@@ -7,7 +7,7 @@ import { shared } from '../shared.js';
 import { TREASURE_DEFS } from '../equip.js';
 import { BREAKTHROUGH_BUFF_LIBRARY } from '../charBreakthroughConfig.js';
 import { characterTemplate, characterList } from '../characterList.js';
-import { toast, confirmDialog } from '../ui/utils.js';
+import { toast, confirmDialog, generateInstanceId, getMainCharacterSlotIndex } from '../ui/utils.js';
 
 // ====== Bag - 宝物/背包/装备系统 ======
 
@@ -1360,11 +1360,27 @@ class UI {
 			};
 		}
 	}
+	// ====== UI 工具（来自 ui/utils，统一收纳到 UI 类） ======
+
+	/** 飘字提示 */
+	static toast(message, type = 'info', duration = 1500) {
+		return toast(message, type, duration);
+	}
+
+	/** 确认对话框 */
+	static confirmDialog(message, onConfirm, onCancel) {
+		return confirmDialog(message, onConfirm, onCancel);
+	}
+
+	/** 生成唯一角色实例ID */
+	static generateInstanceId(charId) {
+		return generateInstanceId(charId);
+	}
+
+	/** 获取主角在队伍中的槽位索引 */
+	static getMainCharacterSlotIndex() {
+		return getMainCharacterSlotIndex();
+	}
 }
 
 export { Bag, Stat, UI };
-
-// 兼容旧 window.* 引用（gameData.js 动态检查使用）
-window.Bag = Bag;
-window.Stat = Stat;
-window.UI = UI;

@@ -1,3 +1,5 @@
+import { Game } from './core.js';
+
 // ====== 夜白旅程 战斗系统 ======
 
 /**
@@ -3055,8 +3057,8 @@ function triggerOnDeath(unit, killer, callback) {
         }
 
         // 更新UI
-        if (window.updateBattleUI) {
-            window.updateBattleUI();
+        if (Game.Battle.updateUI) {
+            Game.Battle.updateUI();
         }
 
         // 延迟触发下一个，避免阻塞

@@ -1,4 +1,6 @@
 import { TREASURE_DEFS } from './equip.js';
+// Bag 直接来自定义文件（避免经 core.js 形成循环依赖）
+import { Bag } from './game/system.js';
 
 /**
  * 夜白旅程 - 游戏数据管理类
@@ -149,7 +151,7 @@ class GameData {
 			if (this.data._treasureInventory) {
 				window.treasureInventory = JSON.parse(JSON.stringify(this.data._treasureInventory));
 			} else {
-				window.Bag.ensureInv();
+				Bag.ensureInv();
 			}
 			
 			console.log(`[GameData] 已加载槽位 ${slotIndex}`, this.data);
@@ -506,8 +508,8 @@ class GameData {
 	 * @returns {Array} 宝物实例ID数组
 	 */
 	getCharTreasures(instanceId) {
-		if (window.Bag.equipped) {
-			return window.Bag.equipped(instanceId);
+		if (Bag.equipped) {
+			return Bag.equipped(instanceId);
 		}
 		return [];
 	}
@@ -519,8 +521,8 @@ class GameData {
 	 * @param {string|null} treasureInstanceId 宝物实例ID
 	 */
 	equipTreasure(instanceId, slotIndex, treasureInstanceId) {
-		if (window.Bag.equip) {
-			window.Bag.equip(instanceId, slotIndex, treasureInstanceId);
+		if (Bag.equip) {
+			Bag.equip(instanceId, slotIndex, treasureInstanceId);
 		}
 	}
 
@@ -553,8 +555,8 @@ class GameData {
 	 * @param {number} count 数量
 	 */
 	addTreasure(baseId, count = 1) {
-		if (window.Bag.add) {
-			window.Bag.add(baseId, count);
+		if (Bag.add) {
+			Bag.add(baseId, count);
 		}
 	}
 
@@ -564,11 +566,11 @@ class GameData {
 	 * @param {number} count 数量
 	 */
 	removeTreasure(baseId, count = 1) {
-		if (window.Bag.remove && window.treasureInventory) {
+		if (Bag.remove && window.treasureInventory) {
 			const instances = Object.entries(window.treasureInventory)
 				.filter(([, inv]) => inv.baseId === baseId && !inv.equippedBy);
 			for (let i = 0; i < Math.min(count, instances.length); i++) {
-				window.Bag.remove(instances[i][0]);
+				Bag.remove(instances[i][0]);
 			}
 		}
 	}
@@ -607,8 +609,8 @@ class GameData {
 	 * @param {string} toInstanceId 目标角色实例ID
 	 */
 	transferTreasures(fromInstanceId, toInstanceId) {
-		const fromTreasures = window.Bag.equipped ? window.Bag.equipped(fromInstanceId) : [];
-		const toTreasures = window.Bag.equipped ? window.Bag.equipped(toInstanceId) : [];
+		const fromTreasures = Bag.equipped ? Bag.equipped(fromInstanceId) : [];
+		const toTreasures = Bag.equipped ? Bag.equipped(toInstanceId) : [];
 		
 		// 先卸下所有
 		fromTreasures.forEach(tid => {

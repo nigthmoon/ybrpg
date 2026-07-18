@@ -6,6 +6,8 @@
  * 由 triggerSelfEffect / triggerGlobalEffect 根据 trigger 时机自动调用
  */
 import { shared } from './shared.js';
+// 战斗日志/UI 更新统一收纳于 Game.Battle（避免散落的 window.* 全局调用）
+import { Game } from './core.js';
 
 // ==================== 全局 Buff 库定义 ====================
 const BREAKTHROUGH_BUFF_LIBRARY = {
@@ -60,8 +62,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			if (this.alive && target && target._lastDamage) {
 				const healAmt = Math.floor(target._lastDamage * 0.5);
 				this.hp = Math.min(this.maxHp, this.hp + healAmt);
-				window.addBattleLog(`${this.name} 吸血 ${healAmt} 点`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 吸血 ${healAmt} 点`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -74,8 +76,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			if (this.alive && target && target._lastDamage) {
 				const healAmt = Math.floor(target._lastDamage * 0.75);
 				this.hp = Math.min(this.maxHp, this.hp + healAmt);
-				window.addBattleLog(`${this.name} 吸血 ${healAmt} 点`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 吸血 ${healAmt} 点`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -88,8 +90,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			if (this.alive && target && target._lastDamage) {
 				const healAmt = Math.floor(target._lastDamage * 1.0);
 				this.hp = Math.min(this.maxHp, this.hp + healAmt);
-				window.addBattleLog(`${this.name} 吸血 ${healAmt} 点`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 吸血 ${healAmt} 点`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -102,8 +104,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			if (this.alive && target && target._lastDamage) {
 				const healAmt = Math.floor(target._lastDamage * 0.5);
 				this.hp = Math.min(this.maxHp, this.hp + healAmt);
-				window.addBattleLog(`${this.name} 吸血 ${healAmt} 点`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 吸血 ${healAmt} 点`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -116,8 +118,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			if (this.alive && target && target._lastDamage) {
 				const healAmt = Math.floor(target._lastDamage * 0.75);
 				this.hp = Math.min(this.maxHp, this.hp + healAmt);
-				window.addBattleLog(`${this.name} 吸血 ${healAmt} 点`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 吸血 ${healAmt} 点`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -130,8 +132,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			if (this.alive && target && target._lastDamage) {
 				const healAmt = Math.floor(target._lastDamage * 1.0);
 				this.hp = Math.min(this.maxHp, this.hp + healAmt);
-				window.addBattleLog(`${this.name} 吸血 ${healAmt} 点`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 吸血 ${healAmt} 点`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -152,8 +154,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			const healAmt = this.atk || 0;
 			this.hp = Math.min(this.maxHp, this.hp + healAmt);
 			this.alive = true; // 复活
-			window.addBattleLog(`${this.name} 触发亡语，恢复 ${healAmt} 生命值！`);
-			window.updateBattleUI();
+			Game.Battle.log(`${this.name} 触发亡语，恢复 ${healAmt} 生命值！`);
+			Game.Battle.updateUI();
 		}
 	},
 	'death_energy_drain_enemy_2': {
@@ -167,8 +169,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			enemies.forEach(e => {
 				e.energy = Math.max(0, e.energy - 2);
 			});
-			window.addBattleLog(`${this.name} 亡语，所有敌人降低2能量`);
-			window.updateBattleUI();
+			Game.Battle.log(`${this.name} 亡语，所有敌人降低2能量`);
+			Game.Battle.updateUI();
 		}
 	},
 	'death_energy_drain_enemy_all': {
@@ -182,8 +184,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			enemies.forEach(e => {
 				e.energy = 0;
 			});
-			window.addBattleLog(`${this.name} 亡语，所有敌人能量归零！`);
-			window.updateBattleUI();
+			Game.Battle.log(`${this.name} 亡语，所有敌人能量归零！`);
+			Game.Battle.updateUI();
 		}
 	},
 	'death_heal_team_atk100': {
@@ -197,10 +199,10 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			allies.forEach(ally => {
 				if (ally.alive) {
 					ally.hp = Math.min(ally.maxHp, ally.hp + healAmt);
-					window.addBattleLog(`${ally.name} 恢复 ${healAmt} 生命`);
+					Game.Battle.log(`${ally.name} 恢复 ${healAmt} 生命`);
 				}
 			});
-			window.updateBattleUI();
+			Game.Battle.updateUI();
 		}
 	},
 	'death_energy_team_2': {
@@ -215,8 +217,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					ally.energy = Math.min(8, ally.energy + 2);
 				}
 			});
-			window.addBattleLog(`${this.name} 亡语，所有队友恢复2能量`);
-			window.updateBattleUI();
+			Game.Battle.log(`${this.name} 亡语，所有队友恢复2能量`);
+			Game.Battle.updateUI();
 		}
 	},
 	'death_dmg_true_enemy_atk100': {
@@ -232,15 +234,15 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 				if (e.alive) {
 					e.hp -= dmg;
 					showDamageNumber(e, dmg, false);
-					window.addBattleLog(`${e.name} 受到 ${dmg} 点真实伤害`);
+					Game.Battle.log(`${e.name} 受到 ${dmg} 点真实伤害`);
 					if (e.hp <= 0) {
 						e.hp = 0;
 						e.alive = false;
-						window.addBattleLog(`${e.name} 阵亡！`);
+						Game.Battle.log(`${e.name} 阵亡！`);
 					}
 				}
 			});
-			window.updateBattleUI();
+			Game.Battle.updateUI();
 		}
 	},
 
@@ -359,8 +361,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
-				window.addBattleLog(`${target.name} 损失1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 损失1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -372,8 +374,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
-				window.addBattleLog(`${target.name} 损失1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 损失1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -385,8 +387,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
-				window.addBattleLog(`${target.name} 损失1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 损失1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -398,8 +400,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 2);
-				window.addBattleLog(`${target.name} 损失2点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 损失2点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -411,8 +413,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 2);
-				window.addBattleLog(`${target.name} 损失2点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 损失2点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -424,8 +426,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
-				window.addBattleLog(`${target.name} 降低1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 降低1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -437,8 +439,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
-				window.addBattleLog(`${target.name} 降低1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 降低1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -450,8 +452,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
-				window.addBattleLog(`${target.name} 降低1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 降低1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -540,7 +542,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					value: poisonDmg,
 				});
 				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
-				window.updateBattleUI();
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -563,7 +565,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					value: poisonDmg,
 				});
 				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
-				window.updateBattleUI();
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -586,7 +588,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					value: poisonDmg,
 				});
 				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
-				window.updateBattleUI();
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -609,7 +611,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					value: poisonDmg,
 				});
 				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
-				window.updateBattleUI();
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -632,7 +634,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					value: poisonDmg,
 				});
 				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
-				window.updateBattleUI();
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -655,7 +657,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					value: poisonDmg,
 				});
 				// 注意：addBuff 内部的 applyBuffEffect 已经会累加中毒伤害并打印日志
-				window.updateBattleUI();
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -674,7 +676,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		},
 		content: function () {
 			this.dmgBoost = (this.dmgBoost || 0) + 0.5;
-			window.addBattleLog(`${this.name} 首次攻击伤害增加50%`);
+			Game.Battle.log(`${this.name} 首次攻击伤害增加50%`);
 		}
 	},
 	'first_taken_dmg_reduce_75': {
@@ -691,7 +693,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (attacker, damage) {
 			// 在 applyDamage 中通过检查 this.dmgReduce 来实现
 			this.dmgReduce = (this.dmgReduce || 0) + 0.75;
-			window.addBattleLog(`${this.name} 首次受击伤害减少75%`);
+			Game.Battle.log(`${this.name} 首次受击伤害减少75%`);
 			// 注意：这里只是设置标记，实际减伤需要在 applyDamage 中计算
 		}
 	},
@@ -709,8 +711,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					ally.energy = Math.min(8, ally.energy + 1);
 				}
 			});
-			window.addBattleLog(`${this.name} 受击，全体队友恢复1能量`);
-			window.updateBattleUI();
+			Game.Battle.log(`${this.name} 受击，全体队友恢复1能量`);
+			Game.Battle.updateUI();
 		}
 	},
 	'on_hit_drain_source_1_25': {
@@ -721,8 +723,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive && attacker.energy !== undefined) {
 				attacker.energy = Math.max(0, attacker.energy - 1);
-				window.addBattleLog(`${attacker.name} 被减少1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${attacker.name} 被减少1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -734,8 +736,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive && attacker.energy !== undefined) {
 				attacker.energy = Math.max(0, attacker.energy - 1);
-				window.addBattleLog(`${attacker.name} 被减少1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${attacker.name} 被减少1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -747,8 +749,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (attacker, damage) {
 			if (this.alive && this.energy !== undefined) {
 				this.energy = Math.min(8, this.energy + 1);
-				window.addBattleLog(`${this.name} 受击，恢复1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 受击，恢复1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -789,7 +791,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return true; },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
-				window.addBattleLog(`${this.name} 触发反击！`);
+				Game.Battle.log(`${this.name} 触发反击！`);
 				const pugongId = this.skills[0] || 'attack1';
 				const pData = window.contentList && window.contentList.pugong && window.contentList.pugong[pugongId];
 				const coeff = 1.0; // 固定100%系数
@@ -805,7 +807,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return true; },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
-				window.addBattleLog(`${this.name} 触发反击！`);
+				Game.Battle.log(`${this.name} 触发反击！`);
 				const dmg = calculateDamage(this, attacker, 0.75, 0);
 				applyDamage(attacker, dmg, this, function () { }, { trigger: 'pugongHit' });
 			}
@@ -818,7 +820,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return true; },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
-				window.addBattleLog(`${this.name} 触发反击！`);
+				Game.Battle.log(`${this.name} 触发反击！`);
 				const dmg = calculateDamage(this, attacker, 0.5, 0);
 				applyDamage(attacker, dmg, this, function () { }, { trigger: 'pugongHit' });
 			}
@@ -900,8 +902,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					ally.energy = Math.min(8, ally.energy + 1);
 				}
 			});
-			window.addBattleLog(`${this.name} 普攻，全体队友恢复1能量`);
-			window.updateBattleUI();
+			Game.Battle.log(`${this.name} 普攻，全体队友恢复1能量`);
+			Game.Battle.updateUI();
 		}
 	},
 	'pugong_energy_lowest_1': {
@@ -920,8 +922,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 				}
 			});
 			lowestAlly.energy = Math.min(8, lowestAlly.energy + 1);
-			window.addBattleLog(`${lowestAlly.name} 获得1点能量（能量最低）`);
-			window.updateBattleUI();
+			Game.Battle.log(`${lowestAlly.name} 获得1点能量（能量最低）`);
+			Game.Battle.updateUI();
 		}
 	},
 	'pugong_energy_self_1': {
@@ -932,8 +934,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (this.energy !== undefined) {
 				this.energy = Math.min(8, this.energy + 1);
-				window.addBattleLog(`${this.name} 普攻，恢复1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 普攻，恢复1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -945,8 +947,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (this.energy !== undefined) {
 				this.energy = Math.min(8, this.energy + 2);
-				window.addBattleLog(`${this.name} 普攻，恢复2点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 普攻，恢复2点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -963,8 +965,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function () {
 			if (this.energy !== undefined) {
 				this.energy = Math.min(8, this.energy + 2);
-				window.addBattleLog(`${this.name} 技能后，恢复2点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 技能后，恢复2点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -980,7 +982,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 			const enemies = getAliveUnits(enemySide);
 			if (enemies.length > 0) {
 				const target = enemies[Math.floor(Math.random() * enemies.length)];
-				window.addBattleLog(`${this.name} 触发额外普攻！`);
+				Game.Battle.log(`${this.name} 触发额外普攻！`);
 				const pugongId = this.skills[0] || 'attack1';
 				const pData = window.contentList && window.contentList.pugong && window.contentList.pugong[pugongId];
 				const coeff = (pData && pData.coefficient) ? Number(pData.coefficient) : 1.0;
@@ -1002,8 +1004,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		},
 		content: function () {
 			this.invincible = true;
-			window.addBattleLog(`${this.name} 获得无敌状态！`);
-			window.updateBattleUI();
+			Game.Battle.log(`${this.name} 获得无敌状态！`);
+			Game.Battle.updateUI();
 		}
 	},
 	'kill_extra_turn_1': {
@@ -1013,7 +1015,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		filter: function () { return true; },
 		content: function (target) {
 			this.extraTurn = true;
-			window.addBattleLog(`${this.name} 击杀敌人，获得额外回合！`);
+			Game.Battle.log(`${this.name} 击杀敌人，获得额外回合！`);
 		}
 	},
 	'kill_add_energy_self_2': {
@@ -1024,8 +1026,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target) {
 			if (this.energy !== undefined) {
 				this.energy = Math.min(8, this.energy + 2);
-				window.addBattleLog(`${this.name} 击杀敌人，恢复2点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${this.name} 击杀敌人，恢复2点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -1059,8 +1061,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target, healAmount) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.min(8, target.energy + 1);
-				window.addBattleLog(`${target.name} 获得1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 获得1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -1072,8 +1074,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		content: function (target, healAmount) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.min(8, target.energy + 1);
-				window.addBattleLog(`${target.name} 获得1点能量`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 获得1点能量`);
+				Game.Battle.updateUI();
 			}
 		}
 	},
@@ -1106,8 +1108,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 					target.healBlocked = false;
 					target.poisonDamage = 0;
 				}
-				window.addBattleLog(`${target.name} 的负面效果已被清除`);
-				window.updateBattleUI();
+				Game.Battle.log(`${target.name} 的负面效果已被清除`);
+				Game.Battle.updateUI();
 			}
 		}
 	},

@@ -4,10 +4,8 @@ import { characterList, characterTemplate } from './characterList.js';
 import { BREAKTHROUGH_BUFF_LIBRARY, STANDARD_BREAKTHROUGH_TEMPLATE } from './charBreakthroughConfig.js';
 import { TREASURE_DEFS } from './equip.js';
 import { eventList, SPeventList } from './eventList.js';
-import { toast, confirmDialog, generateInstanceId, getMainCharacterSlotIndex } from './ui/utils.js';
-import { gameData, GameData } from './gameData.js';
-import { Bag, Stat, UI } from './game/system.js';
-import { startBattle, updateBattleUI, endBattle, addBattleLog } from './battle/battle_refactored.js';
+// 核心功能统一收纳于根命名空间 Game
+import { Game } from './core.js';
 
 // ====== mode.js 自身可变状态（保留 window 透出，后续迁移到 store.js） ======
 
@@ -57,12 +55,12 @@ function renderTeamView(container) {
 
 	// 计算总战力
 	let totalPower = 0;
-	const teamBonuses = Stat.teamBonuses();
+	const teamBonuses = Game.Stat.teamBonuses();
 	for (let i = 0; i < 6; i++) {
 		const instId = window.currentTeam[i];
 		if (instId && window.charBagData && window.charBagData[instId]) {
-			const finalStats = Stat.final(instId, teamBonuses);
-			totalPower += Stat.power(finalStats);
+			const finalStats = Game.Stat.final(instId, teamBonuses);
+			totalPower += Game.Stat.power(finalStats);
 		}
 	}
 
@@ -168,7 +166,7 @@ function showCharacterDetailPopup() {
 	}
 
 	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-		toast('请先在队伍中选择一个角色', 'warning');
+		Game.toast('请先在队伍中选择一个角色', 'warning');
 		return;
 	}
 
@@ -177,13 +175,13 @@ function showCharacterDetailPopup() {
 	const baseChar = characterList[charId];
 
 	if (!baseChar) {
-		toast('角色数据异常', 'error');
+		Game.toast('角色数据异常', 'error');
 		return;
 	}
 
 	// 2. 计算最终属性
-	const teamBonuses = Stat.teamBonuses();
-	const finalStats = Stat.final(instanceId, teamBonuses);
+	const teamBonuses = Game.Stat.teamBonuses();
+	const finalStats = Game.Stat.final(instanceId, teamBonuses);
 
 	// 3. 品质信息
 	const RANK_LABELS = { kami: '神品', legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' };
@@ -364,7 +362,7 @@ function showCharacterDetailPopup() {
 	popup.appendChild(dmgSection);
 
 	// ===== 战斗力 =====
-	const power = Stat.power(finalStats);
+	const power = Game.Stat.power(finalStats);
 	const powerSection = document.createElement('div');
 	powerSection.style.cssText = `
 		text-align: center;
@@ -428,7 +426,7 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 	// }
 
 	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-		toast('请先选择一个角色，不论是背包还是阵容里', 'warning');
+		Game.toast('请先选择一个角色，不论是背包还是阵容里', 'warning');
 		return;
 	}
 
@@ -437,7 +435,7 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 	const baseChar = characterList[charId];
 
 	if (!baseChar) {
-		toast('角色数据异常', 'error');
+		Game.toast('角色数据异常', 'error');
 		return;
 	}
 
@@ -654,19 +652,19 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 					const availableCount = availableFodderIds.length;
 
 					if (availableCount < breakInfo.cost) {
-						toast(`突破材料不足！需要 ${breakInfo.cost} 个同名角色，当前可用: ${availableCount}`, 'error');
+						Game.toast(`突破材料不足！需要 ${breakInfo.cost} 个同名角色，当前可用: ${availableCount}`, 'error');
 						return;
 					}
 
 					// 改为直接刷新弹窗内部数据：
-					confirmDialog(
+					Game.confirmDialog(
 						`确定要突破【${baseCharForAction.name}】吗？\n当前突破等级: ${currentTupoForAction}阶 → 目标: ${currentTupoForAction + 1}阶\n消耗: ${breakInfo.cost}个同名角色`,
 						() => {
 							const result = breakthroughCharacterInstance(instanceId);
 							if (result.success) {
-								toast(result.message, 'success');
+								Game.toast(result.message, 'success');
 								// refreshTeamViewDisplay();
-								// UI.refresh({
+								// Game.UI.refresh({
 								// 	instanceId: instanceId,
 								// 	forceTeamRebuild: false
 								// });
@@ -694,7 +692,7 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 								// ===== 【改为】直接刷新弹窗内容，不关闭重建 =====
 								// refreshBreakthroughPopupContent(popup, instanceId);
 							} else {
-								toast(result.message, 'error');
+								Game.toast(result.message, 'error');
 							}
 						}
 					);
@@ -738,19 +736,19 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 					const availableCount = availableFodderIds.length;
 
 					if (availableCount < promotionCost) {
-						toast(`升阶材料不足！需要 ${promotionCost} 个同名角色，当前可用: ${availableCount}`, 'error');
+						Game.toast(`升阶材料不足！需要 ${promotionCost} 个同名角色，当前可用: ${availableCount}`, 'error');
 						return;
 					}
 
-					confirmDialog(
+					Game.confirmDialog(
 						`确定要将【${baseCharForAction.name}】升阶至【${getRankLabel(needPromotion)}】吗？`,
 						() => {
 							const result = promoteCharacterRank(instanceId);
 							if (result.success) {
-								toast(result.message, 'success');
+								Game.toast(result.message, 'success');
 								// if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
 								// showBreakthroughPreviewPopup();
-								// UI.refresh({
+								// Game.UI.refresh({
 								// 	instanceId: instanceId,
 								// 	forceTeamRebuild: false
 								// });
@@ -777,7 +775,7 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 								}
 								// refreshBreakthroughPopupContent(popup, instanceId);
 							} else {
-								toast(result.message, 'error');
+								Game.toast(result.message, 'error');
 							}
 						}
 					);
@@ -886,7 +884,7 @@ function refreshBreakthroughPopupContent(popup, instanceId) {
 	// 		}
 	// 	} catch (e) { }
 	// }
-	// UI.refresh({
+	// Game.UI.refresh({
 	// 	instanceId: instanceId,
 	// 	dialog: window._pendingRefreshAfterBreakthrough?.parentDialog || null
 	// });
@@ -1043,15 +1041,15 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 			doBreakBtn.onmouseout = () => { doBreakBtn.style.background = '#44aaff'; };
 			doBreakBtn.onclick = (e) => {
 				e.stopPropagation();
-				confirmDialog(
+				Game.confirmDialog(
 					`确定要突破【${baseChar.name}】吗？\n当前突破等级: ${currentTupoLevel}阶 → 目标: ${currentTupoLevel + 1}阶\n消耗: ${breakInfo.cost}个同名角色`,
 					() => {
 						console.log('突破走这里了')
 						const result = breakthroughCharacterInstance(instanceId);
 						if (result.success) {
-							toast(result.message, 'success');
+							Game.toast(result.message, 'success');
 							// 原地刷新弹窗内容
-							// UI.refresh({
+							// Game.UI.refresh({
 							// 	instanceId: instanceId,
 							// 	forceTeamRebuild: false
 							// });
@@ -1078,7 +1076,7 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 							}
 							// refreshBreakthroughPopupContent(popup, instanceId);
 						} else {
-							toast(result.message, 'error');
+							Game.toast(result.message, 'error');
 						}
 					}
 				);
@@ -1113,13 +1111,13 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 			promoteBtn.onmouseout = () => { promoteBtn.style.background = '#ffaa00'; };
 			promoteBtn.onclick = (e) => {
 				e.stopPropagation();
-				confirmDialog(
+				Game.confirmDialog(
 					`确定要将【${baseChar.name}】升阶至【${getRankLabel(needPromotion)}】吗？`,
 					() => {
 						const result = promoteCharacterRank(instanceId);
 						if (result.success) {
-							toast(result.message, 'success');
-							// UI.refresh({
+							Game.toast(result.message, 'success');
+							// Game.UI.refresh({
 							// 	instanceId: instanceId,
 							// 	forceTeamRebuild: false
 							// });
@@ -1146,7 +1144,7 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 							}
 							// refreshBreakthroughPopupContent(popup, instanceId);
 						} else {
-							toast(result.message, 'error');
+							Game.toast(result.message, 'error');
 						}
 					}
 				);
@@ -1181,7 +1179,7 @@ function showBreakthroughPreviewPopupByCharId(charId) {
 	}
 
 	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-		toast('角色数据异常', 'error');
+		Game.toast('角色数据异常', 'error');
 		return;
 	}
 
@@ -1189,7 +1187,7 @@ function showBreakthroughPreviewPopupByCharId(charId) {
 	const baseChar = characterList[charId];
 
 	if (!baseChar) {
-		toast('角色数据异常', 'error');
+		Game.toast('角色数据异常', 'error');
 		return;
 	}
 
@@ -1614,7 +1612,7 @@ function renderTeamSlot(slotEl, index) {
 	slotEl.innerHTML = '';
 
 	// 【修改】动态判断当前渲染的格子是否是主角
-	const mainCharIndex = getMainCharacterSlotIndex();
+	const mainCharIndex = Game.mainSlot();
 	const isMainCharacterSlot = (index === mainCharIndex);
 
 	// 修改：currentTeam 现在存储的是 instanceId
@@ -1736,8 +1734,8 @@ function refreshCharDetailPopupContent(instanceId, dialog) {
 	if (!baseChar) return;
 
 	// 计算最新属性
-	const teamBonuses = Stat.teamBonuses();
-	const finalStats = Stat.final(instanceId, teamBonuses);
+	const teamBonuses = Game.Stat.teamBonuses();
+	const finalStats = Game.Stat.final(instanceId, teamBonuses);
 
 	// 如果传入了dialog，直接更新该dialog的内容
 	if (dialog) {
@@ -1783,12 +1781,12 @@ function refreshTeamViewDisplay() {
 	const totalPowerBar = document.getElementById('team-total-power');
 	if (totalPowerBar) {
 		let totalPower = 0;
-		const teamBonuses = Stat.teamBonuses();
+		const teamBonuses = Game.Stat.teamBonuses();
 		for (let i = 0; i < 6; i++) {
 			const instId = window.currentTeam[i];
 			if (instId && window.charBagData && window.charBagData[instId]) {
-				const finalStats = Stat.final(instId, teamBonuses);
-				totalPower += Stat.power(finalStats);
+				const finalStats = Game.Stat.final(instId, teamBonuses);
+				totalPower += Game.Stat.power(finalStats);
 			}
 		}
 		totalPowerBar.innerHTML = `
@@ -1822,7 +1820,7 @@ shared.refreshTeamViewDisplay = refreshTeamViewDisplay;
 function onTeamSlotClick(index) {
 	// // 【新增】如果点击的是主角槽位，直接提示，不执行后续逻辑
 	// if (index === 0) {
-	//	 toast('主角位置固定，敬请期待更多互动功能', 'info');
+	//	 Game.toast('主角位置固定，敬请期待更多互动功能', 'info');
 	//	 // 依然可以显示详情，但不允许更换
 	//	 window._selectedSlotIndex = index;
 	//	 const instanceId = window.currentTeam[index];
@@ -1856,13 +1854,13 @@ shared.refreshTeamViewDisplay = refreshTeamViewDisplay;
 function onTeamNavChange() {
 	const idx = window._selectedSlotIndex;
 	if (idx === null || idx === undefined) {
-		toast('请先选择一个方格', 'warning');
+		Game.toast('请先选择一个方格', 'warning');
 		return;
 	}
 	// 【修改】动态获取主角位置，禁止更换主角
-	const mainCharIndex = getMainCharacterSlotIndex();
+	const mainCharIndex = Game.mainSlot();
 	if (idx === mainCharIndex) {
-		toast('主角无法更换，敬请期待', 'warning');
+		Game.toast('主角无法更换，敬请期待', 'warning');
 		return;
 	}
 	showCharSelectPopup(idx);
@@ -1872,19 +1870,19 @@ function onTeamNavChange() {
 function onTeamNavTrain() {
 	const idx = window._selectedSlotIndex;
 	if (idx === null || idx === undefined) {
-		toast('请先选择一个方格', 'warning');
+		Game.toast('请先选择一个方格', 'warning');
 		return;
 	}
 	const instanceId = window.currentTeam[idx];
 	if (!instanceId || !window.charBagData || !window.charBagData[instanceId]) {
-		toast('当前方格为空', 'warning');
+		Game.toast('当前方格为空', 'warning');
 		return;
 	}
 	const instData = window.charBagData[instanceId];
 	const charId = instData.charId || instanceId;
 	const char = characterList[charId];
 	if (!char) {
-		toast('角色数据异常', 'error');
+		Game.toast('角色数据异常', 'error');
 		return;
 	}
 	// 调用背包中的角色详情弹窗（带升级功能）
@@ -1956,18 +1954,18 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 
 	const treasureGrid = document.createElement('div');
 	treasureGrid.className = 'treasure-grid';
-	// const treasureDefs = gameData.getTreasureList();
+	// const treasureDefs = Game.Data.getTreasureList();
 	// 修改：传入 instanceId 或 charId? 
-	// 如果 gameData 不支持 instanceId，这里传 charId 会导致所有同名角色共享宝物。
-	// 理想情况：gameData.Bag.equip(instanceId, ...)
-	// 临时方案：假设 gameData 已更新支持 instanceId，或者我们只传 charId 接受共享限制。
-	// 此处代码保持原样调用，但需意识到如果 gameData 内部 key 是 charId，则多实例共享宝物。
-	// const charTreasures = gameData.getCharTreasures(charId); 
+	// 如果 Game.Data 不支持 instanceId，这里传 charId 会导致所有同名角色共享宝物。
+	// 理想情况：Game.Bag.equip(instanceId, ...)
+	// 临时方案：假设 Game.Data 已更新支持 instanceId，或者我们只传 charId 接受共享限制。
+	// 此处代码保持原样调用，但需意识到如果 Game.Data 内部 key 是 charId，则多实例共享宝物。
+	// const charTreasures = Game.Data.getCharTreasures(charId); 
 	// 使用新系统的 getCharEquippedTreasures
-	const defs = Bag.defs();
+	const defs = Game.Bag.defs();
 	// 改为（确保返回完整有序数组）：
 	const equippedIds = [];
-	Bag.ensureSlots();
+	Game.Bag.ensureSlots();
 	const slots = window.charTreasureSlots[instanceId];
 	for (let i = 0; i < 6; i++) {
 		equippedIds[i] = slots ? slots[i] : null;
@@ -2031,7 +2029,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			const tId = equippedIds[i];
 			if (tId) {
 				// 该槽位有宝物 -> 弹出升级浮窗（内置替换功能）
-				Bag.showUpgrade(tId, instanceId, i);
+				Game.Bag.showUpgrade(tId, instanceId, i);
 			} else {
 				// 空槽位 -> 弹出选择浮窗
 				showTreasureSelectPopup(instanceId, i);
@@ -2072,8 +2070,8 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 	attrDiv.appendChild(tipEl);
 
 	// ===== 计算最终属性 =====
-	const teamBonuses = Stat.teamBonuses();
-	const finalStats = Stat.final(instanceId, teamBonuses);
+	const teamBonuses = Game.Stat.teamBonuses();
+	const finalStats = Game.Stat.final(instanceId, teamBonuses);
 
 	const attrs = [
 		{ label: '生命', value: finalStats.totalHp, base: finalStats.baseHp, icon: '❤' },
@@ -2107,9 +2105,9 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 	});
 
 	// 战斗力显示
-	const teamBonusesForPower = Stat.teamBonuses();
-	const finalStatsForPower = Stat.final(instanceId, teamBonusesForPower);
-	const charPower = Stat.power(finalStatsForPower);
+	const teamBonusesForPower = Game.Stat.teamBonuses();
+	const finalStatsForPower = Game.Stat.final(instanceId, teamBonusesForPower);
+	const charPower = Game.Stat.power(finalStatsForPower);
 
 	const powerRow = document.createElement('div');
 	powerRow.style.cssText = `
@@ -2288,13 +2286,13 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
 	const charId = instData ? instData.charId : charInstanceId;
 	const char = characterList[charId];
 	if (!char) {
-		toast('角色数据异常', 'error');
+		Game.toast('角色数据异常', 'error');
 		return;
 	}
 
-	const defs = Bag.defs();
-	const allInstances = Bag.list(); // 从 treasureInventory 获取所有宝物实例
-	Bag.ensureSlots();
+	const defs = Game.Bag.defs();
+	const allInstances = Game.Bag.list(); // 从 treasureInventory 获取所有宝物实例
+	Game.Bag.ensureSlots();
 
 	// 获取当前角色槽位中的宝物
 	const currentSlots = window.charTreasureSlots[charInstanceId] || [null, null, null, null, null, null];
@@ -2336,11 +2334,11 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
 		unequipBtn.className = 'treasure-select-btn unequip';
 		unequipBtn.textContent = '卸下宝物';
 		unequipBtn.onclick = () => {
-			Bag.equip(charInstanceId, slotIndex, null);
+			Game.Bag.equip(charInstanceId, slotIndex, null);
 			overlay.remove();
 			refreshTreasureUI(charInstanceId);
 			SaveManager.autoSave();
-			toast('已卸下宝物', 'success');
+			Game.toast('已卸下宝物', 'success');
 		};
 		popup.appendChild(unequipBtn);
 	}
@@ -2490,20 +2488,20 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
 			// 装备在自己其他槽位，允许更换
 			btn.textContent = '更换到此槽位';
 			btn.onclick = () => {
-				Bag.equip(charInstanceId, slotIndex, item.instanceId);
+				Game.Bag.equip(charInstanceId, slotIndex, item.instanceId);
 				overlay.remove();
 				refreshTreasureUI(charInstanceId);
 				SaveManager.autoSave();
-				toast(`已将【${item.name}】更换到槽位${slotIndex + 1}`, 'success');
+				Game.toast(`已将【${item.name}】更换到槽位${slotIndex + 1}`, 'success');
 			};
 		} else {
 			btn.textContent = '装备';
 			btn.onclick = () => {
-				Bag.equip(charInstanceId, slotIndex, item.instanceId);
+				Game.Bag.equip(charInstanceId, slotIndex, item.instanceId);
 				overlay.remove();
 				refreshTreasureUI(charInstanceId);
 				SaveManager.autoSave();
-				toast(`已装备【${item.name}】`, 'success');
+				Game.toast(`已装备【${item.name}】`, 'success');
 			};
 		}
 		row.appendChild(btn);
@@ -2573,7 +2571,7 @@ function syncTreasureEquipData() {
 	}
 
 	// 初始化新系统
-	Bag.ensureInv();
+	Game.Bag.ensureInv();
 
 	// ====== 1. 从旧格式 window.treasureBagData 迁移 ======
 	if (window.treasureBagData && Object.keys(window.treasureBagData).length > 0) {
@@ -2585,7 +2583,7 @@ function syncTreasureEquipData() {
 
 			// 创建指定数量的实例
 			for (let i = 0; i < data.count; i++) {
-				const instanceId = Bag.newId(baseId);
+				const instanceId = Game.Bag.newId(baseId);
 				const equippedBy = (data.equippedBy && data.equippedBy.length > i)
 					? data.equippedBy[i]
 					: null;
@@ -2602,11 +2600,11 @@ function syncTreasureEquipData() {
 		console.log('[宝物迁移] 从 window.treasureBagData 迁移完成');
 	}
 
-	// ====== 2. 从 gameData.data._treasureBag 迁移 ======
-	if (gameData && gameData.data && gameData.data._treasureBag) {
-		const oldBag = gameData.data._treasureBag;
+	// ====== 2. 从 Game.Data.data._treasureBag 迁移 ======
+	if (Game.Data && Game.Data.data && Game.Data.data._treasureBag) {
+		const oldBag = Game.Data.data._treasureBag;
 		if (Object.keys(oldBag).length > 0) {
-			console.log('[宝物迁移] 检测到 gameData.data._treasureBag，正在迁移...');
+			console.log('[宝物迁移] 检测到 Game.Data.data._treasureBag，正在迁移...');
 
 			// 旧格式: { treasureBaseId: { count: number, equippedBy: [charInstanceId, ...] } }
 			Object.entries(oldBag).forEach(([baseId, data]) => {
@@ -2614,7 +2612,7 @@ function syncTreasureEquipData() {
 
 				// 创建指定数量的实例
 				for (let i = 0; i < data.count; i++) {
-					const instanceId = Bag.newId(baseId);
+					const instanceId = Game.Bag.newId(baseId);
 					const equippedBy = (data.equippedBy && data.equippedBy.length > i)
 						? data.equippedBy[i]
 						: null;
@@ -2630,16 +2628,16 @@ function syncTreasureEquipData() {
 			});
 
 			// 清除旧数据，避免重复迁移
-			delete gameData.data._treasureBag;
-			console.log('[宝物迁移] 从 gameData.data._treasureBag 迁移完成');
+			delete Game.Data.data._treasureBag;
+			console.log('[宝物迁移] 从 Game.Data.data._treasureBag 迁移完成');
 		}
 	}
 
-	// ====== 3. 从 gameData.data._treasures（旧装备槽位数据）迁移 ======
-	if (gameData && gameData.data && gameData.data._treasures) {
-		const oldTreasures = gameData.data._treasures;
+	// ====== 3. 从 Game.Data.data._treasures（旧装备槽位数据）迁移 ======
+	if (Game.Data && Game.Data.data && Game.Data.data._treasures) {
+		const oldTreasures = Game.Data.data._treasures;
 		if (Object.keys(oldTreasures).length > 0) {
-			console.log('[宝物迁移] 检测到旧装备槽位数据 gameData.data._treasures，正在迁移...');
+			console.log('[宝物迁移] 检测到旧装备槽位数据 Game.Data.data._treasures，正在迁移...');
 
 			// 旧格式: { charInstanceId: [treasureBaseId, null, ...] }  // 6个槽位
 			Object.entries(oldTreasures).forEach(([charInstId, slotArray]) => {
@@ -2658,7 +2656,7 @@ function syncTreasureEquipData() {
 						window.treasureInventory[available[0]].equippedBy = charInstId;
 					} else {
 						// 如果没有可用实例，创建一个新实例并装备
-						const instanceId = Bag.newId(treasureBaseId);
+						const instanceId = Game.Bag.newId(treasureBaseId);
 						window.treasureInventory[instanceId] = {
 							baseId: treasureBaseId,
 							equippedBy: charInstId
@@ -2668,7 +2666,7 @@ function syncTreasureEquipData() {
 			});
 
 			// 清除旧数据
-			delete gameData.data._treasures;
+			delete Game.Data.data._treasures;
 			console.log('[宝物迁移] 从旧装备槽位数据迁移完成');
 		}
 	}
@@ -2693,7 +2691,7 @@ function syncTreasureEquipData() {
 					window.treasureInventory[available[0]].equippedBy = charInstId;
 				} else {
 					// 创建新实例并装备
-					const instanceId = Bag.newId(treasureBaseId);
+					const instanceId = Game.Bag.newId(treasureBaseId);
 					window.treasureInventory[instanceId] = {
 						baseId: treasureBaseId,
 						equippedBy: charInstId
@@ -2755,7 +2753,7 @@ function swapTeamSlots(fromIndex, toIndex) {
 		}
 	}
 
-	toast('已交换位置', 'success');
+	Game.toast('已交换位置', 'success');
 	SaveManager.autoSave();
 }
 
@@ -2913,7 +2911,7 @@ function showCharDetailPopup(charId) {
 	// 1. 获取基础数据
 	const baseChar = characterList[charId];
 	if (!baseChar) {
-		toast('角色数据不存在', 'error');
+		Game.toast('角色数据不存在', 'error');
 		return;
 	}
 	// 【修复】尝试从存档中获取最新的 rank，防止基础数据缺失或不同步
@@ -3128,10 +3126,10 @@ function showCharDetailPopup(charId) {
 					if (updatedStats && updatedStats.openSpskill !== undefined) {
 						saveData.openSpskill = updatedStats.openSpskill;
 					}
-					toast('升级成功！', 'success');
+					Game.toast('升级成功！', 'success');
 				});
 			} else {
-				toast('升级功能暂未实装', 'warning');
+				Game.toast('升级功能暂未实装', 'warning');
 			}
 		};
 		btnRow.appendChild(upgradeBtn);
@@ -3298,7 +3296,7 @@ function showCharSelectPopup(slotIndex) {
 			if (oldInstanceId) {
 				// 确保宝物槽位数据已初始化
 				if (typeof ensureCharTreasureSlots === 'function') {
-					Bag.ensureSlots();
+					Game.Bag.ensureSlots();
 				}
 
 				// 获取旧角色的宝物槽位
@@ -3352,7 +3350,7 @@ function showCharSelectPopup(slotIndex) {
 			}, 0);
 
 			// 6. 提示与关闭弹窗
-			toast(`${charInst.name} (Lv.${charInst.level}) 已上阵`, 'success');
+			Game.toast(`${charInst.name} (Lv.${charInst.level}) 已上阵`, 'success');
 			overlay.remove();
 		};
 
@@ -3405,8 +3403,8 @@ function renderBagView(container) {
 
 
 	// 在 renderBagView 函数开头添加
-	const defs = Bag.defs();
-	Bag.ensureSlots();
+	const defs = Game.Bag.defs();
+	Game.Bag.ensureSlots();
 	// 当前选中的子标签
 	if (!window.bagTab) window.bagTab = 'char';
 
@@ -3520,7 +3518,7 @@ function renderBagView(container) {
 		iconDiv.onclick = () => {
 			const tid = detailBar.dataset.treasureId;
 			const instanceId = detailBar.dataset.treasureInstanceId;
-			if (tid && gameData.getTreasureList()[tid]) {
+			if (tid && Game.Data.getTreasureList()[tid]) {
 				showBagTreasureDetail(tid, instanceId);
 			}
 		};
@@ -3554,18 +3552,18 @@ function renderBagView(container) {
 		trainBtn.onclick = () => {
 			const treasureInstanceId = detailBar.dataset.treasureInstanceId;
 			if (!treasureInstanceId) {
-				toast('请先选择要培养的宝物', 'warning');
+				Game.toast('请先选择要培养的宝物', 'warning');
 				return;
 			}
-			const defs = Bag.defs();
+			const defs = Game.Bag.defs();
 			const baseId = detailBar.dataset.baseId || detailBar.dataset.treasureId;
 			const tDef = defs[baseId];
 			if (!tDef) {
-				toast('宝物数据异常', 'error');
+				Game.toast('宝物数据异常', 'error');
 				return;
 			}
 			// 调用培养（升级）弹窗，不传角色ID，表示在背包界面操作
-			Bag.showUpgrade(treasureInstanceId, null, null);
+			Game.Bag.showUpgrade(treasureInstanceId, null, null);
 		};
 		btnsDiv.appendChild(trainBtn);
 
@@ -3578,7 +3576,7 @@ function renderBagView(container) {
 			const baseId = detailBar.dataset.baseId || detailBar.dataset.treasureId;
 
 			if (!treasureInstanceId || !baseId) {
-				toast('请先选择要出售的宝物', 'warning');
+				Game.toast('请先选择要出售的宝物', 'warning');
 				return;
 			}
 
@@ -3586,15 +3584,15 @@ function renderBagView(container) {
 			const ownerInfo = null;
 			for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
 				if (slots.includes(treasureInstanceId)) {
-					toast('该宝物已被装备，请先卸下再出售', 'warning');
+					Game.toast('该宝物已被装备，请先卸下再出售', 'warning');
 					return;
 				}
 			}
 
 			// 获取宝物定义
-			const tDef = defs[baseId] || gameData.getTreasureList()[baseId];
+			const tDef = defs[baseId] || Game.Data.getTreasureList()[baseId];
 			if (!tDef) {
-				toast('宝物数据异常', 'error');
+				Game.toast('宝物数据异常', 'error');
 				return;
 			}
 
@@ -3602,14 +3600,14 @@ function renderBagView(container) {
 			const sellPrice = Math.floor((tDef.price || 100) * 0.5);
 
 			// 确认对话框
-			confirmDialog(`确定要出售【${tDef.name}】吗？\n获得 ${sellPrice} 金币`, () => {
+			Game.confirmDialog(`确定要出售【${tDef.name}】吗？\n获得 ${sellPrice} 金币`, () => {
 				// 执行出售：移除宝物实例
-				Bag.remove(treasureInstanceId);
+				Game.Bag.remove(treasureInstanceId);
 
 				// 增加金币
 				window.gameGold = (window.gameGold || 0) + sellPrice;
 
-				toast(`出售【${tDef.name}】，获得 ${sellPrice} 金币`, 'success');
+				Game.toast(`出售【${tDef.name}】，获得 ${sellPrice} 金币`, 'success');
 
 				// 刷新背包视图
 				const bagContainer = document.querySelector('.bag-view') || container;
@@ -3651,7 +3649,7 @@ function renderBagView(container) {
 		useBtn.textContent = '使用';
 		useBtn.onclick = () => {
 			// 预留接口
-			toast('使用功能 - 预留接口', 'info');
+			Game.toast('使用功能 - 预留接口', 'info');
 		};
 		btnsDiv.appendChild(useBtn);
 		const sellBtn = document.createElement('button');
@@ -3659,7 +3657,7 @@ function renderBagView(container) {
 		sellBtn.textContent = '出售';
 		sellBtn.onclick = () => {
 			// 预留接口
-			toast('出售功能 - 预留接口', 'info');
+			Game.toast('出售功能 - 预留接口', 'info');
 		};
 		btnsDiv.appendChild(sellBtn);
 		detailBar.appendChild(btnsDiv);
@@ -3673,9 +3671,9 @@ function renderBagView(container) {
  * 每个宝物实例独立显示，不再按 baseId 堆叠
  */
 function renderBagEquipContent(container) {
-	const defs = Bag.defs();
-	const allInstances = Bag.list(); // 获取所有宝物实例（独立）
-	Bag.ensureSlots();
+	const defs = Game.Bag.defs();
+	const allInstances = Game.Bag.list(); // 获取所有宝物实例（独立）
+	Game.Bag.ensureSlots();
 
 	// 构建装备者查询表
 	const treasureOwnerMap = {};
@@ -3870,7 +3868,7 @@ function renderBagEquipContent(container) {
 
 		// 双击宝物卡片显示升级浮窗
 		// card.ondblclick = () => {
-		// 	Bag.showUpgrade(item.instanceId, isEquipped ? ownerInfo.ownerId : null);
+		// 	Game.Bag.showUpgrade(item.instanceId, isEquipped ? ownerInfo.ownerId : null);
 		// };
 
 
@@ -4185,9 +4183,9 @@ function updateBagCharDetailBar(charInst) {
 
 // 背包中查看宝物详情弹窗
 function showBagTreasureDetail(tid, instanceId) {
-	const tDef = gameData.getTreasureList()[tid];
+	const tDef = Game.Data.getTreasureList()[tid];
 	if (!tDef) return;
-	const bagItem = gameData.getTreasureInventory()[tid] || { count: 0, equippedBy: [] };
+	const bagItem = Game.Data.getTreasureInventory()[tid] || { count: 0, equippedBy: [] };
 	const remaining = bagItem.count - (bagItem.equippedBy ? bagItem.equippedBy.length : 0);
 
 	// 从宝物实例获取等级
@@ -4395,7 +4393,7 @@ function renderSettingsView(container) {
 	autoToggle.onclick = () => {
 		window.autoBattle = !window.autoBattle;
 		autoToggle.textContent = window.autoBattle ? '开启' : '关闭';
-		toast(`AI战斗托管已${window.autoBattle ? '开启' : '关闭'}`, 'info');
+		Game.toast(`AI战斗托管已${window.autoBattle ? '开启' : '关闭'}`, 'info');
 	};
 	autoSettingRow.appendChild(autoLabel);
 	autoSettingRow.appendChild(autoToggle);
@@ -4419,7 +4417,7 @@ function renderSettingsView(container) {
 	formulaToggle.onclick = () => {
 		window.showFormulaDetail = !window.showFormulaDetail;
 		formulaToggle.textContent = window.showFormulaDetail ? '开启' : '关闭';
-		toast(`属性公式显示已${window.showFormulaDetail ? '开启' : '关闭'}`, 'info');
+		Game.toast(`属性公式显示已${window.showFormulaDetail ? '开启' : '关闭'}`, 'info');
 
 		// 如果当前在队伍视图，刷新显示
 		const teamView = document.getElementById('team-view');
@@ -4531,7 +4529,7 @@ function renderGalleryView(container) {
 
 	// 获取已拥有角色列表（调试：临时全部解锁）
 	// const ownedChars = Object.keys(characterList);
-	const ownedChars = gameData.data.handbook.ownedCharacters
+	const ownedChars = Game.Data.data.handbook.ownedCharacters
 
 	// 滚动容器
 	const scrollDiv = document.createElement('div');
@@ -5094,7 +5092,7 @@ function renderTreasureGalleryView(container) {
 	titleDiv.textContent = '宝物图鉴';
 	container.appendChild(titleDiv);
 
-	const treasureDefs = gameData.getTreasureList();
+	const treasureDefs = Game.Data.getTreasureList();
 	const treasureIds = Object.keys(treasureDefs);
 
 	// 从实例化系统中获取拥有的宝物
@@ -5550,7 +5548,7 @@ function renderDungeonView(container, selectedChapterKey = null) {
 					renderDungeonView(container, chapterKey);
 
 					// 3. 如果秘境功能确实尚未实装，保留提示
-					// toast('秘境副本暂未完全开放，正在开发中...', 'warning');
+					// Game.toast('秘境副本暂未完全开放，正在开发中...', 'warning');
 				} else {
 					// 普通章节逻辑
 					renderDungeonView(container, chapterKey);
@@ -5661,7 +5659,7 @@ function buildPlayerTeamForBattle() {
 	// // ===== 【修复】战斗前强制刷新所有上阵角色的编译属性，确保宝物/突破数据最新 =====
 	// (window.currentTeam || []).forEach(instanceId => {
 	// 	if (instanceId && window.charBagData && window.charBagData[instanceId]) {
-	// 		Stat.final(instanceId);
+	// 		Game.Stat.final(instanceId);
 	// 	}
 	// });
 
@@ -5703,7 +5701,7 @@ function buildPlayerTeamForBattle() {
 			buff: instData.buff || [],
 			treasures: (function () {
 				var equippedDefs = [];
-				Bag.ensureSlots();
+				Game.Bag.ensureSlots();
 				var slots = window.charTreasureSlots && window.charTreasureSlots[instanceId];
 				if (slots && Array.isArray(slots)) {
 					slots.forEach(function (tInstId) {
@@ -5903,7 +5901,7 @@ function renderChapterEventList(container, chapterKey) {
 			// 3. 点击事件
 			levelBtn.onclick = () => {
 				if (isLocked) {
-					toast(lockReason, 'warning');
+					Game.toast(lockReason, 'warning');
 					return;
 				}
 				let event = SPchapterData.eventPack[eventId];
@@ -5949,7 +5947,7 @@ function renderChapterEventList(container, chapterKey) {
 					// }
 					//////敌人的公式化加强
 				}
-				startBattle(playerTeam, enemyTeam, {
+				Game.Battle.start(playerTeam, enemyTeam, {
 					difficulty: currentDifficulty,
 					eventId: checkEventId,
 					eventType: event.type || 'battle',
@@ -5970,7 +5968,7 @@ function renderChapterEventList(container, chapterKey) {
 								if (match) {
 									const targetTupoLevel = parseInt(match[1]);
 									breakthroughMainCharacter(targetTupoLevel);
-									toast(`主角突破至 ${targetTupoLevel} 阶！`, 'success');
+									Game.toast(`主角突破至 ${targetTupoLevel} 阶！`, 'success');
 								} else {
 									// 默认突破1次
 									breakthroughMainCharacter();
@@ -5989,7 +5987,7 @@ function renderChapterEventList(container, chapterKey) {
 								const targetRank = rankMap[eventId];
 								if (targetRank) {
 									promoteMainCharacter(targetRank);
-									toast(`主角品质提升至【${getRankLabel(targetRank)}】！`, 'success');
+									Game.toast(`主角品质提升至【${getRankLabel(targetRank)}】！`, 'success');
 								} else {
 									// 默认执行升阶检查
 									promoteMainCharacter();
@@ -6006,7 +6004,7 @@ function renderChapterEventList(container, chapterKey) {
 						window.gameGold = (window.gameGold || 0) + goldReward;
 						// 事件完成后自动存档
 						SaveManager.autoSave();
-						toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
+						Game.toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
 						// 重新渲染副本视图
 						const dungeonView = document.getElementById('dungeon-view');
 						if (dungeonView) {
@@ -6016,7 +6014,7 @@ function renderChapterEventList(container, chapterKey) {
 						}
 					},
 					onLose: () => {
-						toast(`挑战失败: ${event.name}`, 'warning');
+						Game.toast(`挑战失败: ${event.name}`, 'warning');
 						const dungeonView = document.getElementById('dungeon-view');
 						if (dungeonView) {
 							hideOtherViews('dungeon-view');
@@ -6194,7 +6192,7 @@ function renderChapterEventList(container, chapterKey) {
 					}
 
 					// 启动战斗
-					startBattle(playerTeam, enemyTeam, {
+					Game.Battle.start(playerTeam, enemyTeam, {
 						difficulty: currentDifficulty,
 						eventId: checkEventId,
 						eventType: event.type || 'battle',
@@ -6217,7 +6215,7 @@ function renderChapterEventList(container, chapterKey) {
 							window.gameGold = (window.gameGold || 0) + goldReward;
 							// 事件完成后自动存档
 							SaveManager.autoSave();
-							toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
+							Game.toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
 							// 重新渲染副本视图
 							const dungeonView = document.getElementById('dungeon-view');
 							if (dungeonView) {
@@ -6227,7 +6225,7 @@ function renderChapterEventList(container, chapterKey) {
 							}
 						},
 						onLose: () => {
-							toast(`挑战失败: ${event.name}`, 'warning');
+							Game.toast(`挑战失败: ${event.name}`, 'warning');
 							const dungeonView = document.getElementById('dungeon-view');
 							if (dungeonView) {
 								hideOtherViews('dungeon-view');
@@ -6302,7 +6300,7 @@ function refreshShopItems(type = 'normal') {
 	if (!window.shopData) window.shopData = { items: [], spitems: [], refreshCost: 50 };
 	const items = [];
 	const spitems = [];
-	const allTreasureIds = Object.keys(gameData.getTreasureList());
+	const allTreasureIds = Object.keys(Game.Data.getTreasureList());
 	const selectedTreasures = allTreasureIds.sort(() => 0.5 - Math.random()).slice(0, 4);
 	const allCharIds = Object.keys(characterList || {}).filter(cid => characterList[cid].group != 'zhujue');
 	const selectedChars = allCharIds.sort(() => 0.5 - Math.random()).slice(0, 4);
@@ -6327,8 +6325,8 @@ function refreshShopItems(type = 'normal') {
 					});
 				}
 			}
-			else if (id in gameData.getTreasureList()) {
-				const tData = gameData.getTreasureList()[id];
+			else if (id in Game.Data.getTreasureList()) {
+				const tData = Game.Data.getTreasureList()[id];
 				if (tData) {
 					items.push({
 						type: 'treasure',
@@ -6367,8 +6365,8 @@ function refreshShopItems(type = 'normal') {
 					});
 				}
 			}
-			else if (id in gameData.getTreasureList()) {
-				const tData = gameData.getTreasureList()[id];
+			else if (id in Game.Data.getTreasureList()) {
+				const tData = Game.Data.getTreasureList()[id];
 				if (tData) {
 					var beilv = Math.floor(Math.random() * 4) + 2;
 					spitems.push({
@@ -6694,13 +6692,13 @@ function renderShopView(container) {
 
 			// 1. 检查是否已售出
 			if (item.sold) {
-				toast('该商品已售出', 'warning');
+				Game.toast('该商品已售出', 'warning');
 				return;
 			}
 
 			// 2. 检查金币
 			if ((window.gameGold || 0) < item.price) {
-				toast('金币不足！', 'error');
+				Game.toast('金币不足！', 'error');
 				return;
 			}
 
@@ -6774,7 +6772,7 @@ function renderShopView(container) {
 		allBuyBtn.onclick = () => {
 			// 再次检查金币（防止并发或数据变动）
 			if ((window.gameGold || 0) < num) {
-				toast('金币不足，无法购买！', 'error');
+				Game.toast('金币不足，无法购买！', 'error');
 				return;
 			}
 
@@ -6789,7 +6787,7 @@ function renderShopView(container) {
 			});
 
 			if (successCount > 0) {
-				toast(`成功购买 ${successCount} 件商品`, 'success');
+				Game.toast(`成功购买 ${successCount} 件商品`, 'success');
 			}
 
 			// 7. 刷新界面
@@ -6811,13 +6809,13 @@ function renderShopView(container) {
 	refreshBtn.style.whiteSpace = 'pre-wrap';
 	refreshBtn.onclick = () => {
 		if ((window.gameGold || 0) < cost) {
-			toast('金币不足，无法刷新！', 'error');
+			Game.toast('金币不足，无法刷新！', 'error');
 			return;
 		}
 		window.gameGold = (window.gameGold || 0) - cost;
 		refreshShopItems(window.shopMode);
 		renderShopView(container);
-		toast('商店已刷新', 'info');
+		Game.toast('商店已刷新', 'info');
 		SaveManager.autoSave();
 	};
 	downBtns.appendChild(refreshBtn);
@@ -6833,12 +6831,12 @@ function buyevent(item) {
 		for (var i = 0; i < (item.number || 1); i++) {
 			const baseChar = characterList[item.id];
 			if (!baseChar) {
-				toast('角色数据错误', 'error');
+				Game.toast('角色数据错误', 'error');
 				return;
 			}
 
 			// A. 生成唯一实例ID
-			const instanceId = generateInstanceId(item.id);
+			const instanceId = Game.genId(item.id);
 
 			// B. 【核心】编译属性并创建背包数据
 			const stats = compileCharacterStats(baseChar);
@@ -6863,23 +6861,23 @@ function buyevent(item) {
 			};
 			mergeNoOverwrite(window.charBagData[instanceId], baseChar)
 
-			// C. 添加到图鉴 (如果 gameData 支持)
-			if (typeof gameData.addToHandbook === 'function') {
-				gameData.addToHandbook(item.id);
+			// C. 添加到图鉴 (如果 Game.Data 支持)
+			if (typeof Game.Data.addToHandbook === 'function') {
+				Game.Data.addToHandbook(item.id);
 			}
 
-			toast(`成功招募【${baseChar.name}】！`, 'success');
+			Game.toast(`成功招募【${baseChar.name}】！`, 'success');
 
 		}
 	}
 
 	else if (item.type === 'treasure') {
 		// 新逻辑：创建宝物实例
-		const ids = Bag.add(item.id, item.number || 1);
+		const ids = Game.Bag.add(item.id, item.number || 1);
 		if (ids.length > 0) {
-			toast(`购买了宝物【${item.name}】×${ids.length}`, 'success');
+			Game.toast(`购买了宝物【${item.name}】×${ids.length}`, 'success');
 		} else {
-			toast('宝物系统异常', 'error');
+			Game.toast('宝物系统异常', 'error');
 		}
 	}
 
@@ -7162,7 +7160,7 @@ function initNewGame() {
 	window.showFormulaDetail = true; // 属性面板显示公式，默认开启
 
 	// 初始化宝物背包
-	Bag.ensureInv();
+	Game.Bag.ensureInv();
 	// 在 initNewGame 函数中，初始化队伍数据后：
 	window.initCharTreasureSlots = function () {
 		window.charTreasureSlots = window.charTreasureSlots || {};
@@ -7183,7 +7181,7 @@ function initNewGame() {
 	pickedAll.forEach(id => {
 		const base = characterList[id];
 		// 修改：生成 instanceId
-		const instanceId = generateInstanceId(id);
+		const instanceId = Game.genId(id);
 		// 1. 先编译基础属性
 		const stats = compileCharacterStats(base);
 
@@ -7226,7 +7224,7 @@ function initNewGame() {
 	const mainCharId = 'zhujue';
 	// 如果背包里没有主角，先创建一个
 	if (!window.charBagData || !Object.values(window.charBagData).some(inst => inst.charId === mainCharId)) {
-		const mainInstId = generateInstanceId(mainCharId);
+		const mainInstId = Game.genId(mainCharId);
 		const baseChar = characterList[mainCharId];
 		if (baseChar) {
 			// 编译属性
@@ -7285,14 +7283,14 @@ function showSaveView(fromGame = true) {
 //---------------存档
 // 存档数据管理 - 基于 GameData 类统一管理
 const SaveManager = {
-	SLOT_COUNT: gameData.SLOT_COUNT,
+	SLOT_COUNT: Game.Data.SLOT_COUNT,
 
 	// 获取所有手动存档（跳过索引0的自动存档）
 	getAllSaves() {
 		// 手动存档使用索引1-4，自动存档使用索引0
 		const manualSlots = [];
 		for (let i = 1; i <= this.SLOT_COUNT; i++) {
-			const key = `${gameData.STORAGE_KEY}_${i}`;
+			const key = `${Game.Data.STORAGE_KEY}_${i}`;
 			const savedData = localStorage.getItem(key);
 			if (savedData) {
 				const data = JSON.parse(savedData);
@@ -7331,37 +7329,37 @@ const SaveManager = {
 
 	// 保存到指定槽位（同步 GameData 和 window 变量）
 	saveToSlot(slot) {
-		// 确保 gameData.data 完整
-		if (!gameData.data || !gameData.data.team) {
-			gameData.data = gameData.getDefaultData();
+		// 确保 Game.Data.data 完整
+		if (!Game.Data.data || !Game.Data.data.team) {
+			Game.Data.data = Game.Data.getDefaultData();
 		}
 		// 同步 GameData 数据
-		gameData.data.team.members = (window.currentTeam || []).filter(Boolean);
-		gameData.data.bag.gold = window.gameGold || 1000;
+		Game.Data.data.team.members = (window.currentTeam || []).filter(Boolean);
+		Game.Data.data.bag.gold = window.gameGold || 1000;
 		// ========== 修复这一行 ==========
-		gameData.data._treasureInventory = JSON.parse(JSON.stringify(window.treasureInventory || {}));
+		Game.Data.data._treasureInventory = JSON.parse(JSON.stringify(window.treasureInventory || {}));
 		// =================================
-		gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData || {}));
-		gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
-		gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
+		Game.Data.data._charBag = JSON.parse(JSON.stringify(window.charBagData || {}));
+		Game.Data.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
+		Game.Data.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
 		// 确保 charTreasureSlots 已初始化
 		if (typeof ensureCharTreasureSlots === 'function') {
-			Bag.ensureSlots();
+			Game.Bag.ensureSlots();
 		}
 
 		// ===== 【新增】保存宝物槽位数据和背包Tab =====
-		gameData.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));
-		if (!gameData.data.playerPreferences) {
-			gameData.data.playerPreferences = {};
+		Game.Data.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));
+		if (!Game.Data.data.playerPreferences) {
+			Game.Data.data.playerPreferences = {};
 		}
-		gameData.data.playerPreferences.bagTab = window.bagTab || 'char';
+		Game.Data.data.playerPreferences.bagTab = window.bagTab || 'char';
 		// ============================================
 		// 同步到 GameData
-		gameData.data.baseInfo.saveName = `存档${slot}`;
-		gameData.data.baseInfo.saveTime = new Date().toISOString();
+		Game.Data.data.baseInfo.saveName = `存档${slot}`;
+		Game.Data.data.baseInfo.saveTime = new Date().toISOString();
 
 		// 保存到 localStorage
-		gameData.save(slot);
+		Game.Data.save(slot);
 
 		// 兼容格式也加上
 		const compatData = {
@@ -7394,7 +7392,7 @@ const SaveManager = {
 	// 从指定槽位读取（同步到 GameData 和 window）
 	loadFromSlot(slot) {
 		// 使用 GameData 加载（索引0留给自动存档，手动存档从索引1开始）
-		const data = gameData.load(slot);
+		const data = Game.Data.load(slot);
 
 		// ========== 新增：迁移旧版宝物数据 ==========
 		migrateTreasuresToInstanceId();  // 在 window 变量恢复前迁移
@@ -7406,14 +7404,14 @@ const SaveManager = {
 			const parsed = JSON.parse(compatData);
 			// ===== 【新增】版本兼容性检查 =====
 			const saveVersion = parsed.gameVersion;
-			const compatibility = UI.checkSave(saveVersion);
+			const compatibility = Game.UI.checkSave(saveVersion);
 
 			if (!compatibility.compatible) {
 				console.warn(`[存档加载] ${compatibility.message}`);
 				// 可以在这里处理不兼容情况，比如显示警告
 				if (compatibility.message) {
 					setTimeout(() => {
-						toast(compatibility.message, 'warning');
+						Game.toast(compatibility.message, 'warning');
 					}, 500);
 				}
 			} else if (compatibility.message) {
@@ -7438,7 +7436,7 @@ const SaveManager = {
 					Object.entries(charBag).forEach(([key, val]) => {
 						if (val.charId || characterList[key]) {
 							const actualCharId = val.charId || key;
-							const newInstanceId = generateInstanceId(actualCharId);
+							const newInstanceId = Game.genId(actualCharId);
 							newCharBag[newInstanceId] = { ...val, charId: actualCharId };
 						} else {
 							newCharBag[key] = val;
@@ -7470,10 +7468,10 @@ const SaveManager = {
 			window.treasureBagData = parsed.treasureBagData || {};
 			window.autoBattle = parsed.autoBattle || false;
 
-			// 同步 window 变量回 gameData 内存
-			gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData));
-			gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData));
-			gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData));
+			// 同步 window 变量回 Game.Data 内存
+			Game.Data.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData));
+			Game.Data.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData));
+			Game.Data.data._charBag = JSON.parse(JSON.stringify(window.charBagData));
 
 			// ========== 在解析完所有数据后，添加这一段 ==========
 			// 恢复宝物实例化数据
@@ -7481,13 +7479,13 @@ const SaveManager = {
 				window.treasureInventory = JSON.parse(JSON.stringify(parsed._treasureInventory));
 			} else {
 				// 如果没有新格式数据，尝试从旧格式迁移
-				Bag.ensureInv();
+				Game.Bag.ensureInv();
 				// 如果有旧格式数据，执行迁移
 				if (parsed.treasureBagData && Object.keys(parsed.treasureBagData).length > 0) {
 					Object.entries(parsed.treasureBagData).forEach(([baseId, data]) => {
 						if (!data || !data.count) return;
 						for (let i = 0; i < data.count; i++) {
-							const instanceId = Bag.newId(baseId);
+							const instanceId = Game.Bag.newId(baseId);
 							const equippedBy = (data.equippedBy && data.equippedBy.length > i)
 								? data.equippedBy[i]
 								: null;
@@ -7517,10 +7515,10 @@ const SaveManager = {
 			window.showFormulaDetail = prefs.showFormulaDetail !== undefined ? prefs.showFormulaDetail : true;
 		}
 
-		// 确保 gameData 内存与存档数据一致
+		// 确保 Game.Data 内存与存档数据一致
 		if (data) {
-			const defaults = gameData.getDefaultData();
-			gameData.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
+			const defaults = Game.Data.getDefaultData();
+			Game.Data.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
 		}
 
 		// ========== 新增：同步宝物数据到 window ==========
@@ -7533,7 +7531,7 @@ const SaveManager = {
 
 	// 删除指定槽位存档
 	deleteSlot(slot) {
-		gameData.deleteSave(slot); // 索引0留给自动存档，手动存档从索引1开始
+		Game.Data.deleteSave(slot); // 索引0留给自动存档，手动存档从索引1开始
 		localStorage.removeItem(`ybrpg_save_${slot}`);
 		console.log(`已删除槽位${slot}的存档`);
 	},
@@ -7542,26 +7540,26 @@ const SaveManager = {
 	AUTO_KEY: 'ybrpg_autosave',
 
 	autoSave() {
-		// 确保 gameData.data 完整
-		if (!gameData.data || !gameData.data.team) {
-			gameData.data = gameData.getDefaultData();
+		// 确保 Game.Data.data 完整
+		if (!Game.Data.data || !Game.Data.data.team) {
+			Game.Data.data = Game.Data.getDefaultData();
 		}
 	// 【新增】保存当前的背包Tab状态
-	if (!gameData.data.playerPreferences) {
-		gameData.data.playerPreferences = {};
+	if (!Game.Data.data.playerPreferences) {
+		Game.Data.data.playerPreferences = {};
 	}
-	gameData.data.playerPreferences.bagTab = window.bagTab || 'char';
+	Game.Data.data.playerPreferences.bagTab = window.bagTab || 'char';
 
 		// 迁移旧数据：如果索引0存的是手动存档（旧逻辑），迁移到索引1
-		const slot0Raw = localStorage.getItem(`${gameData.STORAGE_KEY}_0`);
+		const slot0Raw = localStorage.getItem(`${Game.Data.STORAGE_KEY}_0`);
 		if (slot0Raw) {
 			try {
 				const oldData = JSON.parse(slot0Raw);
 				if (oldData.baseInfo?.saveName && oldData.baseInfo.saveName !== '自动存档') {
 					// 旧的手动存档，迁移到索引1（如果索引1为空）
-					const slot1Raw = localStorage.getItem(`${gameData.STORAGE_KEY}_1`);
+					const slot1Raw = localStorage.getItem(`${Game.Data.STORAGE_KEY}_1`);
 					if (!slot1Raw) {
-						localStorage.setItem(`${gameData.STORAGE_KEY}_1`, slot0Raw);
+						localStorage.setItem(`${Game.Data.STORAGE_KEY}_1`, slot0Raw);
 						console.log('[自动存档] 已将旧手动存档从索引0迁移到索引1');
 					}
 				}
@@ -7569,21 +7567,21 @@ const SaveManager = {
 		}
 		// 确保数据最新
 		if (typeof ensureCharTreasureSlots === 'function') {
-			Bag.ensureSlots();
+			Game.Bag.ensureSlots();
 		}
 
 		// 同步 GameData 数据
-		gameData.data.team.members = (window.currentTeam || []).filter(Boolean);
-		gameData.data.bag.gold = window.gameGold || 1000;
-		gameData.data._treasureInventory = JSON.parse(JSON.stringify(window.treasureInventory || {}));  // 【新增】
-		gameData.data._charBag = JSON.parse(JSON.stringify(window.charBagData || {}));
-		gameData.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
-		gameData.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
-		gameData.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));  // 【新增】
-		gameData.data.baseInfo.saveName = '自动存档';
-		gameData.data.baseInfo.saveTime = new Date().toISOString();
+		Game.Data.data.team.members = (window.currentTeam || []).filter(Boolean);
+		Game.Data.data.bag.gold = window.gameGold || 1000;
+		Game.Data.data._treasureInventory = JSON.parse(JSON.stringify(window.treasureInventory || {}));  // 【新增】
+		Game.Data.data._charBag = JSON.parse(JSON.stringify(window.charBagData || {}));
+		Game.Data.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
+		Game.Data.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
+		Game.Data.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));  // 【新增】
+		Game.Data.data.baseInfo.saveName = '自动存档';
+		Game.Data.data.baseInfo.saveTime = new Date().toISOString();
 
-		gameData.save(0);
+		Game.Data.save(0);
 
 
 		// 兼容格式
@@ -7615,8 +7613,8 @@ const SaveManager = {
 	},
 
 	loadAutoSave() {
-		// 直接读取 localStorage，避免 gameData.load() 覆盖内存数据
-		const key = `${gameData.STORAGE_KEY}_0`;
+		// 直接读取 localStorage，避免 Game.Data.load() 覆盖内存数据
+		const key = `${Game.Data.STORAGE_KEY}_0`;
 		const raw = localStorage.getItem(key);
 		if (!raw) return null;
 		let data;
@@ -7624,9 +7622,9 @@ const SaveManager = {
 
 		if (data && data.baseInfo?.saveName === '自动存档') {
 			// ========== 新增：先迁移宝物数据（在恢复 window 之前） ==========
-			gameData.data = data;  // 临时置入 data，方便迁移函数读取
+			Game.Data.data = data;  // 临时置入 data，方便迁移函数读取
 			migrateTreasuresToInstanceId();
-			data = gameData.data;  // 更新后的数据
+			data = Game.Data.data;  // 更新后的数据
 
 			// 恢复 window 变量
 			const compatKey = SaveManager.AUTO_KEY;
@@ -7636,14 +7634,14 @@ const SaveManager = {
 
 				// ===== 【新增】版本兼容性检查 =====
 				const saveVersion = parsed.gameVersion;
-				const compatibility = UI.checkSave(saveVersion);
+				const compatibility = Game.UI.checkSave(saveVersion);
 
 				if (!compatibility.compatible) {
 					console.warn(`[存档加载] ${compatibility.message}`);
 					// 可以在这里处理不兼容情况，比如显示警告
 					if (compatibility.message) {
 						setTimeout(() => {
-							toast(compatibility.message, 'warning');
+							Game.toast(compatibility.message, 'warning');
 						}, 500);
 					}
 				} else if (compatibility.message) {
@@ -7668,7 +7666,7 @@ const SaveManager = {
 						Object.entries(charBag).forEach(([key, val]) => {
 							if (val.charId || characterList[key]) {
 								const actualCharId = val.charId || key;
-								const newInstanceId = generateInstanceId(actualCharId);
+								const newInstanceId = Game.genId(actualCharId);
 								newCharBag[newInstanceId] = { ...val, charId: actualCharId };
 							} else {
 								newCharBag[key] = val;
@@ -7702,13 +7700,13 @@ const SaveManager = {
 				if (parsed._treasureInventory) {
 					window.treasureInventory = JSON.parse(JSON.stringify(parsed._treasureInventory));
 				} else {
-					Bag.ensureInv();
+					Game.Bag.ensureInv();
 					// 如果有旧格式数据，执行迁移
 					if (parsed.treasureBagData && Object.keys(parsed.treasureBagData).length > 0) {
 						Object.entries(parsed.treasureBagData).forEach(([baseId, data]) => {
 							if (!data || !data.count) return;
 							for (let i = 0; i < data.count; i++) {
-								const instanceId = Bag.newId(baseId);
+								const instanceId = Game.Bag.newId(baseId);
 								const equippedBy = (data.equippedBy && data.equippedBy.length > i)
 									? data.equippedBy[i]
 									: null;
@@ -7725,14 +7723,14 @@ const SaveManager = {
 				// ========== 新增：恢复宝物槽位数据 ==========
 				window.charTreasureSlots = parsed.charTreasureSlots || {};
 
-				// 如果 gameData 中也有，也同步一下
-				if (gameData.data && gameData.data._charTreasureSlots) {
-					window.charTreasureSlots = JSON.parse(JSON.stringify(gameData.data._charTreasureSlots));
+				// 如果 Game.Data 中也有，也同步一下
+				if (Game.Data.data && Game.Data.data._charTreasureSlots) {
+					window.charTreasureSlots = JSON.parse(JSON.stringify(Game.Data.data._charTreasureSlots));
 				}
 
 				// 确保数据结构完整
 				if (typeof ensureCharTreasureSlots === 'function') {
-					Bag.ensureSlots();
+					Game.Bag.ensureSlots();
 				}
 				// ==========================================
 			} else {
@@ -7749,9 +7747,9 @@ const SaveManager = {
 				window.showFormulaDetail = prefs2.showFormulaDetail !== undefined ? prefs2.showFormulaDetail : true;
 			}
 
-			// 同步到 gameData 内存（确保结构完整）
-			const defaults = gameData.getDefaultData();
-			gameData.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
+			// 同步到 Game.Data 内存（确保结构完整）
+			const defaults = Game.Data.getDefaultData();
+			Game.Data.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
 
 			// ========== 新增：同步宝物数据 ==========
 			syncTreasureEquipData();
@@ -7764,8 +7762,8 @@ const SaveManager = {
 
 
 	hasAutoSave() {
-		// 直接读取 localStorage，避免 gameData.load() 的副作用
-		const key = `${gameData.STORAGE_KEY}_0`;
+		// 直接读取 localStorage，避免 Game.Data.load() 的副作用
+		const key = `${Game.Data.STORAGE_KEY}_0`;
 		const raw = localStorage.getItem(key);
 		if (!raw) return false;
 		try {
@@ -7779,7 +7777,7 @@ const SaveManager = {
  * 在加载旧存档后调用
  */
 function migrateTreasuresToInstanceId() {
-	const treasures = gameData.data._treasures;
+	const treasures = Game.Data.data._treasures;
 	if (!treasures || typeof treasures !== 'object') return;
 
 	// 判断是否需要迁移：如果所有键都不包含下划线（说明是 charId 格式），则迁移
@@ -7814,8 +7812,8 @@ function migrateTreasuresToInstanceId() {
 		});
 	});
 
-	// 替换 gameData 中的宝物数据
-	gameData.data._treasures = newTreasures;
+	// 替换 Game.Data 中的宝物数据
+	Game.Data.data._treasures = newTreasures;
 	console.log('[迁移] 宝物数据迁移完成，共迁移了 ' + Object.keys(newTreasures).length + ' 个实例的宝物');
 }
 
@@ -7858,7 +7856,7 @@ function renderSaveView(container, fromGame = true) {
 	const hasAuto = SaveManager.hasAutoSave();
 	if (hasAuto) {
 		const autoData = (() => {
-			try { return JSON.parse(localStorage.getItem(`${gameData.STORAGE_KEY}_0`)); } catch { return null; }
+			try { return JSON.parse(localStorage.getItem(`${Game.Data.STORAGE_KEY}_0`)); } catch { return null; }
 		})();
 		const autoInfo = document.createElement('div');
 		autoInfo.className = 'save-info';
@@ -7885,7 +7883,7 @@ function renderSaveView(container, fromGame = true) {
 		autoLoadBtn.textContent = '读取';
 		autoLoadBtn.onclick = () => {
 			SaveManager.loadAutoSave();
-			toast('已读取自动存档', 'success');
+			Game.toast('已读取自动存档', 'success');
 			const bottomBar = document.querySelector('.ybrpg-bottom-bar');
 			if (bottomBar) bottomBar.style.display = 'flex';
 			hideOtherViews('team-view');
@@ -7951,7 +7949,7 @@ function renderSaveView(container, fromGame = true) {
 			loadBtn.textContent = '读取';
 			loadBtn.onclick = () => {
 				SaveManager.loadFromSlot(i);
-				toast(`已读取存档${i}`, 'success');
+				Game.toast(`已读取存档${i}`, 'success');
 				const bottomBar = document.querySelector('.ybrpg-bottom-bar');
 				if (bottomBar) bottomBar.style.display = 'flex';
 				hideOtherViews('team-view');
@@ -7967,11 +7965,11 @@ function renderSaveView(container, fromGame = true) {
 				saveBtn.textContent = '保存';
 				saveBtn.onclick = () => {
 					if (!window.playerProgress || Object.keys(window.playerProgress).length === 0) {
-						toast('当前没有游戏进度，请先开始游戏', 'warning');
+						Game.toast('当前没有游戏进度，请先开始游戏', 'warning');
 						return;
 					}
 					SaveManager.saveToSlot(i);
-					toast(`已保存到存档${i}`, 'success');
+					Game.toast(`已保存到存档${i}`, 'success');
 					renderSaveView(container, fromGame);
 				};
 				saveSlot.appendChild(saveBtn);
@@ -7983,7 +7981,7 @@ function renderSaveView(container, fromGame = true) {
 				deleteBtn.className = 'save-action-btn';
 				deleteBtn.textContent = '删除';
 				deleteBtn.onclick = () => {
-					confirmDialog(`确定要删除存档${i}吗？`, () => {
+					Game.confirmDialog(`确定要删除存档${i}吗？`, () => {
 						SaveManager.deleteSlot(i);
 						renderSaveView(container, fromGame);
 					});
@@ -8011,11 +8009,11 @@ function renderSaveView(container, fromGame = true) {
 				saveBtn.textContent = '保存';
 				saveBtn.onclick = () => {
 					if (!window.playerProgress || Object.keys(window.playerProgress).length === 0) {
-						toast('当前没有游戏进度，请先开始游戏', 'warning');
+						Game.toast('当前没有游戏进度，请先开始游戏', 'warning');
 						return;
 					}
 					SaveManager.saveToSlot(i);
-					toast(`已保存到存档${i}`, 'success');
+					Game.toast(`已保存到存档${i}`, 'success');
 					renderSaveView(container, fromGame);
 				};
 				saveSlot.appendChild(saveBtn);
@@ -8126,10 +8124,10 @@ function showBagCharDetailPopup(instanceId, charId) {
 	// 在 showBagCharDetailPopup 函数中，找到 attrs 数组定义处
 
 	// ===== 【新增】计算全队突破加成 =====
-	const teamBonuses = Stat.teamBonuses();
+	const teamBonuses = Game.Stat.teamBonuses();
 
 	// ===== 传入全队加成 =====
-	const finalStats = Stat.final(instanceId, teamBonuses);
+	const finalStats = Game.Stat.final(instanceId, teamBonuses);
 
 	const attrs = [
 		{
@@ -8467,44 +8465,44 @@ function showBagCharDetailPopup(instanceId, charId) {
 	// 			// 升阶逻辑
 	// 			const promotionCost = Math.floor(currentTupo / 4) + 1;
 	// 			if (availableCount < promotionCost) {
-	// 				toast(`升阶材料不足！需要 ${promotionCost} 个同名角色，当前可用: ${availableCount}`, 'error');
+	// 				Game.toast(`升阶材料不足！需要 ${promotionCost} 个同名角色，当前可用: ${availableCount}`, 'error');
 	// 				return;
 	// 			}
 
-	// 			confirmDialog(getConfirmText(), () => {
+	// 			Game.confirmDialog(getConfirmText(), () => {
 	// 				// 先执行突破（升阶前需要先消耗材料）
 	// 				const beforeTupo = instData.tupolevel || 0;
 
 	// 				// 执行升阶
 	// 				const result = promoteCharacterRank(instanceId);
 	// 				if (result.success) {
-	// 					toast(result.message, 'success');
+	// 					Game.toast(result.message, 'success');
 	// 					// 刷新弹窗
 	// 					refreshDetailPopup();
 	// 				} else {
-	// 					toast(result.message, 'error');
+	// 					Game.toast(result.message, 'error');
 	// 				}
 	// 			});
 	// 		} else {
 	// 			// 突破逻辑
 	// 			const cost = breakInfo.cost;
 	// 			if (availableCount < cost) {
-	// 				toast(`突破材料不足！需要 ${cost} 个同名角色，当前可用: ${availableCount}`, 'error');
+	// 				Game.toast(`突破材料不足！需要 ${cost} 个同名角色，当前可用: ${availableCount}`, 'error');
 	// 				return;
 	// 			}
 	// 			if (breakInfo.maxed) {
-	// 				toast('已达到最大突破等级', 'warning');
+	// 				Game.toast('已达到最大突破等级', 'warning');
 	// 				return;
 	// 			}
 
-	// 			confirmDialog(getConfirmText(), () => {
+	// 			Game.confirmDialog(getConfirmText(), () => {
 	// 				const result = breakthroughCharacterInstance(instanceId);
 	// 				if (result.success) {
-	// 					toast(result.message, 'success');
+	// 					Game.toast(result.message, 'success');
 	// 					// 刷新弹窗
 	// 					refreshDetailPopup();
 	// 				} else {
-	// 					toast(result.message, 'error');
+	// 					Game.toast(result.message, 'error');
 	// 				}
 	// 			});
 	// 		}
@@ -8779,7 +8777,7 @@ function updateCharacterSP(current) {
 				if (!treasureId) return;
 				const treasureData = window.treasureInventory && window.treasureInventory[treasureId];
 				if (treasureData) {
-					const defs = Bag.defs();
+					const defs = Game.Bag.defs();
 					const tDef = defs[treasureData.baseId];
 					if (tDef && tDef.openSpskill) {
 						newcurrent.openSpskill = true;
@@ -8806,7 +8804,7 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 	// 获取目标角色的品质
 	const targetRank = characterList[targetCharId]?.rank;
 	if (!targetRank) {
-		toast('目标角色品质异常', 'error');
+		Game.toast('目标角色品质异常', 'error');
 		return;
 	}
 
@@ -8904,10 +8902,10 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 		}
 
 		overlay.remove();
-		toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！`, 'success');
+		Game.toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！`, 'success');
 
 		// 【修改】统一使用 refreshAllViews
-		UI.refresh({
+		Game.UI.refresh({
 			instanceId: targetInstId,
 			forceTeamRebuild: false
 		});
@@ -9016,7 +9014,7 @@ function showBagCharDetail(charInfo) {
 	if (instanceId) {
 		showBagCharDetailPopup(instanceId, charInfo.id);
 	} else {
-		toast('无法找到该角色实例', 'error');
+		Game.toast('无法找到该角色实例', 'error');
 	}
 }
 
@@ -9189,7 +9187,7 @@ function mergeNoOverwrite(a, b) {
 function levelUpMainCharacter() {
 	const mainChar = getMainCharacterInstance();
 	if (!mainChar) {
-		toast('未找到主角', 'error');
+		Game.toast('未找到主角', 'error');
 		return;
 	}
 
@@ -9233,7 +9231,7 @@ function levelUpMainCharacter() {
 	}
 
 	console.log(`主角升级！当前等级: ${instData.level}`);
-	toast(`主角升至 Lv.${instData.level}！`, 'success');
+	Game.toast(`主角升至 Lv.${instData.level}！`, 'success');
 
 	// 4. 刷新界面
 	refreshAllTeamSlots();
@@ -9271,7 +9269,7 @@ function upgradeCharacterInstance(instanceId, levelsToAdd = 1) {
 	// 可选：设置等级上限，例如 100 级
 	const MAX_LEVEL = 100;
 	if (newLevel > MAX_LEVEL) {
-		toast(`角色已达到最高等级 ${MAX_LEVEL}`, 'warning');
+		Game.toast(`角色已达到最高等级 ${MAX_LEVEL}`, 'warning');
 		return false;
 	}
 
@@ -9423,7 +9421,7 @@ function breakthroughCharacterInstance(targetInstId) {
 	// 		renderBagView(bagView);
 	// 	}
 	// } catch (e) { }
-	// UI.refresh({
+	// Game.UI.refresh({
 	// 	instanceId: targetInstId,
 	// 	dialog: window._pendingRefreshAfterBreakthrough?.parentDialog || null
 	// });
@@ -9522,7 +9520,7 @@ function promoteCharacterRank(targetInstId) {
 
 	SaveManager.autoSave();
 	// 原有的 SaveManager.autoSave(); 之后添加：
-	UI.refresh({
+	Game.UI.refresh({
 		instanceId: targetInstId,
 		dialog: window._pendingRefreshAfterBreakthrough?.parentDialog || null
 	});
@@ -9564,7 +9562,7 @@ function breakthroughMainCharacter(targetTupoLevel) {
 		}
 		if (targetTupoLevel > 20) {
 			console.warn('目标突破等级不能超过20');
-			toast('目标突破等级不能超过20', 'warning');
+			Game.toast('目标突破等级不能超过20', 'warning');
 			return false;
 		}
 	}
@@ -9659,7 +9657,7 @@ function promoteMainCharacter(targetRank) {
 		const targetRankIndex = rankOrder.indexOf(targetRank);
 		if (targetRankIndex === -1) {
 			console.warn(`无效的目标品质: ${targetRank}`);
-			toast(`无效的目标品质: ${targetRank}`, 'error');
+			Game.toast(`无效的目标品质: ${targetRank}`, 'error');
 			return false;
 		}
 
