@@ -5,8 +5,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 	<title>星河之契</title>
-	<link rel="stylesheet" href="./style.css">
-	</link>
+	<link rel="stylesheet" href="/src/style.css">
 	<!-- 或者用另一种方式： -->
 	<script>
 		window.GAME_VERSION = 'v2.2.1';
@@ -89,18 +88,8 @@
 	</script>
 	<!-- 引入宝物定义（需在 gameData.js 之前） -->
 	<!-- <script src="./treasureList.js"></script> -->
-	<script src="./equip.js"></script>
-
-	<!-- 引入游戏数据管理 -->
-	<script src="./gameData.js"></script>
-	<!-- 引入 mode.js -->
-	<script src="./mode.js"></script>
-	<script src="./characterList.js"></script>
-	<script src="./contentList.js"></script>
-	<script src="./eventList.js"></script>
-	<script src="./charBreakthroughConfig.js"></script>
-	<!-- <script src="./battle.js"></script> -->
-	<script src="./battle/battle_refactored.js"></script>
+	<!-- 模块入口（Vite / ESM 加载） -->
+	<script type="module" src="/src/main.js"></script>
 
 </body>
 
