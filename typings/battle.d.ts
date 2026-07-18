@@ -1,4 +1,14 @@
 // ====== 战斗核心系统类型定义 ======
+//
+// 架构说明（与代码保持一致）：
+//   所有战斗函数已归纳进 Battle 类（src/battle/battle_refactored.js 的 class Battle {}），
+//   并通过 core.js 的单一根命名空间 Game 暴露：Game.Battle === Battle。
+//   对外统一用 Game.Battle.xxx / Battle.xxx 调用，不再使用散落的全局函数。
+//
+//   本文件同时提供：
+//   1) 全局环境声明（declare class Battle / declare class Game / window.Game）
+//   2) 对核心模块的模块声明（declare module），使 import { Game } / import { Battle }
+//      在编辑器中也能获得完整类型提示。
 
 // ====== 战斗状态类型 ======
 
@@ -35,31 +45,31 @@ type SkillType = 'pugong' | 'skill' | 'spskill';
  * - 'onHit': 造成伤害时（通用）
  * - 'onHitSelf': 自身受到伤害时
  * - 'onKill': 击杀目标时
- * 
+ *
  * ====== 阵亡相关 ======
  * - 'dieGlobal': 场上任意角色阵亡时
  * - 'dieSelf': 自身阵亡时
- * 
+ *
  * ====== 行动生命周期 ======
- * - 'actionStartSelf': 自身行动开始时（选择行动前）      【新增】
- * - 'actionEndSelf': 自身行动结束后（进入afterAction前）  【新增】
- * - 'actionStartGlobal': 场上任意角色行动开始时          【新增】
- * - 'actionEndGlobal': 场上任意角色行动结束后            【新增】
- * 
+ * - 'actionStartSelf': 自身行动开始时（选择行动前）
+ * - 'actionEndSelf': 自身行动结束后（进入afterAction前）
+ * - 'actionStartGlobal': 场上任意角色行动开始时
+ * - 'actionEndGlobal': 场上任意角色行动结束后
+ *
  * ====== 轮次生命周期 ======
- * - 'roundStart': 每轮开始时（重置actedSlots后）        【新增】
- * - 'roundEnd': 每轮结束时（进入下一轮前）               【新增】
+ * - 'roundStart': 每轮开始时（重置actedSlots后）
+ * - 'roundEnd': 每轮结束时（进入下一轮前）
  */
-type TriggerType = 
+type TriggerType =
     // 命中/伤害相关
     | 'pugongHit' | 'skillHit' | 'spskillHit' | 'onHit' | 'onHitSelf' | 'onKill'
     // 阵亡相关
     | 'dieGlobal' | 'dieSelf'
     // 行动生命周期
-    | 'actionStartSelf' | 'actionEndSelf'               // 【新增】
-    | 'actionStartGlobal' | 'actionEndGlobal'            // 【新增】
+    | 'actionStartSelf' | 'actionEndSelf'
+    | 'actionStartGlobal' | 'actionEndGlobal'
     // 轮次生命周期
-    | 'roundStart' | 'roundEnd';                         // 【新增】
+    | 'roundStart' | 'roundEnd';
 
 /**
  * 目标选择模式
@@ -99,7 +109,7 @@ type Template = 'balanced' | 'offensive' | 'defensive' | 'support';
 
 /** 突破效果数据对象 */
 interface BreakthroughBuff {
-    /** 突破类型：self_stat_flat | self_energy | passive_effect | team_stat_flat | team_stat_percent | skill_effect | death_effect | behit_effect */
+    /** 突破类型 */
     type: string;
     /** 突破等级（从0开始） */
     level?: number;
@@ -121,13 +131,23 @@ interface BreakthroughBuff {
     effects?: Effect[];
     /** 效果描述文本 */
     desc?: string;
+    /** 突破库ID（编译时回填） */
+    _libId?: string;
+    /** 触发时机（skill_effect 类型使用） */
+    trigger?: TriggerType;
+    /** 判定函数（skill_effect 类型使用） */
+    filter?: (...args: any[]) => boolean;
+    /** 执行函数（skill_effect 类型使用） */
+    content?: (...args: any[]) => any;
+    /** 宝物用 effectSkills（字符串 id 引用突破库） */
+    effectSkills?: string[];
 }
 
 // ====== 效果类型 ======
 
 /** 单个效果定义 */
 interface Effect {
-    /** 效果类型：'stun' | 'reduceEnergy' | 'seal' | 'seal_killer' | 'damage_reduce' | 'extraDamage' | 'healSelf' | 'energySelf' */
+    /** 效果类型 */
     type: string;
     /** 持续回合数（眩晕等效果使用） */
     turns?: number;
@@ -141,7 +161,7 @@ interface Effect {
     condition?: string;
 }
 
-/** 存储在角色skills中的效果对象 */
+/** 存储在角色skills中的效果对象（统一契约格式） */
 interface SkillEffect {
     /** 触发时机 */
     trigger: TriggerType;
@@ -151,6 +171,10 @@ interface SkillEffect {
     content: (this: Unit, ...args: any[]) => any;
     /** 效果描述 */
     desc?: string;
+    /** 来源标识：'breakthrough' | 'treasure' 等 */
+    source?: string;
+    /** 效果ID */
+    id?: string;
 }
 
 // ====== 技能数据（contentList 中的定义） ======
@@ -176,16 +200,7 @@ interface SkillData {
     isRecover?: boolean;
     /** 旧版恢复检测字符串（遗留兼容） */
     content?: string;
-    /**
-     * 技能附带的效果数组
-     * 每个元素可包含：
-     * - content: 可执行函数（直接写逻辑）
-     * - filter: 判定函数
-     * - type: 效果类型
-     * - trigger: 触发配置
-     * - effects: 效果数组
-     * - desc: 描述文本
-     */
+    /** 技能附带的效果数组 */
     contents?: Array<{
         content?: (target: Unit, attacker: Unit, battleState?: BattleState) => boolean | void;
         filter?: (...args: any[]) => boolean;
@@ -194,9 +209,31 @@ interface SkillData {
         effects?: Effect[];
         desc: string;
     }>;
+    /** 技能特效 emoji（渲染用） */
+    emoji?: string;
 }
 
 // ====== 角色单位类型 ======
+
+/** 战斗中的 buff 实例 */
+interface Buff {
+    /** buff 唯一标识 */
+    id: string;
+    /** buff 名称 */
+    name: string;
+    /** buff 类型：'seal' | 'stun' | 'paralyze' | 'healBlock' | 'poison' | 'dmgUp' | 'dmgDown' 等 */
+    type: string;
+    /** 持续轮次（-1 表示永久） */
+    remainRounds: number;
+    /** 施加者阵营（可选） */
+    sourceSide?: Side;
+    /** 施加者 instanceId */
+    sourceId?: string;
+    /** 施加者行动位次（如 'player1'，用于按位次衰减） */
+    ownerSlot?: string;
+    /** 附加数值（如中毒每回合伤害、增/减伤百分比） */
+    value?: any;
+}
 
 /** 战斗中的角色单位 */
 interface Unit {
@@ -248,12 +285,22 @@ interface Unit {
     permanentlySealed: boolean;
     /** 是否眩晕（眩晕时跳过回合） */
     stunned?: boolean;
+    /** 是否麻痹 */
+    paralyzed?: boolean;
+    /** 中毒每回合伤害 */
+    poisonDamage?: number;
+    /** 增伤百分比（0-1） */
+    pctDmgUp?: number;
+    /** 减伤百分比（0-1） */
+    pctDmgDown?: number;
     /** 额外回合次数 */
     extraTurnCount: number;
     /** 是否获得额外回合（标记） */
     extraTurn?: boolean;
     /** 是否禁疗 */
     healBlocked?: boolean;
+    /** 当前生效的 buff 列表 */
+    buffList: Buff[];
     /** 突破列表（原始数据） */
     tupoList: BreakthroughBuff[];
     /** 当前突破等级 */
@@ -355,6 +402,8 @@ interface Action {
     targets: Unit[];
     /** 消耗的能量值 */
     energyCost: number;
+    /** 技能特效 emoji（渲染用，可选） */
+    emoji?: string;
 }
 
 // ====== 伤害事件上下文 ======
@@ -403,34 +452,8 @@ interface BattleEventData {
     round?: number;
 }
 
-// ====== 技能特效信息 ======
-
-/** 技能特效配置 */
-interface SkillEffectInfo {
-    /** 显示的Emoji符号 */
-    emoji: string;
-    /** CSS类名 */
-    effectClass: string;
-}
-
-// ====== 函数类型定义 ======
-
-// ====== 全局变量 ======
-
-/** 当前战斗状态（全局单例） */
-declare let battleState: BattleState | null;
-/** 当前目标选择状态（全局单例） */
-declare let targetSelection: TargetSelection | null;
-/** 全局锁，防止函数重入 */
-declare let isProcessing: boolean;
-
-// ====== 事件系统 ======
-
-/**
- * 事件系统 - 用于模块间通信
- * 支持同步（emit）和异步（emitAsync）两种触发方式
- */
-declare const BattleEvents: {
+/** 战斗事件系统（模块间通信，支持同步 emit 与异步 emitAsync） */
+interface BattleEvents {
     /** 伤害计算前事件（可修改伤害值） */
     BEFORE_DAMAGE: 'beforeDamage';
     /** 伤害计算后事件 */
@@ -451,10 +474,8 @@ declare const BattleEvents: {
     BEFORE_ACTION: 'beforeAction';
     /** 行动后事件 */
     AFTER_ACTION: 'afterAction';
-    
     /** 监听器存储 */
     _listeners: Record<string, Function[]>;
-    
     /** 注册事件监听器 */
     on(eventType: string, listener: (...args: any[]) => any): void;
     /** 移除事件监听器 */
@@ -463,196 +484,15 @@ declare const BattleEvents: {
     emit(eventType: string, data: BattleEventData): BattleEventData;
     /** 触发异步事件（串行执行，完成后回调） */
     emitAsync(eventType: string, data: BattleEventData, callback: () => void): void;
-};
+}
 
-// ====== 基础工具函数 ======
+/** 事件系统实例（battle_refactored.js 中定义并挂到 Battle.events） */
+declare const BattleEvents: BattleEvents;
 
-/** 添加战斗日志（同时更新DOM和console） */
-declare function addBattleLog(msg: string): void;
-/** 更新所有角色的UI显示（血量、能量、状态等） */
-declare function updateBattleUI(): void;
-/**
- * 在角色上方显示漂浮数字
- * @param unit 目标角色
- * @param value 数值
- * @param isHeal true=治疗(绿色)，false=伤害(红色)
- */
-declare function showDamageNumber(unit: Unit, value: number, isHeal: boolean): void;
-/** 隐藏玩家行动面板 */
-declare function hidePlayerActionUI(): void;
-/** 清除所有目标高亮 和 click事件绑定 */
-declare function clearTargetHighlights(): void;
-/** 获取指定阵营的存活角色列表 */
-declare function getAliveUnits(side: Side): Unit[];
-/** 判断指定阵营是否全灭 */
-declare function isSideDefeated(side: Side): boolean;
-/** 查找指定阵营中下一个可行动的角色 */
-declare function findNextActor(side: Side): Unit | null;
-/** 重置所有角色的"已行动"标记（新轮次开始时调用） */
-declare function resetActedSlots(): void;
-/** Fisher-Yates 洗牌算法，随机打乱数组顺序 */
-declare function shuffleArray(array: any[]): any[];
+// ====== 战斗开始选项 ======
 
-// ====== 核心结算模块 ======
-
-/**
- * 计算伤害值
- * @param attacker 攻击者
- * @param defender 防御者
- * @param coefficient 伤害系数
- * @param extraEnergy 额外消耗的能量（用于技能增伤）
- * @returns 最终伤害值（至少为1）
- * 公式：floor(max(1, floor(atk * coeff * (1 + extraEnergy * 0.1)) - def))
- */
-declare function calculateDamage(attacker: Unit, defender: Unit, coefficient: number, extraEnergy?: number): number;
-
-/**
- * 应用伤害到目标
- * @param target 受伤角色
- * @param dmg 伤害值
- * @param attacker 伤害来源
- * @param callback 结算完成后的回调
- * @param skillContext 技能上下文（包含技能数据、触发时机等）
- * 
- * 流程：
- * 1. 触发目标的受击效果（onHitSelf）
- * 2. 触发 beforeDamage 事件（可修改伤害）
- * 3. 扣除生命值
- * 4. 触发攻击者的命中效果（pugongHit/skillHit/spskillHit）
- * 5. 触发 afterDamage 事件
- * 6. 判断是否阵亡：
- *    - 阵亡：触发亡语效果，攻击者回能
- *    - 未阵亡：目标回能
- */
-declare function applyDamage(target: Unit, dmg: number, attacker: Unit, callback: () => void, skillContext?: DamageSkillContext): void;
-
-/**
- * 应用治疗到目标
- * @param target 被治疗者
- * @param healAmount 治疗量
- * @param callback 结算完成后的回调
- * 
- * 流程：
- * 1. 检查是否存活和禁疗
- * 2. 触发 beforeHeal 事件（可修改治疗量）
- * 3. 恢复生命值（不超过最大生命值）
- * 4. 触发 afterHeal 事件
- */
-declare function applyHeal(target: Unit, healAmount: number, callback: () => void): void;
-
-// ====== 行动执行模块 ======
-
-/** 执行普攻行动 */
-declare function executePugong(actor: Unit, targets: Unit[], callback: () => void): void;
-/** 执行技能/必杀行动 */
-declare function executeSkill(actor: Unit, skillType: SkillType, skillId: string, targets: Unit[], energyCost: number, callback: () => void): void;
-/**
- * 从角色的skills中获取指定触发时机的效果对象
- * @param actor 角色
- * @param trigger 触发时机
- * @returns 匹配的效果对象数组
- */
-declare function getEffectsByTrigger(actor: Unit, trigger: TriggerType): SkillEffect[];
-
-// ====== 战斗循环控制 ======
-
-/** 进入下一回合（查找下一个行动角色） */
-declare function nextTurn(): void;
-
-/**
- * 触发所有存活角色的指定时机效果                         【新增】
- * @param trigger 触发时机（如 'actionStartGlobal', 'roundStart' 等）
- * @param context 可选的上下文参数
- * 
- * 遍历双方所有存活角色，调用其skills中匹配trigger的效果
- * 每个效果独立执行 filter 判定和 content 执行
- */
-declare function triggerGlobalEffect(trigger: TriggerType, ...context: any[]): void;  // 【新增】
-
-/**
- * 触发指定角色的指定时机效果                             【新增】
- * @param unit 目标角色
- * @param trigger 触发时机（如 'actionStartSelf', 'actionEndSelf' 等）
- * @param context 可选的上下文参数
- */
-declare function triggerSelfEffect(unit: Unit, trigger: TriggerType, ...context: any[]): void;  // 【新增】
-
-/** 当前行动结束，处理回合后逻辑（额外回合、战斗结束判断等） */
-declare function afterAction(): void;
-/** 结束当前轮次，进入下一轮（重置 actedSlots，轮数+1） */
-declare function endRound(): void;
-/** 播放行动动画（光晕、特效、延迟结算） */
-declare function bs_animateAction(actor: Unit, action: Action, callback: () => void): void;
-/** AI执行回合（选择行动并执行） */
-declare function executeAITurn(actor: Unit): void;
-/** 玩家执行回合（由onTargetClicked等调用） */
-declare function executePlayerTurn(actor: Unit, action: Action): void;
-/** 显示战斗介绍并开始第一回合 */
-declare function showBattleIntro(): void;
-/** 结束战斗（胜利/失败） */
-declare function endBattle(winner: Side): void;
-
-// ====== 玩家操作面板 ======
-
-/** 获取技能对应的Emoji图标 */
-declare function getSkillEmoji(skillType: SkillType, skillId: string): string;
-/** 显示玩家行动选择面板（普攻/技能/必杀按钮） */
-declare function showPlayerActionUI(actor: Unit): void;
-
-// ====== 目标选择逻辑 ======
-
-/** 进入目标选择状态（点击技能按钮后触发） */
-declare function enterTargetSelection(actor: Unit, skillType: SkillType, skillId: string, energyCost: number): void;
-/** 高亮可选择的角色（添加selectable类） */
-declare function highlightSelectableTargets(mode: TargetMode, isRecover: boolean, targetSide: Side): void;
-/** 目标被点击时触发（确定最终目标列表） */
-declare function onTargetClicked(target: Unit): void;
-
-// ====== AI 逻辑 ======
-
-/** AI选择行动（优先必杀>技能>普攻） */
-declare function aiChooseAction(actor: Unit): Action | null;
-/** AI选择目标（根据技能配置） */
-declare function aiSelectTargets(actor: Unit, skillData: SkillData, enemySide: Side, friendlySide: Side): Unit[];
-/** 根据技能的目标配置解析合法目标列表 */
-declare function resolveSkillTargets(skillData: SkillData, actor: Unit, intendedSide: Side, options?: any): Unit[];
-/** 选择最优单体目标 */
-declare function selectBestSingleTarget(candidates: Unit[], pref: AIPreference, actor: Unit, options?: any): Unit | null;
-/** 选择行目标 */
-declare function selectRowTargetsSmart(candidates: Unit[], pref: AIPreference, actor: Unit): Unit[];
-/** 选择列目标 */
-declare function selectColumnTargetsSmart(candidates: Unit[], pref: AIPreference, actor: Unit): Unit[];
-
-// ====== 结算界面 ======
-
-/** 显示战斗结算界面（胜利/失败） */
-declare function showBattleResult(winner: Side): void;
-
-// ====== 初始化与渲染 ======
-
-/**
- * 编译突破数据
- * @param data 原始突破数据（对象或库ID字符串）
- * @param index 突破等级
- * @returns 编译后的突破对象
- */
-declare function normalizeBreakthroughData(data: BreakthroughBuff | string | null, index: number): BreakthroughBuff | null;
-
-/**
- * 开始战斗
- * @param playerTeam 玩家队伍配置
- * @param enemyTeam 敌方队伍配置
- * @param options 额外选项
- * 
- * 流程：
- * 1. buildUnit构建所有角色（包含突破效果编译）
- * 2. 应用团队突破加成
- * 3. 根据速度决定先手
- * 4. 初始化战斗状态
- * 5. 渲染战斗界面
- * 6. 显示战斗介绍
- */
-declare function startBattle(playerTeam: any[], enemyTeam: any[], options?: {
+/** start() 的 options 参数 */
+interface BattleStartOptions {
     difficulty?: Difficulty;
     eventId?: string;
     eventType?: 'battle' | 'boss';
@@ -661,37 +501,234 @@ declare function startBattle(playerTeam: any[], enemyTeam: any[], options?: {
     goldReward?: number;
     onWin?: Function;
     onLose?: Function;
-}): void;
+}
 
-/** 应用团队突破加成到所有角色 */
-declare function applyTeamBreakthroughBuffs(units: (Unit | null)[]): void;
-/** 渲染战斗视图 */
-declare function renderBattleView(): void;
-/** 创建单个角色的UI槽位元素 */
-declare function createUnitSlot(unit: Unit | null, side: Side, slotIndex: number): HTMLDivElement;
+// ====== 技能特效信息 ======
 
-// ====== 特效函数 ======
+/** 技能特效配置 */
+interface SkillEffectInfo {
+    /** 显示的Emoji符号 */
+    emoji: string;
+    /** CSS类名 */
+    effectClass: string;
+}
 
-/** 为多个目标依次播放技能特效（每目标间隔100ms） */
-declare function showSkillEffectOnTargets(targets: Unit[], effectInfo: SkillEffectInfo): void;
-/** 在单个目标上播放技能特效 */
-declare function showSkillEffect(unit: Unit, effectInfo: SkillEffectInfo): void;
-/** 根据行动对象获取技能特效信息 */
-declare function getSkillEffectInfo(action: Action): SkillEffectInfo;
+// =====================================================================
+// ====== Battle 类（全部战斗方法聚合于此，对应 Game.Battle） ======
+// =====================================================================
 
-// ====== 效果处理函数（旧版，建议迁移到skills方案） ======
+/**
+ * 战斗系统核心类。所有战斗逻辑方法均为静态方法，
+ * 通过 Game.Battle（即 Battle 本身）对外暴露。
+ * 模块内部互调可用裸名（由 battle_refactored.js 末尾的别名块映射）。
+ */
+declare class Battle {
+    /** 事件系统（对应 BattleEvents） */
+    static events: BattleEvents;
 
-/** 处理命中后的效果（旧版数据方案） */
-declare function processOnHitEffects(target: Unit, attacker: Unit, skillData: any): void;
-/** 应用单个效果（旧版数据方案） */
-declare function applyEffect(target: Unit, source: Unit, effect: Effect): void;
-/** 触发角色的亡语效果（旧版数据方案） */
-declare function triggerDeathEffects(target: Unit, killer: Unit): void;
+    // ====== 基础工具函数 ======
+    /** 添加战斗日志（同时更新DOM和console） */
+    static log(msg: string): void;
+    /** 更新所有角色的UI显示（血量、能量、状态等） */
+    static updateUI(): void;
+    /** 在角色上方显示漂浮数字 */
+    static showDamageNumber(unit: Unit, value: number, isHeal: boolean): void;
+    /** 隐藏玩家行动面板 */
+    static hidePlayerActionUI(): void;
+    /** 清除所有目标高亮 和 click事件绑定 */
+    static clearTargetHighlights(): void;
+    /** 获取指定阵营的存活角色列表 */
+    static getAliveUnits(side: Side): Unit[];
+    /** 判断指定阵营是否全灭 */
+    static isSideDefeated(side: Side): boolean;
+    /** 查找指定阵营中下一个可行动的角色 */
+    static findNextActor(side: Side): Unit | null;
+    /** 重置所有角色的"已行动"标记（新轮次开始时调用） */
+    static resetActedSlots(): void;
+    /** Fisher-Yates 洗牌算法，随机打乱数组顺序 */
+    static shuffleArray<T>(array: T[]): T[];
 
-// ====== 全局变量 ======
+    // ====== 核心结算模块 ======
+    /**
+     * 计算伤害值
+     * 公式：floor(max(1, floor(atk * coeff * (1 + extraEnergy * 0.1)) - def))
+     */
+    static calculateDamage(attacker: Unit, defender: Unit, coefficient: number, extraEnergy?: number): number;
+    /**
+     * 应用伤害到目标
+     * 流程：受击效果 → beforeDamage 事件 → 扣血 → 命中效果 → afterDamage 事件 → 阵亡/回能判定
+     */
+    static applyDamage(target: Unit, dmg: number, attacker: Unit, callback: () => void, skillContext?: DamageSkillContext): void;
+    /** 应用治疗到目标（检查存活与禁疗，触发 before/afterHeal 事件） */
+    static applyHeal(target: Unit, healAmount: number, callback: () => void): void;
 
-/** 突破效果库（通过字符串ID查找突破配置） */
-declare const BREAKTHROUGH_LIB: Record<string, BreakthroughBuff>;
+    // ====== 行动执行模块 ======
+    /** 执行普攻行动 */
+    static executePugong(actor: Unit, targets: Unit[], callback: () => void): void;
+    /** 执行技能/必杀行动 */
+    static executeSkill(actor: Unit, skillType: SkillType, skillId: string, targets: Unit[], energyCost: number, callback: () => void): void;
+    /** 从角色的skills中获取指定触发时机的效果对象 */
+    static getEffectsByTrigger(actor: Unit, trigger: TriggerType): SkillEffect[];
+
+    // ====== 战斗循环控制 ======
+    /** 进入下一回合（查找下一个行动角色） */
+    static nextTurn(): void;
+    /** 触发所有存活角色的指定时机效果 */
+    static triggerGlobalEffect(trigger: TriggerType, ...context: any[]): void;
+    /** 触发指定角色的指定时机效果 */
+    static triggerSelfEffect(unit: Unit, trigger: TriggerType, ...context: any[]): void;
+    /** 当前行动结束，处理回合后逻辑（额外回合、战斗结束判断等） */
+    static afterAction(): void;
+    /** 结束当前轮次，进入下一轮（重置 actedSlots，轮数+1） */
+    static endRound(): void;
+    /** 播放行动动画（光晕、特效、延迟结算） */
+    static bs_animateAction(actor: Unit, action: Action, callback: () => void): void;
+    /** AI执行回合（选择行动并执行） */
+    static executeAITurn(actor: Unit): void;
+    /** 玩家执行回合（由onTargetClicked等调用） */
+    static executePlayerTurn(actor: Unit, action: Action): void;
+    /** 显示战斗介绍并开始第一回合 */
+    static showBattleIntro(): void;
+    /** 结束战斗（胜利/失败） */
+    static end(winner: Side): void;
+
+    // ====== 玩家操作面板 ======
+    /** 获取技能对应的Emoji图标 */
+    static getSkillEmoji(skillType: SkillType, skillId: string): string;
+    /** 显示玩家行动选择面板（普攻/技能/必杀按钮） */
+    static showPlayerActionUI(actor: Unit): void;
+
+    // ====== 目标选择逻辑 ======
+    /** 进入目标选择状态（点击技能按钮后触发） */
+    static enterTargetSelection(actor: Unit, skillType: SkillType, skillId: string, energyCost: number): void;
+    /** 高亮可选择的角色（添加selectable类） */
+    static highlightSelectableTargets(mode: TargetMode, isRecover: boolean, targetSide: Side): void;
+    /** 目标被点击时触发（确定最终目标列表） */
+    static onTargetClicked(target: Unit): void;
+
+    // ====== AI 逻辑 ======
+    /** AI选择行动（优先必杀>技能>普攻） */
+    static aiChooseAction(actor: Unit): Action | null;
+    /** AI选择目标（根据技能配置） */
+    static aiSelectTargets(actor: Unit, skillData: SkillData, enemySide: Side, friendlySide: Side): Unit[];
+    /** 根据技能的目标配置解析合法目标列表 */
+    static resolveSkillTargets(skillData: SkillData, actor: Unit, intendedSide: Side, options?: any): Unit[];
+    /** 选择最优单体目标 */
+    static selectBestSingleTarget(candidates: Unit[], pref: AIPreference, actor: Unit, options?: any): Unit | null;
+    /** 选择行目标 */
+    static selectRowTargetsSmart(candidates: Unit[], pref: AIPreference, actor: Unit): Unit[];
+    /** 选择列目标 */
+    static selectColumnTargetsSmart(candidates: Unit[], pref: AIPreference, actor: Unit): Unit[];
+
+    // ====== 结算界面 ======
+    /** 显示战斗结算界面（胜利/失败） */
+    static showBattleResult(winner: Side): void;
+
+    // ====== 初始化与渲染 ======
+    /** 编译突破数据（对象或库ID字符串 → 编译后的突破对象） */
+    static normalizeBreakthroughData(data: BreakthroughBuff | string | null, index: number): BreakthroughBuff | null;
+    /** 适配器A：突破 skill_effect → 统一契约格式 */
+    static adaptBreakthroughSkillEffect(buff: BreakthroughBuff): SkillEffect | null;
+    /** 适配器B：宝物 effectSkills（字符串 id 引用）→ 统一契约格式 */
+    static adaptTreasureEffects(treasureDef: { effectSkills?: string[]; [key: string]: any }): SkillEffect[];
+    /**
+     * 开始战斗
+     * 流程：buildUnit构建 → 应用团队突破加成 → 决定先手 → 初始化状态 → 渲染 → 显示介绍
+     */
+    static start(playerTeam: any[], enemyTeam: any[], options?: BattleStartOptions): void;
+    /** 应用团队突破加成到所有角色 */
+    static applyTeamBreakthroughBuffs(units: (Unit | null)[]): void;
+    /** 渲染战斗视图 */
+    static renderBattleView(): void;
+    /** 创建单个角色的UI槽位元素 */
+    static createUnitSlot(unit: Unit | null, side: Side, slotIndex: number): HTMLDivElement;
+
+    // ====== 特效函数 ======
+    /** 为多个目标依次播放技能特效（每目标间隔100ms） */
+    static showSkillEffectOnTargets(targets: Unit[], effectInfo: SkillEffectInfo): void;
+    /** 在单个目标上播放技能特效 */
+    static showSkillEffect(unit: Unit, effectInfo: SkillEffectInfo): void;
+    /** 根据行动对象获取技能特效信息 */
+    static getSkillEffectInfo(action: Action): SkillEffectInfo;
+    /** 根据emoji获取特效配置 */
+    static getEmojiClass(emoji: string): SkillEffectInfo;
+
+    // ====== 效果/行动位次查询 ======
+    /** 获取角色在本轮的行动顺序编号 */
+    static getActionOrderInRound(side: Side, slotIndex: number): number;
+    /** 获取角色在本轮唯一的行动位次标识（如 'player1'） */
+    static getActionSlotKey(side: Side, actorNumber: number): string;
+
+    // ====== Buff 系统 ======
+    /** 为角色添加一个 buff */
+    static addBuff(target: Unit, buffConfig: Buff): void;
+    /** 应用 buff 的即时效果 */
+    static applyBuffEffect(target: Unit, buffConfig: Buff): void;
+    /** 移除角色的指定 buff */
+    static removeBuff(target: Unit, buffId: string): void;
+    /** 移除 buff 效果 */
+    static removeBuffEffect(target: Unit, buff: Buff): void;
+    /** 角色阵亡时清除所有 buff */
+    static clearBuffsOnDeath(target: Unit): void;
+    /** 轮次结算时处理所有 buff 的存续 */
+    static processBuffExpiryOnRoundEnd(): void;
+    /** 角色行动开始时处理 buff 的存续 */
+    static processBuffExpiryOnActionStart(actor: Unit): void;
+    /** 根据行动位次标识处理 buff 衰减 */
+    static processBuffDecayBySlotKey(actionSlotKey: string): void;
+
+    // ====== 敌方属性编译 ======
+    /** 根据角色ID、等级、突破等级编译敌方角色属性 */
+    static compileEnemyStats(charId: string, level: number, tupolevel: number, overrides?: any, teamBonuses?: any): any;
+    /** 计算敌方队伍的全队突破加成 */
+    static calculateEnemyTeamBonuses(enemyTeam: any[]): { teamFlat: any; teamPercent: any };
+}
+
+// =====================================================================
+// ====== Game 根命名空间（core.js） ======
+// =====================================================================
+
+/**
+ * 单一根命名空间：所有核心功能收纳于此。
+ *   Game.Bag    宝物 / 背包 / 装备系统
+ *   Game.Stat   属性 / 战力 / 队伍计算
+ *   Game.UI     视图刷新 + UI 工具
+ *   Game.Data   游戏数据管理实例
+ *   Game.Battle 战斗（即上面的 Battle 类）
+ * 全局根对象为 window.Game。
+ */
+declare class Game {
+    /** 宝物 / 背包 / 装备系统（详见 system.js） */
+    static Bag: any;
+    /** 属性 / 战力 / 队伍计算（详见 system.js） */
+    static Stat: any;
+    /** 视图刷新 + UI 工具（详见 system.js） */
+    static UI: any;
+    /** 游戏数据管理实例（详见 gameData.js） */
+    static Data: any;
+    /** 战斗系统（即 Battle 类） */
+    static Battle: typeof Battle;
+    /** 提示信息 */
+    static toast: (msg: string, type?: string) => void;
+    /** 确认对话框 */
+    static confirmDialog: ((msg: string, onConfirm: () => void) => void) | undefined;
+    /** 生成实例ID */
+    static genId: (...args: any[]) => string;
+    /** 获取主角站位索引 */
+    static mainSlot: (...args: any[]) => number;
+}
+
+// ====== 全局环境 ======
+
+/** 当前战斗状态（battle_refactored.js 模块内单例） */
+declare let battleState: BattleState | null;
+/** 当前目标选择状态（battle_refactored.js 模块内单例） */
+declare let targetSelection: TargetSelection | null;
+/** 全局锁，防止函数重入 */
+declare let isProcessing: boolean;
+
+/** 突破效果库（charBreakthroughConfig.js 导出，按字符串ID查找突破配置） */
+declare const BREAKTHROUGH_BUFF_LIBRARY: Record<string, BreakthroughBuff>;
 /** 全局技能/普攻/必杀数据 */
 declare const contentList: {
     pugong: Record<string, SkillData>;
@@ -703,16 +740,39 @@ declare const characterList: Record<string, {
     rank: Rank;
     template: Template;
 }>;
+/** 角色模板基础属性库 */
+declare const characterTemplate: Record<string, any>;
 
-/** 显示提示信息 */
+/** 显示提示信息（shared.js） */
 declare function toast(msg: string, type?: string): void;
-/** 隐藏其他视图，只保留指定视图 */
+/** 隐藏其他视图，只保留指定视图（shared.js） */
 declare function hideOtherViews(viewId: string): void;
-/** 渲染副本视图 */
+/** 渲染副本视图（shared.js） */
 declare function renderDungeonView(container: HTMLElement, chapterKey: string): void;
-
-// ====== 自动战斗开关（全局） ======
+/** 自动战斗开关（全局） */
 declare var autoBattle: boolean;
-
-// ====== 确认对话框（全局） ======
+/** 确认对话框（全局） */
 declare var confirmDialog: ((msg: string, onConfirm: () => void) => void) | undefined;
+
+/** 全局根对象 window.Game */
+interface Window {
+    Game: typeof Game;
+}
+
+// =====================================================================
+// 说明：本文件仅提供全局环境声明（declare class Battle / Game / window.Game）。
+// 战斗模块内部通过本地 class Battle 已自带类型；外部用 Game.Battle.xxx 时，
+// 因 Game 经 import 引入（allowJs 下为 any），编辑器对 Game.Battle.xxx 不强制类型。
+// 若希望 import { Game } / import { Battle } 也获得完整类型提示，可追加如下模块声明
+// （注意：在 allowJs 项目中可能与真实 JS 模块产生重复标识符，需自行验证）：
+//
+//   declare module '*/core.js' {
+//       export const Game: typeof Game;
+//       export const Battle: typeof Battle;
+//       export const BattleEvents: BattleEvents;
+//   }
+//   declare module '*/battle/battle_refactored.js' {
+//       export const Battle: typeof Battle;
+//       export const BattleEvents: BattleEvents;
+//   }
+// =====================================================================
