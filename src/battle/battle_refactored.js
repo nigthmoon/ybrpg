@@ -2700,7 +2700,7 @@ Battle.getActionSlotKey = function getActionSlotKey(side, actorNumber) {
  * @param {Object} buffConfig - buff 配置
  * @param {string} buffConfig.id - buff 唯一标识
  * @param {string} buffConfig.name - buff 名称
- * @param {string} buffConfig.type - buff 类型（'seal', 'stun', 'healBlock', 'poison' 等）
+ * @param {string} buffConfig.type - buff 类型：'seal'|'stun'|'paralyze'|'healBlock'|'poison'|'dmgUp'|'dmgDown'|'baoji'|'kangbao'|'baoshang'|'shouhu'|'mingzhong'|'shanbi'|'poji'|'gedang'（特种属性 value 为万分数，如 3000 = 30%）
  * @param {number} buffConfig.remainRounds - 持续轮次（-1 永久）
  * @param {string} buffConfig.sourceSide - 施加者阵营（可选）
  * @param {string} buffConfig.sourceId - 施加者 instanceId
@@ -2804,6 +2804,39 @@ Battle.applyBuffEffect = function applyBuffEffect(target, buffConfig) {
 			target.pctDmgDown = (target.pctDmgDown || 0) + (buffConfig.value || 0);
 			addBattleLog(`${target.name} 减伤${(buffConfig.value * 100).toFixed(0)}%`);
 			break;
+		// ===== 【新增】特种属性类 buff（value 为万分数，如 3000 = 30%） =====
+		case 'baoji':
+			target.baoji = (target.baoji || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 暴击率提升 ${buffConfig.value}`);
+			break;
+		case 'kangbao':
+			target.kangbao = (target.kangbao || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 抗暴率提升 ${buffConfig.value}`);
+			break;
+		case 'baoshang':
+			target.baoshang = (target.baoshang || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 暴伤提升 ${buffConfig.value}`);
+			break;
+		case 'shouhu':
+			target.shouhu = (target.shouhu || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 守护提升 ${buffConfig.value}`);
+			break;
+		case 'mingzhong':
+			target.mingzhong = (target.mingzhong || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 命中率提升 ${buffConfig.value}`);
+			break;
+		case 'shanbi':
+			target.shanbi = (target.shanbi || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 闪避率提升 ${buffConfig.value}`);
+			break;
+		case 'poji':
+			target.poji = (target.poji || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 破击率提升 ${buffConfig.value}`);
+			break;
+		case 'gedang':
+			target.gedang = (target.gedang || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 格挡率提升 ${buffConfig.value}`);
+			break;
 		// 可以扩展更多 buff 类型
 	}
 	updateBattleUI();
@@ -2862,6 +2895,31 @@ Battle.removeBuffEffect = function removeBuffEffect(target, buff) {
 			break;
 		case 'dmgDown':
 			target.pctDmgDown = Math.max(0, (target.pctDmgDown || 0) - (buff.value || 0));
+			break;
+		// ===== 【新增】特种属性类 buff 移除时反向减回（与 applyBuffEffect 对应） =====
+		case 'baoji':
+			target.baoji = Math.max(0, (target.baoji || 0) - (buff.value || 0));
+			break;
+		case 'kangbao':
+			target.kangbao = Math.max(0, (target.kangbao || 0) - (buff.value || 0));
+			break;
+		case 'baoshang':
+			target.baoshang = Math.max(0, (target.baoshang || 0) - (buff.value || 0));
+			break;
+		case 'shouhu':
+			target.shouhu = Math.max(0, (target.shouhu || 0) - (buff.value || 0));
+			break;
+		case 'mingzhong':
+			target.mingzhong = Math.max(0, (target.mingzhong || 0) - (buff.value || 0));
+			break;
+		case 'shanbi':
+			target.shanbi = Math.max(0, (target.shanbi || 0) - (buff.value || 0));
+			break;
+		case 'poji':
+			target.poji = Math.max(0, (target.poji || 0) - (buff.value || 0));
+			break;
+		case 'gedang':
+			target.gedang = Math.max(0, (target.gedang || 0) - (buff.value || 0));
 			break;
 	}
 	updateBattleUI();
