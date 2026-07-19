@@ -315,9 +315,34 @@ Battle.shuffleArray = function shuffleArray(array) {
  * @param {*} extraEnergy 因额外消耗能量导致的技能增伤
  * @returns 计算最终伤害值
  */
-Battle.calculateDamage = function calculateDamage(attacker, defender, coefficient, extraEnergy = 0) {
+// 计算无视防御比例：读取攻击方 buff 数组中的 ignore_def_* 字符串 id
+// attackType: 'pugong' | 'skill'（spskill 也按 'skill' 处理）
+function getIgnoreDefPercent(unit, attackType) {
+	const buffs = unit.buff || [];
+	let pct = 0;
+	buffs.forEach(id => {
+		if (id === 'ignore_def_all_100') pct = Math.min(1, pct + 1);
+		else if (id === 'ignore_def_all_60') pct = Math.min(1, pct + 0.6);
+		else if (id === 'ignore_def_all_30') pct = Math.min(1, pct + 0.3);
+		else if (attackType === 'pugong') {
+			if (id === 'ignore_def_pugong_100') pct = Math.min(1, pct + 1);
+			else if (id === 'ignore_def_pugong_80') pct = Math.min(1, pct + 0.8);
+			else if (id === 'ignore_def_pugong_50') pct = Math.min(1, pct + 0.5);
+		} else if (attackType === 'skill') {
+			if (id === 'ignore_def_skill_100') pct = Math.min(1, pct + 1);
+			else if (id === 'ignore_def_skill_80') pct = Math.min(1, pct + 0.8);
+			else if (id === 'ignore_def_skill_50') pct = Math.min(1, pct + 0.5);
+		}
+	});
+	return pct;
+}
+
+Battle.calculateDamage = function calculateDamage(attacker, defender, coefficient, extraEnergy = 0, attackType = 'skill') {
 	const atk = Number(attacker.atk) || 0;
 	const def = Number(defender.def) || 0;
+	// 无视防御：根据攻击类型读取攻击方 buff 中的 ignore_def_* id，按比例削减防御
+	const ignoreDefPercent = getIgnoreDefPercent(attacker, attackType);
+	const effectiveDef = Math.floor(def * (1 - ignoreDefPercent));
 	const coeff = Number(coefficient) || 1.0;
 
 	let baseDmg = Math.floor(atk * coeff);
@@ -346,7 +371,16 @@ Battle.calculateDamage = function calculateDamage(attacker, defender, coefficien
 
 	// ===== 第二步：暴击/抗暴判定 =====
 	const critRate = Math.max(0, ((attacker.baoji ?? 0) - (defender.kangbao ?? 0))) / 10000;
-	const isCrit = Math.random() < critRate;
+	let isCrit = Math.random() < critRate;
+
+	// ===== 【硬逻辑】免暴 / 必定格挡 buff：用标记强制，而非数值堆叠 =====
+	// 暴击/抗暴可无限培养，数值堆叠（如 +10000）无法保证 100% 生效，故在此做硬判定。
+	//   no_crit    ：强制 isCrit=false（无法被暴击）
+	//   must_block ：强制 isBlock=true（必定格挡，伤害减半并触发格挡反击）
+	const _defBuffs = defender.buffList || [];
+	const _hasNoCrit = _defBuffs.some(b => b.type === 'no_crit');
+	const _hasMustBlock = _defBuffs.some(b => b.type === 'must_block');
+	if (_hasNoCrit || _hasMustBlock) isCrit = false;
 
 	let finalDmg = baseDmg;
 	let isBlock = false;
@@ -360,26 +394,82 @@ Battle.calculateDamage = function calculateDamage(attacker, defender, coefficien
 		const blockRate = Math.max(0, ((defender.gedang ?? 0) - (attacker.poji ?? 0))) / 10000;
 		isBlock = Math.random() < blockRate;
 
+		// ===== 【硬逻辑】必定格挡 buff：直接强制格挡成功（无视格挡率数值） =====
+		if (_hasMustBlock) isBlock = true;
+
 		if (isBlock) {
 			// 格挡成功：伤害减半
 			finalDmg = Math.floor(baseDmg * 0.5);
 		}
 	}
 
-	// ===== 第四步：防御减免（格挡时也减半防御） =====
+	// ===== 第四步：防御减免（格挡时也减半防御，已应用无视防御） =====
 	if (isBlock) {
-		finalDmg = Math.max(1, Math.floor(finalDmg - Math.floor(def * 0.5)));
+		finalDmg = Math.max(1, Math.floor(finalDmg - Math.floor(effectiveDef * 0.5)));
 	} else {
-		finalDmg = Math.max(1, Math.floor(finalDmg - def));
+		finalDmg = Math.max(1, Math.floor(finalDmg - effectiveDef));
 	}
 
-	// ===== 第五步：增伤/减伤 =====
-	const totalPctDmg = (attacker.pctDmgUp ?? 0) - (defender.pctDmgDown ?? 0);
-	if (totalPctDmg !== 0) {
-		finalDmg = Math.floor(finalDmg * (1 + totalPctDmg));
+	// ===== 第五步：普通增减伤（pctDealUp / pctTakeDn）分步结算 =====
+	// 普通增减伤以「比值」形式加算后，统一乘以 (1 + 增伤 - 减伤)，独立结算一步。
+	const normalPctDmg = (attacker.pctDealUp ?? 0) - (defender.pctTakeDn ?? 0);
+	if (normalPctDmg !== 0) {
+		finalDmg = Math.floor(finalDmg * (1 + normalPctDmg));
 	}
 
-	const totalFixedDmg = (attacker.fixedDmgUp ?? 0) - (defender.fixedDmgDown ?? 0);
+	// ===== 第六步：条件性增减伤（onDamageCalc / onDamageTaken）分步结算 =====
+	// 与普通增减伤分开，单独作为一个结算步骤。
+	// content 不返回值，而是对传入的可变参数对象赋值来传出比值：
+	//   effect.content.call(this, defender/attacker, currentDmg, mod)
+	//   - 攻击方条件增伤（onDamageCalc）：mod.pct += 0.5 表示增伤 50%
+	//   - 防守方条件减伤（onDamageTaken）：mod.pct += 0.2 表示减伤 20%（内部作为减项）
+	// 多个效果对同一 mod.pct 累加，最后统一乘一次 (1 + 条件增伤 - 条件减伤)。
+	let condBuffPct = 0;
+	let condDebuffPct = 0;
+
+	// 攻击方条件增伤
+	// mod.attackType 传出本次攻击类型（'pugong' | 'skill'），供「仅技能增伤」等效果判断
+	const atkMod = { pct: 0, attackType };
+	const atkModifyEffects = getEffectsByTrigger(attacker, 'onDamageCalc');
+	atkModifyEffects.forEach(effect => {
+		if (effect.filter && effect.filter.call(attacker, defender, finalDmg)) {
+			effect.content.call(attacker, defender, finalDmg, atkMod);
+		}
+	});
+	condBuffPct += atkMod.pct;
+
+	// buff 类条件增伤：造成伤害增减统一在此结算（与 onDamageCalc 的 skill_effect 同管道）
+	//   dealUp（造成增加）：正值，condBuffPct += value
+	//   dealDn（造成减少）：负值，condBuffPct -= value
+	(attacker.buffList || []).forEach(b => {
+		if (b.type === 'dealUp' && b.value) condBuffPct += b.value;
+		else if (b.type === 'dealDn' && b.value) condBuffPct -= b.value;
+	});
+
+	// 防守方条件减伤
+	const defMod = { pct: 0, attackType };
+	const defModifyEffects = getEffectsByTrigger(defender, 'onDamageTaken');
+		defModifyEffects.forEach(effect => {
+		if (effect.filter && effect.filter.call(defender, attacker, finalDmg)) {
+			effect.content.call(defender, attacker, finalDmg, defMod);
+		}
+	});
+	// buff 类条件减伤：受伤增减统一在此结算（与 onDamageTaken 的 skill_effect 同管道）
+	//   takeDn（减伤）：正值，condDebuffPct += value
+	//   takeUp（受伤增加）：负值，condDebuffPct -= value
+	(defender.buffList || []).forEach(b => {
+		if (b.type === 'takeDn' && b.value) condDebuffPct += b.value;
+		else if (b.type === 'takeUp' && b.value) condDebuffPct -= b.value;
+	});
+	condDebuffPct += defMod.pct;
+
+	const condPctDmg = condBuffPct - condDebuffPct;
+	if (condPctDmg !== 0) {
+		finalDmg = Math.floor(finalDmg * (1 + condPctDmg));
+	}
+
+	// 固定加减伤（保持原顺序：比值结算之后再加固定值）
+	const totalFixedDmg = (attacker.fixedDealUp ?? 0) - (defender.fixedTakeDn ?? 0);
 	finalDmg += totalFixedDmg;
 
 	finalDmg = Math.max(1, Math.floor(finalDmg));
@@ -457,6 +547,18 @@ Battle.applyDamage = function applyDamage(target, dmgResult, attacker, callback,
 			}
 		}
 	});
+
+	// ======== 【新增】格挡反击：触发 onBlock 效果 ========
+	// 仅当本次伤害被格挡、且不是由「特殊攻击」（格挡反击自身）造成时触发，避免嵌套无限反击。
+	// content 中通过 Game.Battle.applyDamage(..., { isSpecial: true }) 发起特殊攻击。
+	if (isBlock && !skillContext.isSpecial) {
+		const blockEffects = getEffectsByTrigger(target, 'onBlock');
+		blockEffects.forEach(effect => {
+			if (effect.filter && effect.filter.call(target, attacker)) {
+				effect.content.call(target, attacker);
+			}
+		});
+	}
 
 	// 触发 beforeDamage 事件
 	const damageEvent = BattleEvents.emit(BattleEvents.BEFORE_DAMAGE, {
@@ -599,6 +701,9 @@ Battle.executePugong = function executePugong(actor, targets, callback) {
 		return;
 	}
 
+	// 记录本次行动类型，供突破效果（如「使用技能后获得buff」）的 filter 判断
+	actor._lastActionType = 'pugong';
+
 	updateBattleUI();
 	addBattleLog(`${actor.name} 发动普攻`);
 
@@ -654,7 +759,7 @@ Battle.executePugong = function executePugong(actor, targets, callback) {
 				onHitComplete();
 			});
 		} else {
-			const dmgResult = calculateDamage(actor, target, coeff, 0);
+			const dmgResult = calculateDamage(actor, target, coeff, 0, 'pugong');
 
 			if (dmgResult.isMiss) {
 				missCount++;  // 记录闪避
@@ -692,6 +797,9 @@ Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, 
 		return;
 	}
 
+	// 记录本次行动类型（'skill' | 'spskill'），供突破效果（如「使用技能后获得buff」）的 filter 判断
+	actor._lastActionType = skillType;
+
 	actor.energy = Math.max(0, actor.energy - energyCost);
 	updateBattleUI();
 
@@ -709,6 +817,7 @@ Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, 
 	let index = 0;
 	let hitCount = 0;      // 命中次数
 	let missCount = 0;     // 闪避次数
+	let hadCrit = false;   // 本次技能是否出现过暴击
 	const totalTargets = targets.filter(t => t && t.alive).length;
 
 	function processNextTarget() {
@@ -725,6 +834,14 @@ Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, 
 				missCount: missCount,
 				totalTargets: totalTargets
 			});
+
+			// ===== 怒攻（spskill）结束时点：传出本次是否出现暴击 =====
+			// ===== 技能（含必杀）结束时点：传出本次是否出现暴击 =====
+			// 注：原"怒攻"在本文语境即等同于"技能（含必杀）"，故对 skill 与 spskill 均触发。
+			// content/filter 收到 { hadCrit }，供「技能（含必杀）后若出现过暴击回复能量/回血」等效果使用
+			if ((skillType === 'skill' || skillType === 'spskill') && actor && actor.alive) {
+				triggerSelfEffect(actor, 'skillEnd', { hadCrit: hadCrit });
+			}
 
 			// 技能不再回复能量（无论是否命中）
 			// 仅保留日志用于调试
@@ -757,12 +874,13 @@ Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, 
 				onHitComplete();
 			});
 		} else {
-			const dmgResult = calculateDamage(actor, target, coeff, extraEnergy);
+			const dmgResult = calculateDamage(actor, target, coeff, extraEnergy, 'skill');
 
 			if (dmgResult.isMiss) {
 				missCount++;  // 记录闪避
 			} else {
 				hitCount++;   // 记录命中
+				if (dmgResult.isCrit) hadCrit = true; // 本次技能出现过暴击
 			}
 
 			applyDamage(target, dmgResult, actor, onHitComplete, {
@@ -835,17 +953,24 @@ Battle.nextTurn = function nextTurn() {
 		// ===== 【新增】在标记已行动前获取当前行动编号 =====
 		const currentActorNumberInSide = (bs.actedSlots[nextSide]?.size || 0) + 1;
 
-		// ===== 【新增】处理buff衰减：当前行动位次施加的buff，轮次-1 =====
 		const sideLabel = nextSide === 'player' ? '先手' : '后手';
-		const actionSlotKey = `${sideLabel}${currentActorNumberInSide}`;
 		// 标记该角色已行动
 		bs.actedSlots[nextSide].add(nextActor.slotIndex);
 		bs.currentTurnSide = nextSide;
 		bs.currentTurnIndex = nextActor.slotIndex;
 		// 在 nextTurn 中，标记完 actedSlots 后：
-		nextActor._currentActionSlotKey = `${sideLabel}${currentActorNumberInSide}`;
+	nextActor._currentActionSlotKey = `${sideLabel}${currentActorNumberInSide}`;
 
-		processBuffDecayBySlotKey(actionSlotKey);
+	// ===== 每位格「行动世代」计数：每次该位格开始行动时 +1 =====
+	// 用途：addBuff 记录 buff 创建于该位格的第几世代；processBuffDecayBySlotKey
+	// 仅对「早于当前世代」创建的 buff 衰减，从而使「本次行动内施加的 buff」
+	// 在本次行动结束时不衰减（存活到该位格下次行动，即「持续1回合」语义）。
+	bs.slotGen = bs.slotGen || {};
+	bs.slotGen[nextActor._currentActionSlotKey] = (bs.slotGen[nextActor._currentActionSlotKey] || 0) + 1;
+
+	// ===== buff 衰减已改到「行动后」结算（见 afterAction），此处不再衰减 =====
+		// 原因：由某位格施加的 buff 应覆盖该位格本次行动（尤其条件增/减伤），
+		// 因此改为在其行动完全结束后才 remainRounds-1，以区分「行动前 / 行动后」。
 
 		// 触发 beforeTurn 事件
 		BattleEvents.emit(BattleEvents.BEFORE_TURN, {
@@ -966,6 +1091,13 @@ Battle.afterAction = function afterAction() {
 				}
 				isProcessing = false;
 				return;
+			}
+
+			// ===== buff 衰减：在行动位格「行动后」结算 =====
+			// 由当前行动位格施加的 buff，在其本次行动（含额外回合）完全结束后才 remainRounds-1，
+			// 使条件增/减伤等能覆盖施加者本次行动（区分「行动前 / 行动后」）。
+			if (unit && unit._currentActionSlotKey) {
+				processBuffDecayBySlotKey(unit._currentActionSlotKey);
 			}
 
 			isProcessing = false;
@@ -1968,10 +2100,10 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 		let finalPierce = 0;
 		let finalBlock = 0;
 
-		let finalFixedDmgUp = 0;
-		let finalFixedDmgDown = 0;
-		let finalPctDmgUp = 0;
-		let finalPctDmgDown = 0;
+		let finalFixedDealUp = 0;
+		let finalFixedTakeDn = 0;
+		let finalPctDealUp = 0;
+		let finalPctTakeDn = 0;
 
 		let finalFixedHeal = 0;
 		let finalFixedBeHeal = 0;
@@ -1997,10 +2129,10 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 			finalPierce = data._compiledStats.poji ?? 0;
 			finalBlock = data._compiledStats.gedang ?? 0;
 
-			finalFixedDmgUp = data._compiledStats.fixedDmgUp ?? 0;
-			finalFixedDmgDown = data._compiledStats.fixedDmgDown ?? 0;
-			finalPctDmgUp = data._compiledStats.pctDmgUp ?? 0;
-			finalPctDmgDown = data._compiledStats.pctDmgDown ?? 0;
+			finalFixedDealUp = data._compiledStats.fixedDealUp ?? 0;
+			finalFixedTakeDn = data._compiledStats.fixedTakeDn ?? 0;
+			finalPctDealUp = data._compiledStats.pctDealUp ?? 0;
+			finalPctTakeDn = data._compiledStats.pctTakeDn ?? 0;
 
 			finalFixedHeal = data._compiledStats.fixedHeal ?? 0;
 			finalFixedBeHeal = data._compiledStats.fixedBeHeal ?? 0;
@@ -2022,10 +2154,10 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 			finalPierce = data.poji ?? 0;
 			finalBlock = data.gedang ?? 0;
 
-			finalFixedDmgUp = data.fixedDmgUp ?? 0;
-			finalFixedDmgDown = data.fixedDmgDown ?? 0;
-			finalPctDmgUp = data.pctDmgUp ?? 0;
-			finalPctDmgDown = data.pctDmgDown ?? 0;
+			finalFixedDealUp = data.fixedDealUp ?? 0;
+			finalFixedTakeDn = data.fixedTakeDn ?? 0;
+			finalPctDealUp = data.pctDealUp ?? 0;
+			finalPctTakeDn = data.pctTakeDn ?? 0;
 
 			finalFixedHeal = data.fixedHeal ?? 0;
 			finalFixedBeHeal = data.fixedBeHeal ?? 0;
@@ -2049,10 +2181,10 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 			finalPierce = compiled.poji;
 			finalBlock = compiled.gedang;
 
-			finalFixedDmgUp = compiled.fixedDmgUp;
-			finalFixedDmgDown = compiled.fixedDmgDown;
-			finalPctDmgUp = compiled.pctDmgUp;
-			finalPctDmgDown = compiled.pctDmgDown;
+			finalFixedDealUp = compiled.fixedDealUp;
+			finalFixedTakeDn = compiled.fixedTakeDn;
+			finalPctDealUp = compiled.pctDealUp;
+			finalPctTakeDn = compiled.pctTakeDn;
 
 			finalFixedHeal = compiled.fixedHeal;
 			finalFixedBeHeal = compiled.fixedBeHeal;
@@ -2112,6 +2244,7 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 			maxHp: finalHp,
 			hp: finalHp,
 			atk: finalAtk,
+			baseAtk: finalAtk, // 战斗开始时的攻击力基准（供「敌方减员加攻」等效果使用）
 			def: finalDef,
 			spe: finalSpe,
 			energy: Math.min(8, finalEnergy),
@@ -2146,10 +2279,10 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 			gedang: finalBlock,
 
 			// ===== 【新增】增伤/减伤 =====
-			fixedDmgUp: finalFixedDmgUp,
-			fixedDmgDown: finalFixedDmgDown,
-			pctDmgUp: finalPctDmgUp,
-			pctDmgDown: finalPctDmgDown,
+			fixedDealUp: finalFixedDealUp,
+			fixedTakeDn: finalFixedTakeDn,
+			pctDealUp: finalPctDealUp,
+			pctTakeDn: finalPctTakeDn,
 
 			// ===== 【新增】治疗相关 =====
 			fixedHeal: finalFixedHeal,
@@ -2213,7 +2346,7 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 					console.log(
 						`[${label}][${i}] ${u.name} | HP:${u.hp}/${u.maxHp} ATK:${u.atk} DEF:${u.def} SPE:${u.spe} ` +
 						`命中:${u.mingzhong} 闪避:${u.shanbi} 暴击:${u.baoji} 抗暴:${u.kangbao} 破击:${u.poji} 格挡:${u.gedang} ` +
-						`固伤↑:${u.fixedDmgUp} 固伤↓:${u.fixedDmgDown} 百伤↑:${u.pctDmgUp} 百伤↓:${u.pctDmgDown}`,
+						`固伤↑:${u.fixedDealUp} 固伤↓:${u.fixedTakeDn} 百伤↑:${u.pctDealUp} 百伤↓:${u.pctTakeDn}`,
 						u
 					);
 				});
@@ -2700,7 +2833,7 @@ Battle.getActionSlotKey = function getActionSlotKey(side, actorNumber) {
  * @param {Object} buffConfig - buff 配置
  * @param {string} buffConfig.id - buff 唯一标识
  * @param {string} buffConfig.name - buff 名称
- * @param {string} buffConfig.type - buff 类型：'seal'|'stun'|'paralyze'|'healBlock'|'poison'|'dmgUp'|'dmgDown'|'baoji'|'kangbao'|'baoshang'|'shouhu'|'mingzhong'|'shanbi'|'poji'|'gedang'（特种属性 value 为万分数，如 3000 = 30%）
+ * @param {string} buffConfig.type - buff 类型：'seal'|'stun'|'paralyze'|'healBlock'|'healReduce'|'poison'|'takeUp'(受伤增加)|'takeDn'(减伤)|'baoji'|'kangbao'|'baoshang'|'shouhu'|'mingzhong'|'shanbi'|'poji'|'gedang'（特种属性 value 为万分数，如 3000 = 30%；healReduce 的 value 为被治疗量降低比例，如 0.8 = 降疗80%；takeUp 的 value 为该单位受到伤害增加比例，如 0.3 = 受伤+30%）
  * @param {number} buffConfig.remainRounds - 持续轮次（-1 永久）
  * @param {string} buffConfig.sourceSide - 施加者阵营（可选）
  * @param {string} buffConfig.sourceId - 施加者 instanceId
@@ -2747,6 +2880,7 @@ Battle.addBuff = function addBuff(target, buffConfig) {
 			type: buffConfig.type,
 			remainRounds: buffConfig.remainRounds,
 			ownerSlot: ownerSlot,
+			createdAtSlotGen: (battleState.slotGen && battleState.slotGen[ownerSlot]) || 0,
 			sourceId: buffConfig.sourceId || '',
 			value: buffConfig.value || null,
 		};
@@ -2757,6 +2891,7 @@ Battle.addBuff = function addBuff(target, buffConfig) {
 			type: buffConfig.type,
 			remainRounds: buffConfig.remainRounds,
 			ownerSlot: ownerSlot,
+			createdAtSlotGen: (battleState.slotGen && battleState.slotGen[ownerSlot]) || 0,
 			sourceId: buffConfig.sourceId || '',
 			value: buffConfig.value || null,
 		});
@@ -2791,17 +2926,30 @@ Battle.applyBuffEffect = function applyBuffEffect(target, buffConfig) {
 			target.healBlocked = true;
 			addBattleLog(`${target.name} 被禁疗${buffConfig.remainRounds === -1 ? '（永久）' : buffConfig.remainRounds + '回合'}`);
 			break;
+		case 'healReduce':
+			// 降疗：被治疗百分率（pctBeHeal）降低 value（如 0.8 = 降疗80%），下限 -1（即治疗量降为0）
+			target.pctBeHeal = Math.max(-1, (target.pctBeHeal ?? 0) - (buffConfig.value || 0));
+			addBattleLog(`${target.name} 被治疗量降低 ${Math.round((buffConfig.value || 0) * 100)}%`);
+			break;
 		case 'poison':
 			// 中毒伤害叠加
 			target.poisonDamage = (target.poisonDamage || 0) + (buffConfig.value || 0);
 			addBattleLog(`${target.name} 中毒，每回合失去 ${buffConfig.value} 生命`);
 			break;
-		case 'dmgUp':
-			target.pctDmgUp = (target.pctDmgUp || 0) + (buffConfig.value || 0);
-			addBattleLog(`${target.name} 增伤${(buffConfig.value * 100).toFixed(0)}%`);
+		case 'dealUp':
+			// 造成伤害增加：作为攻击方条件增伤的正值，在伤害结算第六步（onDamageCalc）读取 buffList 计入
+			addBattleLog(`${target.name} 造成伤害增加${(buffConfig.value * 100).toFixed(0)}%`);
 			break;
-		case 'dmgDown':
-			target.pctDmgDown = (target.pctDmgDown || 0) + (buffConfig.value || 0);
+		case 'dealDn':
+			// 造成伤害减少：作为攻击方条件增伤的负值，在第六步读取 buffList 计入
+			addBattleLog(`${target.name} 造成伤害减少${(buffConfig.value * 100).toFixed(0)}%`);
+			break;
+		case 'takeUp':
+			// 受伤增加：作为目标条件减伤的负值，在伤害结算第六步（onDamageTaken）读取 buffList 计入
+			addBattleLog(`${target.name} 受伤增加${(buffConfig.value * 100).toFixed(0)}%`);
+			break;
+		case 'takeDn':
+			// 减伤：作为目标条件减伤的正值，在伤害结算第六步（onDamageTaken）读取 buffList 统一计入
 			addBattleLog(`${target.name} 减伤${(buffConfig.value * 100).toFixed(0)}%`);
 			break;
 		// ===== 【新增】特种属性类 buff（value 为万分数，如 3000 = 30%） =====
@@ -2879,6 +3027,11 @@ Battle.removeBuffEffect = function removeBuffEffect(target, buff) {
 			target.healBlocked = false;
 			addBattleLog(`${target.name} 的禁疗已解除`);
 			break;
+		case 'healReduce':
+			// 降疗移除时，被治疗百分率加回原值
+			target.pctBeHeal = (target.pctBeHeal ?? 0) + (buff.value || 0);
+			addBattleLog(`${target.name} 的降疗效果已解除`);
+			break;
 		case 'poison':
 			// ===== 【修改】中毒移除时，减去对应数值 =====
 			if (buff.value) {
@@ -2890,11 +3043,15 @@ Battle.removeBuffEffect = function removeBuffEffect(target, buff) {
 				}
 			}
 			break;
-		case 'dmgUp':
-			target.pctDmgUp = Math.max(0, (target.pctDmgUp || 0) - (buff.value || 0));
+		case 'dealUp':
+		case 'dealDn':
+			// 造成伤害增减由第六步伤害结算读取 buffList 处理，此处无需回退字段
 			break;
-		case 'dmgDown':
-			target.pctDmgDown = Math.max(0, (target.pctDmgDown || 0) - (buff.value || 0));
+		case 'takeUp':
+			// 受伤增加由第六步伤害结算读取 buffList 处理，此处无需回退字段
+			break;
+		case 'takeDn':
+			// 减伤由第六步伤害结算读取 buffList 处理，此处无需回退字段
 			break;
 		// ===== 【新增】特种属性类 buff 移除时反向减回（与 applyBuffEffect 对应） =====
 		case 'baoji':
@@ -3050,10 +3207,16 @@ Battle.processBuffDecayBySlotKey = function processBuffDecayBySlotKey(actionSlot
 
 			// 判断：buff的施加者位次是否等于当前行动位次
 			if (buff.ownerSlot === actionSlotKey) {
-				buff.remainRounds--;
+				// 仅对「早于当前行动世代」创建的 buff 衰减。
+				// 本次行动内刚施加的 buff（createdAtSlotGen === 当前世代）跳过本次衰减，
+				// 使其存活到该位格下次行动（即「持续1回合」的准确语义）。
+				const curGen = (bs.slotGen && bs.slotGen[actionSlotKey]) || 0;
+				if ((buff.createdAtSlotGen ?? 0) < curGen) {
+					buff.remainRounds--;
 
-				if (buff.remainRounds <= 0) {
-					expiredBuffs.push(index);
+					if (buff.remainRounds <= 0) {
+						expiredBuffs.push(index);
+					}
 				}
 			}
 		});
@@ -3082,7 +3245,7 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 			hp: 500, atk: 50, def: 25, spe: 50,
 			maxHp: 500,
 			mingzhong: 10000, shanbi: 0, baoji: 0, kangbao: 0, baoshang: 0, shouhu: 0, poji: 0, gedang: 0,
-			fixedDmgUp: 0, fixedDmgDown: 0, pctDmgUp: 0, pctDmgDown: 0,
+			fixedDealUp: 0, fixedTakeDn: 0, pctDealUp: 0, pctTakeDn: 0,
 			fixedHeal: 0, fixedBeHeal: 0, pctHeal: 0, pctBeHeal: 0
 		};
 	}
@@ -3122,10 +3285,10 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 	let shouhu = 0;
 	let poji = 0;
 	let gedang = 0;
-	let fixedDmgUp = 0;
-	let fixedDmgDown = 0;
-	let pctDmgUp = 0;
-	let pctDmgDown = 0;
+	let fixedDealUp = 0;
+	let fixedTakeDn = 0;
+	let pctDealUp = 0;
+	let pctTakeDn = 0;
 	let fixedHeal = 0;
 	let fixedBeHeal = 0;
 	let pctHeal = 0;
@@ -3136,8 +3299,8 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 	const effectiveTupoLevel = Math.min(tupolevel || 0, tupoList.length);
 
 	// 收集自身的 team_stat 加成，用于计算全队汇总
-	let selfTeamFlat = { hp: 0, atk: 0, def: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, baoshang: 0, shouhu: 0, poji: 0, gedang: 0, fixedDmgUp: 0, fixedDmgDown: 0, fixedHeal: 0, fixedBeHeal: 0 };
-	let selfTeamPercent = { atk: 0, def: 0, hp: 0, spe: 0, pctDmgUp: 0, pctDmgDown: 0, pctHeal: 0, pctBeHeal: 0 };
+	let selfTeamFlat = { hp: 0, atk: 0, def: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, baoshang: 0, shouhu: 0, poji: 0, gedang: 0, fixedDealUp: 0, fixedTakeDn: 0, fixedHeal: 0, fixedBeHeal: 0 };
+	let selfTeamPercent = { atk: 0, def: 0, hp: 0, spe: 0, pctDealUp: 0, pctTakeDn: 0, pctHeal: 0, pctBeHeal: 0 };
 
 	for (let i = 0; i < effectiveTupoLevel; i++) {
 		const buff = tupoList[i];
@@ -3165,8 +3328,8 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 			if (resolvedBuff.shouhu !== undefined) shouhu += Number(resolvedBuff.shouhu);
 				if (resolvedBuff.poji !== undefined) poji += Number(resolvedBuff.poji);
 				if (resolvedBuff.gedang !== undefined) gedang += Number(resolvedBuff.gedang);
-				if (resolvedBuff.fixedDmgUp !== undefined) fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
-				if (resolvedBuff.fixedDmgDown !== undefined) fixedDmgDown += Number(resolvedBuff.fixedDmgDown);
+				if (resolvedBuff.fixedDealUp !== undefined) fixedDealUp += Number(resolvedBuff.fixedDealUp);
+				if (resolvedBuff.fixedTakeDn !== undefined) fixedTakeDn += Number(resolvedBuff.fixedTakeDn);
 				if (resolvedBuff.fixedHeal !== undefined) fixedHeal += Number(resolvedBuff.fixedHeal);
 				if (resolvedBuff.fixedBeHeal !== undefined) fixedBeHeal += Number(resolvedBuff.fixedBeHeal);
 				break;
@@ -3176,8 +3339,8 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 				if (resolvedBuff.def !== undefined) def = Math.floor(def * (1 + Number(resolvedBuff.def)));
 				if (resolvedBuff.hp !== undefined) hp = Math.floor(hp * (1 + Number(resolvedBuff.hp)));
 				if (resolvedBuff.spe !== undefined) spe = Math.floor(spe * (1 + Number(resolvedBuff.spe)));
-				if (resolvedBuff.pctDmgUp !== undefined) pctDmgUp += Number(resolvedBuff.pctDmgUp);
-				if (resolvedBuff.pctDmgDown !== undefined) pctDmgDown += Number(resolvedBuff.pctDmgDown);
+				if (resolvedBuff.pctDealUp !== undefined) pctDealUp += Number(resolvedBuff.pctDealUp);
+				if (resolvedBuff.pctTakeDn !== undefined) pctTakeDn += Number(resolvedBuff.pctTakeDn);
 				if (resolvedBuff.pctHeal !== undefined) pctHeal += Number(resolvedBuff.pctHeal);
 				if (resolvedBuff.pctBeHeal !== undefined) pctBeHeal += Number(resolvedBuff.pctBeHeal);
 				break;
@@ -3196,8 +3359,8 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 			if (resolvedBuff.shouhu !== undefined) selfTeamFlat.shouhu += Number(resolvedBuff.shouhu);
 				if (resolvedBuff.poji !== undefined) selfTeamFlat.poji += Number(resolvedBuff.poji);
 				if (resolvedBuff.gedang !== undefined) selfTeamFlat.gedang += Number(resolvedBuff.gedang);
-				if (resolvedBuff.fixedDmgUp !== undefined) selfTeamFlat.fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
-				if (resolvedBuff.fixedDmgDown !== undefined) selfTeamFlat.fixedDmgDown += Number(resolvedBuff.fixedDmgDown);
+				if (resolvedBuff.fixedDealUp !== undefined) selfTeamFlat.fixedDealUp += Number(resolvedBuff.fixedDealUp);
+				if (resolvedBuff.fixedTakeDn !== undefined) selfTeamFlat.fixedTakeDn += Number(resolvedBuff.fixedTakeDn);
 				if (resolvedBuff.fixedHeal !== undefined) selfTeamFlat.fixedHeal += Number(resolvedBuff.fixedHeal);
 				if (resolvedBuff.fixedBeHeal !== undefined) selfTeamFlat.fixedBeHeal += Number(resolvedBuff.fixedBeHeal);
 				break;
@@ -3208,8 +3371,8 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 				if (resolvedBuff.def !== undefined) selfTeamPercent.def += Number(resolvedBuff.def);
 				if (resolvedBuff.hp !== undefined) selfTeamPercent.hp += Number(resolvedBuff.hp);
 				if (resolvedBuff.spe !== undefined) selfTeamPercent.spe += Number(resolvedBuff.spe);
-				if (resolvedBuff.pctDmgUp !== undefined) selfTeamPercent.pctDmgUp += Number(resolvedBuff.pctDmgUp);
-				if (resolvedBuff.pctDmgDown !== undefined) selfTeamPercent.pctDmgDown += Number(resolvedBuff.pctDmgDown);
+				if (resolvedBuff.pctDealUp !== undefined) selfTeamPercent.pctDealUp += Number(resolvedBuff.pctDealUp);
+				if (resolvedBuff.pctTakeDn !== undefined) selfTeamPercent.pctTakeDn += Number(resolvedBuff.pctTakeDn);
 				if (resolvedBuff.pctHeal !== undefined) selfTeamPercent.pctHeal += Number(resolvedBuff.pctHeal);
 				if (resolvedBuff.pctBeHeal !== undefined) selfTeamPercent.pctBeHeal += Number(resolvedBuff.pctBeHeal);
 				break;
@@ -3231,8 +3394,8 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 		shouhu += teamBonuses.teamFlat.shouhu || 0;
 		poji += teamBonuses.teamFlat.poji || 0;
 		gedang += teamBonuses.teamFlat.gedang || 0;
-		fixedDmgUp += teamBonuses.teamFlat.fixedDmgUp || 0;
-		fixedDmgDown += teamBonuses.teamFlat.fixedDmgDown || 0;
+		fixedDealUp += teamBonuses.teamFlat.fixedDealUp || 0;
+		fixedTakeDn += teamBonuses.teamFlat.fixedTakeDn || 0;
 		fixedHeal += teamBonuses.teamFlat.fixedHeal || 0;
 		fixedBeHeal += teamBonuses.teamFlat.fixedBeHeal || 0;
 
@@ -3247,8 +3410,8 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 		if (teamPercentDef > 0) def = Math.floor(def * (1 + teamPercentDef));
 		if (teamPercentSpe > 0) spe = Math.floor(spe * (1 + teamPercentSpe));
 
-		pctDmgUp += teamBonuses.teamPercent.pctDmgUp || 0;
-		pctDmgDown += teamBonuses.teamPercent.pctDmgDown || 0;
+		pctDealUp += teamBonuses.teamPercent.pctDealUp || 0;
+		pctTakeDn += teamBonuses.teamPercent.pctTakeDn || 0;
 		pctHeal += teamBonuses.teamPercent.pctHeal || 0;
 		pctBeHeal += teamBonuses.teamPercent.pctBeHeal || 0;
 	}
@@ -3265,7 +3428,7 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 		hp, atk, def, spe,
 		maxHp: hp,
 		mingzhong, shanbi, baoji, kangbao, baoshang, shouhu, poji, gedang,
-		fixedDmgUp, fixedDmgDown, pctDmgUp, pctDmgDown,
+		fixedDealUp, fixedTakeDn, pctDealUp, pctTakeDn,
 		fixedHeal, fixedBeHeal, pctHeal, pctBeHeal,
 		// ===== 【新增】返回团队加成信息 =====
 		_teamBuffs: selfTeamFlat,
@@ -3279,8 +3442,8 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
  * @returns {Object} { teamFlat: {...}, teamPercent: {...} }
  */
 Battle.calculateEnemyTeamBonuses = function calculateEnemyTeamBonuses(enemyTeam) {
-    const teamFlat = { hp: 0, atk: 0, def: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, baoshang: 0, shouhu: 0, poji: 0, gedang: 0, fixedDmgUp: 0, fixedDmgDown: 0, fixedHeal: 0, fixedBeHeal: 0 };
-    const teamPercent = { hp: 0, atk: 0, def: 0, spe: 0, pctDmgUp: 0, pctDmgDown: 0, pctHeal: 0, pctBeHeal: 0 };
+    const teamFlat = { hp: 0, atk: 0, def: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, baoshang: 0, shouhu: 0, poji: 0, gedang: 0, fixedDealUp: 0, fixedTakeDn: 0, fixedHeal: 0, fixedBeHeal: 0 };
+    const teamPercent = { hp: 0, atk: 0, def: 0, spe: 0, pctDealUp: 0, pctTakeDn: 0, pctHeal: 0, pctBeHeal: 0 };
 
     enemyTeam.forEach(data => {
         if (!data || !data.id) return;
@@ -3317,8 +3480,8 @@ Battle.calculateEnemyTeamBonuses = function calculateEnemyTeamBonuses(enemyTeam)
                     if (resolvedBuff.shouhu !== undefined) teamFlat.shouhu += Number(resolvedBuff.shouhu);
                     if (resolvedBuff.poji !== undefined) teamFlat.poji += Number(resolvedBuff.poji);
                     if (resolvedBuff.gedang !== undefined) teamFlat.gedang += Number(resolvedBuff.gedang);
-                    if (resolvedBuff.fixedDmgUp !== undefined) teamFlat.fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
-                    if (resolvedBuff.fixedDmgDown !== undefined) teamFlat.fixedDmgDown += Number(resolvedBuff.fixedDmgDown);
+                    if (resolvedBuff.fixedDealUp !== undefined) teamFlat.fixedDealUp += Number(resolvedBuff.fixedDealUp);
+                    if (resolvedBuff.fixedTakeDn !== undefined) teamFlat.fixedTakeDn += Number(resolvedBuff.fixedTakeDn);
                     if (resolvedBuff.fixedHeal !== undefined) teamFlat.fixedHeal += Number(resolvedBuff.fixedHeal);
                     if (resolvedBuff.fixedBeHeal !== undefined) teamFlat.fixedBeHeal += Number(resolvedBuff.fixedBeHeal);
                     break;
@@ -3328,8 +3491,8 @@ Battle.calculateEnemyTeamBonuses = function calculateEnemyTeamBonuses(enemyTeam)
                     if (resolvedBuff.def !== undefined) teamPercent.def += Number(resolvedBuff.def);
                     if (resolvedBuff.hp !== undefined) teamPercent.hp += Number(resolvedBuff.hp);
                     if (resolvedBuff.spe !== undefined) teamPercent.spe += Number(resolvedBuff.spe);
-                    if (resolvedBuff.pctDmgUp !== undefined) teamPercent.pctDmgUp += Number(resolvedBuff.pctDmgUp);
-                    if (resolvedBuff.pctDmgDown !== undefined) teamPercent.pctDmgDown += Number(resolvedBuff.pctDmgDown);
+                    if (resolvedBuff.pctDealUp !== undefined) teamPercent.pctDealUp += Number(resolvedBuff.pctDealUp);
+                    if (resolvedBuff.pctTakeDn !== undefined) teamPercent.pctTakeDn += Number(resolvedBuff.pctTakeDn);
                     if (resolvedBuff.pctHeal !== undefined) teamPercent.pctHeal += Number(resolvedBuff.pctHeal);
                     if (resolvedBuff.pctBeHeal !== undefined) teamPercent.pctBeHeal += Number(resolvedBuff.pctBeHeal);
                     break;

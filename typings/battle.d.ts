@@ -221,7 +221,7 @@ interface Buff {
     id: string;
     /** buff 名称 */
     name: string;
-    /** buff 类型：'seal' | 'stun' | 'paralyze' | 'healBlock' | 'poison' | 'dmgUp' | 'dmgDown' 等 */
+    /** buff 类型：'seal' | 'stun' | 'paralyze' | 'healBlock' | 'poison' | 'takeUp' | 'takeDn' 等 */
     type: string;
     /** 持续轮次（-1 表示永久） */
     remainRounds: number;
@@ -290,9 +290,9 @@ interface Unit {
     /** 中毒每回合伤害 */
     poisonDamage?: number;
     /** 增伤百分比（0-1） */
-    pctDmgUp?: number;
+    pctDealUp?: number;
     /** 减伤百分比（0-1） */
-    pctDmgDown?: number;
+    pctTakeDn?: number;
     /** 额外回合次数 */
     extraTurnCount: number;
     /** 是否获得额外回合（标记） */

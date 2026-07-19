@@ -726,7 +726,7 @@ class Stat {
 				breakthroughBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
 				treasureBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
 				mingzhong: 10000, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0,
-				fixedDmgUp: 0, fixedDmgDown: 0, pctDmgUp: 0, pctDmgDown: 0,
+				fixedDealUp: 0, fixedTakeDn: 0, pctDealUp: 0, pctTakeDn: 0,
 				fixedHeal: 0, fixedBeHeal: 0, pctHeal: 0, pctBeHeal: 0,
 				flatBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
 				percentBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
@@ -745,7 +745,7 @@ class Stat {
 				breakthroughBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
 				treasureBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
 				mingzhong: 10000, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0,
-				fixedDmgUp: 0, fixedDmgDown: 0, pctDmgUp: 0, pctDmgDown: 0,
+				fixedDealUp: 0, fixedTakeDn: 0, pctDealUp: 0, pctTakeDn: 0,
 				fixedHeal: 0, fixedBeHeal: 0, pctHeal: 0, pctBeHeal: 0,
 				flatBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
 				percentBonus: { hp: 0, atk: 0, def: 0, spe: 0 },
@@ -790,12 +790,12 @@ class Stat {
 		let teamPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
 
 		let breakHit = 0, breakDodge = 0, breakCrit = 0, breakCritResist = 0, breakPierce = 0, breakBlock = 0, breakBaoShang = 0, breakShouhu = 0;
-		let breakFixedDmgUp = 0, breakFixedDmgDown = 0, breakPctDmgUp = 0, breakPctDmgDown = 0;
+		let breakFixedDealUp = 0, breakFixedTakeDn = 0, breakPctDealUp = 0, breakPctTakeDn = 0;
 		let breakFixedHeal = 0, breakFixedBeHeal = 0, breakPctHeal = 0, breakPctBeHeal = 0;
 
 		let teamFlatHit = 0, teamFlatDodge = 0, teamFlatCrit = 0, teamFlatCritResist = 0, teamFlatPierce = 0, teamFlatBlock = 0, teamFlatBaoShang = 0, teamFlatShouhu = 0;
-		let teamFlatFixedDmgUp = 0, teamFlatFixedDmgDown = 0, teamFlatFixedHeal = 0, teamFlatFixedBeHeal = 0;
-		let teamPercentPctDmgUp = 0, teamPercentPctDmgDown = 0, teamPercentPctHeal = 0, teamPercentPctBeHeal = 0;
+		let teamFlatFixedDealUp = 0, teamFlatFixedTakeDn = 0, teamFlatFixedHeal = 0, teamFlatFixedBeHeal = 0;
+		let teamPercentPctDealUp = 0, teamPercentPctTakeDn = 0, teamPercentPctHeal = 0, teamPercentPctBeHeal = 0;
 
 		if (externalTeamBonuses) {
 			teamFlat.hp = externalTeamBonuses.teamFlat.hp || 0;
@@ -816,12 +816,12 @@ class Stat {
 		teamFlatShouhu = externalTeamBonuses.teamFlat.shouhu || 0;
 			teamFlatPierce = externalTeamBonuses.teamFlat.poji || 0;
 			teamFlatBlock = externalTeamBonuses.teamFlat.gedang || 0;
-			teamFlatFixedDmgUp = externalTeamBonuses.teamFlat.fixedDmgUp || 0;
-			teamFlatFixedDmgDown = externalTeamBonuses.teamFlat.fixedDmgDown || 0;
+			teamFlatFixedDealUp = externalTeamBonuses.teamFlat.fixedDealUp || 0;
+			teamFlatFixedTakeDn = externalTeamBonuses.teamFlat.fixedTakeDn || 0;
 			teamFlatFixedHeal = externalTeamBonuses.teamFlat.fixedHeal || 0;
 			teamFlatFixedBeHeal = externalTeamBonuses.teamFlat.fixedBeHeal || 0;
-			teamPercentPctDmgUp = externalTeamBonuses.teamPercent.pctDmgUp || 0;
-			teamPercentPctDmgDown = externalTeamBonuses.teamPercent.pctDmgDown || 0;
+			teamPercentPctDealUp = externalTeamBonuses.teamPercent.pctDealUp || 0;
+			teamPercentPctTakeDn = externalTeamBonuses.teamPercent.pctTakeDn || 0;
 			teamPercentPctHeal = externalTeamBonuses.teamPercent.pctHeal || 0;
 			teamPercentPctBeHeal = externalTeamBonuses.teamPercent.pctBeHeal || 0;
 		}
@@ -855,8 +855,8 @@ class Stat {
 				if (resolvedBuff.shouhu !== undefined) breakShouhu += Number(resolvedBuff.shouhu);
 					if (resolvedBuff.poji !== undefined) breakPierce += Number(resolvedBuff.poji);
 					if (resolvedBuff.gedang !== undefined) breakBlock += Number(resolvedBuff.gedang);
-					if (resolvedBuff.fixedDmgUp !== undefined) breakFixedDmgUp += Number(resolvedBuff.fixedDmgUp);
-					if (resolvedBuff.fixedDmgDown !== undefined) breakFixedDmgDown += Number(resolvedBuff.fixedDmgDown);
+					if (resolvedBuff.fixedDealUp !== undefined) breakFixedDealUp += Number(resolvedBuff.fixedDealUp);
+					if (resolvedBuff.fixedTakeDn !== undefined) breakFixedTakeDn += Number(resolvedBuff.fixedTakeDn);
 					if (resolvedBuff.fixedHeal !== undefined) breakFixedHeal += Number(resolvedBuff.fixedHeal);
 					if (resolvedBuff.fixedBeHeal !== undefined) breakFixedBeHeal += Number(resolvedBuff.fixedBeHeal);
 					break;
@@ -873,8 +873,8 @@ class Stat {
 					if (resolvedBuff.shanbi !== undefined) breakDodge += Number(resolvedBuff.shanbi);
 					if (resolvedBuff.poji !== undefined) breakPierce += Number(resolvedBuff.poji);
 					if (resolvedBuff.gedang !== undefined) breakBlock += Number(resolvedBuff.gedang);
-					if (resolvedBuff.pctDmgUp !== undefined) breakPctDmgUp += Number(resolvedBuff.pctDmgUp);
-					if (resolvedBuff.pctDmgDown !== undefined) breakPctDmgDown += Number(resolvedBuff.pctDmgDown);
+					if (resolvedBuff.pctDealUp !== undefined) breakPctDealUp += Number(resolvedBuff.pctDealUp);
+					if (resolvedBuff.pctTakeDn !== undefined) breakPctTakeDn += Number(resolvedBuff.pctTakeDn);
 					if (resolvedBuff.pctHeal !== undefined) breakPctHeal += Number(resolvedBuff.pctHeal);
 					if (resolvedBuff.pctBeHeal !== undefined) breakPctBeHeal += Number(resolvedBuff.pctBeHeal);
 					break;
@@ -891,8 +891,8 @@ class Stat {
 						if (resolvedBuff.kangbao !== undefined) teamFlatCritResist += Number(resolvedBuff.kangbao);
 						if (resolvedBuff.poji !== undefined) teamFlatPierce += Number(resolvedBuff.poji);
 						if (resolvedBuff.gedang !== undefined) teamFlatBlock += Number(resolvedBuff.gedang);
-						if (resolvedBuff.fixedDmgUp !== undefined) teamFlatFixedDmgUp += Number(resolvedBuff.fixedDmgUp);
-						if (resolvedBuff.fixedDmgDown !== undefined) teamFlatFixedDmgDown += Number(resolvedBuff.fixedDmgDown);
+						if (resolvedBuff.fixedDealUp !== undefined) teamFlatFixedDealUp += Number(resolvedBuff.fixedDealUp);
+						if (resolvedBuff.fixedTakeDn !== undefined) teamFlatFixedTakeDn += Number(resolvedBuff.fixedTakeDn);
 						if (resolvedBuff.fixedHeal !== undefined) teamFlatFixedHeal += Number(resolvedBuff.fixedHeal);
 						if (resolvedBuff.fixedBeHeal !== undefined) teamFlatFixedBeHeal += Number(resolvedBuff.fixedBeHeal);
 					}
@@ -904,8 +904,8 @@ class Stat {
 						if (resolvedBuff.def !== undefined) teamPercent.def += Number(resolvedBuff.def);
 						if (resolvedBuff.hp !== undefined) teamPercent.hp += Number(resolvedBuff.hp);
 						if (resolvedBuff.spe !== undefined) teamPercent.spe += Number(resolvedBuff.spe);
-						if (resolvedBuff.pctDmgUp !== undefined) teamPercentPctDmgUp += Number(resolvedBuff.pctDmgUp);
-						if (resolvedBuff.pctDmgDown !== undefined) teamPercentPctDmgDown += Number(resolvedBuff.pctDmgDown);
+						if (resolvedBuff.pctDealUp !== undefined) teamPercentPctDealUp += Number(resolvedBuff.pctDealUp);
+						if (resolvedBuff.pctTakeDn !== undefined) teamPercentPctTakeDn += Number(resolvedBuff.pctTakeDn);
 						if (resolvedBuff.pctHeal !== undefined) teamPercentPctHeal += Number(resolvedBuff.pctHeal);
 						if (resolvedBuff.pctBeHeal !== undefined) teamPercentPctBeHeal += Number(resolvedBuff.pctBeHeal);
 					}
@@ -1002,10 +1002,10 @@ class Stat {
 			poji: 0 + breakPierce + teamFlatPierce + tresPierce,
 			gedang: 0 + breakBlock + teamFlatBlock + tresBlock,
 
-			fixedDmgUp: 0 + breakFixedDmgUp + teamFlatFixedDmgUp,
-			fixedDmgDown: 0 + breakFixedDmgDown + teamFlatFixedDmgDown,
-			pctDmgUp: 0 + breakPctDmgUp + teamPercentPctDmgUp,
-			pctDmgDown: 0 + breakPctDmgDown + teamPercentPctDmgDown,
+			fixedDealUp: 0 + breakFixedDealUp + teamFlatFixedDealUp,
+			fixedTakeDn: 0 + breakFixedTakeDn + teamFlatFixedTakeDn,
+			pctDealUp: 0 + breakPctDealUp + teamPercentPctDealUp,
+			pctTakeDn: 0 + breakPctTakeDn + teamPercentPctTakeDn,
 
 			fixedHeal: 0 + breakFixedHeal + teamFlatFixedHeal,
 			fixedBeHeal: 0 + breakFixedBeHeal + teamFlatFixedBeHeal,
@@ -1030,8 +1030,8 @@ class Stat {
 		const teamPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
 
 		teamFlat.mingzhong = 0; teamFlat.shanbi = 0; teamFlat.baoji = 0; teamFlat.kangbao = 0; teamFlat.poji = 0; teamFlat.gedang = 0;
-		teamFlat.fixedDmgUp = 0; teamFlat.fixedDmgDown = 0; teamFlat.fixedHeal = 0; teamFlat.fixedBeHeal = 0;
-		teamPercent.pctDmgUp = 0; teamPercent.pctDmgDown = 0; teamPercent.pctHeal = 0; teamPercent.pctBeHeal = 0;
+		teamFlat.fixedDealUp = 0; teamFlat.fixedTakeDn = 0; teamFlat.fixedHeal = 0; teamFlat.fixedBeHeal = 0;
+		teamPercent.pctDealUp = 0; teamPercent.pctTakeDn = 0; teamPercent.pctHeal = 0; teamPercent.pctBeHeal = 0;
 
 		if (!window.currentTeam) return { teamFlat, teamPercent };
 
@@ -1071,8 +1071,8 @@ class Stat {
 						if (resolvedBuff.kangbao !== undefined) teamFlat.kangbao += Number(resolvedBuff.kangbao);
 						if (resolvedBuff.poji !== undefined) teamFlat.poji += Number(resolvedBuff.poji);
 						if (resolvedBuff.gedang !== undefined) teamFlat.gedang += Number(resolvedBuff.gedang);
-						if (resolvedBuff.fixedDmgUp !== undefined) teamFlat.fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
-						if (resolvedBuff.fixedDmgDown !== undefined) teamFlat.fixedDmgDown += Number(resolvedBuff.fixedDmgDown);
+						if (resolvedBuff.fixedDealUp !== undefined) teamFlat.fixedDealUp += Number(resolvedBuff.fixedDealUp);
+						if (resolvedBuff.fixedTakeDn !== undefined) teamFlat.fixedTakeDn += Number(resolvedBuff.fixedTakeDn);
 						if (resolvedBuff.fixedHeal !== undefined) teamFlat.fixedHeal += Number(resolvedBuff.fixedHeal);
 						if (resolvedBuff.fixedBeHeal !== undefined) teamFlat.fixedBeHeal += Number(resolvedBuff.fixedBeHeal);
 						break;
@@ -1082,8 +1082,8 @@ class Stat {
 						if (resolvedBuff.def !== undefined) teamPercent.def += Number(resolvedBuff.def);
 						if (resolvedBuff.hp !== undefined) teamPercent.hp += Number(resolvedBuff.hp);
 						if (resolvedBuff.spe !== undefined) teamPercent.spe += Number(resolvedBuff.spe);
-						if (resolvedBuff.pctDmgUp !== undefined) teamPercent.pctDmgUp += Number(resolvedBuff.pctDmgUp);
-						if (resolvedBuff.pctDmgDown !== undefined) teamPercent.pctDmgDown += Number(resolvedBuff.pctDmgDown);
+						if (resolvedBuff.pctDealUp !== undefined) teamPercent.pctDealUp += Number(resolvedBuff.pctDealUp);
+						if (resolvedBuff.pctTakeDn !== undefined) teamPercent.pctTakeDn += Number(resolvedBuff.pctTakeDn);
 						if (resolvedBuff.pctHeal !== undefined) teamPercent.pctHeal += Number(resolvedBuff.pctHeal);
 						if (resolvedBuff.pctBeHeal !== undefined) teamPercent.pctBeHeal += Number(resolvedBuff.pctBeHeal);
 						break;
@@ -1108,14 +1108,14 @@ class Stat {
 		const shanbi = finalStats.shanbi || 0;
 		const gedang = finalStats.gedang || 0;
 
-		const pctDmgUp = finalStats.pctDmgUp || 0;
-		const pctDmgDown = finalStats.pctDmgDown || 0;
+		const pctDealUp = finalStats.pctDealUp || 0;
+		const pctTakeDn = finalStats.pctTakeDn || 0;
 
 		const pctHeal = finalStats.pctHeal || 0;
 		const pctBeHeal = finalStats.pctBeHeal || 0;
 
-		const fixedDmgUp = finalStats.fixedDmgUp || 0;
-		const fixedDmgDown = finalStats.fixedDmgDown || 0;
+		const fixedDealUp = finalStats.fixedDealUp || 0;
+		const fixedTakeDn = finalStats.fixedTakeDn || 0;
 
 		const fixedHeal = finalStats.fixedHeal || 0;
 		const fixedBeHeal = finalStats.fixedBeHeal || 0;
@@ -1128,13 +1128,13 @@ class Stat {
 		let defPower = def * defWeight;
 		let hpPower = hp * hpWeight;
 
-		atkPower = atkPower * (1 + pctDmgUp) * (1 + pctHeal);
-		hpPower = hpPower * (1 + pctDmgDown) * (1 + pctBeHeal);
+		atkPower = atkPower * (1 + pctDealUp) * (1 + pctHeal);
+		hpPower = hpPower * (1 + pctTakeDn) * (1 + pctBeHeal);
 
 		let totalPower = atkPower + defPower + hpPower;
 
-		totalPower += fixedDmgUp * 1;
-		totalPower += fixedDmgDown * 1;
+		totalPower += fixedDealUp * 1;
+		totalPower += fixedTakeDn * 1;
 
 		totalPower += fixedHeal * 1;
 		totalPower += fixedBeHeal * 1;

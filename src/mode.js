@@ -340,10 +340,10 @@ function showCharacterDetailPopup() {
 	dmgGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;';
 
 	const dmgAttrs = [
-		{ label: '固定增伤', value: finalStats.fixedDmgUp ?? 0, color: '#ff6666' },
-		{ label: '固定减伤', value: finalStats.fixedDmgDown ?? 0, color: '#66cc66' },
-		{ label: '百分比增伤', value: ((finalStats.pctDmgUp ?? 0) * 100).toFixed(1) + '%', color: '#ff8866' },
-		{ label: '百分比减伤', value: ((finalStats.pctDmgDown ?? 0) * 100).toFixed(1) + '%', color: '#66cc88' },
+		{ label: '固定增伤', value: finalStats.fixedDealUp ?? 0, color: '#ff6666' },
+		{ label: '固定减伤', value: finalStats.fixedTakeDn ?? 0, color: '#66cc66' },
+		{ label: '百分比增伤', value: ((finalStats.pctDealUp ?? 0) * 100).toFixed(1) + '%', color: '#ff8866' },
+		{ label: '百分比减伤', value: ((finalStats.pctTakeDn ?? 0) * 100).toFixed(1) + '%', color: '#66cc88' },
 		{ label: '固定治疗量', value: finalStats.fixedHeal ?? 0, color: '#66ff66' },
 		{ label: '固定被治疗量', value: finalStats.fixedBeHeal ?? 0, color: '#88ff88' },
 		{ label: '百分比治疗量', value: ((finalStats.pctHeal ?? 0) * 100).toFixed(1) + '%', color: '#44dd44' },
@@ -5734,10 +5734,10 @@ function buildPlayerTeamForBattle() {
 			poji: compiled?.poji ?? 0,
 			gedang: compiled?.gedang ?? 0,
 
-			fixedDmgUp: compiled?.fixedDmgUp ?? 0,
-			fixedDmgDown: compiled?.fixedDmgDown ?? 0,
-			pctDmgUp: compiled?.pctDmgUp ?? 0,
-			pctDmgDown: compiled?.pctDmgDown ?? 0,
+			fixedDealUp: compiled?.fixedDealUp ?? 0,
+			fixedTakeDn: compiled?.fixedTakeDn ?? 0,
+			pctDealUp: compiled?.pctDealUp ?? 0,
+			pctTakeDn: compiled?.pctTakeDn ?? 0,
 
 			fixedHeal: compiled?.fixedHeal ?? 0,
 			fixedBeHeal: compiled?.fixedBeHeal ?? 0,
@@ -8735,10 +8735,10 @@ function updateCharacterSP(current) {
 	newcurrent.poji = current.poji ?? rankData.poji ?? 0;
 	newcurrent.gedang = current.gedang ?? rankData.gedang ?? 0;
 
-	newcurrent.fixedDmgUp = current.fixedDmgUp ?? rankData.fixedDmgUp ?? 0;
-	newcurrent.fixedDmgDown = current.fixedDmgDown ?? rankData.fixedDmgDown ?? 0;
-	newcurrent.pctDmgUp = current.pctDmgUp ?? rankData.pctDmgUp ?? 0;
-	newcurrent.pctDmgDown = current.pctDmgDown ?? rankData.pctDmgDown ?? 0;
+	newcurrent.fixedDealUp = current.fixedDealUp ?? rankData.fixedDealUp ?? 0;
+	newcurrent.fixedTakeDn = current.fixedTakeDn ?? rankData.fixedTakeDn ?? 0;
+	newcurrent.pctDealUp = current.pctDealUp ?? rankData.pctDealUp ?? 0;
+	newcurrent.pctTakeDn = current.pctTakeDn ?? rankData.pctTakeDn ?? 0;
 
 	newcurrent.fixedHeal = current.fixedHeal ?? rankData.fixedHeal ?? 0;
 	newcurrent.fixedBeHeal = current.fixedBeHeal ?? rankData.fixedBeHeal ?? 0;
@@ -9142,10 +9142,10 @@ function compileCharacterStats(charObj) {
 		gedang: 0,		  // 格挡
 
 		// 增伤/减伤
-		fixedDmgUp: 0,	 // 固定增伤
-		fixedDmgDown: 0,   // 固定减伤
-		pctDmgUp: 0,	   // 百分比增伤
-		pctDmgDown: 0,	 // 百分比减伤
+		fixedDealUp: 0,	 // 固定增伤
+		fixedTakeDn: 0,   // 固定减伤
+		pctDealUp: 0,	   // 百分比增伤
+		pctTakeDn: 0,	 // 百分比减伤
 
 		// 治疗相关
 		fixedHeal: 0,	  // 固定治疗量

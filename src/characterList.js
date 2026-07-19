@@ -106,7 +106,66 @@ const characterList = {
 		skills: ["pugong_000", "skill_000", "spskill_000"],
 		isFixed: true,
 		template: "balanced", rank: "common", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{
+				type: 'self_stat_flat',
+				gongji: 100,
+				desc: '攻击+100'
+			},
+			{
+				type: 'self_stat_flat',
+				shanbi: 400,
+				desc: '闪避+400'
+			},
+			{
+				type: 'self_stat_flat',
+				baoji: 1000,
+				desc: '暴击+1000'
+			},
+			{
+				type: 'self_stat_flat',
+				gedang: 3000,
+				desc: '格挡+3000'
+			}, 
+			{
+				type: 'self_stat_flat',
+				baoji: 3000,
+				desc: '暴击+3000'
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '获得10%增伤',
+				trigger: 'onDamageCalc',
+				filter: function () { return true; },
+				content: function (target, dmg, mod) {
+					mod.pct += 0.1; // 无条件增伤 10%
+				}
+			}, 
+			{
+				type: 'self_stat_flat',
+				shanbi: 1200,
+				desc: '闪避+1200'
+			},
+			{
+				type: 'self_stat_flat',
+				mingzhong: 1500,
+				desc: '命中+1500'
+			}, 
+			{
+				type: 'self_stat_flat',
+				kangbao: 2000,
+				desc: '抗暴+2000'
+			},
+			{
+				type: 'skill_effect',
+				desc: '获得30%减伤',
+				trigger: 'onDamageTaken',
+				filter: function () { return true; },
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.3; // 无条件减伤 30%
+				}
+			}, 
+		])
 	},
 
 	// ===== 平凡 (Junk) - 编号: 501-503 =====
@@ -114,19 +173,52 @@ const characterList = {
 		name: "雷魔鹰", group: "zhujue", sex: "female",
 		skills: ["pugong_501", "skill_501"],
 		template: "balanced", rank: "junk", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_fengmolang: {
 		name: "风魔狼", group: "zhujue", sex: "female",
 		skills: ["pugong_502", "skill_502"],
 		template: "balanced", rank: "junk", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_yanmohua: {
 		name: "魇魔花", group: "zhujue", sex: "female",
 		skills: ["pugong_503", "skill_503"],
 		template: "balanced", rank: "junk", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 
 	// ===== 传说级 (Legend) - YB_memory (编号: 001-005) =====
@@ -134,31 +226,385 @@ const characterList = {
 		name: "涂山小红", group: "YB_memory", sex: "female",
 		skills: ["pugong_001", "skill_001", "spskill_001"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			
+			{
+				type: 'self_stat_flat',
+				baoji: 1000,
+				desc: '暴击+1000'
+			},
+			{
+				type: 'self_stat_flat',
+				baoji: 1500,
+				baoshang:3000,
+				desc: '暴击+1500，暴伤+3000'
+			},
+			{
+				type: 'skill_effect',
+				desc: '自身血量高于目标时，对其伤害增加30%',
+				trigger: 'onDamageCalc',
+				filter: function (target) {
+					// 自身当前血量百分比高于目标时触发
+					return target && target.alive && (this.hp / this.maxHp) > (target.hp / target.maxHp);
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.3; // 增伤 30%
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '技能（含必杀）后，若本次技能出现过暴击，回复2能量',
+				trigger: 'skillEnd',
+				filter: function (info) {
+					return info && info.hadCrit === true;
+				},
+				content: function (info) {
+					this.energy = Math.min(8, (this.energy || 0) + 2);
+					Game.Battle.log(`${this.name} 技能暴击，回复2能量（当前 ${this.energy}）`);
+				}
+			}, 
+			{
+				type: 'self_stat_flat',
+				poji:1500,
+				desc: '破击+1500'
+			},
+			{
+				type: 'skill_effect',
+				desc: '技能增伤50%（条件增伤）',
+				trigger: 'onDamageCalc',
+				filter: function () { return true; },
+				content: function (target, dmg, mod) {
+					// 仅技能（含必杀，不含普攻）增伤 50%
+					if (mod.attackType === 'skill') mod.pct += 0.5;
+				}
+			},
+			{
+				type: 'self_stat_flat',
+				kangbao: 2000,
+				desc: '抗暴+2000'
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '技能（含必杀）时，为自身回复100%攻击力的生命值',//注：由于这类回复并非治疗系普攻技能直接带来的，因此不会被治疗系数等影响
+				trigger: 'skillEnd',
+				filter: function () { return true; },
+				content: function () {
+					// 直接回血，不走治疗系数/降疗等体系
+					const heal = Math.floor(this.atk);
+					this.hp = Math.min(this.maxHp, (this.hp || 0) + heal);
+					Game.Battle.log(`${this.name} 技能回血 ${heal}（当前 ${this.hp}/${this.maxHp}）`);
+				}
+			},
+			{
+				type: 'skill_effect',
+				desc: '普攻命中后，45%令目标获得受到伤害增加30%，持续1回合',//注：本游戏中的持续一回合，指的时持续至下X轮的施法者所处位格行动后
+				trigger: 'pugongHit',
+				filter: function (target) {
+					return target && target.alive;
+				},
+				content: function (target) {
+					if (Math.random() < 0.45) {
+						shared.addBuff(target, {
+							id: 'xh_vuln',
+							name: '受伤增加',
+							type: 'takeUp',
+							remainRounds: 1,
+							value: 0.3,
+							sourceSide: this.side,
+							sourceId: this.instanceId,
+							ownerSlot: this._currentActionSlotKey || null
+						});
+						Game.Battle.log(`${this.name} 令 ${target.name} 受伤增加30%（持续至施法者位格行动后）`);
+					}
+				}
+			},
+			{
+				type: 'self_stat_percent',
+				hp: 0.5,
+				desc: '血量增加50%',
+			},
+		])
 	},
 	ybsl_059starsFall1: {
 		name: "鞠熒", group: "YB_memory", sex: "female",
 		skills: ["pugong_002", "skill_002", "spskill_002"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			
+			{
+				type: 'self_stat_flat',
+				baoji: 1000,
+				desc: '暴击+1000'
+			},
+			{
+				type: 'self_stat_flat',
+				mingzhong: 10000,
+				desc: '命中+10000'
+			},
+			{
+				type: 'skill_effect',
+				desc: '成功击杀敌人后，获得1个额外行动回合',
+				trigger: 'onKill',
+				filter: function () { return true; },
+				content: function (target) {
+					this.extraTurn = true;
+					Game.Battle.log(`${this.name} 击杀敌人，获得额外回合！`);
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '目标血量低于50%时，对其造成的伤害增加50%',
+				trigger: 'onDamageCalc',
+				filter: function (target) {
+					return target && target.alive && (target.hp / target.maxHp) < 0.5;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.5; // 通过对传入参数赋值传出比值：增伤 50%
+				}
+			}, 
+			{
+				type: 'self_stat_flat',
+				baoji: 750,
+				baoshang:1500,
+				desc: '暴击+750，暴伤+1500'
+			},
+			{
+				type: 'passive_effect', 
+				effectId: 'ignore_def_all_60', 
+				desc: '所有伤害无视对方60%防御力'
+			},
+			{
+				type: 'self_stat_flat',
+				poji: 2000,
+				desc: '破击+2000'
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '技能命中后，令目标降疗100%，持续2回合',
+				trigger: 'skillHit',
+				filter: function () { return true; },
+				content: function (target) {
+					if (target && target.alive) {
+						shared.addBuff(target, {
+							id: 'healReduce_skill_100',
+							name: '降疗100%',
+							type: 'healReduce',
+							value: 1.0,
+							remainRounds: 2,
+							ownerSlot: this._currentActionSlotKey || null
+						});
+					}
+				}
+			},
+			{
+				type: 'skill_effect',
+				desc: '普攻命中后，60%几率令目标降疗80%，持续1回合',
+				trigger: 'pugongHit',
+				filter: function () { return Math.random() < 0.6; },
+				content: function (target) {
+					if (target && target.alive) {
+						shared.addBuff(target, {
+							id: 'healReduce_pugong_80',
+							name: '降疗80%',
+							type: 'healReduce',
+							value: 0.8,
+							remainRounds: 1,
+							ownerSlot: this._currentActionSlotKey || null
+						});
+					}
+				}
+			},
+			{
+				type: 'skill_effect',
+				desc: '战斗中，敌方每次减员，增加自身攻击力10%（基于战斗开始时的攻击力）',
+				trigger: 'dieGlobal',
+				filter: function (deadUnit) {
+					// 仅当阵亡单位属于敌方（与本单位不同阵营）时触发
+					return deadUnit && deadUnit.alive === false && deadUnit.side !== this.side;
+				},
+				content: function (deadUnit) {
+					const add = Math.floor(this.baseAtk * 0.1);
+					this.atk += add;
+					Game.Battle.log(`${this.name} 敌方减员，攻击力提升 ${add}（当前 ${this.atk}）`);
+				}
+			},
+		])
 	},
 	ybsl_047shan: {
 		name: "彡", group: "YB_memory", sex: "female",
 		skills: ["pugong_003", "skill_003", "spskill_003"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{
+				type: 'self_stat_flat',
+				gedang: 1000,
+				desc:'格挡+1000'
+			},
+			{
+				type: 'self_stat_flat',
+				gedang: 3000,
+				desc:'格挡+3000'
+			},
+			{
+				type: 'skill_effect',
+				desc:'格挡反击，造成75%伤害',
+				trigger: 'onBlock',
+				filter: function (source) { return source && source.alive; },
+				content: function (source) {
+				// 格挡反击：复用普攻伤害流程（calculateDamage，attackType='pugong'），
+				// 因此与普攻一样可正常触发【暴击 / 格挡 / 闪避】判定（伤害减半、showDamageNumber 等均生效）。
+				// 与普攻的区别：
+				//   1) trigger='blockCounter' → 不触发攻击者的「普攻命中时机」(pugongHit) 效果；
+				//   2) isSpecial=true → 被击者再次格挡时不会触发其格挡反击，避免无限嵌套。
+				// 被击者的受击效果(onHitSelf)仍正常触发，与普攻一致。
+				// 伤害系数 = 普攻系数 × 格挡反击系数(75%)。
+				const pugongId = this.skills[0] || 'attack1';
+					const pData = window.contentList && window.contentList.pugong && window.contentList.pugong[pugongId];
+					const baseCoeff = (pData && pData.coefficient) ? Number(pData.coefficient) : 1.0;
+					const coeff = baseCoeff * 0.75;
+					Game.Battle.log(`${this.name} 触发格挡反击！`);
+					const dmg = Game.Battle.calculateDamage(this, source, coeff, 0, 'pugong');
+					Game.Battle.applyDamage(source, dmg, this, function () {}, { isSpecial: true, trigger: 'blockCounter' });
+				}
+			},
+			{
+				type: 'skill_effect',
+				desc:'自身血量高于50%时，受到伤害减少50%（条件减伤）',
+				trigger: 'onDamageTaken',
+				filter: function (attacker, currentDmg) {
+					return this.alive && (this.hp / this.maxHp) > 0.5;
+				},
+				content: function (attacker, currentDmg, defMod) {
+					defMod.pct += 0.5;
+				}
+			},
+			{
+				type: 'self_stat_flat',
+				gedang: 1500,
+				desc:'格挡+1500'
+			},
+			{
+				type: 'skill_effect',
+				desc:'被普攻/技能命中时，25%几率减少来源1点能量。',
+				trigger: 'onHitSelf',
+				filter: function (attacker, damage) { return Math.random() < 0.25; },
+				content: function (attacker, damage) {
+					if (attacker && attacker.alive && attacker.energy !== undefined) {
+						attacker.energy = Math.max(0, attacker.energy - 1);
+						Game.Battle.log(`${attacker.name} 被减少1点能量`);
+						Game.Battle.updateUI();
+					}
+				}
+			},
+			{
+				type: 'self_stat_flat',
+				kangbao: 2000,
+				desc:'抗暴+2000'
+			},
+			{
+				type: 'self_stat_percent',
+				hp: 0.5,
+				desc:'血量+50%'
+			},
+			{
+				type: 'skill_effect',
+				desc:'普攻命中时，45%几率减少目标1点能量。',
+				trigger: 'pugongHit',
+				filter: function (target) { return Math.random() < 0.45; },
+				content: function (target) {
+					if (target && target.alive && target.energy !== undefined) {
+						target.energy = Math.max(0, target.energy - 1);
+						Game.Battle.log(`${target.name} 被减少1点能量`);
+						Game.Battle.updateUI();
+					}
+				}
+			},
+			{
+				type: 'skill_effect',
+				desc:'使用技能后，自身获得buff：无法被暴击，必定格挡，持续1回合。',
+				trigger: 'actionEndSelf',
+				filter: function () {
+					return this._lastActionType === 'skill' || this._lastActionType === 'spskill';
+				},
+				content: function () {
+					// 【硬逻辑】免暴 + 必定格挡：用 buff 标记强制，而非数值堆叠。
+					// （暴击/抗暴可无限培养，数值堆叠无法保证 100% 生效）
+					//   no_crit    → calculateDamage 强制 isCrit=false（无法被暴击）
+				//   must_block → calculateDamage 强制 isBlock=true（必定格挡，伤害减半并触发反击）
+				// 注：衰减机制已改为「按位格行动世代」结算——本次行动内施加的 buff 当回合不衰减，
+				// 故 remainRounds:1 即表示「持续至施法者下个位格行动后」（=持续1回合），无需再用 2。
+				Game.Battle.addBuff(this, {
+					id: 'no_crit_buff',
+					name: '免暴',
+					type: 'no_crit',
+					remainRounds: 1,
+					ownerSlot: this._currentActionSlotKey || null
+				});
+				Game.Battle.addBuff(this, {
+					id: 'must_block_buff',
+					name: '必定格挡',
+					type: 'must_block',
+					remainRounds: 1,
+					ownerSlot: this._currentActionSlotKey || null
+				});
+					Game.Battle.log(`${this.name} 获得免暴与必定格挡（持续1回合）`);
+				}
+			}
+		])
 	},
 	ybsl_041mmuqin: {
 		name: "慕琴", group: "YB_memory", sex: "female",
 		skills: ["pugong_004", "skill_004", "spskill_004"],
 		template: "balanced", rank: "legend", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{
+				//闪避+800
+			},
+			{
+				//闪避+1800
+			}, 
+			{
+				//释放技能后，提升后排2000暴击持续2回合
+			}, 
+			{
+				//上场后限三次，自身受到伤害减少75%（条件减伤）
+			}, 
+			{
+				//暴击+1500
+			}, 
+			{
+				//自身血量高于目标时，对其伤害增加50%（条件加伤）
+			}, 
+			{
+				//抗暴+2000
+			}, 
+			{
+				//收到技能伤害减少50%（条件减伤）
+			}, 
+			{
+				//普攻命中时，15%几率令目标麻痹，持续1回合
+			}, 
+			{
+				//释放技能后，令血量最少的三名敌人减少35%的被治疗率，持续2回合
+			}
+		])
 	},
 	ybsl_049waner: {
 		name: "王婉儿", group: "YB_memory", sex: "female",
 		skills: ["pugong_005", "skill_005", "spskill_005"],
 		template: "balanced", rank: "legend", tip: "recover", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 
 	// ===== 传说级 (Legend) - YB_dream (编号: 006-010) =====
@@ -166,31 +612,86 @@ const characterList = {
 		name: "吴爽", group: "YB_dream", sex: "female",
 		skills: ["pugong_006", "skill_006", "spskill_006"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_076zhujun: {
 		name: "朱焌", group: "YB_dream", sex: "female",
 		skills: ["pugong_007", "skill_007", "spskill_007"],
 		template: "defense", rank: "legend", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_107tushanshuili: {
 		name: "涂山水璃", group: "YB_dream", sex: "female",
 		skills: ["pugong_008", "skill_008", "spskill_008"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_008wuyuxin: {
 		name: "吴雨欣", group: "YB_dream", sex: "female",
 		skills: ["pugong_009", "skill_009", "spskill_009"],
 		template: "balanced", rank: "legend", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_002chenailin: {
 		name: "陈爱琳", group: "YB_dream", sex: "female",
 		skills: ["pugong_010", "skill_010", "spskill_010"],
 		template: "balanced", rank: "legend", tip: "recover", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 
 	// ===== 史诗级 (Epic) - YB_memory (编号: 101-110) =====
@@ -198,61 +699,171 @@ const characterList = {
 		name: "王海茹", group: "YB_memory", sex: "female",
 		skills: ["pugong_101", "skill_101"],
 		template: "balanced", rank: "epic", tip: "recover", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_016manchengqi: {
 		name: "满城柒", group: "YB_memory", sex: "female",
 		skills: ["pugong_102", "skill_102"],
 		template: "damger", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_018zhangqing: {
 		name: "张晴", group: "YB_memory", sex: "female",
 		skills: ["pugong_103", "skill_103"],
 		template: "balanced", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_059starsFall3: {
 		name: "周靈", group: "YB_memory", sex: "female",
 		skills: ["pugong_104", "skill_104"],
 		template: "balanced", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_059starsFall4: {
 		name: "李曉", group: "YB_memory", sex: "female",
 		skills: ["pugong_105", "skill_105"],
 		template: "damger", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_068qingyue: {
 		name: "清月姑娘", group: "YB_memory", sex: "female",
 		skills: ["pugong_106", "skill_106"],
 		template: "balanced", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_070lvyanqiu: {
 		name: "吕艳秋", group: "YB_memory", sex: "female",
 		skills: ["pugong_107", "skill_107"],
 		template: "damger", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_033xiaohui: {
 		name: "小慧", group: "YB_memory", sex: "female",
 		skills: ["pugong_108", "skill_108"],
 		template: "damger", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_038bianqiuwen: {
 		name: "卞秋雯", group: "YB_memory", sex: "female",
 		skills: ["pugong_109", "skill_109"],
 		template: "defense", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	db_ybsl_067snake: {
 		name: "蛇妃", group: "YB_memory", sex: "female",
 		skills: ["pugong_110", "skill_110"],
 		template: "damger", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 
 	// ===== 史诗级 (Epic) - YB_dream (编号: 111-120) =====
@@ -260,61 +871,171 @@ const characterList = {
 		name: "香紫姑娘", group: "YB_dream", sex: "female",
 		skills: ["pugong_111", "skill_111"],
 		template: "balanced", rank: "epic", tip: "recover", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_001sunlisong: {
 		name: "孙丽松", group: "YB_dream", sex: "female",
 		skills: ["pugong_112", "skill_112"],
 		template: "damger", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_006wanghanzhen: {
 		name: "王汉桢", group: "YB_dream", sex: "female",
 		skills: ["pugong_113", "skill_113"],
 		template: "balanced", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_009liyushan: {
 		name: "李玉珊", group: "YB_dream", sex: "female",
 		skills: ["pugong_114", "skill_114"],
 		template: "defense", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_010zhouyue: {
 		name: "周玥", group: "YB_dream", sex: "female",
 		skills: ["pugong_115", "skill_115"],
 		template: "balanced", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_013yinji: {
 		name: "尹超跃", group: "YB_dream", sex: "female",
 		skills: ["pugong_116", "skill_116"],
 		template: "damger", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_018huanqing: {
 		name: "幻晴", group: "YB_dream", sex: "female",
 		skills: ["pugong_117", "skill_117"],
 		template: "balanced", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_036bright: {
 		name: "熙", group: "YB_dream", sex: "female",
 		skills: ["pugong_118", "skill_118"],
 		template: "damger", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_092handan: {
 		name: "玉蝶心", group: "YB_dream", sex: "female",
 		skills: ["pugong_119", "skill_119"],
 		template: "defense", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_083xiaozhu: {
 		name: "小筑", group: "YB_dream", sex: "female",
 		skills: ["pugong_120", "skill_120"],
 		template: "damger", rank: "epic", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 
 	// ===== 伪史诗 (Epicfake) - YB_memory (编号: 201-209) =====
@@ -322,55 +1043,154 @@ const characterList = {
 		name: "史庆宇", group: "YB_memory", sex: "female",
 		skills: ["pugong_201", "skill_201"],
 		template: "balanced", rank: "epicfake", tip: "recover", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_020jiayutong: {
 		name: "贾雨桐", group: "YB_memory", sex: "female",
 		skills: ["pugong_202", "skill_202"],
 		template: "defense", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_025wanghe: {
 		name: "王贺", group: "YB_memory", sex: "female",
 		skills: ["pugong_203", "skill_203"],
 		template: "defense", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_042pingzi: {
 		name: "蘋姉", group: "YB_memory", sex: "female",
 		skills: ["pugong_204", "skill_204"],
 		template: "damger", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_043fangjiayu: {
 		name: "房佳谕", group: "YB_memory", sex: "female",
 		skills: ["pugong_205", "skill_205"],
 		template: "balanced", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_046jiangxuewu: {
 		name: "江雪舞", group: "YB_memory", sex: "female",
 		skills: ["pugong_206", "skill_206"],
 		template: "balanced", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_059starsFall2: {
 		name: "宋橤", group: "YB_memory", sex: "female",
 		skills: ["pugong_207", "skill_207"],
 		template: "defense", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_060liutianhang: {
 		name: "刘天杭", group: "YB_memory", sex: "female",
 		skills: ["pugong_208", "skill_208"],
 		template: "balanced", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_079xiaoxin: {
 		name: "小新", group: "YB_memory", sex: "female",
 		skills: ["pugong_209", "skill_209"],
 		template: "balanced", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 
 	// ===== 伪史诗 (Epicfake) - YB_dream (编号: 210-218) =====
@@ -378,55 +1198,154 @@ const characterList = {
 		name: "闫爽", group: "YB_dream", sex: "female",
 		skills: ["pugong_210", "skill_210"],
 		template: "balanced", rank: "epicfake", tip: "recover", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_004zhangyujie: {
 		name: "张玉洁", group: "YB_dream", sex: "female",
 		skills: ["pugong_211", "skill_211"],
 		template: "damger", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_005wangruobing: {
 		name: "王若冰", group: "YB_dream", sex: "female",
 		skills: ["pugong_212", "skill_212"],
 		template: "balanced", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_007wugege: {
 		name: "吴格格", group: "YB_dream", sex: "female",
 		skills: ["pugong_213", "skill_213"],
 		template: "balanced", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_011gaoyuhang: {
 		name: "高宇航", group: "YB_dream", sex: "female",
 		skills: ["pugong_214", "skill_214"],
 		template: "balanced", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_047zhangmi: {
 		name: "张汨", group: "YB_dream", sex: "female",
 		skills: ["pugong_215", "skill_215"],
 		template: "damger", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_026can: {
 		name: "蚕", group: "YB_dream", sex: "female",
 		skills: ["pugong_216", "skill_216"],
 		template: "defense", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_027rain: {
 		name: "雨", group: "YB_dream", sex: "female",
 		skills: ["pugong_217", "skill_217"],
 		template: "defense", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_029dawn: {
 		name: "黎", group: "YB_dream", sex: "female",
 		skills: ["pugong_218", "skill_218"],
 		template: "balanced", rank: "epicfake", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 
 	// ===== 稀有 (Rare) - YB_memory (编号: 301-306) =====
@@ -434,37 +1353,103 @@ const characterList = {
 		name: "盛妍", group: "YB_memory", sex: "female",
 		skills: ["pugong_301", "skill_301"],
 		template: "defense", rank: "rare", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_045gaocong: {
 		name: "高聪", group: "YB_memory", sex: "female",
 		skills: ["pugong_302", "skill_302"],
 		template: "balanced", rank: "rare", tip: "recover", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_024yuetong: {
 		name: "岳瞳", group: "YB_memory", sex: "female",
 		skills: ["pugong_303", "skill_303"],
 		template: "balanced", rank: "rare", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_053qiuer: {
 		name: "秋儿", group: "YB_memory", sex: "female",
 		skills: ["pugong_304", "skill_304"],
 		template: "defense", rank: "rare", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_054yueer: {
 		name: "悦儿", group: "YB_memory", sex: "female",
 		skills: ["pugong_305", "skill_305"],
 		template: "balanced", rank: "rare", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_055zhengyan: {
 		name: "郑琰", group: "YB_memory", sex: "female",
 		skills: ["pugong_306", "skill_306"],
 		template: "balanced", rank: "rare", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 
 	// ===== 稀有 (Rare) - YB_dream (编号: 307-312) =====
@@ -472,37 +1457,103 @@ const characterList = {
 		name: "郑佳怡", group: "YB_dream", sex: "female",
 		skills: ["pugong_307", "skill_307"],
 		template: "damger", rank: "rare", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_037diamondqueen: {
 		name: "方块公主", group: "YB_dream", sex: "female",
 		skills: ["pugong_308", "skill_308"],
 		template: "defense", rank: "rare", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_044huruihang: {
 		name: "胡瑞航", group: "YB_dream", sex: "female",
 		skills: ["pugong_309", "skill_309"],
 		template: "balanced", rank: "rare", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_121tujing: {
 		name: "涂静", group: "YB_dream", sex: "female",
 		skills: ["pugong_310", "skill_310"],
 		template: "balanced", rank: "rare", tip: "recover", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_122wangbingyu: {
 		name: "王冰雨", group: "YB_dream", sex: "female",
 		skills: ["pugong_311", "skill_311"],
 		template: "balanced", rank: "rare", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 	ybsl_123xuelang: {
 		name: "雪琅", group: "YB_dream", sex: "female",
 		skills: ["pugong_312", "skill_312"],
 		template: "defense", rank: "rare", tip: "damage", ties: [],
-		tupoList: generateTupoList_new([null, null, null, null, null, null, null, null, null, null])
+		tupoList: generateTupoList_new([
+			{},
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		])
 	},
 };
 const characterTemplate = {

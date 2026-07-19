@@ -13,42 +13,42 @@ import { Game } from './core.js';
 const BREAKTHROUGH_BUFF_LIBRARY = {
 	'dmg_up_10': { 
 		type: 'self_stat_percent',
-		pctDmgUp: 0.1,	// 增伤10%
+		pctDealUp: 0.1,	// 增伤10%
 		desc: '获得10%增伤' 
 	},
 	'dmg_up_20': { 
 		type: 'self_stat_percent',
-		pctDmgUp: 0.2,	
+		pctDealUp: 0.2,	
 		desc: '获得20%增伤' 
 	},
 	'dmg_up_30': { 
 		type: 'self_stat_percent',
-		pctDmgUp: 0.3,
+		pctDealUp: 0.3,
 		desc: '获得30%增伤' 
 	},
 	'dmg_up_50': { 
 		type: 'self_stat_percent',
-		pctDmgUp: 0.5,
+		pctDealUp: 0.5,
 		desc: '获得50%增伤' 
 	},
 	'dmg_reduce_10': { 
 		type: 'self_stat_percent',
-		pctDmgDown: 0.1,
+		pctTakeDn: 0.1,
 		desc: '获得10%减伤' 
 	},
 	'dmg_reduce_20': { 
 		type: 'self_stat_percent',
-		pctDmgDown: 0.2,
+		pctTakeDn: 0.2,
 		desc: '获得20%减伤'
 	},
 	'dmg_reduce_30': { 
 		type: 'self_stat_percent',
-		pctDmgDown: 0.3,
+		pctTakeDn: 0.3,
 		desc: '获得30%减伤' 
 	},
 	'dmg_reduce_50': { 
 		type: 'self_stat_percent',
-		pctDmgDown: 0.5,
+		pctTakeDn: 0.5,
 		desc: '获得50%减伤' 
 	},
 
@@ -1261,8 +1261,8 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 	// newtupo11:{},//每名角色各异
 	newtupo12:{
 		type: 'team_stat_flat',
-		fixedDmgUp: 3000,
-		fixedDmgDown: 3000,
+		fixedDealUp: 3000,
+		fixedTakeDn: 3000,
 		hp: 8000,
 		desc: '全队获得固定增伤+3000，固定减伤+3000，血量+8000'
 	},
