@@ -1158,7 +1158,7 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
         let teamBuffs = [];
         let teamPercentBuffs = [];
 
-        for (let i = 0; i <= tupolevel; i++) {
+        for (let i = 0; i < tupolevel; i++) {
             if (!normalizedTupoList[i]) continue;
             const buff = normalizedTupoList[i];
             const type = buff.type;

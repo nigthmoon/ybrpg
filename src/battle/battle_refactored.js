@@ -115,6 +115,33 @@ Battle.log = function addBattleLog(msg) {
 }
 
 /**
+ * 同步单位的状态图标层：每个状态对应一个独立 DOM 节点，避免图标互相覆盖
+ * （原先所有状态共用 ::after 伪元素，多状态时后者会覆盖前者，例如眩晕被封印的锁头覆盖）
+ */
+function syncStatusIcons(slot, unit) {
+	const layer = slot.querySelector('.status-icon-layer');
+	if (!layer) return;
+	const defs = [
+		{ cls: 'status-stunned', on: !!unit.stunned, emoji: '💫' },
+		{ cls: 'status-sealed', on: !!(unit.sealed || unit.permanentlySealed), emoji: '🔒' },
+		{ cls: 'status-paralyzed', on: !!unit.paralyzed, emoji: '⚡' },
+		{ cls: 'status-heal-blocked', on: !!unit.healBlocked, emoji: '🚫' },
+		{ cls: 'status-poisoned', on: unit.poisonDamage > 0, emoji: '🤢' },
+	];
+	defs.forEach(d => {
+		let el = layer.querySelector('.' + d.cls);
+		if (d.on && !el) {
+			el = document.createElement('span');
+			el.className = 'status-icon ' + d.cls;
+			el.textContent = d.emoji;
+			layer.appendChild(el);
+		} else if (!d.on && el) {
+			el.remove();
+		}
+	});
+}
+
+/**
  * 
  * @returns 战斗画面更新
  */
@@ -131,6 +158,8 @@ Battle.updateUI = function updateBattleUI() {
 			slot.classList.add('dead');
 			// 死人不应显示任何 buff 视觉效果
 			slot.classList.remove('sealed', 'stunned', 'paralyzed', 'heal-blocked-effect', 'poisoned');
+			const _sl = slot.querySelector('.status-icon-layer');
+			if (_sl) _sl.innerHTML = '';
 		} else {
 			slot.classList.remove('dead');
 
@@ -148,6 +177,8 @@ Battle.updateUI = function updateBattleUI() {
 
 			if (unit.poisonDamage > 0) slot.classList.add('poisoned');
 			else slot.classList.remove('poisoned');
+
+			syncStatusIcons(slot, unit);
 		}
 
 		if (bs.currentTurnSide === unit.side && bs.currentTurnIndex === unit.slotIndex && unit.alive) {
@@ -259,6 +290,49 @@ Battle.getAliveUnits = function getAliveUnits(side) {
 	return units.filter(u => u && u.alive);
 }
 
+// ===== 【调试】暴露当前战斗状态，供控制台查看阵容 =====
+Battle.getBattleState = function getBattleState() {
+	return battleState;
+}
+
+// ===== 【调试】在控制台排版输出双方阵容关键数据 =====
+Battle.dumpLineup = function dumpLineup() {
+	const bs = battleState;
+	if (!bs) {
+		console.log('当前没有进行中的战斗（battleState 为空）。');
+		return;
+	}
+	const fmt = (u) => {
+		if (!u || !u.name) return '　(空)';
+		const tags = [];
+		if (!u.alive) tags.push('阵亡');
+		if (u.sealed) tags.push('封印');
+		if (u.stunned) tags.push('眩晕');
+		if (u.paralyzed) tags.push('麻痹');
+		const skillId = (u.skills && u.skills[1]) || '-';
+		const sp = u.skills && u.skills[1] && String(u.skills[1]).startsWith('spskill_') ? '必杀' : '技能';
+		return [
+			`#${u.slotIndex} ${u.name}`,
+			`[${u.rank}]`,
+			`HP ${u.hp}/${u.maxHp}`,
+			`ATK ${u.atk}`,
+			`DEF ${u.def}`,
+			`SPD ${u.spe}`,
+			`能量 ${u.energy}`,
+			`突破${u.tupolevel || 0}`,
+			`${sp}:${skillId}`,
+			`暴击${u.baoji} 抗暴${u.kangbao} 命中${u.mingzhong} 闪避${u.shanbi} 格挡${u.gedang} 破击${u.poji}`,
+			`增伤${u.pctDealUp || 0} 减伤${u.pctTakeDn || 0} 治疗${u.pctHeal || 0}`,
+			tags.length ? `状态:${tags.join(',')}` : ''
+		].filter(Boolean).join(' | ');
+	};
+	console.log('===== 我方阵容 =====');
+	(bs.playerUnits || []).forEach(u => console.log(fmt(u)));
+	console.log('===== 敌方阵容 =====');
+	(bs.enemyUnits || []).forEach(u => console.log(fmt(u)));
+	console.log('===== 当前回合 =====', `第${bs.round}轮`, `先手:${bs.firstSide}`, `阶段:${bs.phase || '-'}`);
+}
+
 /**
  * 
  * @param {string} side 为player或不为player
@@ -338,7 +412,9 @@ function getIgnoreDefPercent(unit, attackType) {
 }
 
 Battle.calculateDamage = function calculateDamage(attacker, defender, coefficient, extraEnergy = 0, attackType = 'skill') {
-	const atk = Number(attacker.atk) || 0;
+	let atk = Number(attacker.atk) || 0;
+	// ===== 【新增】攻击力百分比 buff（atkPctBonus，来自 atk 类 buff）=====
+	atk = Math.floor(atk * (1 + (Number(attacker.atkPctBonus) || 0)));
 	const def = Number(defender.def) || 0;
 	// 无视防御：根据攻击类型读取攻击方 buff 中的 ignore_def_* id，按比例削减防御
 	const ignoreDefPercent = getIgnoreDefPercent(attacker, attackType);
@@ -634,7 +710,7 @@ Battle.applyDamage = function applyDamage(target, dmgResult, attacker, callback,
  * @param {*} callback 治疗后续事件
  * @returns 结算治疗事件
  */
-Battle.applyHeal = function applyHeal(target, healAmount, callback) {
+Battle.applyHeal = function applyHeal(target, healAmount, callback, source) {
 	if (!target || !target.alive) {
 		if (callback) callback();
 		return;
@@ -665,6 +741,10 @@ Battle.applyHeal = function applyHeal(target, healAmount, callback) {
 	finalHeal += (target.fixedBeHeal ?? 0);
 	// 百分比被治疗量增加
 	finalHeal = Math.floor(finalHeal * (1 + (target.pctBeHeal ?? 0)));
+	// ===== 【新增】治疗者自身的治疗效果加成（pctHeal，来自 self_stat_percent 编译）=====
+	if (source && source.pctHeal) {
+		finalHeal = Math.floor(finalHeal * (1 + source.pctHeal));
+	}
 
 	const maxHp = Number(target.maxHp) || 1;
 	const currentHp = Number(target.hp) || 0;
@@ -720,16 +800,21 @@ Battle.executePugong = function executePugong(actor, targets, callback) {
 		if (index >= targets.length) {
 			// ===== 普攻指令结算完毕 =====
 			// 触发 AFTER_PUGONG_EXEC 事件，传入命中次数和闪避次数
-			BattleEvents.emit(BattleEvents.AFTER_PUGONG_EXEC, {
-				actor: actor,
-				targets: targets,
-				skillData: sData,
-				hitCount: hitCount,
-				missCount: missCount,
-				totalTargets: totalTargets
-			});
+		BattleEvents.emit(BattleEvents.AFTER_PUGONG_EXEC, {
+			actor: actor,
+			targets: targets,
+			skillData: sData,
+			hitCount: hitCount,
+			missCount: missCount,
+			totalTargets: totalTargets
+		});
 
-			// 普攻命中至少1个目标才回复能量
+		// ===== 【新增】普攻结束时机：供「每次普攻后…」类效果（如吴爽突破）=====
+		if (actor && actor.alive) {
+			triggerSelfEffect(actor, 'pugongEnd', { hitCount, missCount });
+		}
+
+		// 普攻命中至少1个目标才回复能量
 			if (hitCount > 0) {
 				actor.energy = Math.min(8, actor.energy + 1);
 				addBattleLog(`${actor.name} 普攻命中，恢复 1 能量`);
@@ -757,7 +842,7 @@ Battle.executePugong = function executePugong(actor, targets, callback) {
 			applyHeal(target, healAmt, () => {
 				hitCount++;  // 治疗也算命中
 				onHitComplete();
-			});
+			}, actor);
 		} else {
 			const dmgResult = calculateDamage(actor, target, coeff, 0, 'pugong');
 
@@ -872,6 +957,13 @@ Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, 
 			applyHeal(target, healAmt, () => {
 				hitCount++;  // 治疗也算命中
 				onHitComplete();
+			}, actor);
+			// ===== 【新增】治疗也触发「命中类」突破/技能效果（如「增加目标能量」「提升目标减伤」）=====
+			const healHitEffects = getEffectsByTrigger(actor, trigger);
+			healHitEffects.forEach(effect => {
+				if (effect.filter && effect.filter.call(actor, target)) {
+					effect.content.call(actor, target);
+				}
 			});
 		} else {
 			const dmgResult = calculateDamage(actor, target, coeff, extraEnergy, 'skill');
@@ -1987,25 +2079,37 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 			const trigger = triggerMap[skillType];
 			if (!trigger) return;
 
-			sData.contents.forEach(content => {
-				if (content.content && typeof content.content === 'function') {
-					effectSkills.push({
-						trigger: trigger,
-						filter: content.filter || function () { return true; },
-						content: content.content,
-						desc: content.desc || ''
-					});
-				}
-			});
+		sData.contents.forEach(content => {
+			if (content.content && typeof content.content === 'function') {
+				effectSkills.push({
+					// 允许 content 通过 trigger 字段覆盖默认触发时机
+					// （如「释放普攻」需挂在 skillEnd 而非逐目标命中的 skillHit）
+					trigger: content.trigger || trigger,
+					filter: content.filter || function () { return true; },
+					content: content.content,
+					desc: content.desc || ''
+				});
+			}
+		});
 		}
 
-		// 提取普攻、技能、必杀的效果
+		// ===== 【修复】必杀解锁状态决定载入哪个技能特效 =====
+		// 必须在此处（而非下方的 baseSkills 替换逻辑）先确定，否则 skill 与 spskill 的 contents 会被一起载入
+		const _spSkillId = (Array.isArray(data.skills) && data.skills[2]) || null;
+		const _normalSkillId = (Array.isArray(data.skills) && data.skills[1]) || null;
+		const _isSpskillUnlocked = data.openSpskill === true;
+
+		// 提取普攻特效（始终生效）
 		extractSkillContentsToSkills('pugong', 0);
-		extractSkillContentsToSkills('skill', 1);
-		extractSkillContentsToSkills('spskill', 2);
+		// 仅载入当前激活技能的特效：必杀已解锁 → 只载入必杀；否则 → 只载入普通技能
+		if (_isSpskillUnlocked && _spSkillId) {
+			extractSkillContentsToSkills('spskill', 2);
+		} else if (_normalSkillId) {
+			extractSkillContentsToSkills('skill', 1);
+		}
 
 		// 编译非属性类的突破效果
-		for (let i = 0; i <= tupolevel; i++) {
+		for (let i = 0; i < tupolevel; i++) {
 			if (!normalizedTupoList[i]) continue;
 			const buff = normalizedTupoList[i];
 			const type = buff.type;
@@ -2635,6 +2739,12 @@ Battle.createUnitSlot = function createUnitSlot(unit, side, slotIndex) {
 	}
 	infoOverlay.appendChild(energyBar);
 	slot.appendChild(infoOverlay);
+
+	// 状态图标层（眩晕/封印/麻痹/中毒/禁疗 等独立图标，互不覆盖）
+	const statusLayer = document.createElement('div');
+	statusLayer.className = 'status-icon-layer';
+	slot.appendChild(statusLayer);
+
 	return slot;
 }
 
@@ -2985,6 +3095,16 @@ Battle.applyBuffEffect = function applyBuffEffect(target, buffConfig) {
 			target.gedang = (target.gedang || 0) + (buffConfig.value || 0);
 			addBattleLog(`${target.name} 格挡率提升 ${buffConfig.value}`);
 			break;
+		// ===== 【新增】攻击力百分比 buff（atk：value 为带符号分数，如 0.3 增 / -0.3 减）=====
+		case 'atk':
+			target.atkPctBonus = (target.atkPctBonus || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 攻击力${buffConfig.value >= 0 ? '提升' : '降低'} ${Math.round(Math.abs(buffConfig.value) * 100)}%`);
+			break;
+		// ===== 【新增】治疗效果百分比 buff（healBoost：value 为带符号分数）=====
+		case 'healBoost':
+			target.healBoost = (target.healBoost || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 治疗效果${buffConfig.value >= 0 ? '提升' : '降低'} ${Math.round(Math.abs(buffConfig.value) * 100)}%`);
+			break;
 		// 可以扩展更多 buff 类型
 	}
 	updateBattleUI();
@@ -3077,6 +3197,12 @@ Battle.removeBuffEffect = function removeBuffEffect(target, buff) {
 			break;
 		case 'gedang':
 			target.gedang = Math.max(0, (target.gedang || 0) - (buff.value || 0));
+			break;
+		case 'atk':
+			target.atkPctBonus = (target.atkPctBonus || 0) - (buff.value || 0);
+			break;
+		case 'healBoost':
+			target.healBoost = (target.healBoost || 0) - (buff.value || 0);
 			break;
 	}
 	updateBattleUI();

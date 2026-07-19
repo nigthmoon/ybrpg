@@ -559,10 +559,13 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 			else {
 				if (typeof buff == 'string') {
 					if (BREAKTHROUGH_BUFF_LIBRARY[buff]) buff = BREAKTHROUGH_BUFF_LIBRARY[buff];
+				} else if (typeof buff !== 'object') {
+					// 仅当既非字符串也非对象（如数字/布尔等异常类型）时才用占位对象
+					buff = {
+						desc: '暂无详细描述'
+					}
 				}
-				else buff = {
-					desc: '暂无详细描述'
-				}
+				// 对象型能力（self_stat_flat / skill_effect / passive_effect 等）保持原样，直接读取其 desc
 				if (buff.desc) {
 					descDiv.textContent = buff.desc;
 				} else if (buff.type) {
@@ -1303,10 +1306,13 @@ function showBreakthroughPreviewPopupByCharId(charId) {
 			else {
 				if (typeof buff == 'string') {
 					if (BREAKTHROUGH_BUFF_LIBRARY[buff]) buff = BREAKTHROUGH_BUFF_LIBRARY[buff];
+				} else if (typeof buff !== 'object') {
+					// 仅当既非字符串也非对象（如数字/布尔等异常类型）时才用占位对象
+					buff = {
+						desc: '暂无详细描述'
+					}
 				}
-				else buff = {
-					desc: '暂无详细描述'
-				}
+				// 对象型能力（self_stat_flat / skill_effect / passive_effect 等）保持原样，直接读取其 desc
 				if (buff.desc) {
 					descDiv.textContent = buff.desc;
 				} else if (buff.type) {
@@ -1570,10 +1576,13 @@ function renderBreakthroughContent() {
 		else {
 			if (typeof buff == 'string') {
 				if (BREAKTHROUGH_BUFF_LIBRARY[buff]) buff = BREAKTHROUGH_BUFF_LIBRARY[buff];
+			} else if (typeof buff !== 'object') {
+				// 仅当既非字符串也非对象（如数字/布尔等异常类型）时才用占位对象
+				buff = {
+					desc: '暂无详细描述'
+				}
 			}
-			else buff = {
-				desc: '暂无详细描述'
-			}
+			// 对象型能力（self_stat_flat / skill_effect / passive_effect 等）保持原样，直接读取其 desc
 			if (buff.desc) {
 				descDiv.textContent = buff.desc;
 			} else if (buff.type) {
@@ -6462,7 +6471,7 @@ function showItemDetail(item) {
 		// 宝物详情
 		if(item.desc){
 			if(typeof item.desc === 'function'){
-				str=item.desc(item.level);
+				str=item.desc(item.level || 1);
 			}
 			else str=item.desc;
 		}

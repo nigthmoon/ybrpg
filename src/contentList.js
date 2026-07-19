@@ -1205,6 +1205,8 @@ const contentList = {
 		},
 	},
 	skill: {
+		//部分技能带有额外效果，默认省略前提：释放技能或技能命中等，
+		//根据实际效果或类似效果决定
 		skill_000: {
 			name: "技能攻击",
 			intro: "对三名敌人造成伤害，伤害系数为165%",
@@ -1216,44 +1218,91 @@ const contentList = {
 		},
 		skill_001: {
 			name: "技能攻击",
-			intro: "对一行敌人造成伤害，伤害系数为190%",
-			ai_intro: "对敌方前排敌人造成伤害，伤害系数为190%",
+			intro: "对一行敌人造成伤害，伤害系数为190%，45%几率释放普攻",
+			ai_intro: "对敌方前排敌人造成伤害，伤害系数为190%，45%几率释放普攻",
 			target: ["row", "first"],
 			coefficient: 1.9,
 			isRecover: false,
 			emoji: '❤️',
+			contents: [
+				{
+					trigger: 'skillEnd',
+					filter: function () { return Math.random() < 0.45; },
+					desc: '45%几率释放普攻',
+					content: function (info) {
+						const pId = this.skills[0];
+						const pData = (contentList && contentList.pugong && contentList.pugong[pId]) || null;
+						if (!pData) return;
+						const enemySide = this.side === 'player' ? 'enemy' : 'player';
+						const targets = Game.Battle.resolveSkillTargets(pData, this, enemySide);
+						if (targets && targets.length) {
+							Game.Battle.executePugong(this, targets, function () {});
+						}
+					}
+				}
+			],
 		},
 		skill_002: {
 			name: "技能攻击",
-			intro: "对单体造成伤害，伤害系数为305%",
-			ai_intro: "对血量最少的敌方造成伤害，伤害系数为305%",
+			intro: "对单体造成伤害，伤害系数为305%，60%几率提升30%攻击2回合",//（以战斗开始时的攻击力计算）
+			ai_intro: "对血量最少的敌方造成伤害，伤害系数为305%，60%几率提升30%攻击2回合",
 			target: ["one", "lowest"],
 			coefficient: 3.05,
 			isRecover: false,
 			emoji: '☄️',
+			contents: [
+				{
+					trigger: 'skillEnd',
+					filter: function () { return Math.random() < 0.6; },
+					desc: '60%几率提升30%攻击2回合',
+					content: function (info) {
+						Game.Battle.addBuff(this, { id: 'atk_up_self_30', name: '攻击提升', type: 'atk', value: 0.3, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		skill_003: {
 			name: "技能攻击",
-			intro: "对一行敌人造成伤害，伤害系数为190%",
-			ai_intro: "对敌方前排敌人造成伤害，伤害系数为190%",
+			intro: "对一行敌人造成伤害，伤害系数为190%，75%几率封印目标1回合",
+			ai_intro: "对敌方前排敌人造成伤害，伤害系数为190%，75%几率封印目标1回合",
 			target: ["row", "first"],
 			coefficient: 1.9,
 			isRecover: false,
 			emoji: '🌪️',
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.75; },
+					desc: '75%几率封印目标1回合',
+					content: function (target) {
+						Game.Battle.addBuff(target, { id: 'seal_target', name: '封印', type: 'seal', remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		skill_004: {
 			name: "技能攻击",
-			intro: "对一行敌人造成伤害，伤害系数为170%",
-			ai_intro: "对敌方后排敌人造成伤害，伤害系数为170%",
+			intro: "对一行敌人造成伤害，伤害系数为170%，75%几率封印目标1回合",
+			ai_intro: "对敌方后排敌人造成伤害，伤害系数为170%，75%几率封印目标1回合",
 			target: ["row", "last"],
 			coefficient: 1.7,
 			isRecover: false,
 			emoji: '🌙',
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.75; },
+					desc: '75%几率封印目标1回合',
+					content: function (target) {
+						Game.Battle.addBuff(target, { id: 'seal_target', name: '封印', type: 'seal', remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		skill_005: {
 			name: "技能回复",
-			intro: "治疗全体友方，系数为125%",
-			ai_intro: "治疗全体友方，系数为125%",
+			//不死效果解释：限一次的亡语效果，回复生命至1点。
+			//其实原游戏的表现为受到致命伤害，但负值的血量自动变成0，然后飘出一个1的回复量
+			intro: "治疗全体友方，系数为125%，40%几率为目标施加不死效果1回合",
+			ai_intro: "治疗全体友方，系数为125%，40%几率为目标施加不死效果1回合",
 			target: ["all", "all"],
 			coefficient: 1.25,
 			isRecover: true,
@@ -1261,48 +1310,97 @@ const contentList = {
 		},
 		skill_006: {
 			name: "技能攻击",
-			intro: "对一列敌人造成伤害，伤害系数为225%",
-			ai_intro: "对敌方默认前排所在的一列敌人造成伤害，伤害系数为225%",
+			intro: "对一列敌人造成伤害，伤害系数为225%，100%几率提升自身4000暴击2回合",
+			ai_intro: "对敌方默认前排所在的一列敌人造成伤害，伤害系数为225%，100%几率提升自身4000暴击2回合",
 			target: ["column", "first"],
 			coefficient: 2.25,
 			isRecover: false,
 			emoji: '🍁',
+			contents: [
+				{
+					trigger: 'skillEnd',
+					filter: function () { return true; },
+					desc: '100%几率提升自身4000暴击2回合',
+					content: function (info) {
+						Game.Battle.addBuff(this, { id: 'baoji_self_4000', name: '暴击提升', type: 'baoji', value: 4000, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		skill_007: {
 			name: "技能攻击",
-			intro: "对一行敌人造成伤害，伤害系数为190%",
-			ai_intro: "对敌方前排敌人造成伤害，伤害系数为190%",
+			intro: "对一行敌人造成伤害，伤害系数为190%，100%几率提升自身4000格挡2回合",
+			ai_intro: "对敌方前排敌人造成伤害，伤害系数为190%，100%几率提升自身4000格挡2回合",
 			target: ["row", "first"],
 			coefficient: 1.9,
 			isRecover: false,
 			emoji: '💧',
+			contents: [
+				{
+					trigger: 'skillEnd',
+					filter: function () { return true; },
+					desc: '100%几率提升自身4000格挡2回合',
+					content: function (info) {
+						Game.Battle.addBuff(this, { id: 'gedang_self_4000', name: '格挡提升', type: 'gedang', value: 4000, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		skill_008: {
 			name: "技能攻击",
-			intro: "对一行敌人造成伤害，伤害系数为190%",
-			ai_intro: "对敌方前排敌人造成伤害，伤害系数为190%",
+			intro: "对一行敌人造成伤害，伤害系数为190%，40%几率眩晕目标1回合",
+			ai_intro: "对敌方前排敌人造成伤害，伤害系数为190%，40%几率眩晕目标1回合",
 			target: ["row", "first"],
 			coefficient: 1.9,
 			isRecover: false,
 			emoji: '❤️',
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.4; },
+					desc: '40%几率眩晕目标1回合',
+					content: function (target) {
+						Game.Battle.addBuff(target, { id: 'stun_target', name: '眩晕', type: 'stun', remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		skill_009: {
 			name: "技能攻击",
-			intro: "对三名敌人造成伤害，伤害系数为180%",
-			ai_intro: "对敌方随机三名敌人造成伤害，伤害系数为180%",
+			intro: "对三名敌人造成伤害，伤害系数为180%，20%几率减少目标2点能量",
+			ai_intro: "对敌方随机三名敌人造成伤害，伤害系数为180%，20%几率减少目标2点能量",
 			target: ["manual_multi", "random", 3],
 			coefficient: 1.8,
 			isRecover: false,
 			emoji: "🧊",
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.2; },
+					desc: '20%几率减少目标2点能量',
+					content: function (target) {
+						target.energy = Math.max(0, (target.energy || 0) - 2);
+						Game.Battle.log(`${this.name} 减少 ${target.name} 2 点能量`);
+					}
+				}
+			],
 		},
 		skill_010: {
 			name: "技能回复",
-			intro: "治疗全体友方，系数为125%",
-			ai_intro: "治疗全体友方，系数为125%",
+			intro: "治疗全体友方，系数为125%，35%几率增加目标1点能量",
+			ai_intro: "治疗全体友方，系数为125%，35%几率增加目标1点能量",
 			target: ["all", "all"],
 			coefficient: 1.25,
 			isRecover: true,
 			emoji: "🧪",
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.35; },
+					desc: '35%几率增加目标1点能量',
+					content: function (target) {
+						target.energy = Math.min(8, (target.energy || 0) + 1);
+						Game.Battle.log(`${this.name} 为 ${target.name} 增加 1 点能量`);
+					}
+				}
+			],
 		},
 		skill_101: {
 			name: "技能回复",
@@ -1796,44 +1894,89 @@ const contentList = {
 		},
 		spskill_001: {
 			name: '必杀技能攻击',
-			intro: '对一行敌人造成伤害，伤害系数为210%',
-			ai_intro: '对敌方前排敌人造成伤害，伤害系数为210%',
+			intro: '对一行敌人造成伤害，伤害系数为210%，100%几率释放普攻',
+			ai_intro: '对敌方前排敌人造成伤害，伤害系数为210%，100%几率释放普攻',
 			target: ['row', 'first'],
 			coefficient: 2.1,
 			isRecover: false,
 			emoji: '❤️',
+			contents: [
+				{
+					trigger: 'skillEnd',
+					filter: function () { return true; },
+					desc: '100%几率释放普攻',
+					content: function (info) {
+						const pId = this.skills[0];
+						const pData = (contentList && contentList.pugong && contentList.pugong[pId]) || null;
+						if (!pData) return;
+						const enemySide = this.side === 'player' ? 'enemy' : 'player';
+						const targets = Game.Battle.resolveSkillTargets(pData, this, enemySide);
+						if (targets && targets.length) {
+							Game.Battle.executePugong(this, targets, function () {});
+						}
+					}
+				}
+			],
 		},
 		spskill_002: {
 			name: '必杀技能攻击',
-			intro: '对单体造成伤害，伤害系数为335%',
-			ai_intro: '对血量最少的敌方造成伤害，伤害系数为335%',
+			intro: '对单体造成伤害，伤害系数为335%，100%几率提升45%攻击2回合',
+			ai_intro: '对血量最少的敌方造成伤害，伤害系数为335%，100%几率提升45%攻击2回合',
 			target: ['one', 'lowest'],
 			coefficient: 3.35,
 			isRecover: false,
 			emoji: '☄️',
+			contents: [
+				{
+					trigger: 'skillEnd',
+					filter: function () { return true; },
+					desc: '100%几率提升45%攻击2回合',
+					content: function (info) {
+						Game.Battle.addBuff(this, { id: 'atk_up_self_45', name: '攻击提升', type: 'atk', value: 0.45, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		spskill_003: {
 			name: "技能攻击",
-			intro: '对一行敌人造成伤害，伤害系数为210%',
-			ai_intro: '对敌方前排敌人造成伤害，伤害系数为210%',
+			intro: '对一行敌人造成伤害，伤害系数为210%，75%几率封印目标2回合',
+			ai_intro: '对敌方前排敌人造成伤害，伤害系数为210%，75%几率封印目标2回合',
 			target: ['row', 'first'],
 			coefficient: 2.1,
 			isRecover: false,
 			emoji: '🌪️',
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.75; },
+					desc: '75%几率封印目标2回合',
+					content: function (target) {
+						Game.Battle.addBuff(target, { id: 'seal_target', name: '封印', type: 'seal', remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		spskill_004: {
 			name: '必杀技能攻击',
-			intro: '对一行敌人造成伤害，伤害系数为190%',
-			ai_intro: '对敌方后排敌人造成伤害，伤害系数为190%',
+			intro: '对一行敌人造成伤害，伤害系数为190%，75%几率封印目标2回合',
+			ai_intro: '对敌方后排敌人造成伤害，伤害系数为190%，75%几率封印目标2回合',
 			target: ['row', 'last'],
 			coefficient: 1.9,
 			isRecover: false,
 			emoji: '🌙',
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.75; },
+					desc: '75%几率封印目标2回合',
+					content: function (target) {
+						Game.Battle.addBuff(target, { id: 'seal_target', name: '封印', type: 'seal', remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		spskill_005: {
 			name: '必杀技能回复',
-			intro: '治疗全体友方，系数为150%',
-			ai_intro: '治疗全体友方，系数为150%',
+			intro: '治疗全体友方，系数为150%，85%几率为目标施加不死效果1回合',
+			ai_intro: '治疗全体友方，系数为150%，85%几率为目标施加不死效果1回合',
 			target: ['all', 'all'],
 			coefficient: 1.5,
 			isRecover: true,
@@ -1841,48 +1984,97 @@ const contentList = {
 		},
 		spskill_006: {
 			name: '必杀技能攻击',
-			intro: '对一列敌人造成伤害，伤害系数为250%',
-			ai_intro: '对敌方默认前排所在的一列敌人造成伤害，伤害系数为250%',
+			intro: '对一列敌人造成伤害，伤害系数为250%，100%几率提升自身10000暴击2回合',
+			ai_intro: '对敌方默认前排所在的一列敌人造成伤害，伤害系数为250%，100%几率提升自身10000暴击2回合',
 			target: ['column', 'first'],
 			coefficient: 2.5,
 			isRecover: false,
 			emoji: '🍁',
+			contents: [
+				{
+					trigger: 'skillEnd',
+					filter: function () { return true; },
+					desc: '100%几率提升自身10000暴击2回合',
+					content: function (info) {
+						Game.Battle.addBuff(this, { id: 'baoji_self_10000', name: '暴击提升', type: 'baoji', value: 10000, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		spskill_007: {
 			name: '必杀技能攻击',
-			intro: '对一行敌人造成伤害，伤害系数为210%',
-			ai_intro: '对敌方前排敌人造成伤害，伤害系数为210%',
+			intro: '对一行敌人造成伤害，伤害系数为210%，100%几率提升自身10000格挡2回合',
+			ai_intro: '对敌方前排敌人造成伤害，伤害系数为210%，100%几率提升自身10000格挡2回合',
 			target: ['row', 'first'],
 			coefficient: 2.1,
 			isRecover: false,
 			emoji: '💧',
+			contents: [
+				{
+					trigger: 'skillEnd',
+					filter: function () { return true; },
+					desc: '100%几率提升自身10000格挡2回合',
+					content: function (info) {
+						Game.Battle.addBuff(this, { id: 'gedang_self_10000', name: '格挡提升', type: 'gedang', value: 10000, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		spskill_008: {
 			name: '必杀技能攻击',
-			intro: '对一行敌人造成伤害，伤害系数为210%',
-			ai_intro: '对敌方前排敌人造成伤害，伤害系数为210%',
+			intro: '对一行敌人造成伤害，伤害系数为210%，75%几率眩晕目标1回合',
+			ai_intro: '对敌方前排敌人造成伤害，伤害系数为210%，75%几率眩晕目标1回合',
 			target: ['row', 'first'],
 			coefficient: 2.1,
 			isRecover: false,
 			emoji: '❤️',
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.75; },
+					desc: '75%几率眩晕目标1回合',
+					content: function (target) {
+						Game.Battle.addBuff(target, { id: 'stun_target', name: '眩晕', type: 'stun', remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		spskill_009: {
 			name: '必杀技能攻击',
-			intro: '对三名敌人造成伤害，伤害系数为200%',
-			ai_intro: '对敌方随机三名敌人造成伤害，伤害系数为200%',
+			intro: '对三名敌人造成伤害，伤害系数为200%，50%几率减少目标2点能量',
+			ai_intro: '对敌方随机三名敌人造成伤害，伤害系数为200%，50%几率减少目标2点能量',
 			target: ['manual_multi', 'random', 3],
 			coefficient: 2,
 			isRecover: false,
 			emoji: "🧊",
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.5; },
+					desc: '50%几率减少目标2点能量',
+					content: function (target) {
+						target.energy = Math.max(0, (target.energy || 0) - 2);
+						Game.Battle.log(`${this.name} 减少 ${target.name} 2 点能量`);
+					}
+				}
+			],
 		},
 		spskill_010: {
 			name: '必杀技能回复',
-			intro: '治疗全体友方，系数为150%',
-			ai_intro: '治疗全体友方，系数为150%',
+			intro: '治疗全体友方，系数为150%，70%几率增加目标1点能量',
+			ai_intro: '治疗全体友方，系数为150%，70%几率增加目标1点能量',
 			target: ['all', 'all'],
 			coefficient: 1.5,
 			isRecover: true,
 			emoji: "🧪",
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.7; },
+					desc: '70%几率增加目标1点能量',
+					content: function (target) {
+						target.energy = Math.min(8, (target.energy || 0) + 1);
+						Game.Battle.log(`${this.name} 为 ${target.name} 增加 1 点能量`);
+					}
+				}
+			],
 		},
 	},
 };

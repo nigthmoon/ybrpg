@@ -78,7 +78,7 @@ function startBattle(playerTeam, enemyTeam, options = {}) {
         let teamPercentBuffs = []; // 暂存全队百分比加成
 
         // 累加 0 到当前突破等级的所有效果
-        for (let i = 0; i <= tupolevel; i++) {
+        for (let i = 0; i < tupolevel; i++) {
             if (!tupoList[i]) continue;
             const buff = tupoList[i];
             

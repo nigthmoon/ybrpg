@@ -558,34 +558,96 @@ const characterList = {
 		template: "balanced", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//闪避+800
+				type: 'self_stat_flat',
+				shanbi: 800,
+				desc: '闪避+800'
 			},
 			{
-				//闪避+1800
+				type: 'self_stat_flat',
+				shanbi: 1800,
+				desc: '闪避+1800'
 			}, 
 			{
-				//释放技能后，提升后排2000暴击持续2回合
+				type: 'skill_effect',
+				desc: '释放技能后，提升后排2000暴击持续2回合',
+				trigger: 'skillEnd',
+				filter: function () { return true; },
+				content: function (info) {
+					const allies = Game.Battle.getAliveUnits(this.side).filter(u => u.slotIndex >= 3);
+					allies.forEach(ally => {
+						Game.Battle.addBuff(ally, { id: 'baoji_back_2000', name: '暴击提升', type: 'baoji', value: 2000, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					});
+				}
 			}, 
 			{
-				//上场后限三次，自身受到伤害减少75%（条件减伤）
+				type: 'skill_effect',
+				desc: '上场后限三次，自身受到伤害减少75%',
+				trigger: 'onDamageTaken',
+				filter: function (attacker, dmg) {
+					if (!this._dmgReduceTimes) this._dmgReduceTimes = 0;
+					if (this._dmgReduceTimes < 3) {
+						this._dmgReduceTimes++;
+						return true;
+					}
+					return false;
+				},
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.75;
+				}
 			}, 
 			{
-				//暴击+1500
+				type: 'self_stat_flat',
+				baoji: 1500,
+				desc: '暴击+1500'
+			},
+			{
+				type: 'skill_effect',
+				desc: '自身血量高于目标时，对其伤害增加50%',
+				trigger: 'onDamageCalc',
+				filter: function (target) {
+					return target && target.alive && (this.hp / this.maxHp) > (target.hp / target.maxHp);
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.5;
+				}
 			}, 
 			{
-				//自身血量高于目标时，对其伤害增加50%（条件加伤）
+				type: 'self_stat_flat',
+				kangbao: 2000,
+				desc: '抗暴+2000'
 			}, 
 			{
-				//抗暴+2000
+				type: 'skill_effect',
+				desc: '收到技能伤害减少50%',
+				trigger: 'onDamageTaken',
+				filter: function () { return true; },
+				content: function (attacker, dmg, mod) {
+					if (mod.attackType === 'skill') mod.pct += 0.5;
+				}
 			}, 
 			{
-				//收到技能伤害减少50%（条件减伤）
+				type: 'skill_effect',
+				desc: '普攻命中时，15%几率令目标麻痹，持续1回合',
+				trigger: 'pugongHit',
+				filter: function (target) { return Math.random() < 0.15; },
+				content: function (target) {
+					Game.Battle.addBuff(target, { id: 'paralyze_target', name: '麻痹', type: 'paralyze', remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+				}
 			}, 
 			{
-				//普攻命中时，15%几率令目标麻痹，持续1回合
-			}, 
-			{
-				//释放技能后，令血量最少的三名敌人减少35%的被治疗率，持续2回合
+				type: 'skill_effect',
+				desc: '释放技能后，令血量最少的三名敌人减少35%的被治疗率，持续2回合',
+				trigger: 'skillEnd',
+				filter: function () { return true; },
+				content: function (info) {
+					const enemySide = this.side === 'player' ? 'enemy' : 'player';
+					const enemies = Game.Battle.getAliveUnits(enemySide)
+						.sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))
+						.slice(0, 3);
+					enemies.forEach(e => {
+						Game.Battle.addBuff(e, { id: 'healReduce_target_35', name: '降疗', type: 'healReduce', value: 0.35, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					});
+				}
 			}
 		])
 	},
@@ -594,16 +656,63 @@ const characterList = {
 		skills: ["pugong_005", "skill_005", "spskill_005"],
 		template: "balanced", rank: "legend", tip: "recover", ties: [],
 		tupoList: generateTupoList_new([
-			{},
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}
+			{
+				type: 'self_stat_flat',
+				baoji: 1000,
+				desc: '暴击+1000'
+			},
+			{
+				type: 'self_stat_percent',
+				pctTakeDn: 0.18,
+				desc: '受到伤害减少18%'
+			}, 
+			{
+				type: 'self_stat_flat',
+				shanbi: 1800,
+				desc: '闪避+1800'
+			},
+			{
+				type: 'self_stat_percent',
+				pctHeal: 0.3,
+				pctTakeDn: 0.15,
+				desc: '治疗效果+30%，受到伤害减少15%'
+			},
+			{
+				type: 'self_stat_flat',
+				baoji: 1500,
+				desc: '暴击+1500'
+			},
+			{
+				type: 'self_stat_percent',
+				pctTakeDn: 0.3,
+				desc: '受到伤害减少30%'
+			},
+			{
+				type: 'self_stat_flat',
+				shanbi: 1200,
+				desc: '闪避+1200'
+			},
+			{
+				// 亡语：100%几率减少全体敌方1点能量（暂未实现，跳过）
+			},
+			{
+				type: 'skill_effect',
+				desc: '普攻时，100%几率提升目标30%减伤一回合',
+				trigger: 'pugongHit',
+				filter: function () { return true; },
+				content: function (target) {
+					Game.Battle.addBuff(target, { id: 'takeDn_target_30', name: '减伤', type: 'takeDn', value: 0.3, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+				}
+			},
+			{
+				type: 'skill_effect',
+				desc: '技能时，100%几率提升目标25%减伤一回合',
+				trigger: 'skillHit',
+				filter: function () { return true; },
+				content: function (target) {
+					Game.Battle.addBuff(target, { id: 'takeDn_target_25', name: '减伤', type: 'takeDn', value: 0.25, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+				}
+			}
 		])
 	},
 
@@ -613,16 +722,89 @@ const characterList = {
 		skills: ["pugong_006", "skill_006", "spskill_006"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([
-			{},
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}
+			{
+				type: 'self_stat_flat',
+				baoji: 1000,
+				desc: '暴击+1000'
+			},
+			{
+				type: 'skill_effect',
+				desc: '暴击时，增加1点能量',
+				trigger: ['pugongHit', 'skillHit'],
+				filter: function (target) { return this._lastHitIsCrit === true; },
+				content: function (target) {
+					this.energy = Math.min(8, (this.energy || 0) + 1);
+					Game.Battle.log(`${this.name} 暴击，回复 1 能量`);
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '普攻命中时，对额定目标的左右角色造成60%伤害',
+				trigger: 'pugongHit',
+				filter: function () { return true; },
+				content: function (target) {
+					if (!target || !target.alive) return;
+					const side = target.side;
+					const idx = target.slotIndex;
+					const neighbors = [idx - 1, idx + 1]
+						.map(i => Game.Battle.getAliveUnits(side).find(u => u.slotIndex === i))
+						.filter(Boolean);
+					neighbors.forEach(n => {
+						const dmg = Game.Battle.calculateDamage(this, n, 0.6, 0, 'pugong');
+						Game.Battle.applyDamage(n, dmg, this, function () {}, { trigger: 'extraHit', isSpecial: true });
+					});
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '每次普攻或技能后，增加10%攻击，最多30%',
+				trigger: ['pugongEnd', 'skillEnd'],
+				filter: function () { return true; },
+				content: function (info) {
+					if ((this.atkPctBonus || 0) + 0.1 <= 0.3) {
+						Game.Battle.addBuff(this, { id: 'atk_stack', name: '攻击提升', type: 'atk', value: 0.1, remainRounds: -1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			}, 
+			{
+				type: 'self_stat_flat',
+				mingzhong: 1500,
+				desc: '命中+1500'
+			},
+			{
+				type: 'passive_effect',
+				effectId: 'ignore_def_skill_100',
+				desc: '技能无视100%防御'
+			}, 
+			{
+				type: 'self_stat_flat',
+				mingzhong: 2000,
+				desc: '命中+2000'
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '技能命中时，100%几率降低目标75%被治疗率2回合',
+				trigger: 'skillHit',
+				filter: function () { return true; },
+				content: function (target) {
+					Game.Battle.addBuff(target, { id: 'healReduce_target_75', name: '降疗', type: 'healReduce', value: 0.75, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '普攻时，45%几率增加1能量',
+				trigger: 'pugongHit',
+				filter: function () { return Math.random() < 0.45; },
+				content: function (target) {
+					this.energy = Math.min(8, (this.energy || 0) + 1);
+					Game.Battle.log(`${this.name} 普攻，回复 1 能量`);
+				}
+			}, 
+			{
+				type: 'self_stat_percent',
+				pctTakeDn: 0.3,
+				desc: '受到伤害减少30%'
+			}
 		])
 	},
 	ybsl_076zhujun: {
@@ -630,16 +812,75 @@ const characterList = {
 		skills: ["pugong_007", "skill_007", "spskill_007"],
 		template: "defense", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([
-			{},
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}
+			{
+				type: 'self_stat_flat',
+				gedang: 1000,
+				desc: '格挡+1000'
+			},
+			{
+				type: 'skill_effect',
+				desc: '格挡反击，造成75%伤害',
+				trigger: 'onBlock',
+				filter: function () { return true; },
+				content: function (attacker) {
+					const dmg = Game.Battle.calculateDamage(this, attacker, 0.75, 0, 'pugong');
+					Game.Battle.applyDamage(attacker, dmg, this, function () {}, { trigger: 'blockCounter', isSpecial: true });
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '自身血量低于50%时，受到伤害减少30%',
+				trigger: 'onDamageTaken',
+				filter: function () { return (this.hp / this.maxHp) < 0.5; },
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.3;
+				}
+			}, 
+			{
+				// 亡语限一次，回复自身150%攻击力的生命值（暂未实现，跳过）
+			}, 
+			{
+				type: 'self_stat_flat',
+				gedang: 1500,
+				desc: '格挡+1500'
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '被攻击时，15%几率眩晕目标1回合',
+				trigger: 'onHitSelf',
+				filter: function (attacker, dmg) { return Math.random() < 0.15; },
+				content: function (attacker) {
+					Game.Battle.addBuff(attacker, { id: 'stun_attacker', name: '眩晕', type: 'stun', remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+				}
+			}, 
+			{
+				type: 'self_stat_flat',
+				kangbao: 2000,
+				desc: '抗暴+2000'
+			}, 
+			{
+				type: 'self_stat_percent',
+				hp: 0.5,
+				desc: '血量+50%'
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '普攻命中时，30%几率眩晕目标1回合',
+				trigger: 'pugongHit',
+				filter: function (target) { return Math.random() < 0.3; },
+				content: function (target) {
+					Game.Battle.addBuff(target, { id: 'stun_target', name: '眩晕', type: 'stun', remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '技能时，100%几率提升自身减伤60%一回合',
+				trigger: 'skillEnd',
+				filter: function () { return true; },
+				content: function (target) {
+					Game.Battle.addBuff(this, { id: 'takeDn_self_60', name: '减伤', type: 'takeDn', value: 0.6, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+				}
+			}
 		])
 	},
 	ybsl_107tushanshuili: {
@@ -647,16 +888,79 @@ const characterList = {
 		skills: ["pugong_008", "skill_008", "spskill_008"],
 		template: "damger", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([
-			{},
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}
+			{
+				type: 'self_stat_flat',
+				baoji: 1000,
+				desc: '暴击+1000'
+			},
+			{
+				type: 'self_stat_flat',
+				baoji: 3000,
+				desc: '暴击+3000'
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '被攻击时，若血量低于对方，伤害减少30%',
+				trigger: 'onDamageTaken',
+				filter: function (attacker) { return this.hp < (attacker ? attacker.hp : 0); },
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.3;
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '自身血量每减少10%，造成伤害增加100%',
+				trigger: 'onDamageCalc',
+				filter: function () { return true; },
+				content: function (target, dmg, mod) {
+					const lost = 1 - (this.hp / this.maxHp);
+					mod.pct += lost * 10; // 每少10%血 → +100%伤
+				}
+			}, 
+			{
+				type: 'self_stat_flat',
+				poji: 1500,
+				desc: '破击+1500'
+			},
+			{
+				type: 'self_stat_flat',
+				baoji: 2500,
+				baoshang: 5000,
+				desc: '暴击+2500，暴伤+5000'
+			},
+			{
+				type: 'self_stat_flat',
+				kangbao: 2000,
+				desc: '抗暴+2000'
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '受到技能伤害减少50%',
+				trigger: 'onDamageTaken',
+				filter: function () { return true; },
+				content: function (attacker, dmg, mod) {
+					if (mod.attackType === 'skill') mod.pct += 0.5;
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '普攻命中后，为自身回复45%伤害值的生命值',
+				trigger: 'pugongHit',
+				filter: function () { return true; },
+				content: function (target) {
+					const dealt = target._lastDamage || 0;
+					Game.Battle.applyHeal(this, Math.floor(dealt * 0.45), function () {}, this);
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '技能伤害增加20%；技能免伤增加20%',
+				trigger: ['onDamageCalc', 'onDamageTaken'],
+				filter: function () { return true; },
+				content: function (target, dmg, mod) {
+					if (mod.attackType === 'skill') mod.pct += 0.2;
+				}
+			}
 		])
 	},
 	ybsl_008wuyuxin: {
@@ -664,16 +968,94 @@ const characterList = {
 		skills: ["pugong_009", "skill_009", "spskill_009"],
 		template: "balanced", rank: "legend", tip: "damage", ties: [],
 		tupoList: generateTupoList_new([
-			{},
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}
+			{
+				type: 'self_stat_flat',
+				mingzhong: 1000,
+				desc: '命中+1000'
+			},
+			{
+				type: 'self_stat_flat',
+				baoji: 3000,
+				desc: '暴击+3000'
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '自身血量高于50%时，造成伤害增加30%',
+				trigger: 'onDamageCalc',
+				filter: function (target) { return (this.hp / this.maxHp) > 0.5; },
+				content: function (target, dmg, mod) {
+					mod.pct += 0.3;
+				}
+			}, 
+			{
+				type: 'self_stat_flat',
+				shanbi: 3000,
+				desc: '闪避+3000'
+			},
+			{
+				type: 'self_stat_flat',
+				baoji: 750,
+				baoshang: 1500,
+				desc: '暴击+750，暴伤+1500'
+			},
+			{
+				type: 'skill_effect',
+				desc: '技能后，75%几率令自身增加2能量',
+				trigger: 'skillEnd',
+				filter: function () { return Math.random() < 0.75; },
+				content: function (info) {
+					this.energy = Math.min(8, (this.energy || 0) + 2);
+					Game.Battle.log(`${this.name} 技能后，回复 2 能量`);
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '上场后限三次，自身受到伤害减少30%',
+				trigger: 'onDamageTaken',
+				filter: function (attacker, dmg) {
+					if (!this._dmgReduceTimes) this._dmgReduceTimes = 0;
+					if (this._dmgReduceTimes < 3) {
+						this._dmgReduceTimes++;
+						return true;
+					}
+					return false;
+				},
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.3;
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '技能伤害提升50%',
+				trigger: 'onDamageCalc',
+				filter: function () { return true; },
+				content: function (target, dmg, mod) {
+					if (mod.attackType === 'skill') mod.pct += 0.5;
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '普攻命中时，75%几率令目标沉默1回合',
+				trigger: 'pugongHit',
+				filter: function (target) { return Math.random() < 0.75; },
+				content: function (target) {
+					Game.Battle.addBuff(target, { id: 'stun_target', name: '沉默', type: 'stun', remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '技能后，100%几率降低能量最高的一名敌人30%的攻击力两回合',
+				trigger: 'skillEnd',
+				filter: function () { return true; },
+				content: function (info) {
+					const enemySide = this.side === 'player' ? 'enemy' : 'player';
+					const target = Game.Battle.getAliveUnits(enemySide)
+						.sort((a, b) => (b.energy || 0) - (a.energy || 0))[0];
+					if (target) {
+						Game.Battle.addBuff(target, { id: 'atk_down_enemy_30', name: '攻击降低', type: 'atk', value: -0.3, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			}
 		])
 	},
 	ybsl_002chenailin: {
@@ -681,16 +1063,79 @@ const characterList = {
 		skills: ["pugong_010", "skill_010", "spskill_010"],
 		template: "balanced", rank: "legend", tip: "recover", ties: [],
 		tupoList: generateTupoList_new([
-			{},
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}, 
-			{}
+			{
+				type: 'self_stat_flat',
+				baoji: 1000,
+				desc: '暴击+1000'
+			},
+			{
+				type: 'self_stat_flat',
+				shanbi: 1800,
+				desc: '闪避+1800'
+			},
+			{
+				type: 'self_stat_flat',
+				shanbi: 1800,
+				desc: '闪避+1800'
+			},
+			{
+				type: 'self_stat_percent',
+				pctHeal: 0.5,
+				desc: '治疗效果+50%'
+			},
+			{
+				type: 'self_stat_flat',
+				baoji: 1500,
+				desc: '暴击+1500'
+			},
+			{
+				type: 'skill_effect',
+				desc: '上场后限三次，自身受到伤害减少75%',
+				trigger: 'onDamageTaken',
+				filter: function (attacker, dmg) {
+					if (!this._dmgReduceTimes) this._dmgReduceTimes = 0;
+					if (this._dmgReduceTimes < 3) {
+						this._dmgReduceTimes++;
+						return true;
+					}
+					return false;
+				},
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.75;
+				}
+			},
+			{
+				// 亡语：回复全体友方目标30%攻击力的生命值（暂未实现，跳过）
+			},
+			{
+				type: 'skill_effect',
+				desc: '受到技能伤害减少30%',
+				trigger: 'onDamageTaken',
+				filter: function () { return true; },
+				content: function (attacker, dmg, mod) {
+					if (mod.attackType === 'skill') mod.pct += 0.3;
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '普攻时，45%几率增加目标1能量',
+				trigger: 'pugongHit',
+				filter: function (target) { return Math.random() < 0.45; },
+				content: function (target) {
+					target.energy = Math.min(8, (target.energy || 0) + 1);
+					Game.Battle.log(`${this.name} 为 ${target.name} 增加 1 点能量`);
+				}
+			}, 
+			{
+				type: 'skill_effect',
+				desc: '技能时，75%几率增加自身2能量',
+				trigger: 'skillEnd',
+				filter: function () { return Math.random() < 0.75; },
+				content: function (info) {
+					this.energy = Math.min(8, (this.energy || 0) + 2);
+					Game.Battle.log(`${this.name} 技能后，回复 2 能量`);
+				}
+			}
 		])
 	},
 

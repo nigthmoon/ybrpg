@@ -1255,38 +1255,43 @@ body {
 	font-size: 24px;
 	animation: pulse 1s infinite;
 }
-/* 💫 眩晕特效*/
+/* 💫 眩晕特效（不再变暗、不再旋转，仅以顶部图标表示）*/
 .battle-unit.stunned {
-	filter: grayscale(100%) brightness(0.7);
-	opacity: 0.8;
+	/* 不施加 filter/opacity，避免画面变暗 */
 }
-.battle-unit.stunned::after {
-	content: '💫'; /* 或者使用星星图标 */
+
+/* ===== 状态图标层：每个 buff/debuff 一个独立 DOM 节点，横向排列在角色卡顶部，互不覆盖 ===== */
+.battle-unit .status-icon-layer {
 	position: absolute;
-	top: -15px;
+	top: 2px;
 	left: 50%;
 	transform: translateX(-50%);
-	font-size: 24px;
-	animation: spin 2s linear infinite;
+	display: flex;
+	flex-wrap: nowrap;
+	justify-content: center;
+	gap: 2px;
+	z-index: 20;
+	pointer-events: none;
+	max-width: 100%;
 }
-@keyframes spin {
-	from { transform: translateX(-50%) rotate(0deg); }
-	to { transform: translateX(-50%) rotate(360deg); }
+.status-icon {
+	font-size: 20px;
+	line-height: 1;
+	filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.9));
+}
+.status-icon.status-stunned { animation: stun-pulse 1.2s ease-in-out infinite; }
+.status-icon.status-sealed { font-size: 22px; }
+.status-icon.status-paralyzed { animation: zap-flicker 0.8s infinite; }
+.status-icon.status-poisoned { animation: pulse-green 1.5s infinite; }
+.status-icon.status-heal-blocked { animation: pulse-red 1.5s infinite; }
+
+@keyframes stun-pulse {
+	0%, 100% { transform: scale(1); opacity: 0.85; }
+	50% { transform: scale(1.18); opacity: 1; }
 }
 /* 🚫 禁疗特效 */
 .battle-unit.heal-blocked-effect {
-	/* 可选：稍微降低亮度或改变色调以表示负面状态 */
 	filter: brightness(0.9) sepia(0.3); 
-}
-
-.battle-unit.heal-blocked-effect::after {
-	content: '🚫'; /* 禁止符号，也可以换成 '💊❌' 或 '🩸🚫' */
-	position: absolute;
-	top: -10px;
-	left: -10px; /* 放在左上角，与无敌的右上角区分开 */
-	font-size: 24px;
-	z-index: 5;
-	animation: pulse-red 1.5s infinite; /* 红色脉冲动画 */
 }
 
 @keyframes pulse-red {
@@ -1297,16 +1302,6 @@ body {
 /* 🤢 中毒特效 */
 .battle-unit.poisoned {
 	filter: hue-rotate(90deg) brightness(0.8); /* 变绿变暗 */
-}
-
-.battle-unit.poisoned::after {
-	content: '🤢'; /* 或者 ☠️ */
-	position: absolute;
-	top: -10px;
-	right: -10px; /* 放在右上角，避免与其他状态重叠 */
-	font-size: 24px;
-	z-index: 5;
-	animation: pulse-green 1.5s infinite;
 }
 
 @keyframes pulse-green {
@@ -2894,38 +2889,15 @@ h1, h2 {
 	background: #444;
 }
 
-/* 战斗中封印状态 —— 锁图案居中覆盖在角色卡片上 */
+/* 战斗中封印状态 —— 锁图标由 DOM 状态图标层渲染，不再用 ::after 覆盖 */
 .battle-unit.sealed {
 	position: relative;
 }
 
-.battle-unit.sealed::after {
-	content: '🔒';
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	font-size: 36px;
-	z-index: 10;
-	opacity: 0.75;
-	pointer-events: none;
-	text-shadow: 0 0 6px rgba(0,0,0,0.5);
-}
-
-/* ⚡ 麻痹特效 —— 效果同原封印的灰度滤镜 */
+/* ⚡ 麻痹特效 */
 .battle-unit.paralyzed {
 	filter: grayscale(0.5);
 	position: relative;
-}
-
-.battle-unit.paralyzed::after {
-	content: '⚡';
-	position: absolute;
-	top: 2px;
-	right: 2px;
-	font-size: 14px;
-	z-index: 5;
-	animation: zap-flicker 0.8s infinite;
 }
 
 @keyframes zap-flicker {
