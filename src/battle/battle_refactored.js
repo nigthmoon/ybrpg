@@ -352,8 +352,9 @@ Battle.calculateDamage = function calculateDamage(attacker, defender, coefficien
 	let isBlock = false;
 
 	if (isCrit) {
-		// 暴击成功：伤害×2，不进行格挡判定
-		finalDmg = baseDmg * 2;
+		// 暴击成功：伤害 = 基础伤害 × (攻击方暴伤 + 15000 - 被攻击方守护) / 10000
+		const critMultiplier = Math.max(0, (Number(attacker.baoshang ?? 0) + 15000 - Number(defender.shouhu ?? 0))) / 10000;
+		finalDmg = Math.floor(baseDmg * critMultiplier);
 	} else {
 		// ===== 第三步：格挡判定（仅当不暴击时） =====
 		const blockRate = Math.max(0, ((defender.gedang ?? 0) - (attacker.poji ?? 0))) / 10000;
@@ -1960,8 +1961,10 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 		// ===== 【新增】新属性初始值 =====
 		let finalHit = 10000;
 		let finalDodge = 0;
-		let finalCrit = 0;
-		let finalCritResist = 0;
+	let finalCrit = 0;
+	let finalCritResist = 0;
+	let finalBaoShang = 0;
+	let finalShouhu = 0;
 		let finalPierce = 0;
 		let finalBlock = 0;
 
@@ -1987,8 +1990,10 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 			// ===== 【新增】从编译结果读取新属性 =====
 			finalHit = data._compiledStats.mingzhong ?? 10000;
 			finalDodge = data._compiledStats.shanbi ?? 0;
-			finalCrit = data._compiledStats.baoji ?? 0;
-			finalCritResist = data._compiledStats.kangbao ?? 0;
+		finalCrit = data._compiledStats.baoji ?? 0;
+		finalCritResist = data._compiledStats.kangbao ?? 0;
+		finalBaoShang = data._compiledStats.baoshang ?? 0;
+		finalShouhu = data._compiledStats.shouhu ?? 0;
 			finalPierce = data._compiledStats.poji ?? 0;
 			finalBlock = data._compiledStats.gedang ?? 0;
 
@@ -2010,8 +2015,10 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 
 			finalHit = data.mingzhong ?? 10000;
 			finalDodge = data.shanbi ?? 0;
-			finalCrit = data.baoji ?? 0;
-			finalCritResist = data.kangbao ?? 0;
+		finalCrit = data.baoji ?? 0;
+		finalCritResist = data.kangbao ?? 0;
+		finalBaoShang = data.baoshang ?? 0;
+		finalShouhu = data.shouhu ?? 0;
 			finalPierce = data.poji ?? 0;
 			finalBlock = data.gedang ?? 0;
 
@@ -2035,8 +2042,10 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 
 			finalHit = compiled.mingzhong;
 			finalDodge = compiled.shanbi;
-			finalCrit = compiled.baoji;
-			finalCritResist = compiled.kangbao;
+		finalCrit = compiled.baoji;
+		finalCritResist = compiled.kangbao;
+		finalBaoShang = compiled.baoshang ?? 0;
+		finalShouhu = compiled.shouhu ?? 0;
 			finalPierce = compiled.poji;
 			finalBlock = compiled.gedang;
 
@@ -2129,8 +2138,10 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 			// ===== 【新增】战斗概率属性 =====
 			mingzhong: finalHit,
 			shanbi: finalDodge,
-			baoji: finalCrit,
-			kangbao: finalCritResist,
+		baoji: finalCrit,
+		kangbao: finalCritResist,
+		baoshang: finalBaoShang,
+		shouhu: finalShouhu,
 			poji: finalPierce,
 			gedang: finalBlock,
 
@@ -3012,7 +3023,7 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 		return {
 			hp: 500, atk: 50, def: 25, spe: 50,
 			maxHp: 500,
-			mingzhong: 10000, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0,
+			mingzhong: 10000, shanbi: 0, baoji: 0, kangbao: 0, baoshang: 0, shouhu: 0, poji: 0, gedang: 0,
 			fixedDmgUp: 0, fixedDmgDown: 0, pctDmgUp: 0, pctDmgDown: 0,
 			fixedHeal: 0, fixedBeHeal: 0, pctHeal: 0, pctBeHeal: 0
 		};
@@ -3049,6 +3060,8 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 	let shanbi = 0;
 	let baoji = 0;
 	let kangbao = 0;
+	let baoshang = 0;
+	let shouhu = 0;
 	let poji = 0;
 	let gedang = 0;
 	let fixedDmgUp = 0;
@@ -3065,7 +3078,7 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 	const effectiveTupoLevel = Math.min(tupolevel || 0, tupoList.length);
 
 	// 收集自身的 team_stat 加成，用于计算全队汇总
-	let selfTeamFlat = { hp: 0, atk: 0, def: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0, fixedDmgUp: 0, fixedDmgDown: 0, fixedHeal: 0, fixedBeHeal: 0 };
+	let selfTeamFlat = { hp: 0, atk: 0, def: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, baoshang: 0, shouhu: 0, poji: 0, gedang: 0, fixedDmgUp: 0, fixedDmgDown: 0, fixedHeal: 0, fixedBeHeal: 0 };
 	let selfTeamPercent = { atk: 0, def: 0, hp: 0, spe: 0, pctDmgUp: 0, pctDmgDown: 0, pctHeal: 0, pctBeHeal: 0 };
 
 	for (let i = 0; i < effectiveTupoLevel; i++) {
@@ -3088,8 +3101,10 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 				if (resolvedBuff.spe !== undefined) spe += Number(resolvedBuff.spe);
 				if (resolvedBuff.mingzhong !== undefined) mingzhong += Number(resolvedBuff.mingzhong);
 				if (resolvedBuff.shanbi !== undefined) shanbi += Number(resolvedBuff.shanbi);
-				if (resolvedBuff.baoji !== undefined) baoji += Number(resolvedBuff.baoji);
-				if (resolvedBuff.kangbao !== undefined) kangbao += Number(resolvedBuff.kangbao);
+			if (resolvedBuff.baoji !== undefined) baoji += Number(resolvedBuff.baoji);
+			if (resolvedBuff.kangbao !== undefined) kangbao += Number(resolvedBuff.kangbao);
+			if (resolvedBuff.baoshang !== undefined) baoshang += Number(resolvedBuff.baoshang);
+			if (resolvedBuff.shouhu !== undefined) shouhu += Number(resolvedBuff.shouhu);
 				if (resolvedBuff.poji !== undefined) poji += Number(resolvedBuff.poji);
 				if (resolvedBuff.gedang !== undefined) gedang += Number(resolvedBuff.gedang);
 				if (resolvedBuff.fixedDmgUp !== undefined) fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
@@ -3117,8 +3132,10 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 				if (resolvedBuff.spe !== undefined) selfTeamFlat.spe += Number(resolvedBuff.spe);
 				if (resolvedBuff.mingzhong !== undefined) selfTeamFlat.mingzhong += Number(resolvedBuff.mingzhong);
 				if (resolvedBuff.shanbi !== undefined) selfTeamFlat.shanbi += Number(resolvedBuff.shanbi);
-				if (resolvedBuff.baoji !== undefined) selfTeamFlat.baoji += Number(resolvedBuff.baoji);
-				if (resolvedBuff.kangbao !== undefined) selfTeamFlat.kangbao += Number(resolvedBuff.kangbao);
+			if (resolvedBuff.baoji !== undefined) selfTeamFlat.baoji += Number(resolvedBuff.baoji);
+			if (resolvedBuff.kangbao !== undefined) selfTeamFlat.kangbao += Number(resolvedBuff.kangbao);
+			if (resolvedBuff.baoshang !== undefined) selfTeamFlat.baoshang += Number(resolvedBuff.baoshang);
+			if (resolvedBuff.shouhu !== undefined) selfTeamFlat.shouhu += Number(resolvedBuff.shouhu);
 				if (resolvedBuff.poji !== undefined) selfTeamFlat.poji += Number(resolvedBuff.poji);
 				if (resolvedBuff.gedang !== undefined) selfTeamFlat.gedang += Number(resolvedBuff.gedang);
 				if (resolvedBuff.fixedDmgUp !== undefined) selfTeamFlat.fixedDmgUp += Number(resolvedBuff.fixedDmgUp);
@@ -3152,6 +3169,8 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 		shanbi += teamBonuses.teamFlat.shanbi || 0;
 		baoji += teamBonuses.teamFlat.baoji || 0;
 		kangbao += teamBonuses.teamFlat.kangbao || 0;
+		baoshang += teamBonuses.teamFlat.baoshang || 0;
+		shouhu += teamBonuses.teamFlat.shouhu || 0;
 		poji += teamBonuses.teamFlat.poji || 0;
 		gedang += teamBonuses.teamFlat.gedang || 0;
 		fixedDmgUp += teamBonuses.teamFlat.fixedDmgUp || 0;
@@ -3187,7 +3206,7 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 	return {
 		hp, atk, def, spe,
 		maxHp: hp,
-		mingzhong, shanbi, baoji, kangbao, poji, gedang,
+		mingzhong, shanbi, baoji, kangbao, baoshang, shouhu, poji, gedang,
 		fixedDmgUp, fixedDmgDown, pctDmgUp, pctDmgDown,
 		fixedHeal, fixedBeHeal, pctHeal, pctBeHeal,
 		// ===== 【新增】返回团队加成信息 =====
@@ -3202,7 +3221,7 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
  * @returns {Object} { teamFlat: {...}, teamPercent: {...} }
  */
 Battle.calculateEnemyTeamBonuses = function calculateEnemyTeamBonuses(enemyTeam) {
-    const teamFlat = { hp: 0, atk: 0, def: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, poji: 0, gedang: 0, fixedDmgUp: 0, fixedDmgDown: 0, fixedHeal: 0, fixedBeHeal: 0 };
+    const teamFlat = { hp: 0, atk: 0, def: 0, spe: 0, mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0, baoshang: 0, shouhu: 0, poji: 0, gedang: 0, fixedDmgUp: 0, fixedDmgDown: 0, fixedHeal: 0, fixedBeHeal: 0 };
     const teamPercent = { hp: 0, atk: 0, def: 0, spe: 0, pctDmgUp: 0, pctDmgDown: 0, pctHeal: 0, pctBeHeal: 0 };
 
     enemyTeam.forEach(data => {
@@ -3236,6 +3255,8 @@ Battle.calculateEnemyTeamBonuses = function calculateEnemyTeamBonuses(enemyTeam)
                     if (resolvedBuff.shanbi !== undefined) teamFlat.shanbi += Number(resolvedBuff.shanbi);
                     if (resolvedBuff.baoji !== undefined) teamFlat.baoji += Number(resolvedBuff.baoji);
                     if (resolvedBuff.kangbao !== undefined) teamFlat.kangbao += Number(resolvedBuff.kangbao);
+                    if (resolvedBuff.baoshang !== undefined) teamFlat.baoshang += Number(resolvedBuff.baoshang);
+                    if (resolvedBuff.shouhu !== undefined) teamFlat.shouhu += Number(resolvedBuff.shouhu);
                     if (resolvedBuff.poji !== undefined) teamFlat.poji += Number(resolvedBuff.poji);
                     if (resolvedBuff.gedang !== undefined) teamFlat.gedang += Number(resolvedBuff.gedang);
                     if (resolvedBuff.fixedDmgUp !== undefined) teamFlat.fixedDmgUp += Number(resolvedBuff.fixedDmgUp);

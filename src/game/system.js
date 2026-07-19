@@ -789,11 +789,11 @@ class Stat {
 		let selfPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
 		let teamPercent = { hp: 0, atk: 0, def: 0, spe: 0 };
 
-		let breakHit = 0, breakDodge = 0, breakCrit = 0, breakCritResist = 0, breakPierce = 0, breakBlock = 0;
+		let breakHit = 0, breakDodge = 0, breakCrit = 0, breakCritResist = 0, breakPierce = 0, breakBlock = 0, breakBaoShang = 0, breakShouhu = 0;
 		let breakFixedDmgUp = 0, breakFixedDmgDown = 0, breakPctDmgUp = 0, breakPctDmgDown = 0;
 		let breakFixedHeal = 0, breakFixedBeHeal = 0, breakPctHeal = 0, breakPctBeHeal = 0;
 
-		let teamFlatHit = 0, teamFlatDodge = 0, teamFlatCrit = 0, teamFlatCritResist = 0, teamFlatPierce = 0, teamFlatBlock = 0;
+		let teamFlatHit = 0, teamFlatDodge = 0, teamFlatCrit = 0, teamFlatCritResist = 0, teamFlatPierce = 0, teamFlatBlock = 0, teamFlatBaoShang = 0, teamFlatShouhu = 0;
 		let teamFlatFixedDmgUp = 0, teamFlatFixedDmgDown = 0, teamFlatFixedHeal = 0, teamFlatFixedBeHeal = 0;
 		let teamPercentPctDmgUp = 0, teamPercentPctDmgDown = 0, teamPercentPctHeal = 0, teamPercentPctBeHeal = 0;
 
@@ -810,8 +810,10 @@ class Stat {
 
 			teamFlatHit = externalTeamBonuses.teamFlat.mingzhong || 0;
 			teamFlatDodge = externalTeamBonuses.teamFlat.shanbi || 0;
-			teamFlatCrit = externalTeamBonuses.teamFlat.baoji || 0;
-			teamFlatCritResist = externalTeamBonuses.teamFlat.kangbao || 0;
+		teamFlatCrit = externalTeamBonuses.teamFlat.baoji || 0;
+		teamFlatCritResist = externalTeamBonuses.teamFlat.kangbao || 0;
+		teamFlatBaoShang = externalTeamBonuses.teamFlat.baoshang || 0;
+		teamFlatShouhu = externalTeamBonuses.teamFlat.shouhu || 0;
 			teamFlatPierce = externalTeamBonuses.teamFlat.poji || 0;
 			teamFlatBlock = externalTeamBonuses.teamFlat.gedang || 0;
 			teamFlatFixedDmgUp = externalTeamBonuses.teamFlat.fixedDmgUp || 0;
@@ -848,7 +850,9 @@ class Stat {
 					if (resolvedBuff.mingzhong !== undefined) breakHit += Number(resolvedBuff.mingzhong);
 					if (resolvedBuff.shanbi !== undefined) breakDodge += Number(resolvedBuff.shanbi);
 					if (resolvedBuff.baoji !== undefined) breakCrit += Number(resolvedBuff.baoji);
+				if (resolvedBuff.baoshang !== undefined) breakBaoShang += Number(resolvedBuff.baoshang);
 					if (resolvedBuff.kangbao !== undefined) breakCritResist += Number(resolvedBuff.kangbao);
+				if (resolvedBuff.shouhu !== undefined) breakShouhu += Number(resolvedBuff.shouhu);
 					if (resolvedBuff.poji !== undefined) breakPierce += Number(resolvedBuff.poji);
 					if (resolvedBuff.gedang !== undefined) breakBlock += Number(resolvedBuff.gedang);
 					if (resolvedBuff.fixedDmgUp !== undefined) breakFixedDmgUp += Number(resolvedBuff.fixedDmgUp);
@@ -863,7 +867,9 @@ class Stat {
 					if (resolvedBuff.hp !== undefined) selfPercent.hp += Number(resolvedBuff.hp);
 					if (resolvedBuff.spe !== undefined) selfPercent.spe += Number(resolvedBuff.spe);
 					if (resolvedBuff.baoji !== undefined) breakCrit += Number(resolvedBuff.baoji);
+				if (resolvedBuff.baoshang !== undefined) breakBaoShang += Number(resolvedBuff.baoshang);
 					if (resolvedBuff.kangbao !== undefined) breakCritResist += Number(resolvedBuff.kangbao);
+				if (resolvedBuff.shouhu !== undefined) breakShouhu += Number(resolvedBuff.shouhu);
 					if (resolvedBuff.shanbi !== undefined) breakDodge += Number(resolvedBuff.shanbi);
 					if (resolvedBuff.poji !== undefined) breakPierce += Number(resolvedBuff.poji);
 					if (resolvedBuff.gedang !== undefined) breakBlock += Number(resolvedBuff.gedang);
@@ -914,7 +920,7 @@ class Stat {
 		}
 
 		let tresHp = 0, tresAtk = 0, tresDef = 0, tresSpe = 0;
-		let tresHit = 0, tresDodge = 0, tresCrit = 0, tresCritResist = 0, tresPierce = 0, tresBlock = 0;
+		let tresHit = 0, tresDodge = 0, tresCrit = 0, tresCritResist = 0, tresPierce = 0, tresBlock = 0, tresBaoShang = 0, tresShouhu = 0;
 
 		if (window.charTreasureSlots && window.charTreasureSlots[instanceId]) {
 			const slots = window.charTreasureSlots[instanceId];
@@ -927,8 +933,10 @@ class Stat {
 				tresSpe += s.spe || 0;
 				tresHit += s.mingzhong || 0;
 				tresDodge += s.shanbi || 0;
-				tresCrit += s.baoji || 0;
-				tresCritResist += s.kangbao || 0;
+			tresCrit += s.baoji || 0;
+			tresCritResist += s.kangbao || 0;
+			tresBaoShang += s.baoshang || 0;
+			tresShouhu += s.shouhu || 0;
 				tresPierce += s.poji || 0;
 				tresBlock += s.gedang || 0;
 			});
@@ -987,8 +995,10 @@ class Stat {
 
 			mingzhong: 10000 + breakHit + teamFlatHit + tresHit,
 			shanbi: 0 + breakDodge + teamFlatDodge + tresDodge,
-			baoji: 0 + breakCrit + teamFlatCrit + tresCrit,
-			kangbao: 0 + breakCritResist + teamFlatCritResist + tresCritResist,
+		baoji: 0 + breakCrit + teamFlatCrit + tresCrit,
+		kangbao: 0 + breakCritResist + teamFlatCritResist + tresCritResist,
+		baoshang: 0 + breakBaoShang + teamFlatBaoShang + tresBaoShang,
+		shouhu: 0 + breakShouhu + teamFlatShouhu + tresShouhu,
 			poji: 0 + breakPierce + teamFlatPierce + tresPierce,
 			gedang: 0 + breakBlock + teamFlatBlock + tresBlock,
 

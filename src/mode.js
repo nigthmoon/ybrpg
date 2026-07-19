@@ -303,6 +303,8 @@ function showCharacterDetailPopup() {
 		{ label: '闪避', value: finalStats.shanbi ?? 0, color: '#44ff88' },
 		{ label: '暴击', value: finalStats.baoji ?? 0, color: '#ffdd00' },
 		{ label: '抗暴', value: finalStats.kangbao ?? 0, color: '#88aaff' },
+		{ label: '暴伤', value: finalStats.baoshang ?? 0, color: '#ff66cc' },
+		{ label: '守护', value: finalStats.shouhu ?? 0, color: '#66ccff' },
 		{ label: '破击', value: finalStats.poji ?? 0, color: '#ff8844' },
 		{ label: '格挡', value: finalStats.gedang ?? 0, color: '#4488ff' },
 	];
@@ -9134,6 +9136,8 @@ function compileCharacterStats(charObj) {
 		shanbi: 0,		  // 闪避
 		baoji: 0,		   // 暴击
 		kangbao: 0,	 // 抗暴
+		baoshang: 0,	// 暴伤
+		shouhu: 0,	  // 守护
 		poji: 0,		 // 破击
 		gedang: 0,		  // 格挡
 
