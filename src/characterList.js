@@ -915,7 +915,23 @@ const characterList = {
 				},
 			},
 			{
-				// 亡语限一次，回复自身150%攻击力的生命值（暂未实现，跳过）
+				type: "skill_effect",
+				desc: "亡语，每局限一次，恢复生命值至攻击力*150%并复活",
+				trigger: "dieSelf",
+				filter: function () {
+					if (!this._deathHealUsed) {
+						this._deathHealUsed = true;
+						return true;
+					}
+					return false;
+				},
+				content: function (killer) {
+					const healAmt = Math.floor((this.atk || 0) * 1.5);
+					this.hp = Math.min(this.maxHp, this.hp + healAmt);
+					this.alive = true; // 复活
+					Game.Battle.log(`${this.name} 触发亡语，恢复 ${healAmt} 生命值并复活！`);
+					Game.Battle.updateUI();
+				},
 			},
 			{
 				type: "self_stat_flat",
@@ -1223,7 +1239,21 @@ const characterList = {
 				},
 			},
 			{
-				// 亡语：回复全体友方目标30%攻击力的生命值（暂未实现，跳过）
+				type: 'skill_effect',
+				desc: '亡语，令所有队友恢复生命为自身攻击力*30%',
+				trigger: 'dieSelf',
+				filter: function () { return true; },
+				content: function (killer) {
+					const allies = Game.Battle.getAliveUnits(this.side);
+					const healAmt = Math.floor((this.atk || 0) * 0.3);
+					allies.forEach(ally => {
+						if (ally.alive) {
+							ally.hp = Math.min(ally.maxHp, ally.hp + healAmt);
+							Game.Battle.log(`${ally.name} 恢复 ${healAmt} 生命`);
+						}
+					});
+					Game.Battle.updateUI();
+				}
 			},
 			{
 				type: "skill_effect",
