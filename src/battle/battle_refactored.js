@@ -679,7 +679,7 @@ Battle.applyDamage = function applyDamage(target, dmgResult, attacker, callback,
 			removeBuffEffect(target, ub);
 			target.hp = 1;
 			addBattleLog(`${target.name} 触发【不死】，生命回复至1点！`);
-			showDamageNumber(target, 0, { isHeal: true });
+			showDamageNumber(target, 1, { isHeal: true });
 			updateBattleUI();
 			if (callback) callback();
 			return;
