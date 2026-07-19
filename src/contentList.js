@@ -1307,6 +1307,15 @@ const contentList = {
 			coefficient: 1.25,
 			isRecover: true,
 			emoji: '🧪',
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.4; },
+					desc: '40%几率施加不死效果1回合',
+					content: function (target) {
+						Game.Battle.addBuff(target, { id: 'undying_1', name: '不死', type: 'undying', value: 1, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		skill_006: {
 			name: "技能攻击",
@@ -1981,6 +1990,15 @@ const contentList = {
 			coefficient: 1.5,
 			isRecover: true,
 			emoji: '🧪',
+			contents: [
+				{
+					filter: function (target) { return Math.random() < 0.85; },
+					desc: '85%几率施加不死效果1回合',
+					content: function (target) {
+						Game.Battle.addBuff(target, { id: 'undying_1', name: '不死', type: 'undying', value: 1, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		spskill_006: {
 			name: '必杀技能攻击',

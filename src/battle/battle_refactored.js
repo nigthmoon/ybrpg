@@ -127,6 +127,7 @@ function syncStatusIcons(slot, unit) {
 		{ cls: 'status-paralyzed', on: !!unit.paralyzed, emoji: '⚡' },
 		{ cls: 'status-heal-blocked', on: !!unit.healBlocked, emoji: '🚫' },
 		{ cls: 'status-poisoned', on: unit.poisonDamage > 0, emoji: '🤢' },
+		{ cls: 'status-undying', on: !!unit.undying, emoji: '💖' },
 	];
 	defs.forEach(d => {
 		let el = layer.querySelector('.' + d.cls);
@@ -670,16 +671,37 @@ Battle.applyDamage = function applyDamage(target, dmgResult, attacker, callback,
 		isCrit,
 		isBlock
 	}, () => {
+		// ===== 不死效果：致命伤时消耗不死buff，生命回复至1点（不进入阵亡流程） =====
+		const undyingIdx = (target.buffList || []).findIndex(b => b.type === 'undying');
+		if (target.hp <= 0 && undyingIdx !== -1) {
+			const ub = target.buffList[undyingIdx];
+			target.buffList.splice(undyingIdx, 1);
+			removeBuffEffect(target, ub);
+			target.hp = 1;
+			addBattleLog(`${target.name} 触发【不死】，生命回复至1点！`);
+			showDamageNumber(target, 0, { isHeal: true });
+			updateBattleUI();
+			if (callback) callback();
+			return;
+		}
+
 		if (target.hp <= 0) {
 			target.hp = 0;
 			target.alive = false;
 			clearBuffsOnDeath(target);
 			addBattleLog(`${target.name} 阵亡！`);
 
-			triggerSelfEffect(target, 'dieSelf', attacker);
+			// 触发亡语：单位已阵亡，需绕过 triggerSelfEffect 的 alive 守卫，直接遍历 dieSelf 效果
+			const deathEffects = getEffectsByTrigger(target, 'dieSelf');
+			deathEffects.forEach(effect => {
+				if (effect.filter && effect.filter.call(target, attacker)) {
+					effect.content.call(target, attacker);
+				}
+			});
 			triggerGlobalEffect('dieGlobal', target, attacker);
 
-			if (attacker && attacker.alive) {
+			// 若亡语将单位复活，则不再视为击杀（不触发 onKill / 击杀能量）
+			if (!target.alive && attacker && attacker.alive) {
 				triggerSelfEffect(attacker, 'onKill', target);
 				attacker.energy = Math.min(8, attacker.energy + 1);
 				// ===== 【移除以移除】 =====
@@ -3105,6 +3127,12 @@ Battle.applyBuffEffect = function applyBuffEffect(target, buffConfig) {
 			target.healBoost = (target.healBoost || 0) + (buffConfig.value || 0);
 			addBattleLog(`${target.name} 治疗效果${buffConfig.value >= 0 ? '提升' : '降低'} ${Math.round(Math.abs(buffConfig.value) * 100)}%`);
 			break;
+		// ===== 【新增】不死 buff：持有期间受到致命伤害时消耗1层并回复至1点生命 =====
+		case 'undying':
+			target.undying = true;
+			target.undyingCharges = (target.undyingCharges || 0) + 1;
+			addBattleLog(`${target.name} 获得【不死】效果`);
+			break;
 		// 可以扩展更多 buff 类型
 	}
 	updateBattleUI();
@@ -3203,6 +3231,10 @@ Battle.removeBuffEffect = function removeBuffEffect(target, buff) {
 			break;
 		case 'healBoost':
 			target.healBoost = (target.healBoost || 0) - (buff.value || 0);
+			break;
+		case 'undying':
+			target.undyingCharges = Math.max(0, (target.undyingCharges || 0) - (buff.value || 1));
+			if (target.undyingCharges <= 0) target.undying = false;
 			break;
 	}
 	updateBattleUI();

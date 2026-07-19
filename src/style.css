@@ -1284,6 +1284,7 @@ body {
 .status-icon.status-paralyzed { animation: zap-flicker 0.8s infinite; }
 .status-icon.status-poisoned { animation: pulse-green 1.5s infinite; }
 .status-icon.status-heal-blocked { animation: pulse-red 1.5s infinite; }
+.status-icon.status-undying { animation: pulse-pink 1.2s infinite; }
 
 @keyframes stun-pulse {
 	0%, 100% { transform: scale(1); opacity: 0.85; }
@@ -1297,6 +1298,11 @@ body {
 @keyframes pulse-red {
 	0% { transform: scale(1); opacity: 0.8; }
 	50% { transform: scale(1.1); opacity: 1; }
+	100% { transform: scale(1); opacity: 0.8; }
+}
+@keyframes pulse-pink {
+	0% { transform: scale(1); opacity: 0.8; }
+	50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 4px #ff5fa2); }
 	100% { transform: scale(1); opacity: 0.8; }
 }
 /* 🤢 中毒特效 */
