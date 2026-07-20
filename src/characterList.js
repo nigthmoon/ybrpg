@@ -188,7 +188,18 @@ const characterList = {
 		rank: "junk",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_fengmolang: {
 		name: "风魔狼",
@@ -199,7 +210,18 @@ const characterList = {
 		rank: "junk",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_yanmohua: {
 		name: "魇魔花",
@@ -210,7 +232,18 @@ const characterList = {
 		rank: "junk",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 
 	// ===== 传说级 (Legend) - YB_memory (编号: 001-005) =====
@@ -1303,7 +1336,18 @@ const characterList = {
 		rank: "epic",
 		tip: "recover",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_016manchengqi: {
 		name: "满城柒",
@@ -1314,7 +1358,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_018zhangqing: {
 		name: "张晴",
@@ -1325,7 +1380,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_059starsFall3: {
 		name: "周靈",
@@ -1336,7 +1402,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_059starsFall4: {
 		name: "李曉",
@@ -1347,7 +1424,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_068qingyue: {
 		name: "清月姑娘",
@@ -1358,7 +1446,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_070lvyanqiu: {
 		name: "吕艳秋",
@@ -1369,7 +1468,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_033xiaohui: {
 		name: "小慧",
@@ -1380,7 +1490,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_038bianqiuwen: {
 		name: "卞秋雯",
@@ -1391,7 +1512,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	db_ybsl_067snake: {
 		name: "蛇妃",
@@ -1402,7 +1534,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 
 	// ===== 史诗级 (Epic) - YB_dream (编号: 111-120) =====
@@ -1415,7 +1558,18 @@ const characterList = {
 		rank: "epic",
 		tip: "recover",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_001sunlisong: {
 		name: "孙丽松",
@@ -1426,7 +1580,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_006wanghanzhen: {
 		name: "王汉桢",
@@ -1437,7 +1602,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_009liyushan: {
 		name: "李玉珊",
@@ -1448,7 +1624,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_010zhouyue: {
 		name: "周玥",
@@ -1459,7 +1646,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_013yinji: {
 		name: "尹超跃",
@@ -1470,7 +1668,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_018huanqing: {
 		name: "幻晴",
@@ -1481,7 +1690,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_036bright: {
 		name: "熙",
@@ -1492,7 +1712,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_092handan: {
 		name: "玉蝶心",
@@ -1503,7 +1734,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_083xiaozhu: {
 		name: "小筑",
@@ -1514,7 +1756,18 @@ const characterList = {
 		rank: "epic",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 
 	// ===== 伪史诗 (Epicfake) - YB_memory (编号: 201-209) =====
@@ -1527,7 +1780,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "recover",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_020jiayutong: {
 		name: "贾雨桐",
@@ -1538,7 +1802,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_025wanghe: {
 		name: "王贺",
@@ -1549,7 +1824,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_042pingzi: {
 		name: "蘋姉",
@@ -1560,7 +1846,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_043fangjiayu: {
 		name: "房佳谕",
@@ -1571,7 +1868,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_046jiangxuewu: {
 		name: "江雪舞",
@@ -1582,7 +1890,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_059starsFall2: {
 		name: "宋橤",
@@ -1593,7 +1912,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_060liutianhang: {
 		name: "刘天杭",
@@ -1604,7 +1934,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_079xiaoxin: {
 		name: "小新",
@@ -1615,7 +1956,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 
 	// ===== 伪史诗 (Epicfake) - YB_dream (编号: 210-218) =====
@@ -1628,7 +1980,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "recover",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_004zhangyujie: {
 		name: "张玉洁",
@@ -1639,7 +2002,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_005wangruobing: {
 		name: "王若冰",
@@ -1650,7 +2024,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_007wugege: {
 		name: "吴格格",
@@ -1661,7 +2046,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_011gaoyuhang: {
 		name: "高宇航",
@@ -1672,7 +2068,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_047zhangmi: {
 		name: "张汨",
@@ -1683,7 +2090,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_026can: {
 		name: "蚕",
@@ -1694,7 +2112,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_027rain: {
 		name: "雨",
@@ -1705,7 +2134,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_029dawn: {
 		name: "黎",
@@ -1716,7 +2156,18 @@ const characterList = {
 		rank: "epicfake",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 
 	// ===== 稀有 (Rare) - YB_memory (编号: 301-306) =====
@@ -1729,7 +2180,18 @@ const characterList = {
 		rank: "rare",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_045gaocong: {
 		name: "高聪",
@@ -1740,7 +2202,18 @@ const characterList = {
 		rank: "rare",
 		tip: "recover",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_024yuetong: {
 		name: "岳瞳",
@@ -1751,7 +2224,18 @@ const characterList = {
 		rank: "rare",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_053qiuer: {
 		name: "秋儿",
@@ -1762,7 +2246,18 @@ const characterList = {
 		rank: "rare",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_054yueer: {
 		name: "悦儿",
@@ -1773,7 +2268,18 @@ const characterList = {
 		rank: "rare",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_055zhengyan: {
 		name: "郑琰",
@@ -1784,7 +2290,18 @@ const characterList = {
 		rank: "rare",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 
 	// ===== 稀有 (Rare) - YB_dream (编号: 307-312) =====
@@ -1797,7 +2314,18 @@ const characterList = {
 		rank: "rare",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_037diamondqueen: {
 		name: "方块公主",
@@ -1808,7 +2336,18 @@ const characterList = {
 		rank: "rare",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_044huruihang: {
 		name: "胡瑞航",
@@ -1819,7 +2358,18 @@ const characterList = {
 		rank: "rare",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_121tujing: {
 		name: "涂静",
@@ -1830,7 +2380,18 @@ const characterList = {
 		rank: "rare",
 		tip: "recover",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_122wangbingyu: {
 		name: "王冰雨",
@@ -1841,7 +2402,18 @@ const characterList = {
 		rank: "rare",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 	ybsl_123xuelang: {
 		name: "雪琅",
@@ -1852,7 +2424,18 @@ const characterList = {
 		rank: "rare",
 		tip: "damage",
 		ties: [],
-		tupoList: generateTupoList_new([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]),
+		tupoList: generateTupoList_new([
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}, 
+			{}
+		]),
 	},
 };
 const characterTemplate = {
