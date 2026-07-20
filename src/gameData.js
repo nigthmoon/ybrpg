@@ -25,7 +25,9 @@ class GameData {
 		baseInfo: {
 			saveName: '新存档',
 			saveTime: null,
-			version: '1.0.0'
+			// 以 window.GAME_VERSION（在 index.html 中直接设定的当前版本，如 v2.3.3）为唯一真值来源，
+			// 避免写死导致存档版本号与游戏实际版本不符。
+			version: window.GAME_VERSION || 'v1.0'
 		},
 
 		// ========== 玩家偏好设置 ==========
@@ -92,6 +94,8 @@ class GameData {
 	save(slotIndex = 0) {
 		const key = `${this.STORAGE_KEY}_${slotIndex}`;
 		this.data.baseInfo.saveTime = new Date().toISOString();
+		// 每次保存都重新盖章当前版本号，确保旧存档重新保存后版本号与游戏实际版本一致
+		this.data.baseInfo.version = window.GAME_VERSION || 'v1.0';
 
 		// 同步 window 变量到 GameData
 		if (window.currentTeam) {
