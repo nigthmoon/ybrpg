@@ -1902,9 +1902,9 @@ Battle.selectColumnTargetsSmart = function selectColumnTargetsSmart(candidates, 
 
 	if (!seedTarget) return [];
 
-	const rowStart = seedTarget.slotIndex < 3 ? 0 : 3;
+	const col = seedTarget.slotIndex % 3;
 	const side = seedTarget.side;
-	return candidates.filter(u => u.side === side && u.slotIndex >= rowStart && u.slotIndex < rowStart + 3);
+	return candidates.filter(u => u.side === side && u.slotIndex % 3 === col);
 }
 // ====== 9. 结算界面 ======
 

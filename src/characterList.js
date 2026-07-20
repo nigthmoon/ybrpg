@@ -1,3 +1,5 @@
+import { shared } from './shared.js';
+
 /**
  * 生成完整的20阶突破列表
  * @param {Array} exclusiveEffects - 5个专属位的库ID或自定义对象
