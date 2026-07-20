@@ -2323,6 +2323,37 @@ h1, h2 {
 	width: 62px;
 }
 
+/* 选中角标 ✓ */
+.gallery-char-check {
+	display: none;
+	position: absolute;
+	top: 1px;
+	left: 1px;
+	width: 18px;
+	height: 18px;
+	line-height: 18px;
+	text-align: center;
+	background: #ffd700;
+	color: #000;
+	border-radius: 50%;
+	font-size: 12px;
+	font-weight: bold;
+	z-index: 2;
+	box-shadow: 0 0 4px rgba(0,0,0,0.6);
+}
+
+/* 选中状态高亮 */
+.gallery-char-card.selected .gallery-char-icon {
+	border-color: #ffd700 !important;
+	box-shadow: 0 0 10px #ffd700;
+	transform: scale(1.06);
+}
+
+.gallery-char-card.selected .gallery-char-name {
+	color: #ffd700 !important;
+	font-weight: bold;
+}
+
 /* ========== 角色详情弹窗 ========== */
 
 .gallery-detail-dialog {

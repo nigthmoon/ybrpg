@@ -1435,8 +1435,8 @@ const contentList = {
 		},
 		skill_101: {
 			name: "技能回复",
-			intro: "治疗全体友方，系数为115%",
-			ai_intro: "治疗全体友方，系数为115%",
+			intro: "治疗全体友方，系数为115%，20%几率令目标恢复1能量",
+			ai_intro: "治疗全体友方，系数为115%，20%几率令目标恢复1能量",
 			target: ["all", "all"],
 			coefficient: 1.15,
 			isRecover: true,
@@ -1444,8 +1444,8 @@ const contentList = {
 		},
 		skill_102: {
 			name: "技能攻击",
-			intro: "对一列敌人造成伤害，伤害系数为195%",
-			ai_intro: "对敌方默认前排所在的一列敌人造成伤害，伤害系数为195%",
+			intro: "对一列敌人造成伤害，伤害系数为195%，65%几率提升自身4000暴击2回合",
+			ai_intro: "对敌方默认前排所在的一列敌人造成伤害，伤害系数为195%，65%几率提升自身4000暴击2回合",
 			target: ["column", "first"],
 			coefficient: 1.95,
 			isRecover: false,

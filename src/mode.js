@@ -6,6 +6,8 @@ import { TREASURE_DEFS } from './equip.js';
 import { eventList, SPeventList } from './eventList.js';
 // 核心功能统一收纳于根命名空间 Game
 import { Game } from './core.js';
+// 道具（礼包）定义与使用逻辑
+import { ITEM_DEFS, useItem, renderBagItemContent } from './item.js';
 
 // ====== mode.js 自身可变状态（保留 window 透出，后续迁移到 store.js） ======
 
@@ -3449,11 +3451,7 @@ function renderBagView(container) {
 	if (window.bagTab === 'char') {
 		renderBagCharContent(bodyDiv);
 	} else if (window.bagTab === 'item') {
-		// 预留接口
-		const tip = document.createElement('div');
-		tip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:30px;';
-		tip.textContent = '道具背包 - 敬请期待';
-		bodyDiv.appendChild(tip);
+		renderBagItemContent(bodyDiv);
 	} else if (window.bagTab === 'equip') {
 		renderBagEquipContent(bodyDiv);
 	} else {
@@ -3652,25 +3650,21 @@ function renderBagView(container) {
 		infoDiv.appendChild(descEl);
 		detailBar.appendChild(infoDiv);
 
-		// 右侧：使用和出售按钮
+		// 右侧：使用按钮（道具礼包）
 		const btnsDiv = document.createElement('div');
 		btnsDiv.className = 'bag-detail-btns';
 		const useBtn = document.createElement('button');
 		useBtn.className = 'bag-detail-action-btn';
 		useBtn.textContent = '使用';
 		useBtn.onclick = () => {
-			// 预留接口
-			Game.toast('使用功能 - 预留接口', 'info');
+			const itemId = detailBar.dataset.itemId;
+			if (!itemId) {
+				Game.toast('请先选择道具', 'warning');
+				return;
+			}
+			useItem(itemId);
 		};
 		btnsDiv.appendChild(useBtn);
-		const sellBtn = document.createElement('button');
-		sellBtn.className = 'bag-detail-action-btn';
-		sellBtn.textContent = '出售';
-		sellBtn.onclick = () => {
-			// 预留接口
-			Game.toast('出售功能 - 预留接口', 'info');
-		};
-		btnsDiv.appendChild(sellBtn);
 		detailBar.appendChild(btnsDiv);
 	}
 
@@ -6311,91 +6305,83 @@ function refreshShopItems(type = 'normal') {
 	if (!window.shopData) window.shopData = { items: [], spitems: [], refreshCost: 50 };
 	const items = [];
 	const spitems = [];
+	// 3宝物
 	const allTreasureIds = Object.keys(Game.Data.getTreasureList());
-	const selectedTreasures = allTreasureIds.sort(() => 0.5 - Math.random()).slice(0, 4);
+	const selectedTreasures = allTreasureIds.sort(() => 0.5 - Math.random()).slice(0, 3);
+	// 3武将
 	const allCharIds = Object.keys(characterList || {}).filter(cid => characterList[cid].group != 'zhujue');
-	const selectedChars = allCharIds.sort(() => 0.5 - Math.random()).slice(0, 4);
-	const allIteams = selectedTreasures.concat(selectedChars);
-	const allProducts = [...allIteams].sort(() => Math.random() - 0.5);
-	if (type == 'normal') {
-		for (let i = 0; i < Math.min(8, allProducts.length); i++) {
-			const id = allProducts[i];
-			if (id in characterList) {
-				const cData = characterList[id];
-				if (cData) {
-					items.push({
-						type: 'character',
-						id: id,
-						name: cData.name,
-						desc: `${getRankName(cData.rank)} | HP:${cData.hp} ATK:${cData.atk} DEF:${cData.def}`,
-						price: getCharPrice(cData.rank),
-						sold: false,
-						number: 1,
-						rank: cData.rank,
-						icon: `/image/character/${id}.jpg`,
-					});
-				}
-			}
-			else if (id in Game.Data.getTreasureList()) {
-				const tData = Game.Data.getTreasureList()[id];
-				if (tData) {
-					items.push({
-						type: 'treasure',
-						id: id,
-						name: tData.name,
-						desc: tData.desc,
-						price: tData.price || 200,
-						sold: false,
-						number: 1,
-						icon: tData.icon || `/image/skill/${id}.png`,
-					})
-				}
-			}
-		}
-		window.shopData.items = items;
-		window.shopData.refreshCost = 50;
-		return items;
+	const selectedChars = allCharIds.sort(() => 0.5 - Math.random()).slice(0, 3);
+	// 2武将包（可重复）
+	const allPackIds = Object.keys(ITEM_DEFS);
+	const selectedPacks = [];
+	for (let i = 0; i < 2 && allPackIds.length > 0; i++) {
+		selectedPacks.push(allPackIds[Math.floor(Math.random() * allPackIds.length)]);
 	}
-	else {
-		for (let i = 0; i < Math.min(8, allProducts.length); i++) {
-			const id = allProducts[i];
-			if (id in characterList) {
-				const cData = characterList[id];
-				if (cData) {
-					var beilv = Math.floor(Math.random() * 4) + 2;
-					spitems.push({
-						type: 'character',
-						id: id,
-						name: cData.name,
-						desc: `${getRankName(cData.rank)} | HP:${cData.hp} ATK:${cData.atk} DEF:${cData.def}`,
-						price: getCharPrice(cData.rank) * beilv,
-						sold: false,
-						number: beilv,
-						rank: cData.rank,
-						icon: `/image/character/${id}.jpg`,
-					});
-				}
-			}
-			else if (id in Game.Data.getTreasureList()) {
-				const tData = Game.Data.getTreasureList()[id];
-				if (tData) {
-					var beilv = Math.floor(Math.random() * 4) + 2;
-					spitems.push({
-						type: 'treasure',
-						id: id,
-						name: tData.name,
-						desc: tData.desc,
-						price: (tData.price || 200) * beilv,
-						sold: false,
-						number: beilv,
-						icon: tData.icon || `/image/skill/${id}.png`,
-					})
-				}
+	// 混合并打乱
+	const allIteams = selectedTreasures.concat(selectedChars).concat(selectedPacks);
+	const allProducts = [...allIteams].sort(() => Math.random() - 0.5);
+
+	const isSp = type != 'normal';
+	const target = isSp ? spitems : items;
+	for (let i = 0; i < allProducts.length; i++) {
+		const id = allProducts[i];
+		const beilv = isSp ? (Math.floor(Math.random() * 4) + 2) : 1;
+		if (id in characterList) {
+			const cData = characterList[id];
+			if (cData) {
+				target.push({
+					type: 'character',
+					id: id,
+					name: cData.name,
+					desc: `${getRankName(cData.rank)} | HP:${cData.hp} ATK:${cData.atk} DEF:${cData.def}`,
+					price: getCharPrice(cData.rank) * beilv,
+					sold: false,
+					number: beilv,
+					rank: cData.rank,
+					icon: `/image/character/${id}.jpg`,
+				});
 			}
 		}
+		else if (id in ITEM_DEFS) {
+			const def = ITEM_DEFS[id];
+			if (def) {
+				target.push({
+					type: 'item',
+					id: id,
+					name: def.name,
+					desc: def.desc,
+					price: (def.price || 200) * beilv,
+					sold: false,
+					number: beilv,
+					emoji: def.emoji || '📦',
+					icon: def.icon || '',
+				});
+			}
+		}
+		else if (id in Game.Data.getTreasureList()) {
+			const tData = Game.Data.getTreasureList()[id];
+			if (tData) {
+				target.push({
+					type: 'treasure',
+					id: id,
+					name: tData.name,
+					desc: tData.desc,
+					price: (tData.price || 200) * beilv,
+					sold: false,
+					number: beilv,
+					icon: tData.icon || `/image/skill/${id}.png`,
+				})
+			}
+		}
+	}
+	if (isSp) {
 		window.shopData.spitems = spitems;
 		window.shopData.refreshCost = 50;
 		return spitems;
+	} else {
+		window.shopData.items = items;
+		window.shopData.refreshCost = 50;
+		return items;
 	}
 }
 
@@ -6478,10 +6464,11 @@ function showItemDetail(item) {
 		else{
 			str='暂无描述';
 		}
+		const fallbackIcon = item.emoji || '?';
 		content = `
 			<div style="text-align:center;margin-bottom:15px;">
 				<div style="width:80px;height:80px;margin:0 auto;border:3px solid #888;border-radius:8px;overflow:hidden;background:#444;">
-					${item.icon ? `<img src="${item.icon}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='?'">` : '<span style="display:flex;align-items:center;justify-content:center;height:100%;font-size:30px;">?</span>'}
+					${item.icon ? `<img src="${item.icon}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='${fallbackIcon}'">` : `<span style="display:flex;align-items:center;justify-content:center;height:100%;font-size:40px;">${fallbackIcon}</span>`}
 				</div>
 				<h3 style="margin:10px 0 5px;color:#fff;">${item.name}</h3>
 			</div>
@@ -6620,17 +6607,28 @@ function renderShopView(container) {
 		// 左侧：图片占位 (70x70)
 		const imgPlaceholder = document.createElement('div');
 		imgPlaceholder.className = 'shop-item-img' + (item && item.type === 'character' ? ' character-icon' : '');
+		// 占位文本：宝物→宝，道具→emoji，武将→将
+		const placeholderText = (it) => {
+			if (!it) return '';
+			if (it.type === 'treasure') return '宝';
+			if (it.type === 'item') return it.emoji || '📦';
+			return '将';
+		};
 		if (item && !item.sold && item.icon) {
 			const img = document.createElement('img');
 			img.src = item.icon;
 			img.onerror = function () {
 				this.style.display = 'none';
-				imgPlaceholder.textContent = item.type === 'treasure' ? '宝' : '将';
+				imgPlaceholder.textContent = placeholderText(item);
 				imgPlaceholder.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:20px;color:#888;';
 			};
 			imgPlaceholder.appendChild(img);
+		} else if (item && !item.sold && item.type === 'item') {
+			// 武将包无图片，直接用 emoji
+			imgPlaceholder.textContent = item.emoji || '📦';
+			imgPlaceholder.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:36px;';
 		} else {
-			imgPlaceholder.textContent = item ? (item.sold ? '—' : (item.type === 'treasure' ? '宝' : '将')) : '';
+			imgPlaceholder.textContent = item ? (item.sold ? '—' : placeholderText(item)) : '';
 		}
 		// 点击商品图标弹出详情
 		if (item && !item.sold) {
@@ -6892,6 +6890,16 @@ function buyevent(item) {
 		}
 	}
 
+	else if (item.type === 'item') {
+		// 武将包等道具：加入背包
+		if (Game.Data && typeof Game.Data.addItem === 'function') {
+			Game.Data.addItem(item.id, item.number || 1);
+			Game.toast(`购买了【${item.name}】×${item.number || 1}`, 'success');
+		} else {
+			Game.toast('道具系统异常', 'error');
+		}
+	}
+
 	// 4. 扣除金币 (只扣一次)
 	window.gameGold -= item.price;
 
@@ -6902,6 +6910,40 @@ function buyevent(item) {
 	if (goldDisplay) {
 		goldDisplay.textContent = window.gameGold;
 	}
+}
+
+/**
+ * 授予玩家一名武将（创建背包实例并加入图鉴）
+ * @param {string} charId 基础角色ID
+ * @returns {string|false} 新创建的实例ID，失败返回 false
+ */
+function grantCharacter(charId) {
+	const baseChar = characterList[charId];
+	if (!baseChar) {
+		Game.toast('角色数据错误', 'error');
+		return false;
+	}
+	// A. 生成唯一实例ID
+	const instanceId = Game.genId(charId);
+	// B. 编译属性并创建背包数据
+	const stats = compileCharacterStats(baseChar);
+	window.charBagData[instanceId] = {
+		charId: charId,
+		level: 1,
+		hp: stats.hp,
+		atk: stats.atk,
+		def: stats.def,
+		spe: stats.spe,
+		currentHp: stats.hp,
+		maxHp: stats.hp,
+		openSpskill: false,
+	};
+	mergeNoOverwrite(window.charBagData[instanceId], baseChar);
+	// C. 添加到图鉴
+	if (typeof Game.Data.addToHandbook === 'function') {
+		Game.Data.addToHandbook(charId);
+	}
+	return instanceId;
 }
 // 占位函数，防止报错
 
@@ -9914,3 +9956,8 @@ shared.renderShopView = renderShopView;
 shared.updateBagCharDetailBar = updateBagCharDetailBar;
 shared.refreshCharDetailPopupContent = refreshCharDetailPopupContent;
 shared.refreshBreakthroughPopupContent = refreshBreakthroughPopupContent;
+
+// 暴露给 item.js 等模块使用的全局函数
+window.grantCharacter = grantCharacter;
+window.renderBagView = renderBagView;
+Game.SaveManager = SaveManager;

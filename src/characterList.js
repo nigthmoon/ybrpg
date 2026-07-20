@@ -139,15 +139,9 @@ const characterList = {
 				desc: "暴击+3000",
 			},
 			{
-				type: "skill_effect",
+				type: "self_stat_percent",
+				pctDealUp: 0.1,
 				desc: "获得10%增伤",
-				trigger: "onDamageCalc",
-				filter: function () {
-					return true;
-				},
-				content: function (target, dmg, mod) {
-					mod.pct += 0.1; // 无条件增伤 10%
-				},
 			},
 			{
 				type: "self_stat_flat",
@@ -165,15 +159,9 @@ const characterList = {
 				desc: "抗暴+2000",
 			},
 			{
-				type: "skill_effect",
+				type: "self_stat_percent",
+				pctTakeDn: 0.3,
 				desc: "获得30%减伤",
-				trigger: "onDamageTaken",
-				filter: function () {
-					return true;
-				},
-				content: function (attacker, dmg, mod) {
-					mod.pct += 0.3; // 无条件减伤 30%
-				},
 			},
 		]),
 	},
@@ -840,12 +828,13 @@ const characterList = {
 				filter: function () {
 					return true;
 				},
-				content: function (target) {
-					if (!target || !target.alive) return;
-					const side = target.side;
-					const idx = target.slotIndex;
-					const neighbors = [idx - 1, idx + 1].map(i => Game.Battle.getAliveUnits(side).find(u => u.slotIndex === i)).filter(Boolean);
-					neighbors.forEach(n => {
+			content: function (target) {
+				if (!target || !target.alive) return;
+				const side = target.side;
+				const idx = target.slotIndex;
+				const neighbors = [idx - 1, idx + 1].map(i => Game.Battle.getAliveUnits(side).find(u => u.slotIndex === i)).filter(Boolean);
+				Game.Battle.log(`[DEBUG 溅射] 触发 side=${side} idx=${idx} 邻位=${neighbors.map(n => n.name + '#' + n.slotIndex).join(',') || '无'}`);
+				neighbors.forEach(n => {
 						const dmg = Game.Battle.calculateDamage(this, n, 0.6, 0, "pugong");
 						Game.Battle.applyDamage(n, dmg, this, function () {}, { trigger: "extraHit", isSpecial: true });
 					});
@@ -1049,14 +1038,15 @@ const characterList = {
 			},
 			{
 				type: "skill_effect",
-				desc: "自身血量每减少10%，造成伤害增加100%",
+				desc: "自身血量每减少10%，造成伤害增加10%",
 				trigger: "onDamageCalc",
 				filter: function () {
 					return true;
 				},
 				content: function (target, dmg, mod) {
 					const lost = 1 - this.hp / this.maxHp;
-					mod.pct += lost * 10; // 每少10%血 → +100%伤
+					const steps = Math.floor(lost / 0.1); // 每满10%血量才计一阶
+					mod.pct += steps * 0.1; // 每阶 +10%伤害
 				},
 			},
 			{
@@ -1337,8 +1327,12 @@ const characterList = {
 		tip: "recover",
 		ties: [],
 		tupoList: generateTupoList_new([
-			{}, 
-			{}, 
+			{
+				//闪避+640
+			}, 
+			{
+				//受到伤害减少12%
+			}, 
 			{}, 
 			{}, 
 			{}, 
