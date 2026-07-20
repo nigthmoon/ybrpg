@@ -146,6 +146,7 @@ body {
 	transition: all 0.2s; 
 	border-radius: 5px;
 	margin-bottom: 10px;
+	min-width: 20%;
 }
 .ybrpg-btn:hover { 
 	background: #444; 
@@ -205,26 +206,7 @@ body {
 }
 
 /* 队伍视图风格 */
-#team-view {
-	width: 100%;
-	height: 97%;
-	display: flex;
-	flex-direction: column;
-	justify-content: flex-start; /* 修改: 从 center 改为 flex-start，使内容靠上 */
-	align-items: center;
-	padding-top: 20px; /* 新增: 顶部留一点间距，避免贴顶太紧 */
-}
 
-.team-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	grid-template-rows: repeat(2, 1fr);
-	gap: 10px;
-	width: 100%;
-	max-width: 300px;
-	padding: 10px;
-	box-sizing: border-box;
-}
 
 .team-slot {
 	background-color: #2a2a2a;
@@ -299,15 +281,6 @@ body {
 }
 
 /* 布阵信息区 */
-.team-info-area {
-	width: 100%;
-	max-width: 300px;
-	display: flex;
-	gap: 10px;
-	padding: 10px 5px;
-	min-height: 100px;
-	flex-shrink: 0;
-}
 
 .team-info-img-container {
 	width: 80px;
@@ -418,34 +391,11 @@ body {
 }
 
 /* 背包角色"已上阵"标记 */
-.charbag-in-team-badge {
-	position: absolute;
-	top: 2px;
-	right: 2px;
-	background: #ffd700;
-	color: #1a1a1a;
-	font-size: 9px;
-	font-weight: bold;
-	padding: 1px 4px;
-	border-radius: 3px;
-	pointer-events: none;
-}
 
 .charbag-char-card {
 	position: relative;
 }
 
-.team-footer {
-	margin-top: 10px;
-	margin-bottom: 8px;
-	display: flex;
-	gap: 10px;
-	width: 100%;
-	max-width: 300px;
-	justify-content: center;
-	padding: 0 10px;
-	box-sizing: border-box;
-}
 
 .ybrpg-team-btn {
 	flex: 1;
@@ -1037,20 +987,6 @@ body {
 	100% { opacity: 0; transform: translateX(-50%) translateY(15px) scale(0.8); }
 }
 
-/* 🧪 治疗：从头上向下落在角色身上 */
-.skill-effect.heal-effect {
-	left: 50%;
-	top: -10px;
-	animation: heal-fall 0.6s ease-in forwards;
-}
-
-@keyframes heal-fall {
-	0% { opacity: 0; transform: translateX(-50%) translateY(-70px) scale(0.6); }
-	30% { opacity: 1; transform: translateX(-50%) translateY(-20px) scale(1.1); }
-	60% { opacity: 1; transform: translateX(-50%) translateY(15px) scale(1.2); }
-	80% { opacity: 0.7; transform: translateX(-50%) translateY(10px) scale(0.9); }
-	100% { opacity: 0; transform: translateX(-50%) translateY(12px) scale(0.6); }
-}
 
 /* ⚔️ 前排行攻击 & 🌙 后排行攻击：从方阵左边横穿该行 */
 .skill-effect.sword-effect,
@@ -1128,12 +1064,6 @@ body {
 	100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
 }
 
-/* 龙卷风：从卡片左侧移动到右侧（同新月样式） */
-.skill-effect.wind-effect {
-	left: -10px;
-	top: 50%;
-	animation: row-slash 0.6s ease-out forwards;
-}
 
 /* 冰块：从卡片上方砸向卡片中央（同火样式） */
 .skill-effect.ice-effect {
@@ -1496,15 +1426,6 @@ body {
 }
 
 /* 宝物特效组动画 */
-.treasure-effect-group {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	pointer-events: none;
-	z-index: 15;
-}
 
 /* VS+日志区域 */
 .battle-divider {
@@ -2025,25 +1946,6 @@ h1, h2 {
 }
 
 /* 主界面新按钮样式 */
-.main-start-btn {
-	width: 250px;
-	padding: 15px;
-	font-size: 20px;
-	cursor: pointer;
-	background: #333;
-	color: #fff;
-	border: 1px solid #555;
-	transition: all 0.2s;
-	border-radius: 5px;
-	margin-bottom: 20px;
-}
-
-.main-start-btn:hover {
-	background: #444;
-	border-color: #ffd700;
-	transform: scale(1.05);
-}
-
 /* 修改主界面容器样式 */
 #main-view {
 	width: 100%;
@@ -2081,6 +1983,7 @@ h1, h2 {
 	align-items: center;
 	text-align: center;
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+	margin-bottom: 20px;
 }
 
 .main-start-btn:hover {
@@ -2777,14 +2680,6 @@ h1, h2 {
 
 /* ====== 宝物系统样式 ====== */
 
-/* 左侧容器：图片 + 宝物格阵 */
-.team-info-left {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	flex-shrink: 0;
-	gap: 6px;
-}
 
 /* 宝物格阵标签 */
 .treasure-grid-label {
@@ -3019,23 +2914,6 @@ h1, h2 {
 	margin-top: 15px;
 }
 
-.ybrpg-btn {
-	/* 确保按钮有最小宽度，避免文字过多时挤压 */
-	min-width: 20%;
-	/* padding: 8px 16px; */
-}
-.ybrpg-confirm-overlay {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	background: rgba(0, 0, 0, 0.7);
-	z-index: 9999;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
 
 .shop-downBtns {
 	display: flex; 
@@ -3045,11 +2923,6 @@ h1, h2 {
 	min-width: 90%;
 }
 
-/* 确保图标容器允许绝对定位子元素 */
-.gallery-char-icon {
-	position: relative;
-	/* 保持原有的样式... */
-}
 
 /* 等级徽章样式 - 左下角 */
 .charbag-level-badge {
@@ -3137,18 +3010,6 @@ h1, h2 {
 	0% { opacity: 1; transform: translateX(-50%) translateY(0); }
 	100% { opacity: 0; transform: translateX(-50%) translateY(-30px); }
 }
-/* 修改队伍视图 */
-#team-view {
-    width: 100%;
-    height: 97%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    padding-top: 20px;
-    /* 新增：限制高度，让内部元素按比例分布 */
-    overflow: hidden;
-}
 
 /* 新增：滚动内容区（格子+详情） */
 .team-scrollable-content {
@@ -3161,69 +3022,9 @@ h1, h2 {
     padding-bottom: 10px;
 }
 
-/* 修改底部按钮栏 - 固定在底部 */
-.team-footer {
-    width: 100%;
-    max-width: 300px;
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    padding: 10px;
-    box-sizing: border-box;
-    /* 新增：固定在底部 */
-    flex-shrink: 0;
-    background: #1a1a1a;
-    border-top: 1px solid #333;
-    position: sticky;
-    bottom: 0;
-    z-index: 10;
-}
-/* 修改信息区域 - 改为左右结构 */
-.team-info-area {
-    width: 100%;
-    max-width: 350px;
-    display: flex;
-    gap: 10px;
-    padding: 10px 5px;
-    min-height: 100px;
-    flex-shrink: 0;
-    /* 新增：左右结构 */
-    align-items: flex-start;
-}
 
-/* 左侧固定区域（图片+宝物） */
-.team-info-left {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex-shrink: 0;
-    gap: 6px;
-    /* 新增：固定在左侧 */
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
 
-/* 新增：右侧可滚动区域（属性+技能） */
-.team-info-right-scroll {
-    flex: 1;
-    min-width: 0;
-    overflow-y: auto;
-    max-height: 350px; /* 限制最大高度，使内容可滚动 */
-    padding-right: 4px;
-}
-
-/* 自定义滚动条 */
-.team-info-right-scroll::-webkit-scrollbar {
-    width: 3px;
-}
-.team-info-right-scroll::-webkit-scrollbar-track {
-    background: #222;
-}
-.team-info-right-scroll::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 2px;
-}/* 修改队伍视图 - 让内容不溢出屏幕 */
+/* 修改队伍视图 - 让内容不溢出屏幕 */
 #team-view {
     width: 100%;
     height: 97%;
