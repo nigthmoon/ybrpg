@@ -1235,12 +1235,18 @@ const contentList = {
 						const pId = this.skills[0];
 						const pData = (contentList && contentList.pugong && contentList.pugong[pId]) || null;
 						if (!pData) return;
-						const enemySide = this.side === "player" ? "enemy" : "player";
-						const targets = Game.Battle.resolveSkillTargets(pData, this, enemySide);
-						if (targets && targets.length) {
-							Game.Battle.executePugong(this, targets, function () {});
-						}
-					},
+					const enemySide = this.side === "player" ? "enemy" : "player";
+					const targets = Game.Battle.resolveSkillTargets(pData, this, enemySide);
+					if (targets && targets.length) {
+						// 延迟执行追加普攻，使技能特效与普攻之间有视觉间隔，而非一次性甩出。
+						// 先同步置位 _isFollowUpPugong 标记，让 executeSkill 据此暂缓行动结束流程，
+						// 待延迟后真正执行 executePugong 时再由其 finishFollowUp 驱动 onActionComplete。
+						this._isFollowUpPugong = true;
+						setTimeout(() => {
+							Game.Battle.executePugong(this, targets, function () {}, true);
+						}, 600);
+					}
+				},
 				},
 			],
 		},
@@ -1943,10 +1949,16 @@ const contentList = {
 						if (!pData) return;
 						const enemySide = this.side === "player" ? "enemy" : "player";
 						const targets = Game.Battle.resolveSkillTargets(pData, this, enemySide);
-						if (targets && targets.length) {
-							Game.Battle.executePugong(this, targets, function () {});
-						}
-					},
+					if (targets && targets.length) {
+						// 延迟执行追加普攻，使技能特效与普攻之间有视觉间隔，而非一次性甩出。
+						// 先同步置位 _isFollowUpPugong 标记，让 executeSkill 据此暂缓行动结束流程，
+						// 待延迟后真正执行 executePugong 时再由其 finishFollowUp 驱动 onActionComplete。
+						this._isFollowUpPugong = true;
+						setTimeout(() => {
+							Game.Battle.executePugong(this, targets, function () {}, true);
+						}, 600);
+					}
+				},
 				},
 			],
 		},

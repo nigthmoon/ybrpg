@@ -797,8 +797,25 @@ Battle.applyHeal = function applyHeal(target, healAmount, callback, source) {
  * @param {*} callback 后续
  * @returns 执行普攻事件
  */
-Battle.executePugong = function executePugong(actor, targets, callback) {
+Battle.executePugong = function executePugong(actor, targets, callback, isFollowUp) {
+	// 标记：本次普攻是否为「技能/必杀后追加普攻」。若是，则完成时由 finishFollowUp 驱动行动结束流程，
+	// 避免 executeSkill 在追加普攻动画结算前就进入 afterAction 造成流程错乱。
+	// 注意：非追加普攻时显式置 false，防止沿用上一次行动残留的标记。
+	actor._isFollowUpPugong = isFollowUp ? true : false;
+
+	// 追加普攻结算完毕时，驱动被暂缓的行动结束流程（onActionComplete）
+	function finishFollowUp() {
+		// 注意：此处【不】重置 _isFollowUpPugong，保留它作为「本次行动触发过追加普攻」的标记，
+		// 供 executeSkill 在 skillEnd 之后判断是否仍需等待追加普攻结算（含同步结算的场景）。
+		if (actor._isFollowUpPugong && actor._followUpPugongDoneCallback) {
+			const doneCb = actor._followUpPugongDoneCallback;
+			actor._followUpPugongDoneCallback = null;
+			doneCb();
+		}
+	}
+
 	if (!targets || targets.length === 0) {
+		finishFollowUp();
 		if (callback) callback();
 		return;
 	}
@@ -845,6 +862,7 @@ Battle.executePugong = function executePugong(actor, targets, callback) {
 			}
 			updateBattleUI();
 
+			finishFollowUp();
 			if (callback) callback();
 			return;
 		}
@@ -900,12 +918,22 @@ Battle.executePugong = function executePugong(actor, targets, callback) {
  */
 Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, energyCost, callback) {
 	if (!targets || targets.length === 0) {
+		actor._followUpPugongDoneCallback = null;
 		if (callback) callback();
 		return;
 	}
 
 	// 记录本次行动类型（'skill' | 'spskill'），供突破效果（如「使用技能后获得buff」）的 filter 判断
 	actor._lastActionType = skillType;
+	actor._isFollowUpPugong = false; // 重置「追加普攻」标记，由本次技能是否触发决定
+
+	// ===== 【修复】提前暂存行动结束回调（onActionComplete）=====
+	// 原因：「追加普攻」通过 skillEnd 触发，而 executePugong 可能在 triggerSelfEffect 内部
+	// 同步结算完成（当 applyDamage 的 AFTER_DAMAGE 没有异步监听器时，emitAsync 会同步回调），
+	// 若等 triggerSelfEffect 之后才赋值，finishFollowUp 会在回调尚未暂存时执行，
+	// 导致 onActionComplete 永不驱动 → 战斗卡死（需切自动再切回手动才能恢复）。
+	// 故在触发 skillEnd 之前就暂存回调，保证 finishFollowUp 一定能驱动行动结束流程。
+	actor._followUpPugongDoneCallback = callback;
 
 	actor.energy = Math.max(0, actor.energy - energyCost);
 	updateBattleUI();
@@ -918,7 +946,10 @@ Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, 
 	const isRecover = (sData && sData.isRecover === true);
 	const extraEnergy = Math.max(0, energyCost - 4);
 
-	const triggerMap = { 'pugong': 'pugongHit', 'skill': 'skillHit', 'spskill': 'spskillHit' };
+	// 必杀技（spskill）命中时，同时触发 skillHit 与 spskillHit：
+	// 让 skillHit 这一时机「囊括技能与必杀」，突破效果只需监听 skillHit 即可覆盖两者；
+	// 保留 spskillHit 不丢失，供需要「仅必杀」生效的效果使用。getEffectsByTrigger 已支持数组。
+	const triggerMap = { 'pugong': 'pugongHit', 'skill': 'skillHit', 'spskill': ['skillHit', 'spskillHit'] };
 	const trigger = triggerMap[skillType] || 'onHit';
 
 	let index = 0;
@@ -946,19 +977,30 @@ Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, 
 			// ===== 技能（含必杀）结束时点：传出本次是否出现暴击 =====
 			// 注：原"怒攻"在本文语境即等同于"技能（含必杀）"，故对 skill 与 spskill 均触发。
 			// content/filter 收到 { hadCrit }，供「技能（含必杀）后若出现过暴击回复能量/回血」等效果使用
-			if ((skillType === 'skill' || skillType === 'spskill') && actor && actor.alive) {
-				triggerSelfEffect(actor, 'skillEnd', { hadCrit: hadCrit });
-			}
+		if ((skillType === 'skill' || skillType === 'spskill') && actor && actor.alive) {
+			triggerSelfEffect(actor, 'skillEnd', { hadCrit: hadCrit });
+		}
 
-			// 技能不再回复能量（无论是否命中）
-			// 仅保留日志用于调试
-			if (hitCount === 0 && missCount > 0) {
-				addBattleLog(`${actor.name} 的技能全部被闪避`);
-			}
-			updateBattleUI();
+		// 技能不再回复能量（无论是否命中）
+		// 仅保留日志用于调试
+		if (hitCount === 0 && missCount > 0) {
+			addBattleLog(`${actor.name} 的技能全部被闪避`);
+		}
+		updateBattleUI();
 
+		// ===== 【修复】若本次技能通过 skillEnd 触发了「追加普攻」，则暂缓行动结束流程，
+		// onActionComplete 已在函数开头暂存到 _followUpPugongDoneCallback，
+		// 待追加普攻（executePugong）结算完成后再由 finishFollowUp 驱动；
+		// 否则行动结束/额外回合/下一轮会与追加普攻并行，导致流程错乱。 =====
+		if (actor._isFollowUpPugong) {
+			// 已触发追加普攻：行动结束流程改由 finishFollowUp 在追加普攻结算完成后驱动，
+			// 此处不再直接调用 callback（避免重复驱动，也避免同步结算时重复触发）。
+		} else {
+			// 未触发追加普攻：直接驱动行动结束流程，并清理暂存回调
 			if (callback) callback();
-			return;
+			actor._followUpPugongDoneCallback = null;
+		}
+		return;
 		}
 
 		const target = targets[index++];
@@ -2098,7 +2140,8 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 			const sData = contentList && contentList[skillType] && contentList[skillType][skillId];
 			if (!sData || !sData.contents || !Array.isArray(sData.contents)) return;
 
-			const triggerMap = { 'pugong': 'pugongHit', 'skill': 'skillHit', 'spskill': 'spskillHit' };
+			// 与 executeSkill 保持一致：必杀（spskill）默认命中时机为 skillHit + spskillHit
+			const triggerMap = { 'pugong': 'pugongHit', 'skill': 'skillHit', 'spskill': ['skillHit', 'spskillHit'] };
 			const trigger = triggerMap[skillType];
 			if (!trigger) return;
 

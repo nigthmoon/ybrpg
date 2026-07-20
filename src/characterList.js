@@ -814,6 +814,8 @@ const characterList = {
 			{
 				type: "skill_effect",
 				desc: "暴击时，增加1点能量",
+				// 底层已让 spskill（必杀）命中时一并触发 skillHit，
+				// 故 skillHit 已囊括「技能 + 必杀」两种暴击场景，无需单独监听 spskillHit。
 				trigger: ["pugongHit", "skillHit"],
 				filter: function (target) {
 					return this._lastHitIsCrit === true;

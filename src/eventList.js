@@ -150,11 +150,11 @@ const SPeventList = {
 				prev: 'sp1-8',
 				gold: 2800,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 45, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 45, tupolevel: 12, rank: 'epic', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 45, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 45, tupolevel: 12, rank: 'epic', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 45, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 45, tupolevel: 12, rank: 'epic', template: 'defense', buff: [] },
 					{}
 				],
 			},
@@ -166,11 +166,11 @@ const SPeventList = {
 				prev: 'sp1-9',
 				gold: 3300,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 50, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 50, tupolevel: 12, rank: 'epic', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 50, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 50, tupolevel: 12, rank: 'epic', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 50, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 50, tupolevel: 12, rank: 'epic', template: 'defense', buff: [] },
 					{}
 				],
 			},
@@ -182,11 +182,11 @@ const SPeventList = {
 				prev: 'sp1-10',
 				gold: 3800,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 55, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 55, tupolevel: 12, rank: 'epic', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 55, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 55, tupolevel: 12, rank: 'epic', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 55, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 55, tupolevel: 12, rank: 'epic', template: 'defense', buff: [] },
 					{}
 				]
 			},
@@ -198,11 +198,11 @@ const SPeventList = {
 				prev: 'sp1-11',
 				gold: 4300,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 60, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 60, tupolevel: 12, rank: 'epic', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 60, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 60, tupolevel: 12, rank: 'epic', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 60, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 60, tupolevel: 12, rank: 'epic', template: 'defense', buff: [] },
 					{}
 				]
 			},
@@ -216,11 +216,11 @@ const SPeventList = {
 				prev: 'sp1-12',
 				gold: 5500,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 70, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 70, tupolevel: 16, rank: 'legend', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 70, tupolevel: 8, rank: 'legend', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 70, tupolevel: 16, rank: 'legend', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 70, tupolevel: 8, rank: 'legend', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 70, tupolevel: 16, rank: 'legend', template: 'defense', buff: [] },
 					{}
 				]
 			},
@@ -232,11 +232,11 @@ const SPeventList = {
 				prev: 'sp1-13',
 				gold: 6700,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 80, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 80, tupolevel: 16, rank: 'legend', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 80, tupolevel: 8, rank: 'legend', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 80, tupolevel: 16, rank: 'legend', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 80, tupolevel: 8, rank: 'legend', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 80, tupolevel: 16, rank: 'legend', template: 'defense', buff: [] },
 					{}
 				]
 			},
@@ -248,11 +248,11 @@ const SPeventList = {
 				prev: 'sp1-14',
 				gold: 7900,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 90, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 90, tupolevel: 16, rank: 'legend', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 90, tupolevel: 8, rank: 'legend', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 90, tupolevel: 16, rank: 'legend', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 90, tupolevel: 8, rank: 'legend', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 90, tupolevel: 16, rank: 'legend', template: 'defense', buff: [] },
 					{}
 				]
 			},
@@ -264,11 +264,11 @@ const SPeventList = {
 				prev: 'sp1-15',
 				gold: 9000,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 100, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 100, tupolevel: 16, rank: 'legend', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 100, tupolevel: 8, rank: 'legend', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 100, tupolevel: 16, rank: 'legend', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 100, tupolevel: 8, rank: 'legend', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 100, tupolevel: 16, rank: 'legend', template: 'defense', buff: [] },
 					{}
 				]
 			},
