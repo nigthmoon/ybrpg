@@ -254,6 +254,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 	'ignore_def_pugong_100': { type: 'passive_effect', effectId: 'ignore_def_pugong_100', desc: '普攻时，无视对方全部防御力' },
 	'ignore_def_skill_50': { type: 'passive_effect', effectId: 'ignore_def_skill_50', desc: '技能时，无视对方50%防御力' },
 	'ignore_def_skill_80': { type: 'passive_effect', effectId: 'ignore_def_skill_80', desc: '技能时，无视对方80%防御力' },
+	'ignore_def_skill_40': { type: 'passive_effect', effectId: 'ignore_def_skill_40', desc: '技能时，无视对方40%防御力' },
 	'ignore_def_skill_100': { type: 'passive_effect', effectId: 'ignore_def_skill_100', desc: '技能时，无视对方全部防御力' },
 	'ignore_def_all_30': { type: 'passive_effect', effectId: 'ignore_def_all_30', desc: '所有伤害无视对方30%防御力' },
 	'ignore_def_all_60': { type: 'passive_effect', effectId: 'ignore_def_all_60', desc: '所有伤害无视对方60%防御力' },

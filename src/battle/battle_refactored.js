@@ -416,7 +416,8 @@ Battle.calculateDamage = function calculateDamage(attacker, defender, coefficien
 	let atk = Number(attacker.atk) || 0;
 	// ===== 【新增】攻击力百分比 buff（atkPctBonus，来自 atk 类 buff）=====
 	atk = Math.floor(atk * (1 + (Number(attacker.atkPctBonus) || 0)));
-	const def = Number(defender.def) || 0;
+	// 防御百分比 buff（defPctBonus，来自 def 类 buff，如「降低防御」）：与 atkPctBonus 同管道
+	const def = Math.floor((Number(defender.def) || 0) * (1 + (Number(defender.defPctBonus) || 0)));
 	// 无视防御：根据攻击类型读取攻击方 buff 中的 ignore_def_* id，按比例削减防御
 	const ignoreDefPercent = getIgnoreDefPercent(attacker, attackType);
 	const effectiveDef = Math.floor(def * (1 - ignoreDefPercent));
@@ -613,6 +614,11 @@ Battle.applyDamage = function applyDamage(target, dmgResult, attacker, callback,
 	}
 
 	let finalDmg = dmg;
+
+	// ======== 无敌：非真实伤害改为1（真实伤害走直接扣血，不经过 applyDamage） ========
+	if (target.buffList && target.buffList.some(b => b.type === 'invincible')) {
+		finalDmg = 1;
+	}
 
 	// ======== 执行目标的受击效果（onHitSelf） ========
 	const defendEffects = getEffectsByTrigger(target, 'onHitSelf');
@@ -3094,7 +3100,7 @@ Battle.getActionSlotKey = function getActionSlotKey(side, actorNumber) {
  * @param {Object} buffConfig - buff 配置
  * @param {string} buffConfig.id - buff 唯一标识
  * @param {string} buffConfig.name - buff 名称
- * @param {string} buffConfig.type - buff 类型：'seal'|'stun'|'paralyze'|'healBlock'|'healReduce'|'poison'|'takeUp'(受伤增加)|'takeDn'(减伤)|'baoji'|'kangbao'|'baoshang'|'shouhu'|'mingzhong'|'shanbi'|'poji'|'gedang'（特种属性 value 为万分数，如 3000 = 30%；healReduce 的 value 为被治疗量降低比例，如 0.8 = 降疗80%；takeUp 的 value 为该单位受到伤害增加比例，如 0.3 = 受伤+30%）
+ * @param {string} buffConfig.type - buff 类型：'seal'|'stun'|'paralyze'|'healBlock'|'healReduce'|'poison'|'takeUp'(受伤增加)|'takeDn'(减伤)|'baoji'|'kangbao'|'baoshang'|'shouhu'|'mingzhong'|'shanbi'|'poji'|'gedang'|'atk'(攻击百分比，value 为带符号分数，如 0.1 = 攻击+10%)|'def'(防御百分比，value 为带符号分数，如 -0.45 = 降防45% / 0.3 = 加防30%)（特种属性 value 为万分数，如 3000 = 30%；healReduce 的 value 为被治疗量降低比例，如 0.8 = 降疗80%；takeUp 的 value 为该单位受到伤害增加比例，如 0.3 = 受伤+30%）
  * @param {number} buffConfig.remainRounds - 持续轮次（-1 永久）
  * @param {string} buffConfig.sourceSide - 施加者阵营（可选）
  * @param {string} buffConfig.sourceId - 施加者 instanceId
@@ -3251,6 +3257,11 @@ Battle.applyBuffEffect = function applyBuffEffect(target, buffConfig) {
 			target.atkPctBonus = (target.atkPctBonus || 0) + (buffConfig.value || 0);
 			addBattleLog(`${target.name} 攻击力${buffConfig.value >= 0 ? '提升' : '降低'} ${Math.round(Math.abs(buffConfig.value) * 100)}%`);
 			break;
+		// ===== 防御百分比 buff（def：value 为带符号分数，如 -0.45 降防45% / 0.3 加防30%）=====
+		case 'def':
+			target.defPctBonus = (target.defPctBonus || 0) + (buffConfig.value || 0);
+			addBattleLog(`${target.name} 防御${buffConfig.value >= 0 ? '提升' : '降低'} ${Math.round(Math.abs(buffConfig.value) * 100)}%`);
+			break;
 		// ===== 【新增】治疗效果百分比 buff（healBoost：value 为带符号分数）=====
 		case 'healBoost':
 			target.healBoost = (target.healBoost || 0) + (buffConfig.value || 0);
@@ -3357,6 +3368,9 @@ Battle.removeBuffEffect = function removeBuffEffect(target, buff) {
 			break;
 		case 'atk':
 			target.atkPctBonus = (target.atkPctBonus || 0) - (buff.value || 0);
+			break;
+		case 'def':
+			target.defPctBonus = (target.defPctBonus || 0) - (buff.value || 0);
 			break;
 		case 'healBoost':
 			target.healBoost = (target.healBoost || 0) - (buff.value || 0);

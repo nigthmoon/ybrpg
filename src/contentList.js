@@ -1447,6 +1447,21 @@ const contentList = {
 			coefficient: 1.15,
 			isRecover: true,
 			emoji: "🧪",
+			contents: [
+				{
+					desc: "20%几率令被治疗目标恢复1能量",
+					filter: function (target) {
+						return Math.random() < 0.2;
+					},
+					content: function (target) {
+						if (target && target.alive && target.energy !== undefined) {
+							target.energy = Math.min(8, target.energy + 1);
+							Game.Battle.log(`${target.name} 获得1点能量`);
+							Game.Battle.updateUI();
+						}
+					}
+				}
+			],
 		},
 		skill_102: {
 			name: "技能攻击",
@@ -1456,6 +1471,15 @@ const contentList = {
 			coefficient: 1.95,
 			isRecover: false,
 			emoji: "🎵",
+			contents: [
+				{
+					desc: "65%几率提升自身4000暴击2回合",
+					filter: function () { return Math.random() < 0.65; },
+					content: function () {
+						Game.Battle.addBuff(this, { id: "baoji_self_4000", name: "暴击提升", type: "baoji", value: 4000, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		skill_103: {
 			name: "技能攻击",
@@ -1465,6 +1489,18 @@ const contentList = {
 			coefficient: 1.65,
 			isRecover: false,
 			emoji: "🌙",
+			contents: [
+				{
+					desc: "65%几率提升前排2000格挡2回合",
+					filter: function () { return Math.random() < 0.65; },
+					content: function () {
+						const allies = Game.Battle.getAliveUnits(this.side).filter(u => u.slotIndex < 3);
+						allies.forEach(ally => {
+							Game.Battle.addBuff(ally, { id: "gedang_front_2000", name: "格挡提升", type: "gedang", value: 2000, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+						});
+					}
+				}
+			],
 		},
 		skill_104: {
 			name: "技能攻击",
@@ -1483,6 +1519,17 @@ const contentList = {
 			coefficient: 1.05,
 			isRecover: false,
 			emoji: "💧",
+			contents: [
+				{
+					desc: "10%几率麻痹目标1回合",
+					filter: function () { return Math.random() < 0.1; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "paralyze_skill", name: "麻痹", type: "paralyze", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_106: {
 			name: "技能攻击",
@@ -1492,6 +1539,21 @@ const contentList = {
 			coefficient: 1.55,
 			isRecover: false,
 			emoji: "🌙",
+			contents: [
+				{
+					desc: "消耗10%最大生命值，本技能伤害增加30%",
+					filter: function () {
+						return !(this.buffList && this.buffList.some(b => b.id === 'skill106_dmg'));
+					},
+					content: function () {
+						const cost = Math.floor(this.maxHp * 0.1);
+						this.hp = Math.max(1, this.hp - cost);
+						Game.Battle.addBuff(this, { id: "skill106_dmg", name: "增伤", type: "dealUp", value: 0.3, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						Game.Battle.log(`${this.name} 消耗 ${cost} 生命，伤害提升30%`);
+						Game.Battle.updateUI();
+					}
+				}
+			],
 		},
 		skill_107: {
 			name: "技能攻击",
@@ -1510,6 +1572,17 @@ const contentList = {
 			coefficient: 1.65,
 			isRecover: false,
 			emoji: "🔥",
+			contents: [
+				{
+					desc: "50%几率封印目标1回合",
+					filter: function () { return Math.random() < 0.5; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "seal_target", name: "封印", type: "seal", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_109: {
 			name: "技能攻击",
@@ -1519,6 +1592,15 @@ const contentList = {
 			coefficient: 3.25,
 			isRecover: false,
 			emoji: "🪨",
+			contents: [
+				{
+					desc: "65%几率增加自身40格挡2回合",
+					filter: function () { return Math.random() < 0.65; },
+					content: function () {
+						Game.Battle.addBuff(this, { id: "gedang_self_40", name: "格挡提升", type: "gedang", value: 40, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				}
+			],
 		},
 		skill_110: {
 			name: "技能攻击",
@@ -1528,6 +1610,17 @@ const contentList = {
 			coefficient: 2.65,
 			isRecover: false,
 			emoji: "🔥",
+			contents: [
+				{
+					desc: "60%几率降低目标75%被治疗效果2回合",
+					filter: function () { return Math.random() < 0.6; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "healReduce_target_75", name: "降疗", type: "healReduce", value: 0.75, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_111: {
 			name: "技能回复",
@@ -1537,6 +1630,34 @@ const contentList = {
 			coefficient: 1.15,
 			isRecover: true,
 			emoji: "🧪",
+			contents: [
+				{
+					desc: "清除被治疗目标的负面效果",
+					filter: function () { return true; },
+					content: function (target) {
+						if (target && target.alive) {
+							const debuffTypes = ['seal', 'stun', 'paralyze', 'healBlock', 'poison'];
+							const toRemove = [];
+							(target.buffList || []).forEach(function (buff, index) {
+								if (debuffTypes.includes(buff.type)) toRemove.push(index);
+							});
+							toRemove.reverse().forEach(function (index) {
+								const buff = target.buffList[index];
+								target.buffList.splice(index, 1);
+								Game.Battle.removeBuffEffect(target, buff);
+							});
+							if (toRemove.length === 0) {
+								target.stunned = false;
+								target.paralyzed = false;
+								target.healBlocked = false;
+								target.poisonDamage = 0;
+							}
+							Game.Battle.log(`${target.name} 的负面效果已被清除`);
+							Game.Battle.updateUI();
+						}
+					}
+				}
+			],
 		},
 		skill_112: {
 			name: "技能攻击",
@@ -1546,6 +1667,17 @@ const contentList = {
 			coefficient: 1.95,
 			isRecover: false,
 			emoji: "🌙",
+			contents: [
+				{
+					desc: "55%几率降低目标45%防御2回合",
+					filter: function () { return Math.random() < 0.55; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "def_target_45", name: "降低防御", type: "def", value: -0.45, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_113: {
 			name: "技能攻击",
@@ -1555,6 +1687,17 @@ const contentList = {
 			coefficient: 1.65,
 			isRecover: false,
 			emoji: "🌪️",
+			contents: [
+				{
+					desc: "20%几率眩晕目标1回合",
+					filter: function () { return Math.random() < 0.2; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "stun_target", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_114: {
 			name: "技能攻击",
@@ -1564,6 +1707,17 @@ const contentList = {
 			coefficient: 3.25,
 			isRecover: false,
 			emoji: "🪨",
+			contents: [
+				{
+					desc: "40%几率眩晕目标1回合",
+					filter: function () { return Math.random() < 0.4; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "stun_target", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_115: {
 			name: "技能攻击",
@@ -1573,6 +1727,17 @@ const contentList = {
 			coefficient: 1.65,
 			isRecover: false,
 			emoji: "🌙",
+			contents: [
+				{
+					desc: "20%几率眩晕目标1回合",
+					filter: function () { return Math.random() < 0.2; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "stun_target", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_116: {
 			name: "技能攻击",
@@ -1582,6 +1747,26 @@ const contentList = {
 			coefficient: 3.25,
 			isRecover: false,
 			emoji: "🔥",
+			contents: [
+				{
+					desc: "100%几率提升友方后排15%攻击力2回合（若后排无人则提升前排）",
+					filter: function () { return true; },
+					content: function () {
+						// 后排 = slotIndex >= 3（456号位）；若后排无人，则取前排（123号位）
+						let allies = Game.Battle.getAliveUnits(this.side).filter(u => u.slotIndex >= 3);
+						if (allies.length === 0) {
+							allies = Game.Battle.getAliveUnits(this.side).filter(u => u.slotIndex < 3);
+						}
+						allies.forEach(ally => {
+							Game.Battle.addBuff(ally, { id: "atk_back_15", name: "攻击提升", type: "atk", value: 0.15, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+						});
+						if (allies.length > 0) {
+							Game.Battle.log(`${this.name} 提升 ${allies.length} 名后排友方 15% 攻击力`);
+							Game.Battle.updateUI();
+						}
+					}
+				}
+			],
 		},
 		skill_117: {
 			name: "技能攻击",
@@ -1609,6 +1794,17 @@ const contentList = {
 			coefficient: 3.25,
 			isRecover: false,
 			emoji: "🔥",
+			contents: [
+				{
+					desc: "100%几率封印目标1回合",
+					filter: function () { return true; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "seal_target", name: "封印", type: "seal", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_120: {
 			name: "技能攻击",
