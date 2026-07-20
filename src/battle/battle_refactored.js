@@ -1432,7 +1432,8 @@ Battle.end = function endBattle(winner) {
  */
 Battle.getSkillEmoji = function getSkillEmoji(skillType, skillId) {
 	const sData = contentList && contentList[skillType] && contentList[skillType][skillId];
-	if (!sData || !sData.target) return '🔥';
+	if (!sData) return '🔥';
+	if (!sData.target) return '🔥';
 	let isRecover = false;
 	if (sData.isRecover === true) isRecover = true;
 	if (isRecover) return '🧪';
@@ -2794,6 +2795,91 @@ Battle.showSkillEffect = function showSkillEffect(unit, effectInfo) {
 
 	setTimeout(() => el.remove(), 650);
 }
+
+/**
+ * 让一个 emoji 从 fromUnit 槽位「飞」到 toUnit 槽位（用于溅射等连锁伤害特效）
+ * 用 position:fixed + 视口坐标，避免被槽位 overflow:hidden 裁切。
+ * @param {object} fromUnit 起点单位（激活溅射的施法者）
+ * @param {object} toUnit 终点单位（被溅射目标）
+ * @param {string} emojiChar emoji 字符（如 '🔥'）
+ */
+Battle.flyEmoji = function flyEmoji(fromUnit, toUnit, emojiChar) {
+	const fromEl = document.querySelector(`.battle-unit[data-side="${fromUnit.side}"][data-slot="${fromUnit.slotIndex}"]`);
+	const toEl = document.querySelector(`.battle-unit[data-side="${toUnit.side}"][data-slot="${toUnit.slotIndex}"]`);
+	if (!fromEl || !toEl) return;
+	const emoji = emojiChar || '🔥';
+	const fromRect = fromEl.getBoundingClientRect();
+	const toRect = toEl.getBoundingClientRect();
+	const startX = fromRect.left + fromRect.width / 2;
+	const startY = fromRect.top + fromRect.height / 2;
+	const endX = toRect.left + toRect.width / 2;
+	const endY = toRect.top + toRect.height / 2;
+
+	const flyEl = document.createElement('div');
+	flyEl.className = 'splash-fly-emoji';
+	flyEl.textContent = emoji;
+	flyEl.style.left = startX + 'px';
+	flyEl.style.top = startY + 'px';
+	document.body.appendChild(flyEl);
+
+	// 强制 reflow 后再触发过渡，确保起点样式已应用
+	flyEl.getBoundingClientRect();
+	requestAnimationFrame(() => {
+		flyEl.style.transform = `translate(-50%, -50%) translate(${endX - startX}px, ${endY - startY}px) scale(1.3)`;
+		flyEl.classList.add('flying');
+	});
+
+	// 飞行结束后：移除飞行元素，并在被命中目标身上播放命中特效
+	setTimeout(() => {
+		flyEl.remove();
+		if (Battle.showSkillEffect) Battle.showSkillEffect(toUnit, Battle.getEmojiClass(emoji));
+	}, 450);
+};
+
+/**
+ * 溅射专用指示线：从主目标(fromUnit)向被溅射目标(toUnit)画一条快速延伸并消散的定向冲击线，
+ * 末端带一个溅射爆点标记。用于表达「溅射连锁」，与技能特效 emoji 体系解耦、避免混淆。
+ * 用 position:fixed + 视口坐标，避免被槽位 overflow:hidden 裁切。
+ * @param {object} fromUnit 起点单位（被主攻击命中的目标）
+ * @param {object} toUnit 终点单位（被溅射的邻居）
+ */
+Battle.splashLine = function splashLine(fromUnit, toUnit) {
+	const fromEl = document.querySelector(`.battle-unit[data-side="${fromUnit.side}"][data-slot="${fromUnit.slotIndex}"]`);
+	const toEl = document.querySelector(`.battle-unit[data-side="${toUnit.side}"][data-slot="${toUnit.slotIndex}"]`);
+	if (!fromEl || !toEl) return;
+	const fromRect = fromEl.getBoundingClientRect();
+	const toRect = toEl.getBoundingClientRect();
+	const startX = fromRect.left + fromRect.width / 2;
+	const startY = fromRect.top + fromRect.height / 2;
+	const endX = toRect.left + toRect.width / 2;
+	const endY = toRect.top + toRect.height / 2;
+	const dx = endX - startX;
+	const dy = endY - startY;
+	const length = Math.sqrt(dx * dx + dy * dy);
+	const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+	// 外层：定位到起点并按夹角旋转，宽度=两点距离
+	const wrap = document.createElement('div');
+	wrap.className = 'splash-line-wrap';
+	wrap.style.left = startX + 'px';
+	wrap.style.top = startY + 'px';
+	wrap.style.width = length + 'px';
+	wrap.style.transform = `rotate(${angle}deg)`;
+
+	// 内层线条：scaleX 从 0 延伸到全长再消散
+	const bar = document.createElement('div');
+	bar.className = 'splash-line-bar';
+	wrap.appendChild(bar);
+
+	// 末端爆点：延迟绽放，标记溅射落点
+	const head = document.createElement('div');
+	head.className = 'splash-line-head';
+	wrap.appendChild(head);
+
+	document.body.appendChild(wrap);
+
+	setTimeout(() => wrap.remove(), 650);
+};
 
 /**
  * 获取Emoji特效类

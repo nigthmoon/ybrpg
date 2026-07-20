@@ -831,12 +831,24 @@ const characterList = {
 					return true;
 				},
 			content: function (target) {
-				if (!target || !target.alive) return;
+				// if (!target || !target.alive) return;
 				const side = target.side;
 				const idx = target.slotIndex;
-				const neighbors = [idx - 1, idx + 1].map(i => Game.Battle.getAliveUnits(side).find(u => u.slotIndex === i)).filter(Boolean);
-				Game.Battle.log(`[DEBUG 溅射] 触发 side=${side} idx=${idx} 邻位=${neighbors.map(n => n.name + '#' + n.slotIndex).join(',') || '无'}`);
+				// 站位：每排 3 人，0-2 为前排、3-5 为后排（左→中→右）。
+				// 仅在「同排内」取左右相邻列，避免前排右(idx=2) 的 +1 误判到后排左(idx=3)。
+				const perRow = 3;
+				const row = Math.floor(idx / perRow);
+				const col = idx % perRow; // 0=左, 1=中, 2=右
+				const neighbors = [col - 1, col + 1]
+					.filter(c => c >= 0 && c < perRow)
+					.map(c => row * perRow + c)
+					.map(i => Game.Battle.getAliveUnits(side).find(u => u.slotIndex === i))
+					.filter(Boolean);
+				Game.Battle.log(`[DEBUG 溅射] 触发 side=${side} idx=${idx} 排=${row} 列=${col} 邻位=${neighbors.map(n => n.name + '#' + n.slotIndex).join(',') || '无'}`);
+				// 溅射用「冲击指示线」表达：从被主攻击命中的目标(target)指向被溅射邻居(n)，
+				// 与技能特效 emoji 体系解耦，避免混淆。
 				neighbors.forEach(n => {
+						if (Game.Battle.splashLine) Game.Battle.splashLine(target, n);
 						const dmg = Game.Battle.calculateDamage(this, n, 0.6, 0, "pugong");
 						Game.Battle.applyDamage(n, dmg, this, function () {}, { trigger: "extraHit", isSpecial: true });
 					});

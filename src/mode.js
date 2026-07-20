@@ -5721,7 +5721,8 @@ function buildPlayerTeamForBattle() {
 			})(),
 			rank: instData.rank || (base ? base.rank : 'common'),
 			tupolevel: instData.tupolevel || 0,
-			tupoList: instData.tupoList || (base ? base.tupoList : []),
+			// 突破定义以 characterList 原对象为准（含 content/filter 函数），避免实例存档反序列化后函数丢失
+			tupoList: base ? base.tupoList : (instData.tupoList || []),
 
 			// ===== 【新增】传递 openSpskill =====
 			openSpskill: instData.openSpskill === true,
@@ -9889,8 +9890,9 @@ function syncInstanceTupoList(instanceId) {
 	// 如果实例中完全没有 tupoList，或者我们强制每次进入战斗前都刷新（防止角色库修改后存档没变）
 	// 这里建议：只要角色库有定义，就覆盖存档中的旧定义，确保逻辑一致
 	if (newTupoList.length > 0) {
-		// 【关键】深拷贝，防止引用指向同一对象导致意外修改
-		instData.tupoList = JSON.parse(JSON.stringify(newTupoList));
+		// 【关键】浅拷贝数组即可。注意：内联突破对象含 content/filter 函数，
+		// JSON 深拷贝会丢失函数导致 skill_effect 类突破失效，故用 slice 保留元素引用（函数不丢）
+		instData.tupoList = newTupoList.slice();
 
 		// 如果实例中没有记录当前突破等级，初始化为 0
 		if (instData.tupolevel === undefined || instData.tupolevel === null) {
