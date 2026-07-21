@@ -3049,32 +3049,61 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//闪避+640
-			}, 
+				type: "self_stat_flat",
+				shanbi: 640,
+				desc: "闪避+640",
+			},
 			{
-				//治疗效果+20%
-			}, 
+				type: "self_stat_percent",
+				pctHeal: 0.2,
+				desc: "治疗效果+20%",
+			},
 			{
-				//亡语，为全体友方回复30%攻击的血量
-			}, 
+				type: "skill_effect",
+				desc: "亡语，为全体友方回复30%攻击的血量",
+				trigger: "dieSelf",
+				filter: function () { return true; },
+				content: function () {
+					const allies = Game.Battle.getAliveUnits(this.side);
+					const healAmt = Math.floor((this.atk || 0) * 0.3);
+					allies.forEach(ally => {
+						if (ally.alive) {
+							ally.hp = Math.min(ally.maxHp, ally.hp + healAmt);
+							Game.Battle.log(`${ally.name} 恢复 ${healAmt} 生命`);
+						}
+					});
+					Game.Battle.updateUI();
+				},
+			},
 			{
-				//普攻时，45%几率为一名能量最低的友方恢复1能量
-			}, 
+				type: "skill_effect",
+				desc: "普攻时，45%几率为一名能量最低的友方恢复1能量",
+				trigger: "pugongHit",
+				filter: function () { return Math.random() < 0.45; },
+				content: function () {
+					const allies = Game.Battle.getAliveUnits(this.side).filter(u => u !== this);
+					if (allies.length === 0) return;
+					allies.sort((a, b) => (a.energy || 0) - (b.energy || 0));
+					const t = allies[0];
+					t.energy = Math.min(8, (t.energy || 0) + 1);
+					Game.Battle.log(`${t.name} 恢复 1 能量`);
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3091,33 +3120,56 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//格挡+800
-			}, 
+				type: "self_stat_flat",
+				gedang: 800,
+				desc: "格挡+800",
+			},
 			{
-				//格挡+2000
-			}, 
+				type: "self_stat_flat",
+				gedang: 2000,
+				desc: "格挡+2000",
+			},
 			{
-				//格挡反击，造成50%伤害
-			}, 
+				type: "skill_effect",
+				desc: "格挡反击，造成50%伤害",
+				trigger: "onBlock",
+				filter: function (source) { return source && source.alive; },
+				content: function (source) {
+					const pugongId = this.skills[0] || "attack1";
+					const pData = window.contentList && window.contentList.pugong && window.contentList.pugong[pugongId];
+					const baseCoeff = pData && pData.coefficient ? Number(pData.coefficient) : 1.0;
+					const coeff = baseCoeff * 0.5;
+					Game.Battle.log(`${this.name} 触发格挡反击！`);
+					const dmg = Game.Battle.calculateDamage(this, source, coeff, 0, "pugong");
+					Game.Battle.applyDamage(source, dmg, this, function () {}, { isSpecial: true, trigger: "blockCounter" });
+				},
+			},
 			{
-				//被攻击时，若血量高于来源，受到伤害减少30%
-			}, 
-			
+				type: "skill_effect",
+				desc: "被攻击时，若血量高于来源，受到伤害减少30%",
+				trigger: "onDamageTaken",
+				filter: function (attacker) {
+					return this.alive && attacker && this.hp / this.maxHp > attacker.hp / attacker.maxHp;
+				},
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.3;
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3134,32 +3186,52 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//命中+800
-			}, 
+				type: "self_stat_flat",
+				mingzhong: 800,
+				desc: "命中+800",
+			},
 			{
-				//暴击+2000
-			}, 
+				type: "self_stat_flat",
+				baoji: 2000,
+				desc: "暴击+2000",
+			},
 			{
-				//普攻，10%几率麻痹目标1回合
-			}, 
+				type: "skill_effect",
+				desc: "普攻，10%几率麻痹目标1回合",
+				trigger: "pugongHit",
+				filter: function () { return Math.random() < 0.1; },
+				content: function (target) {
+					if (target && target.alive) {
+						Game.Battle.addBuff(target, { id: "paralyze_target", name: "麻痹", type: "paralyze", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				},
+			},
 			{
-				//自身血量高于目标时，对其伤害+30%
-			}, 
+				type: "skill_effect",
+				desc: "自身血量高于目标时，对其造成的伤害+30%",
+				trigger: "onDamageCalc",
+				filter: function (target) {
+					return target && target.alive && this.hp / this.maxHp > target.hp / target.maxHp;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.3;
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3176,32 +3248,64 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//暴击+800
-			}, 
+				type: "self_stat_flat",
+				baoji: 800,
+				desc: "暴击+800",
+			},
 			{
-				//暴击+2000
-			}, 
+				type: "self_stat_flat",
+				baoji: 2000,
+				desc: "暴击+2000",
+			},
 			{
-				//普攻命中时，对左右相邻角色造成40%伤害（同吴爽模式）
-			}, 
+				type: "skill_effect",
+				desc: "普攻命中时，对左右相邻角色造成40%伤害",
+				trigger: "pugongHit",
+				filter: function () { return true; },
+				content: function (target) {
+					const side = target.side;
+					const idx = target.slotIndex;
+					const perRow = 3;
+					const row = Math.floor(idx / perRow);
+					const col = idx % perRow;
+					const neighbors = [col - 1, col + 1]
+						.filter(c => c >= 0 && c < perRow)
+						.map(c => row * perRow + c)
+						.map(i => Game.Battle.getAliveUnits(side).find(u => u.slotIndex === i))
+						.filter(Boolean);
+					neighbors.forEach(n => {
+						const dmg = Game.Battle.calculateDamage(this, n, 0.4, 0, "pugong");
+						Game.Battle.applyDamage(n, dmg, this, function () {}, { trigger: "extraHit", isSpecial: true });
+					});
+				},
+			},
 			{
-				//上场限一次，造成的伤害+75%
-			}, 
+				type: "skill_effect",
+				desc: "上场限一次，造成的伤害+75%",
+				trigger: "onDamageCalc",
+				filter: function () {
+					if (!this._onceDmgUpUsed) { this._onceDmgUpUsed = true; return true; }
+					return false;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.75;
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3260,32 +3364,60 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//闪避+640
-			}, 
+				type: "self_stat_flat",
+				shanbi: 640,
+				desc: "闪避+640",
+			},
 			{
-				//首次被攻击时，闪避+10000
-			}, 
+				type: "skill_effect",
+				desc: "首次被攻击时，闪避+10000",
+				trigger: "onHitSelf",
+				filter: function () {
+					if (!this._firstHitShanbiUsed) { this._firstHitShanbiUsed = true; return true; }
+					return false;
+				},
+				content: function () {
+					Game.Battle.addBuff(this, { id: "shanbi_first_10000", name: "闪避提升", type: "shanbi", value: 10000, remainRounds: -1, ownerSlot: null });
+				},
+			},
 			{
-				//每次被攻击后，伤害减免+6%，最多18%
-			}, 
+				type: "skill_effect",
+				desc: "每次被攻击后，伤害减免+6%，最多18%",
+				trigger: "onDamageTaken",
+				filter: function () { return true; },
+				content: function (attacker, dmg, mod) {
+					if (!this._dmgReduceStacks) this._dmgReduceStacks = 0;
+					if (this._dmgReduceStacks < 0.18) {
+						this._dmgReduceStacks = Math.min(0.18, this._dmgReduceStacks + 0.06);
+					}
+					mod.pct += this._dmgReduceStacks;
+				},
+			},
 			{
-				//闪避时，90%几率增加1能量
-			}, 
+				type: "skill_effect",
+				desc: "闪避时，90%几率增加1能量",
+				trigger: "onDodge",
+				filter: function () { return Math.random() < 0.9; },
+				content: function () {
+					this.energy = Math.min(8, (this.energy || 0) + 1);
+					Game.Battle.log(`${this.name} 闪避，回复 1 能量`);
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3302,32 +3434,61 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//格挡+800
-			}, 
+				type: "self_stat_flat",
+				gedang: 800,
+				desc: "格挡+800",
+			},
 			{
-				//被普攻时，10%几率眩晕来源1回合
-			}, 
+				type: "skill_effect",
+				desc: "被普攻时，10%几率眩晕来源1回合",
+				trigger: "onDamageTaken",
+				filter: function () { return true; },
+				content: function (attacker, dmg, mod) {
+					if (mod.attackType === 'pugong' && attacker && attacker.alive && Math.random() < 0.1) {
+						Game.Battle.addBuff(attacker, { id: "stun_source", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				},
+			},
 			{
-				//自身血量低于50%时，受到伤害-20%
-			}, 
+				type: "skill_effect",
+				desc: "自身血量低于50%时，受到伤害-20%",
+				trigger: "onDamageTaken",
+				filter: function () {
+					return this.alive && this.hp / this.maxHp < 0.5;
+				},
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
-				//技能，为自身回复30%伤害的血量
-			}, 
+				type: "skill_effect",
+				desc: "技能，为自身回复30%伤害的血量",
+				trigger: "skillHit",
+				filter: function () { return true; },
+				content: function (target) {
+					if (this.alive && target && target._lastDamage) {
+						const healAmt = Math.floor(target._lastDamage * 0.3);
+						this.hp = Math.min(this.maxHp, this.hp + healAmt);
+						Game.Battle.log(`${this.name} 回复 ${healAmt} 生命`);
+						Game.Battle.updateUI();
+					}
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3344,32 +3505,69 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//闪避+640
-			}, 
+				type: "self_stat_flat",
+				shanbi: 640,
+				desc: "闪避+640",
+			},
 			{
-				//普攻命中时，为损血最多友方回复30%伤害的血量
-			}, 
+				type: "skill_effect",
+				desc: "普攻命中时，为损血最多友方回复30%伤害的血量",
+				trigger: "pugongHit",
+				filter: function () { return true; },
+				content: function (target) {
+					if (target && target._lastDamage) {
+						const healAmt = Math.floor(target._lastDamage * 0.3);
+						const allies = Game.Battle.getAliveUnits(this.side).filter(u => u !== this);
+						if (allies.length === 0) return;
+						allies.sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+						const ally = allies[0];
+						ally.hp = Math.min(ally.maxHp, ally.hp + healAmt);
+						Game.Battle.log(`${ally.name} 恢复 ${healAmt} 生命`);
+						Game.Battle.updateUI();
+					}
+				},
+			},
 			{
-				//技能命中时，15%几率减少目标2能量
-			}, 
+				type: "skill_effect",
+				desc: "技能命中时，15%几率减少目标2能量",
+				trigger: "skillHit",
+				filter: function () { return Math.random() < 0.15; },
+				content: function (target) {
+					if (target && target.alive) {
+						target.energy = Math.max(0, (target.energy || 0) - 2);
+						Game.Battle.log(`${target.name} 失去 2 能量`);
+					}
+				},
+			},
 			{
-				//亡语，60%几率减少敌方全体1能量。（仅一次判断是否生效，若生效则对全体生效）
-			}, 
+				type: "skill_effect",
+				desc: "亡语，60%几率减少敌方全体1能量（仅一次判断是否生效，若生效则对全体生效）",
+				trigger: "dieSelf",
+				filter: function () { return Math.random() < 0.6; },
+				content: function () {
+					const enemySide = this.side === 'player' ? 'enemy' : 'player';
+					Game.Battle.getAliveUnits(enemySide).forEach(e => {
+						e.energy = Math.max(0, (e.energy || 0) - 1);
+						Game.Battle.log(`${e.name} 失去 1 能量`);
+					});
+					Game.Battle.updateUI();
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3386,32 +3584,62 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//命中+800
-			}, 
+				type: "self_stat_flat",
+				mingzhong: 800,
+				desc: "命中+800",
+			},
 			{
-				//自身血量高于目标时，对其伤害+20%
-			}, 
+				type: "skill_effect",
+				desc: "自身血量高于目标时，对其造成的伤害+20%",
+				trigger: "onDamageCalc",
+				filter: function (target) {
+					return target && target.alive && this.hp / this.maxHp > target.hp / target.maxHp;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
-				//上场限一次，造成的伤害+50%
-			}, 
+				type: "skill_effect",
+				desc: "上场限一次，造成的伤害+50%",
+				trigger: "onDamageCalc",
+				filter: function () {
+					if (!this._onceDmgUpUsed) { this._onceDmgUpUsed = true; return true; }
+					return false;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.5;
+				},
+			},
 			{
-				//普攻时，45%几率为能量最低的1名友方恢复1能量
-			}, 
+				type: "skill_effect",
+				desc: "普攻时，45%几率为能量最低的1名友方恢复1能量",
+				trigger: "pugongHit",
+				filter: function () { return Math.random() < 0.45; },
+				content: function () {
+					const allies = Game.Battle.getAliveUnits(this.side).filter(u => u !== this);
+					if (allies.length === 0) return;
+					allies.sort((a, b) => (a.energy || 0) - (b.energy || 0));
+					const t = allies[0];
+					t.energy = Math.min(8, (t.energy || 0) + 1);
+					Game.Battle.log(`${t.name} 恢复 1 能量`);
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3430,32 +3658,63 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//闪避+640
-			}, 
+				type: "self_stat_flat",
+				shanbi: 640,
+				desc: "闪避+640",
+			},
 			{
-				//上场限三次，受到伤害减少30%
-			}, 
+				type: "skill_effect",
+				desc: "上场限三次，受到伤害减少30%",
+				trigger: "onDamageTaken",
+				filter: function (attacker, dmg) {
+					if (!this._dmgReduceTimes) this._dmgReduceTimes = 0;
+					if (this._dmgReduceTimes < 3) {
+						this._dmgReduceTimes++;
+						return true;
+					}
+					return false;
+				},
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.3;
+				},
+			},
 			{
-				//治疗效果+20%
-			}, 
+				type: "self_stat_percent",
+				pctHeal: 0.2,
+				desc: "治疗效果+20%",
+			},
 			{
-				//亡语，为全体友方回复45%攻击的血量
-			}, 
+				type: "skill_effect",
+				desc: "亡语，为全体友方回复45%攻击的血量",
+				trigger: "dieSelf",
+				filter: function () { return true; },
+				content: function () {
+					const allies = Game.Battle.getAliveUnits(this.side);
+					const healAmt = Math.floor((this.atk || 0) * 0.45);
+					allies.forEach(ally => {
+						if (ally.alive) {
+							ally.hp = Math.min(ally.maxHp, ally.hp + healAmt);
+							Game.Battle.log(`${ally.name} 恢复 ${healAmt} 生命`);
+						}
+					});
+					Game.Battle.updateUI();
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3472,32 +3731,53 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//闪避+640
-			}, 
+				type: "self_stat_flat",
+				shanbi: 640,
+				desc: "闪避+640",
+			},
 			{
-				//自身血量高于目标时，对其伤害+20%
-			}, 
+				type: "skill_effect",
+				desc: "自身血量高于目标时，对其造成的伤害+20%",
+				trigger: "onDamageCalc",
+				filter: function (target) {
+					return target && target.alive && this.hp / this.maxHp > target.hp / target.maxHp;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
-				//暴击+2000
-			}, 
+				type: "self_stat_flat",
+				baoji: 2000,
+				desc: "暴击+2000",
+			},
 			{
-				//上场限一次，造成的伤害+75%
-			}, 
+				type: "skill_effect",
+				desc: "上场限一次，造成的伤害+75%",
+				trigger: "onDamageCalc",
+				filter: function () {
+					if (!this._onceDmgUpUsed) { this._onceDmgUpUsed = true; return true; }
+					return false;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.75;
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3556,32 +3836,53 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//暴击+800
-			}, 
+				type: "self_stat_flat",
+				baoji: 800,
+				desc: "暴击+800",
+			},
 			{
-				//暴击+2000
-			}, 
+				type: "self_stat_flat",
+				baoji: 2000,
+				desc: "暴击+2000",
+			},
+			"ignore_def_skill_40",
 			{
-				//技能，无视40%防御
-			}, 
-			{
-				//普攻，对左右目标造成60%伤害（同吴爽）
-			}, 
+				type: "skill_effect",
+				desc: "普攻，对左右目标造成60%伤害",
+				trigger: "pugongHit",
+				filter: function () { return true; },
+				content: function (target) {
+					const side = target.side;
+					const idx = target.slotIndex;
+					const perRow = 3;
+					const row = Math.floor(idx / perRow);
+					const col = idx % perRow;
+					const neighbors = [col - 1, col + 1]
+						.filter(c => c >= 0 && c < perRow)
+						.map(c => row * perRow + c)
+						.map(i => Game.Battle.getAliveUnits(side).find(u => u.slotIndex === i))
+						.filter(Boolean);
+					neighbors.forEach(n => {
+						const dmg = Game.Battle.calculateDamage(this, n, 0.6, 0, "pugong");
+						Game.Battle.applyDamage(n, dmg, this, function () {}, { trigger: "extraHit", isSpecial: true });
+					});
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3598,32 +3899,67 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//命中+800
-			}, 
+				type: "self_stat_flat",
+				mingzhong: 800,
+				desc: "命中+800",
+			},
 			{
-				//目标血量高于50%时，对其造成的伤害+20%
-			}, 
+				type: "skill_effect",
+				desc: "目标血量高于50%时，对其造成的伤害+20%",
+				trigger: "onDamageCalc",
+				filter: function (target) {
+					return target && target.alive && target.hp / target.maxHp > 0.5;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
-				//普攻时，30%几率为一名能量最低友方提升1能量
-			}, 
+				type: "skill_effect",
+				desc: "普攻时，30%几率为一名能量最低友方提升1能量",
+				trigger: "pugongHit",
+				filter: function () { return Math.random() < 0.3; },
+				content: function () {
+					const allies = Game.Battle.getAliveUnits(this.side).filter(u => u !== this);
+					if (allies.length === 0) return;
+					allies.sort((a, b) => (a.energy || 0) - (b.energy || 0));
+					const t = allies[0];
+					t.energy = Math.min(8, (t.energy || 0) + 1);
+					Game.Battle.log(`${t.name} 恢复 1 能量`);
+				},
+			},
 			{
-				//技能命中，为友方损血最多角色回复30%伤害的血量
-			}, 
+				type: "skill_effect",
+				desc: "技能命中，为友方损血最多角色回复30%伤害的血量",
+				trigger: "skillHit",
+				filter: function () { return true; },
+				content: function (target) {
+					if (target && target._lastDamage) {
+						const healAmt = Math.floor(target._lastDamage * 0.3);
+						const allies = Game.Battle.getAliveUnits(this.side);
+						allies.sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+						const ally = allies[0];
+						ally.hp = Math.min(ally.maxHp, ally.hp + healAmt);
+						Game.Battle.log(`${ally.name} 恢复 ${healAmt} 生命`);
+						Game.Battle.updateUI();
+					}
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3640,32 +3976,64 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//闪避+640
-			}, 
+				type: "self_stat_flat",
+				shanbi: 640,
+				desc: "闪避+640",
+			},
 			{
-				//自身血量高于目标时，对其伤害+20%
-			}, 
+				type: "skill_effect",
+				desc: "自身血量高于目标时，对其造成的伤害+20%",
+				trigger: "onDamageCalc",
+				filter: function (target) {
+					return target && target.alive && this.hp / this.maxHp > target.hp / target.maxHp;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
-				//技能命中，为自身恢复20%伤害的血量
-			}, 
+				type: "skill_effect",
+				desc: "技能命中，为自身恢复20%伤害的血量",
+				trigger: "skillHit",
+				filter: function () { return true; },
+				content: function (target) {
+					if (this.alive && target && target._lastDamage) {
+						const healAmt = Math.floor(target._lastDamage * 0.2);
+						this.hp = Math.min(this.maxHp, this.hp + healAmt);
+						Game.Battle.log(`${this.name} 回复 ${healAmt} 生命`);
+						Game.Battle.updateUI();
+					}
+				},
+			},
 			{
-				//亡语，60%几率减少敌方全体1能量。（仅一次判断是否生效，若生效则对全体生效）
-			}, 
+				type: "skill_effect",
+				desc: "亡语，60%几率减少敌方全体1能量（仅一次判断是否生效，若生效则对全体生效）",
+				trigger: "dieSelf",
+				filter: function () { return Math.random() < 0.6; },
+				content: function () {
+					const enemySide = this.side === 'player' ? 'enemy' : 'player';
+					Game.Battle.getAliveUnits(enemySide).forEach(e => {
+						e.energy = Math.max(0, (e.energy || 0) - 1);
+						Game.Battle.log(`${e.name} 失去 1 能量`);
+					});
+					Game.Battle.updateUI();
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3682,32 +4050,59 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//命中+800
-			}, 
+				type: "self_stat_flat",
+				mingzhong: 800,
+				desc: "命中+800",
+			},
 			{
-				//技能命中，为一名损血最多友方恢复20%伤害的血量
-			}, 
+				type: "skill_effect",
+				desc: "技能命中，为一名损血最多友方恢复20%伤害的血量",
+				trigger: "skillHit",
+				filter: function () { return true; },
+				content: function (target) {
+					if (target && target._lastDamage) {
+						const healAmt = Math.floor(target._lastDamage * 0.2);
+						const allies = Game.Battle.getAliveUnits(this.side).filter(u => u !== this);
+						if (allies.length === 0) return;
+						allies.sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
+						const ally = allies[0];
+						ally.hp = Math.min(ally.maxHp, ally.hp + healAmt);
+						Game.Battle.log(`${ally.name} 恢复 ${healAmt} 生命`);
+						Game.Battle.updateUI();
+					}
+				},
+			},
 			{
-				//自身血量低于目标时，对其伤害+20%
-			}, 
+				type: "skill_effect",
+				desc: "自身血量低于目标时，对其造成的伤害+20%",
+				trigger: "onDamageCalc",
+				filter: function (target) {
+					return target && target.alive && this.hp / this.maxHp < target.hp / target.maxHp;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
-				//暴击+3000
-			}, 
+				type: "self_stat_flat",
+				baoji: 3000,
+				desc: "暴击+3000",
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3724,32 +4119,56 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//格挡+800
-			}, 
+				type: "self_stat_flat",
+				gedang: 800,
+				desc: "格挡+800",
+			},
 			{
-				//格挡+2000
-			}, 
+				type: "self_stat_flat",
+				gedang: 2000,
+				desc: "格挡+2000",
+			},
 			{
-				//格挡反击，造成50%伤害
-			}, 
+				type: "skill_effect",
+				desc: "格挡反击，造成50%伤害",
+				trigger: "onBlock",
+				filter: function (source) { return source && source.alive; },
+				content: function (source) {
+					const pugongId = this.skills[0] || "attack1";
+					const pData = window.contentList && window.contentList.pugong && window.contentList.pugong[pugongId];
+					const baseCoeff = pData && pData.coefficient ? Number(pData.coefficient) : 1.0;
+					const coeff = baseCoeff * 0.5;
+					Game.Battle.log(`${this.name} 触发格挡反击！`);
+					const dmg = Game.Battle.calculateDamage(this, source, coeff, 0, "pugong");
+					Game.Battle.applyDamage(source, dmg, this, function () {}, { isSpecial: true, trigger: "blockCounter" });
+				},
+			},
 			{
-				//被攻击时，若血量高于来源，伤害减少30%
-			}, 
+				type: "skill_effect",
+				desc: "被攻击时，若血量高于来源，受到伤害减少30%",
+				trigger: "onDamageTaken",
+				filter: function (attacker) {
+					return this.alive && attacker && this.hp / this.maxHp > attacker.hp / attacker.maxHp;
+				},
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.3;
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3766,32 +4185,54 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//命中+800
-			}, 
+				type: "self_stat_flat",
+				mingzhong: 800,
+				desc: "命中+800",
+			},
 			{
-				//暴击+2000
-			}, 
+				type: "self_stat_flat",
+				baoji: 2000,
+				desc: "暴击+2000",
+			},
 			{
-				//每次攻击后，攻击+4%，最多12%
-			}, 
+				type: "skill_effect",
+				desc: "每次攻击后，攻击+4%，最多12%",
+				trigger: "actionEndSelf",
+				filter: function () { return true; },
+				content: function () {
+					if (!this._atkStacks) this._atkStacks = 0;
+					if (this._atkStacks < 0.12) {
+						this._atkStacks = Math.min(0.12, this._atkStacks + 0.04);
+						Game.Battle.addBuff(this, { id: "atk_stack_" + this._atkStacks, name: "攻击提升", type: "atk", value: 0.04, remainRounds: -1, ownerSlot: null });
+					}
+				},
+			},
 			{
-				//自身血量低于目标时，对其造成的伤害+30%
-			}, 
+				type: "skill_effect",
+				desc: "自身血量低于目标时，对其造成的伤害+30%",
+				trigger: "onDamageCalc",
+				filter: function (target) {
+					return target && target.alive && this.hp / this.maxHp < target.hp / target.maxHp;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.3;
+				},
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
-			}, 
+			},
 			{
 				//原游戏是没有这项的，因为这个角色品级不足，这个注释放在这里不要动，以后看心情填入
 			}
@@ -3804,20 +4245,32 @@ const characterList = {
 		group: "YB_memory",
 		sex: "female",
 		skills: ["pugong_301", "skill_301"],
-		template: "defense",
+		template: "damger",
 		rank: "rare",
 		tip: "damage",
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				baoji: 600,
+				desc: "暴击+600",
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "技能，40%几率眩晕目标1回合",
+				trigger: "skillHit",
+				filter: function () { return Math.random() < 0.4; },
+				content: function (target) {
+					if (target && target.alive) {
+						Game.Battle.addBuff(target, { id: "stun_target", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				},
+			},
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				baoji: 2000,
+				desc: "暴击+2000",
+			},
 			{
 				//
 			}, 
@@ -3852,14 +4305,20 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				shanbi: 480,
+				desc: "闪避+480",
+			},
 			{
-				//
-			}, 
+				type: "self_stat_percent",
+				pctHeal: 0.2,
+				desc: "治疗效果+20%",
+			},
 			{
-				//
-			}, 
+				type: "self_stat_percent",
+				pctTakeDn: 0.12,
+				desc: "受到伤害减少12%",
+			},
 			{
 				//
 			}, 
@@ -3888,20 +4347,38 @@ const characterList = {
 		group: "YB_memory",
 		sex: "female",
 		skills: ["pugong_303", "skill_303"],
-		template: "balanced",
+		template: "damger",
 		rank: "rare",
 		tip: "damage",
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				shanbi: 480,
+				desc: "闪避+480",
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "普攻，80%几率减少目标45%防御1回合",
+				trigger: "pugongHit",
+				filter: function () { return Math.random() < 0.8; },
+				content: function (target) {
+					if (target && target.alive) {
+						Game.Battle.addBuff(target, { id: "def_target_45", name: "降低防御", type: "def", value: -0.45, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				},
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "自身血量低于目标时，对其造成的伤害+20%",
+				trigger: "onDamageCalc",
+				filter: function (target) {
+					return target && target.alive && this.hp / this.maxHp < target.hp / target.maxHp;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
 				//
 			}, 
@@ -3936,14 +4413,26 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				gedang: 600,
+				desc: "格挡+600",
+			},
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				gedang: 2000,
+				desc: "格挡+2000",
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "自身血量高于50%时，受到伤害-20%",
+				trigger: "onDamageTaken",
+				filter: function () {
+					return this.alive && this.hp / this.maxHp > 0.5;
+				},
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
 				//
 			}, 
@@ -3972,20 +4461,33 @@ const characterList = {
 		group: "YB_memory",
 		sex: "female",
 		skills: ["pugong_305", "skill_305"],
-		template: "balanced",
+		template: "damger",
 		rank: "rare",
 		tip: "damage",
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				baoji: 600,
+				desc: "暴击+600",
+			},
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				baoji: 1000,
+				baoshang: 2000,
+				desc: "暴击+1000，暴伤+2000",
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "自身血量高于目标时，对其造成的伤害+20%",
+				trigger: "onDamageCalc",
+				filter: function (target) {
+					return target && target.alive && this.hp / this.maxHp > target.hp / target.maxHp;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
 				//
 			}, 
@@ -4020,14 +4522,27 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				baoji: 600,
+				desc: "暴击+600",
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "普攻，50%几率令目标中毒2回合，毒素伤害为施加者攻击力的5%",
+				trigger: "pugongHit",
+				filter: function () { return Math.random() < 0.5; },
+				content: function (target) {
+					if (target && target.alive) {
+						const poisonDmg = Math.floor((this.atk || 0) * 0.05);
+						Game.Battle.addBuff(target, { id: "poison_target", name: "中毒", type: "poison", value: poisonDmg, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+					}
+				},
+			},
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				mingzhong: 2000,
+				desc: "命中+2000",
+			},
 			{
 				//
 			}, 
@@ -4064,14 +4579,33 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				shanbi: 480,
+				desc: "闪避+480",
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "技能，40%几率减少目标1能量",
+				trigger: "skillHit",
+				filter: function () { return Math.random() < 0.4; },
+				content: function (target) {
+					if (target && target.alive) {
+						target.energy = Math.max(0, (target.energy || 0) - 1);
+						Game.Battle.log(`${target.name} 失去 1 能量`);
+					}
+				},
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "自身血量高于目标时，对其造成的伤害+20%",
+				trigger: "onDamageCalc",
+				filter: function (target) {
+					return target && target.alive && this.hp / this.maxHp > target.hp / target.maxHp;
+				},
+				content: function (target, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
 				//
 			}, 
@@ -4106,14 +4640,33 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				shanbi: 480,
+				desc: "闪避+480",
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "被攻击时，10%几率减少来源1能量",
+				trigger: "onDamageTaken",
+				filter: function () { return Math.random() < 0.1; },
+				content: function (attacker) {
+					if (attacker && attacker.alive) {
+						attacker.energy = Math.max(0, (attacker.energy || 0) - 1);
+						Game.Battle.log(`${attacker.name} 失去 1 能量`);
+					}
+				},
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "被攻击时，若血量低于来源，受到伤害减少20%",
+				trigger: "onDamageTaken",
+				filter: function (attacker) {
+					return this.alive && attacker && this.hp / this.maxHp < attacker.hp / attacker.maxHp;
+				},
+				content: function (attacker, dmg, mod) {
+					mod.pct += 0.2;
+				},
+			},
 			{
 				//
 			}, 
@@ -4190,14 +4743,20 @@ const characterList = {
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				shanbi: 480,
+				desc: "闪避+480",
+			},
 			{
-				//
-			}, 
+				type: "self_stat_percent",
+				pctHeal: 0.2,
+				desc: "治疗效果+20%",
+			},
 			{
-				//
-			}, 
+				type: "self_stat_percent",
+				pctTakeDn: 0.12,
+				desc: "受到伤害-12%",
+			},
 			{
 				//
 			}, 
@@ -4226,20 +4785,32 @@ const characterList = {
 		group: "YB_dream",
 		sex: "female",
 		skills: ["pugong_311", "skill_311"],
-		template: "balanced",
+		template: "damger",
 		rank: "rare",
 		tip: "damage",
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				mingzhong: 600,
+				desc: "命中+600",
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "普攻，20%几率眩晕目标1回合",
+				trigger: "pugongHit",
+				filter: function () { return Math.random() < 0.2; },
+				content: function (target) {
+					if (target && target.alive) {
+						Game.Battle.addBuff(target, { id: "stun_target", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+					}
+				},
+			},
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				baoji: 2000,
+				desc: "暴击+2000",
+			},
 			{
 				//
 			}, 
@@ -4268,20 +4839,33 @@ const characterList = {
 		group: "YB_dream",
 		sex: "female",
 		skills: ["pugong_312", "skill_312"],
-		template: "defense",
+		template: "damger",
 		rank: "rare",
 		tip: "damage",
 		ties: [],
 		tupoList: generateTupoList_new([
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				baoji: 600,
+				desc: "暴击+600",
+			},
 			{
-				//
-			}, 
+				type: "skill_effect",
+				desc: "技能，30%几率减少目标2能量",
+				trigger: "skillHit",
+				filter: function () { return Math.random() < 0.3; },
+				content: function (target) {
+					if (target && target.alive) {
+						target.energy = Math.max(0, (target.energy || 0) - 2);
+						Game.Battle.log(`${target.name} 失去 2 能量`);
+					}
+				},
+			},
 			{
-				//
-			}, 
+				type: "self_stat_flat",
+				baoji: 2000,
+				desc: "暴击+2000",
+			},
 			{
 				//
 			}, 

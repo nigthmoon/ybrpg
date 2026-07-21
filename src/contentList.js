@@ -1084,10 +1084,10 @@ const contentList = {
 		},
 		pugong_303: {
 			name: "攻击",
-			intro: "对一列敌人造成伤害，伤害系数为65%",
-			ai_intro: "对敌方默认前排所在的一列敌人造成伤害，伤害系数为65%",
-			target: ["column", "first"],
-			coefficient: 0.65,
+			intro: "对单体造成伤害，伤害系数为105%",
+			ai_intro: "对前排单体造成伤害，伤害系数为105%",
+			target: ["one", "first"],
+			coefficient: 1.05,
 			isRecover: false,
 			emoji: "🎵",
 		},
@@ -1120,10 +1120,10 @@ const contentList = {
 		},
 		pugong_307: {
 			name: "攻击",
-			intro: "对一列敌人造成伤害，伤害系数为65%",
-			ai_intro: "对敌方默认前排所在的一列敌人造成伤害，伤害系数为65%",
-			target: ["column", "first"],
-			coefficient: 0.65,
+			intro: "对单体造成伤害，伤害系数为105%",
+			ai_intro: "对前排单体造成伤害，伤害系数为105%",
+			target: ["one", "first"],
+			coefficient: 1.05,
 			isRecover: false,
 			emoji: "🧊",
 		},
@@ -1832,6 +1832,17 @@ const contentList = {
 			coefficient: 3.05,
 			isRecover: false,
 			emoji: "🎵",
+			contents: [
+				{
+					desc: "提升全体友方1500命中2回合",
+					filter: function () { return true; },
+					content: function () {
+						Game.Battle.getAliveUnits(this.side).forEach(ally => {
+							Game.Battle.addBuff(ally, { id: "mingzhong_ally_1500", name: "命中提升", type: "mingzhong", value: 1500, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+						});
+					}
+				}
+			],
 		},
 		skill_203: {
 			name: "技能攻击",
@@ -1868,6 +1879,18 @@ const contentList = {
 			coefficient: 1.45,
 			isRecover: false,
 			emoji: "❄️",
+			contents: [
+				{
+					desc: "30%几率减少目标1能量",
+					filter: function () { return Math.random() < 0.3; },
+					content: function (target) {
+						if (target && target.alive) {
+							target.energy = Math.max(0, (target.energy || 0) - 1);
+							Game.Battle.log(`${target.name} 失去 1 能量`);
+						}
+					}
+				}
+			],
 		},
 		skill_207: {
 			name: "技能攻击",
@@ -1877,6 +1900,17 @@ const contentList = {
 			coefficient: 3.05,
 			isRecover: false,
 			emoji: "🌺",
+			contents: [
+				{
+					desc: "50%几率提升前排40%防御1回合",
+					filter: function () { return Math.random() < 0.5; },
+					content: function () {
+						Game.Battle.getAliveUnits(this.side).filter(u => u.slotIndex < 3).forEach(ally => {
+							Game.Battle.addBuff(ally, { id: "def_front_40", name: "防御提升", type: "def", value: 0.4, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						});
+					}
+				}
+			],
 		},
 		skill_208: {
 			name: "技能攻击",
@@ -1886,6 +1920,17 @@ const contentList = {
 			coefficient: 1.5,
 			isRecover: false,
 			emoji: "🌪️",
+			contents: [
+				{
+					desc: "100%几率令目标受到伤害增加10%，1回合",
+					filter: function () { return true; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "takeUp_target_10", name: "易伤", type: "takeUp", value: 0.1, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_209: {
 			name: "技能攻击",
@@ -1913,6 +1958,17 @@ const contentList = {
 			coefficient: 1.5,
 			isRecover: false,
 			emoji: "🧊",
+			contents: [
+				{
+					desc: "35%几率封印目标1回合",
+					filter: function () { return Math.random() < 0.35; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "seal_target", name: "封印", type: "seal", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_212: {
 			name: "技能攻击",
@@ -1931,6 +1987,17 @@ const contentList = {
 			coefficient: 1.45,
 			isRecover: false,
 			emoji: "🌙",
+			contents: [
+				{
+					desc: "20%几率降低目标45%防御2回合",
+					filter: function () { return Math.random() < 0.2; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "def_target_45", name: "降低防御", type: "def", value: -0.45, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_214: {
 			name: "技能攻击",
@@ -1940,6 +2007,17 @@ const contentList = {
 			coefficient: 1.3,
 			isRecover: false,
 			emoji: "💀",
+			contents: [
+				{
+					desc: "25%几率降低目标20%攻击1回合",
+					filter: function () { return Math.random() < 0.25; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "atk_target_20", name: "攻击降低", type: "atk", value: -0.2, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_215: {
 			name: "技能攻击",
@@ -1949,6 +2027,18 @@ const contentList = {
 			coefficient: 1.8,
 			isRecover: false,
 			emoji: "💥",
+			contents: [
+				{
+					desc: "20%几率减少目标1能量",
+					filter: function () { return Math.random() < 0.2; },
+					content: function (target) {
+						if (target && target.alive) {
+							target.energy = Math.max(0, (target.energy || 0) - 1);
+							Game.Battle.log(`${target.name} 失去 1 能量`);
+						}
+					}
+				}
+			],
 		},
 		skill_216: {
 			name: "技能攻击",
@@ -1958,6 +2048,17 @@ const contentList = {
 			coefficient: 3.1,
 			isRecover: false,
 			emoji: "🌙",
+			contents: [
+				{
+					desc: "20%几率眩晕目标1回合",
+					filter: function () { return Math.random() < 0.2; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "stun_target", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_217: {
 			name: "技能攻击",
@@ -1967,6 +2068,17 @@ const contentList = {
 			coefficient: 1.5,
 			isRecover: false,
 			emoji: "💧",
+			contents: [
+				{
+					desc: "35%几率提升前排2000格挡2回合",
+					filter: function () { return Math.random() < 0.35; },
+					content: function () {
+						Game.Battle.getAliveUnits(this.side).filter(u => u.slotIndex < 3).forEach(ally => {
+							Game.Battle.addBuff(ally, { id: "gedang_front_2000", name: "格挡提升", type: "gedang", value: 2000, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+						});
+					}
+				}
+			],
 		},
 		skill_218: {
 			name: "技能攻击",
@@ -1976,13 +2088,24 @@ const contentList = {
 			coefficient: 1.5,
 			isRecover: false,
 			emoji: "⭐",
+			contents: [
+				{
+					desc: "20%几率降低目标45%防御2回合",
+					filter: function () { return Math.random() < 0.2; },
+					content: function (target) {
+						if (target && target.alive) {
+							Game.Battle.addBuff(target, { id: "def_target_45", name: "降低防御", type: "def", value: -0.45, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
+						}
+					}
+				}
+			],
 		},
 		skill_301: {
 			name: "技能攻击",
-			intro: "对单体造成伤害，伤害系数为285%",
-			ai_intro: "对敌方前排单体造成伤害，伤害系数为285%",
-			target: ["one", "first"],
-			coefficient: 2.85,
+			intro: "对单体造成伤害，伤害系数为265%",
+			ai_intro: "对敌方血量最低单体造成伤害，伤害系数为265%",
+			target: ["one", "lowest"],
+			coefficient: 2.65,
 			isRecover: false,
 			emoji: "💧",
 		},
@@ -1997,10 +2120,10 @@ const contentList = {
 		},
 		skill_303: {
 			name: "技能攻击",
-			intro: "对一列敌人造成伤害，伤害系数为205%",
-			ai_intro: "对敌方默认前排所在的一列敌人造成伤害，伤害系数为205%",
-			target: ["column", "first"],
-			coefficient: 2.05,
+			intro: "对一行敌人造成伤害，伤害系数为145%",
+			ai_intro: "对敌方后排敌人造成伤害，伤害系数为145%",
+			target: ["row", "last"],
+			coefficient: 1.45,
 			isRecover: false,
 			emoji: "🎵",
 		},
@@ -2069,19 +2192,19 @@ const contentList = {
 		},
 		skill_311: {
 			name: "技能攻击",
-			intro: "对全体造成伤害，伤害系数为105%",
-			ai_intro: "对全体敌方造成伤害，伤害系数为105%",
-			target: ["all", "all"],
-			coefficient: 1.05,
+			intro: "对一行敌人造成伤害，伤害系数为150%",
+			ai_intro: "对敌方前排敌人造成伤害，伤害系数为150%",
+			target: ["row", "first"],
+			coefficient: 1.5,
 			isRecover: false,
 			emoji: "🧊",
 		},
 		skill_312: {
 			name: "技能攻击",
-			intro: "对单体造成伤害，伤害系数为285%",
-			ai_intro: "对敌方前排单体造成伤害，伤害系数为285%",
-			target: ["one", "first"],
-			coefficient: 2.85,
+			intro: "对单体造成伤害，伤害系数为270%",
+			ai_intro: "对敌方后排单体造成伤害，伤害系数为270%",
+			target: ["one", "last"],
+			coefficient: 2.7,
 			isRecover: false,
 			emoji: "❄️",
 		},
