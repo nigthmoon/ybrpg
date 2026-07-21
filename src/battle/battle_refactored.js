@@ -803,6 +803,34 @@ Battle.applyHeal = function applyHeal(target, healAmount, callback, source) {
  * @param {*} callback 后续
  * @returns 执行普攻事件
  */
+	// ===== 【新增】攻击 target 定义 → 额定最大目标数（玄武「原定目标数」） =====
+	// 全体=6，一行=3，一列=2，单体=1；
+	// 复数额定技能：如 ["manual_multi","random",3] 第三元素为额定人数；
+	// 其他类型默认单体（如需复数额定值可在此补充映射）
+	function getMaxTargetsFromTargetDef(targetDef) {
+		if (!Array.isArray(targetDef) || targetDef.length === 0) return 1;
+		const mode = targetDef[0];
+		switch (mode) {
+			case 'all': return 6;
+			case 'row': return 3;
+			case 'column': return 2;
+			case 'one': return 1;
+			case 'manual_multi': {
+				// 第三元素为目标人数，如 ["manual_multi","manahighest",3] → 3
+				const n = Number(targetDef[2]);
+				return (isFinite(n) && n > 0) ? n : 1;
+			}
+			default: {
+				// 其他可能带额定人数的模式：取最后一个数字元素
+				for (let i = targetDef.length - 1; i >= 1; i--) {
+					const v = Number(targetDef[i]);
+					if (isFinite(v) && v > 0) return v;
+				}
+				return 1;
+			}
+		}
+	}
+
 Battle.executePugong = function executePugong(actor, targets, callback, isFollowUp) {
 	// 标记：本次普攻是否为「技能/必杀后追加普攻」。若是，则完成时由 finishFollowUp 驱动行动结束流程，
 	// 避免 executeSkill 在追加普攻动画结算前就进入 afterAction 造成流程错乱。
@@ -841,8 +869,20 @@ Battle.executePugong = function executePugong(actor, targets, callback, isFollow
 	const coeff = (sData && sData.coefficient) ? Number(sData.coefficient) : 1.0;
 	const totalTargets = targets.filter(t => t && t.alive).length;
 
+	// ===== 【新增】记录「是否治疗系普攻」与「原定目标数」，供天灵鸟/玄武类效果判定 =====
+	actor._lastActionIsRecover = isRecover;
+	const _pugongMode = (sData && sData.target && sData.target[0]) || 'one';
+	actor._currentAttack = {
+		mode: _pugongMode,
+		maxTargets: getMaxTargetsFromTargetDef(sData && sData.target),
+		actualTargets: totalTargets
+	};
+
 	function processNextTarget() {
 		if (index >= targets.length) {
+			// ===== 【新增】清理本次普攻的「原定目标数」记录 =====
+			actor._currentAttack = null;
+
 			// ===== 普攻指令结算完毕 =====
 			// 触发 AFTER_PUGONG_EXEC 事件，传入命中次数和闪避次数
 		BattleEvents.emit(BattleEvents.AFTER_PUGONG_EXEC, {
@@ -889,6 +929,13 @@ Battle.executePugong = function executePugong(actor, targets, callback, isFollow
 				hitCount++;  // 治疗也算命中
 				onHitComplete();
 			}, actor);
+			// ===== 【新增】治疗系普攻命中：触发 healPugongHit 类特效（如天灵鸟），与技能治疗触发 skillHit 一致 =====
+			const healHitEffects = getEffectsByTrigger(actor, 'healPugongHit');
+			healHitEffects.forEach(effect => {
+				if (effect.filter && effect.filter.call(actor, target)) {
+					effect.content.call(actor, target);
+				}
+			});
 		} else {
 			const dmgResult = calculateDamage(actor, target, coeff, 0, 'pugong');
 
@@ -964,8 +1011,19 @@ Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, 
 	let hadCrit = false;   // 本次技能是否出现过暴击
 	const totalTargets = targets.filter(t => t && t.alive).length;
 
+	// ===== 【新增】记录本次攻击的「原定目标数」供玄武类效果判定 =====
+	const _atkMode = (sData && sData.target && sData.target[0]) || 'one';
+	actor._currentAttack = {
+		mode: _atkMode,
+		maxTargets: getMaxTargetsFromTargetDef(sData && sData.target),
+		actualTargets: totalTargets
+	};
+
 	function processNextTarget() {
 		if (index >= targets.length) {
+			// ===== 【新增】清理本次攻击的「原定目标数」记录 =====
+			actor._currentAttack = null;
+
 			// ===== 技能指令结算完毕 =====
 			// 触发 AFTER_SKILL_EXEC 事件，传入命中次数和闪避次数
 			BattleEvents.emit(BattleEvents.AFTER_SKILL_EXEC, {
@@ -2106,7 +2164,8 @@ Battle.adaptTreasureEffects = function adaptTreasureEffects(treasureDef) {
 			filter: typeof eff.filter === 'function' ? eff.filter : function () { return true; },
 			content: eff.content,
 			source: 'treasure',
-			id: eff.id || ''
+			id: eff.id || '',
+			probMod: eff.probMod || null
 		});
 	});
 
@@ -2494,6 +2553,18 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 		}
 
 		if (passiveBuffs.length > 0) unit.buff.push(...passiveBuffs);
+
+		// ===== 【新增】聚合概率修正（宝物：碧眼玉麟 self+、灵枢通天诀 enemy-） =====
+		let _probModSelf = 0, _probModEnemy = 0;
+		allSkills.forEach(function (sk) {
+			if (sk && sk.probMod) {
+				if (sk.probMod.self) _probModSelf += sk.probMod.self;
+				if (sk.probMod.enemy) _probModEnemy += sk.probMod.enemy;
+			}
+		});
+		unit._probModSelf = _probModSelf;
+		unit._probModEnemy = _probModEnemy;
+
 		return unit;
 	}
 
@@ -2583,6 +2654,31 @@ Battle.getEffectsByTrigger = function getEffectsByTrigger(actor, trigger) {
  * @param {string} trigger 触发时机
  * @param {...any} context 上下文参数
  */
+	/**
+	 * 统一概率判定（供宝物「概率修正」类效果使用）
+	 * - 碧眼玉麟：持有者发动特效时，自身成功率 +X（probMod.self）
+	 * - 灵枢通天诀：敌方发动特效时，其成功率 -X（probMod.enemy，由敌方单位携带）
+	 * @param {Object} roller 进行概率判定的单位（通常为 filter 中的 this）
+	 * @param {number} baseChance 基础成功率（0~1）
+	 * @returns {boolean}
+	 */
+	Battle.rollChance = function rollChance(roller, baseChance) {
+		let chance = baseChance;
+		if (roller && roller._probModSelf) chance += roller._probModSelf;
+		const bs = battleState;
+		if (bs && roller) {
+			const enemies = roller.side === 'player' ? bs.enemyUnits : bs.playerUnits;
+			if (enemies) {
+				enemies.forEach(function (e) {
+					if (e && e.alive && e._probModEnemy) chance -= e._probModEnemy;
+				});
+			}
+		}
+		if (chance < 0) chance = 0;
+		if (chance > 1) chance = 1;
+		return Math.random() < chance;
+	};
+
 Battle.triggerGlobalEffect = function triggerGlobalEffect(trigger, ...context) {
 	const bs = battleState;
 	if (!bs) return;

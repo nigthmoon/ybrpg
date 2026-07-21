@@ -1228,7 +1228,7 @@ const contentList = {
 				{
 					trigger: "skillEnd",
 					filter: function () {
-						return Math.random() < 0.45;
+						return Game.Battle.rollChance(this, 0.45);
 					},
 					desc: "45%几率释放普攻",
 					content: function (info) {
@@ -1262,7 +1262,7 @@ const contentList = {
 				{
 					trigger: "skillEnd",
 					filter: function () {
-						return Math.random() < 0.6;
+						return Game.Battle.rollChance(this, 0.6);
 					},
 					desc: "60%几率提升30%攻击2回合",
 					content: function (info) {
@@ -1282,7 +1282,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.75;
+						return Game.Battle.rollChance(this, 0.75);
 					},
 					desc: "75%几率封印目标1回合",
 					content: function (target) {
@@ -1302,7 +1302,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.75;
+						return Game.Battle.rollChance(this, 0.75);
 					},
 					desc: "75%几率封印目标1回合",
 					content: function (target) {
@@ -1324,7 +1324,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.4;
+						return Game.Battle.rollChance(this, 0.4);
 					},
 					desc: "40%几率施加不死效果1回合",
 					content: function (target) {
@@ -1388,7 +1388,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.4;
+						return Game.Battle.rollChance(this, 0.4);
 					},
 					desc: "40%几率眩晕目标1回合",
 					content: function (target) {
@@ -1408,7 +1408,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.2;
+						return Game.Battle.rollChance(this, 0.2);
 					},
 					desc: "20%几率减少目标2点能量",
 					content: function (target) {
@@ -1429,7 +1429,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.35;
+						return Game.Battle.rollChance(this, 0.35);
 					},
 					desc: "35%几率增加目标1点能量",
 					content: function (target) {
@@ -1451,7 +1451,7 @@ const contentList = {
 				{
 					desc: "20%几率令被治疗目标恢复1能量",
 					filter: function (target) {
-						return Math.random() < 0.2;
+						return Game.Battle.rollChance(this, 0.2);
 					},
 					content: function (target) {
 						if (target && target.alive && target.energy !== undefined) {
@@ -1474,7 +1474,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "65%几率提升自身4000暴击2回合",
-					filter: function () { return Math.random() < 0.65; },
+					filter: function () { return Game.Battle.rollChance(this, 0.65); },
 					content: function () {
 						Game.Battle.addBuff(this, { id: "baoji_self_4000", name: "暴击提升", type: "baoji", value: 4000, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
 					}
@@ -1492,7 +1492,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "65%几率提升前排2000格挡2回合",
-					filter: function () { return Math.random() < 0.65; },
+					filter: function () { return Game.Battle.rollChance(this, 0.65); },
 					content: function () {
 						const allies = Game.Battle.getAliveUnits(this.side).filter(u => u.slotIndex < 3);
 						allies.forEach(ally => {
@@ -1522,7 +1522,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "10%几率麻痹目标1回合",
-					filter: function () { return Math.random() < 0.1; },
+					filter: function () { return Game.Battle.rollChance(this, 0.1); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "paralyze_skill", name: "麻痹", type: "paralyze", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
@@ -1575,7 +1575,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "50%几率封印目标1回合",
-					filter: function () { return Math.random() < 0.5; },
+					filter: function () { return Game.Battle.rollChance(this, 0.5); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "seal_target", name: "封印", type: "seal", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
@@ -1595,7 +1595,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "65%几率增加自身40格挡2回合",
-					filter: function () { return Math.random() < 0.65; },
+					filter: function () { return Game.Battle.rollChance(this, 0.65); },
 					content: function () {
 						Game.Battle.addBuff(this, { id: "gedang_self_40", name: "格挡提升", type: "gedang", value: 40, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
 					}
@@ -1613,7 +1613,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "60%几率降低目标75%被治疗效果2回合",
-					filter: function () { return Math.random() < 0.6; },
+					filter: function () { return Game.Battle.rollChance(this, 0.6); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "healReduce_target_75", name: "降疗", type: "healReduce", value: 0.75, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
@@ -1670,7 +1670,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "55%几率降低目标45%防御2回合",
-					filter: function () { return Math.random() < 0.55; },
+					filter: function () { return Game.Battle.rollChance(this, 0.55); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "def_target_45", name: "降低防御", type: "def", value: -0.45, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
@@ -1690,7 +1690,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "20%几率眩晕目标1回合",
-					filter: function () { return Math.random() < 0.2; },
+					filter: function () { return Game.Battle.rollChance(this, 0.2); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "stun_target", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
@@ -1710,7 +1710,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "40%几率眩晕目标1回合",
-					filter: function () { return Math.random() < 0.4; },
+					filter: function () { return Game.Battle.rollChance(this, 0.4); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "stun_target", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
@@ -1730,7 +1730,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "20%几率眩晕目标1回合",
-					filter: function () { return Math.random() < 0.2; },
+					filter: function () { return Game.Battle.rollChance(this, 0.2); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "stun_target", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
@@ -1882,7 +1882,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "30%几率减少目标1能量",
-					filter: function () { return Math.random() < 0.3; },
+					filter: function () { return Game.Battle.rollChance(this, 0.3); },
 					content: function (target) {
 						if (target && target.alive) {
 							target.energy = Math.max(0, (target.energy || 0) - 1);
@@ -1903,7 +1903,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "50%几率提升前排40%防御1回合",
-					filter: function () { return Math.random() < 0.5; },
+					filter: function () { return Game.Battle.rollChance(this, 0.5); },
 					content: function () {
 						Game.Battle.getAliveUnits(this.side).filter(u => u.slotIndex < 3).forEach(ally => {
 							Game.Battle.addBuff(ally, { id: "def_front_40", name: "防御提升", type: "def", value: 0.4, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
@@ -1961,7 +1961,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "35%几率封印目标1回合",
-					filter: function () { return Math.random() < 0.35; },
+					filter: function () { return Game.Battle.rollChance(this, 0.35); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "seal_target", name: "封印", type: "seal", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
@@ -1990,7 +1990,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "20%几率降低目标45%防御2回合",
-					filter: function () { return Math.random() < 0.2; },
+					filter: function () { return Game.Battle.rollChance(this, 0.2); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "def_target_45", name: "降低防御", type: "def", value: -0.45, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
@@ -2010,7 +2010,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "25%几率降低目标20%攻击1回合",
-					filter: function () { return Math.random() < 0.25; },
+					filter: function () { return Game.Battle.rollChance(this, 0.25); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "atk_target_20", name: "攻击降低", type: "atk", value: -0.2, remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
@@ -2030,7 +2030,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "20%几率减少目标1能量",
-					filter: function () { return Math.random() < 0.2; },
+					filter: function () { return Game.Battle.rollChance(this, 0.2); },
 					content: function (target) {
 						if (target && target.alive) {
 							target.energy = Math.max(0, (target.energy || 0) - 1);
@@ -2051,7 +2051,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "20%几率眩晕目标1回合",
-					filter: function () { return Math.random() < 0.2; },
+					filter: function () { return Game.Battle.rollChance(this, 0.2); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "stun_target", name: "眩晕", type: "stun", remainRounds: 1, ownerSlot: this._currentActionSlotKey || null });
@@ -2071,7 +2071,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "35%几率提升前排2000格挡2回合",
-					filter: function () { return Math.random() < 0.35; },
+					filter: function () { return Game.Battle.rollChance(this, 0.35); },
 					content: function () {
 						Game.Battle.getAliveUnits(this.side).filter(u => u.slotIndex < 3).forEach(ally => {
 							Game.Battle.addBuff(ally, { id: "gedang_front_2000", name: "格挡提升", type: "gedang", value: 2000, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
@@ -2091,7 +2091,7 @@ const contentList = {
 			contents: [
 				{
 					desc: "20%几率降低目标45%防御2回合",
-					filter: function () { return Math.random() < 0.2; },
+					filter: function () { return Game.Battle.rollChance(this, 0.2); },
 					content: function (target) {
 						if (target && target.alive) {
 							Game.Battle.addBuff(target, { id: "def_target_45", name: "降低防御", type: "def", value: -0.45, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
@@ -2313,7 +2313,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.75;
+						return Game.Battle.rollChance(this, 0.75);
 					},
 					desc: "75%几率封印目标2回合",
 					content: function (target) {
@@ -2333,7 +2333,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.75;
+						return Game.Battle.rollChance(this, 0.75);
 					},
 					desc: "75%几率封印目标2回合",
 					content: function (target) {
@@ -2353,7 +2353,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.85;
+						return Game.Battle.rollChance(this, 0.85);
 					},
 					desc: "85%几率施加不死效果1回合",
 					content: function (target) {
@@ -2417,7 +2417,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.75;
+						return Game.Battle.rollChance(this, 0.75);
 					},
 					desc: "75%几率眩晕目标1回合",
 					content: function (target) {
@@ -2437,7 +2437,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.5;
+						return Game.Battle.rollChance(this, 0.5);
 					},
 					desc: "50%几率减少目标2点能量",
 					content: function (target) {
@@ -2458,7 +2458,7 @@ const contentList = {
 			contents: [
 				{
 					filter: function (target) {
-						return Math.random() < 0.7;
+						return Game.Battle.rollChance(this, 0.7);
 					},
 					desc: "70%几率增加目标1点能量",
 					content: function (target) {

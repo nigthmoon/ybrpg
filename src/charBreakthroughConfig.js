@@ -266,7 +266,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '普攻时，30%几率封印目标一回合',
 		trigger: 'pugongHit',
-		filter: function () { return Math.random() < 0.3; },
+		filter: function () { return Game.Battle.rollChance(this, 0.3); },
 		content: function (target) {
 			if (target && target.alive) {
 				shared.addBuff(target, {
@@ -281,7 +281,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '普攻时，60%几率封印目标一回合',
 		trigger: 'pugongHit',
-		filter: function () { return Math.random() < 0.6; },
+		filter: function () { return Game.Battle.rollChance(this, 0.6); },
 		content: function (target) {
 			if (target && target.alive) {
 				shared.addBuff(target, {
@@ -311,7 +311,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，30%几率封印目标一回合',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.3; },
+		filter: function () { return Game.Battle.rollChance(this, 0.3); },
 		content: function (target) {
 			if (target && target.alive) {
 				shared.addBuff(target, {
@@ -326,7 +326,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，60%几率封印目标一回合',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.6; },
+		filter: function () { return Game.Battle.rollChance(this, 0.6); },
 		content: function (target) {
 			if (target && target.alive) {
 				shared.addBuff(target, {
@@ -358,7 +358,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，20%几率减少目标1能量',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.2; },
+		filter: function () { return Game.Battle.rollChance(this, 0.2); },
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
@@ -371,7 +371,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，50%几率减少目标1能量',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.5; },
+		filter: function () { return Game.Battle.rollChance(this, 0.5); },
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
@@ -384,7 +384,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，80%几率减少目标1能量',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.8; },
+		filter: function () { return Game.Battle.rollChance(this, 0.8); },
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
@@ -397,7 +397,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，20%几率减少目标2能量',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.2; },
+		filter: function () { return Game.Battle.rollChance(this, 0.2); },
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 2);
@@ -410,7 +410,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，50%几率减少目标2能量',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.5; },
+		filter: function () { return Game.Battle.rollChance(this, 0.5); },
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 2);
@@ -423,7 +423,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '普攻时，20%几率令目标降低1能量',
 		trigger: 'pugongHit',
-		filter: function () { return Math.random() < 0.2; },
+		filter: function () { return Game.Battle.rollChance(this, 0.2); },
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
@@ -436,7 +436,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '普攻时，50%几率令目标降低1能量',
 		trigger: 'pugongHit',
-		filter: function () { return Math.random() < 0.5; },
+		filter: function () { return Game.Battle.rollChance(this, 0.5); },
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
@@ -449,7 +449,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '普攻时，80%几率令目标降低1能量',
 		trigger: 'pugongHit',
-		filter: function () { return Math.random() < 0.8; },
+		filter: function () { return Game.Battle.rollChance(this, 0.8); },
 		content: function (target) {
 			if (target && target.alive && target.energy !== undefined) {
 				target.energy = Math.max(0, target.energy - 1);
@@ -465,7 +465,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '普攻时，20%几率令目标眩晕1回合',
 		trigger: 'pugongHit',
-		filter: function () { return Math.random() < 0.2; },
+		filter: function () { return Game.Battle.rollChance(this, 0.2); },
 		content: function (target) {
 			if (target && target.alive) {
 				shared.addBuff(target, {
@@ -480,7 +480,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '普攻时，50%几率令目标眩晕1回合',
 		trigger: 'pugongHit',
-		filter: function () { return Math.random() < 0.5; },
+		filter: function () { return Game.Battle.rollChance(this, 0.5); },
 		content: function (target) {
 			if (target && target.alive) {
 				shared.addBuff(target, {
@@ -495,7 +495,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，20%几率令目标眩晕1回合',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.2; },
+		filter: function () { return Game.Battle.rollChance(this, 0.2); },
 		content: function (target) {
 			if (target && target.alive) {
 				shared.addBuff(target, {
@@ -510,7 +510,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，50%几率令目标眩晕1回合',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.5; },
+		filter: function () { return Game.Battle.rollChance(this, 0.5); },
 		content: function (target) {
 			if (target && target.alive) {
 				shared.addBuff(target, {
@@ -528,7 +528,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '普攻时，20%几率令目标永久中毒，系数为攻击力5%',
 		trigger: 'pugongHit',
-		filter: function () { return Math.random() < 0.2; },
+		filter: function () { return Game.Battle.rollChance(this, 0.2); },
 		content: function (target) {
 			if (target && target.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.05);
@@ -551,7 +551,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '普攻时，50%几率令目标永久中毒，系数为攻击力5%',
 		trigger: 'pugongHit',
-		filter: function () { return Math.random() < 0.5; },
+		filter: function () { return Game.Battle.rollChance(this, 0.5); },
 		content: function (target) {
 			if (target && target.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.05);
@@ -597,7 +597,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，20%几率令目标永久中毒，系数为攻击力10%',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.2; },
+		filter: function () { return Game.Battle.rollChance(this, 0.2); },
 		content: function (target) {
 			if (target && target.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.10);
@@ -620,7 +620,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '使用技能后，50%几率令目标永久中毒，系数为攻击力10%',
 		trigger: 'skillHit',
-		filter: function () { return Math.random() < 0.5; },
+		filter: function () { return Game.Battle.rollChance(this, 0.5); },
 		content: function (target) {
 			if (target && target.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.10);
@@ -704,7 +704,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '受到普攻或技能伤害，50%几率令全体队友增加1能量',
 		trigger: 'onHitSelf',
-		filter: function () { return Math.random() < 0.5; },
+		filter: function () { return Game.Battle.rollChance(this, 0.5); },
 		content: function (attacker, damage) {
 			const allies = getAliveUnits(this.side);
 			allies.forEach(ally => {
@@ -720,7 +720,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '受到普攻或技能伤害时，25%几率减少来源1能量',
 		trigger: 'onHitSelf',
-		filter: function () { return Math.random() < 0.25; },
+		filter: function () { return Game.Battle.rollChance(this, 0.25); },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive && attacker.energy !== undefined) {
 				attacker.energy = Math.max(0, attacker.energy - 1);
@@ -733,7 +733,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '受到普攻或技能伤害时，50%几率减少来源1能量',
 		trigger: 'onHitSelf',
-		filter: function () { return Math.random() < 0.5; },
+		filter: function () { return Game.Battle.rollChance(this, 0.5); },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive && attacker.energy !== undefined) {
 				attacker.energy = Math.max(0, attacker.energy - 1);
@@ -759,7 +759,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '受到普攻或技能伤害时，10%几率令来源眩晕1回合',
 		trigger: 'onHitSelf',
-		filter: function () { return Math.random() < 0.1; },
+		filter: function () { return Game.Battle.rollChance(this, 0.1); },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
 				addBuff(attacker, {
@@ -774,7 +774,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '受到普攻或技能伤害时，20%几率令来源眩晕1回合',
 		trigger: 'onHitSelf',
-		filter: function () { return Math.random() < 0.2; },
+		filter: function () { return Game.Battle.rollChance(this, 0.2); },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
 				addBuff(attacker, {
@@ -831,7 +831,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '受到普攻或技能伤害时，20%几率令来源中毒，系数为攻击力5%',
 		trigger: 'onHitSelf',
-		filter: function () { return Math.random() < 0.2; },
+		filter: function () { return Game.Battle.rollChance(this, 0.2); },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.05);
@@ -852,7 +852,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '受到普攻或技能伤害时，50%几率令来源中毒，系数为攻击力5%',
 		trigger: 'onHitSelf',
-		filter: function () { return Math.random() < 0.5; },
+		filter: function () { return Game.Battle.rollChance(this, 0.5); },
 		content: function (attacker, damage) {
 			if (attacker && attacker.alive) {
 				const poisonDmg = Math.floor((this.atk || 0) * 0.05);
@@ -895,7 +895,7 @@ const BREAKTHROUGH_BUFF_LIBRARY = {
 		type: 'skill_effect',
 		desc: '普攻时，25%增加全队1能量',
 		trigger: 'pugongHit',
-		filter: function () { return Math.random() < 0.25; },
+		filter: function () { return Game.Battle.rollChance(this, 0.25); },
 		content: function (target) {
 			const allies = getAliveUnits(this.side);
 			allies.forEach(ally => {

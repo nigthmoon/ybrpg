@@ -139,32 +139,49 @@ class Bag {
 		return false;
 	}
 
-	/** 获取宝物的属性加成（用于战斗时合并） */
+	/**
+	 * 获取宝物的属性加成（用于战斗/角色编译时合并）
+	 * ------------------------------------------------------------
+	 * 属性契约：
+	 *  - 主属性（atk/def/hp/spe）随宝物等级缩放（× level），与 desc 中 `${star*X}` 一致；
+	 *  - 特种属性（命中/闪避/暴击/抗暴/暴伤/守护/破击/格挡）为固定值，不随等级缩放，
+	 *    与 desc 中「格挡+200」「命中+400」等固定写法一致。
+	 *  说明：这些特种属性最终由 Stat.final（角色编译）与 Bag.applyTo 读取并汇总进战斗单位，
+	 *  从而真正在 calculateDamage 的命中/暴击/格挡等判定中生效。
+	 */
 	static stats(instanceId) {
 		Bag.ensureInv();
+		const empty = {
+			atk: 0, def: 0, hp: 0, spe: 0,
+			mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0,
+			baoshang: 0, shouhu: 0, poji: 0, gedang: 0,
+		};
 		const data = window.treasureInventory[instanceId];
-		if (!data) return { atk: 0, def: 0, hp: 0 };
+		if (!data) return { ...empty };
 
 		const defs = Bag.defs();
 		const def = defs[data.baseId];
-		if (!def) return { atk: 0, def: 0, hp: 0 };
+		if (!def) return { ...empty };
 
 		const level = data.level || 1;
 		const multiplier = level;
 
-		const result = {
+		return {
+			// 主属性：随等级缩放
 			atk: (def.atk || 0) * multiplier,
 			def: (def.def || 0) * multiplier,
 			hp: (def.hp || 0) * multiplier,
+			spe: (def.spe || 0) * multiplier,
+			// 特种属性：固定值（万分数），不随等级缩放
+			mingzhong: def.mingzhong || 0,
+			shanbi: def.shanbi || 0,
+			baoji: def.baoji || 0,
+			kangbao: def.kangbao || 0,
+			baoshang: def.baoshang || 0,
+			shouhu: def.shouhu || 0,
+			poji: def.poji || 0,
+			gedang: def.gedang || 0,
 		};
-
-		const metaKeys = new Set(['id', 'name', 'desc', 'icon', 'price', 'atk', 'def', 'hp']);
-		for (const key of Object.keys(def)) {
-			if (metaKeys.has(key)) continue;
-			result[key] = def[key];
-		}
-
-		return result;
 	}
 
 	/** 合并宝物属性到角色属性（战斗前调用） */
@@ -172,22 +189,33 @@ class Bag {
 		if (!unit || !unit.instanceId) return;
 
 		const equippedTreasureIds = Bag.equipped(unit.instanceId);
-		let totalAtk = 0, totalDef = 0, totalHp = 0, totalSpe = 0;
+		const acc = {
+			atk: 0, def: 0, hp: 0, spe: 0,
+			mingzhong: 0, shanbi: 0, baoji: 0, kangbao: 0,
+			baoshang: 0, shouhu: 0, poji: 0, gedang: 0,
+		};
 
 		equippedTreasureIds.forEach(tid => {
 			if (!tid) return;
 			const s = Bag.stats(tid);
-			totalAtk += s.atk;
-			totalDef += s.def;
-			totalHp += s.hp;
-			totalSpe += s.spe;
+			for (const k of Object.keys(acc)) acc[k] += (s[k] || 0);
 		});
 
-		unit.atk = (unit.atk || 0) + totalAtk;
-		unit.def = (unit.def || 0) + totalDef;
-		unit.hp = (unit.hp || 0) + totalHp;
-		unit.spe = (unit.spe || 0) + totalSpe;
+		unit.atk = (unit.atk || 0) + acc.atk;
+		unit.def = (unit.def || 0) + acc.def;
+		unit.hp = (unit.hp || 0) + acc.hp;
+		unit.spe = (unit.spe || 0) + acc.spe;
 		unit.maxHp = unit.hp;
+
+		// ===== 特种属性：命中默认 10000，其余默认 0，叠加宝物固定值 =====
+		unit.mingzhong = (unit.mingzhong ?? 10000) + acc.mingzhong;
+		unit.shanbi = (unit.shanbi ?? 0) + acc.shanbi;
+		unit.baoji = (unit.baoji ?? 0) + acc.baoji;
+		unit.kangbao = (unit.kangbao ?? 0) + acc.kangbao;
+		unit.baoshang = (unit.baoshang ?? 0) + acc.baoshang;
+		unit.shouhu = (unit.shouhu ?? 0) + acc.shouhu;
+		unit.poji = (unit.poji ?? 0) + acc.poji;
+		unit.gedang = (unit.gedang ?? 0) + acc.gedang;
 
 		return unit;
 	}

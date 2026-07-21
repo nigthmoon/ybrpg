@@ -98,36 +98,54 @@ const TREASURE_DEFS= {
 		name: '宝物10041',
 		icon: '/image/equip/bws_10041.png',
 		iconbig: '/image/equip-big/bw_10041.png',
+		desc: function(star){
+			return `请输入文本。`;
+		},
 	},
 	bw_10042:{
 		id: 'bw_10042',
 		name: '宝物10042',
 		icon: '/image/equip/bws_10042.png',
 		iconbig: '/image/equip-big/bw_10042.png',
+		desc: function(star){
+			return `请输入文本。`;
+		},
 	},
 	bw_11625:{
 		id: 'bw_11625',
 		name: '宝物11625',
 		icon: '/image/equip/bws_11625.png',
 		iconbig: '/image/equip-big/bw_11625.png',
+		desc: function(star){
+			return `请输入文本。`;
+		},
 	},
 	bw_11626:{
 		id: 'bw_11626',
 		name: '宝物11626',
 		icon: '/image/equip/bws_11626.png',
 		iconbig: '/image/equip-big/bw_11626.png',
+		desc: function(star){
+			return `请输入文本。`;
+		},
 	},
 	bw_21625:{
 		id: 'bw_21625',
 		name: '宝物21625',
 		icon: '/image/equip/bws_21625.png',
 		iconbig: '/image/equip-big/bw_21625.png',
+		desc: function(star){
+			return `请输入文本。`;
+		},
 	},
 	bw_21626:{
 		id: 'bw_21626',
 		name: '宝物21626',
 		icon: '/image/equip/bws_21626.png',
 		iconbig: '/image/equip-big/bw_21626.png',
+		desc: function(star){
+			return `请输入文本。`;
+		},
 	},
 
 	//品质1
@@ -229,6 +247,20 @@ const TREASURE_DEFS= {
 		rank:2,
 		price: 800,
 		hp:240,
+		// 普攻命中时，50%几率令目标中毒2回合（每回合失去 施加者攻击力*33% 生命）
+		effects: [{
+			trigger: 'pugongHit',
+			filter: function () { return Game.Battle.rollChance(this, 0.5); },
+			content: function (target) {
+				if (target && target.alive) {
+					Game.Battle.addBuff(target, {
+						id: 'poison', name: '中毒', type: 'poison', remainRounds: 2,
+						sourceSide: this.side, sourceId: this.instanceId,
+						value: Math.floor((this.atk || 0) * 0.33),
+					});
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*240}，普攻，50%几率令目标中毒2回合，毒素伤害为施加者攻击力的33%。`;
 		},
@@ -240,6 +272,20 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10607.png',
 		rank:2,
 		price: 800,
+		hp:240,
+		// 普攻命中时，20%几率眩晕目标1回合
+		effects: [{
+			trigger: 'pugongHit',
+			filter: function () { return Game.Battle.rollChance(this, 0.2); },
+			content: function (target) {
+				if (target && target.alive) {
+					Game.Battle.addBuff(target, {
+						id: 'stun_bw', name: '眩晕', type: 'stun', remainRounds: 1,
+						sourceSide: this.side, sourceId: this.instanceId,
+					});
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*240}，普攻命中时，20%几率眩晕目标1回合。`;
 		},
@@ -251,6 +297,21 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10608.png',
 		rank:2,
 		price: 800,
+		hp:240,
+		// 普攻命中时，80%几率减少目标45%防御1回合（def 类 buff，value 为带符号分数）
+		effects: [{
+			trigger: 'pugongHit',
+			filter: function () { return Game.Battle.rollChance(this, 0.8); },
+			content: function (target) {
+				if (target && target.alive) {
+					Game.Battle.addBuff(target, {
+						id: 'def_down_bw', name: '破甲', type: 'def', remainRounds: 1,
+						sourceSide: this.side, sourceId: this.instanceId,
+						value: -0.45,
+					});
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*240}，普攻后，80%几率减少目标45%防御1回合。`;
 		},
@@ -262,6 +323,20 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20605.png',
 		rank:2,
 		price: 800,
+		atk:40,
+		// 技能命中时，20%几率封印目标1回合
+		effects: [{
+			trigger: 'skillHit',
+			filter: function () { return Game.Battle.rollChance(this, 0.2); },
+			content: function (target) {
+				if (target && target.alive) {
+					Game.Battle.addBuff(target, {
+						id: 'seal_bw', name: '封印', type: 'seal', remainRounds: 1,
+						sourceSide: this.side, sourceId: this.instanceId,
+					});
+				}
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*40}，技能命中时，20%几率封印目标1回合`;
 		},
@@ -273,6 +348,19 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20606.png',
 		rank:2,
 		price: 800,
+		atk:40,
+		// 技能命中时，20%几率减少目标1能量
+		effects: [{
+			trigger: 'skillHit',
+			filter: function () { return Game.Battle.rollChance(this, 0.2); },
+			content: function (target) {
+				if (target && target.alive && target.energy !== undefined) {
+					target.energy = Math.max(0, target.energy - 1);
+					Game.Battle.log(`${target.name} 损失1点能量`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*40}，技能命中时，20%几率减少目标1能量`;
 		},
@@ -284,6 +372,21 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20607.png',
 		rank:2,
 		price: 800,
+		atk:40,
+		// 技能命中时，50%几率令目标中毒2回合（每回合失去 施加者攻击力*33% 生命）
+		effects: [{
+			trigger: 'skillHit',
+			filter: function () { return Game.Battle.rollChance(this, 0.5); },
+			content: function (target) {
+				if (target && target.alive) {
+					Game.Battle.addBuff(target, {
+						id: 'poison', name: '中毒', type: 'poison', remainRounds: 2,
+						sourceSide: this.side, sourceId: this.instanceId,
+						value: Math.floor((this.atk || 0) * 0.33),
+					});
+				}
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*40}，技能命中时，50%几率令目标中毒2回合，毒素伤害为施加者攻击力的33%。`;
 		},
@@ -297,6 +400,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10803.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `请输入文本。`;
+		},
 	},
 	bw_11012:{
 		id: 'bw_11012',
@@ -305,6 +411,21 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11012.png',
 		rank:3,
 		price: 5000,
+		hp:600,
+		gedang:200,
+		// 格挡反击：格挡成功时，对来源发起一次特殊普攻（50%攻击系数），isSpecial 防止反击再触发格挡反击
+		effects: [{
+			trigger: 'onBlock',
+			filter: function () { return true; },
+			content: function (attacker) {
+				if (attacker && attacker.alive) {
+					var B = Game.Battle;
+					B.log(`${this.name} 触发格挡反击！`);
+					var dmg = B.calculateDamage(this, attacker, 0.5, 0, 'pugong');
+					B.applyDamage(attacker, dmg, this, function () {}, { trigger: 'counterHit', isSpecial: true });
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*600}，格挡+200，格挡反击，造成50%伤害。`;
 		},
@@ -316,6 +437,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11013.png',
 		rank:3,
 		price: 5000,
+		hp:600,
+		shanbi:200,
 		desc: function(star){
 			return `血量加${star*600}，闪避+200。`;
 		},
@@ -327,6 +450,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11014.png',
 		rank:3,
 		price: 5000,
+		hp:600,
+		kangbao:200,
 		desc: function(star){
 			return `血量加${star*600}，抗暴+200。`;
 		},
@@ -338,6 +463,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11109.png',
 		rank:3,
 		price: 5000,
+		hp:600,
+		gedang:200,
 		desc: function(star){
 			return `血量加${star*600}，格挡+200。`;
 		},
@@ -349,6 +476,20 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11110.png',
 		rank:3,
 		price: 5000,
+		hp:600,
+		kangbao:200,
+		// 受到伤害时，20%几率减少来源1能量
+		effects: [{
+			trigger: 'onHitSelf',
+			filter: function () { return Game.Battle.rollChance(this, 0.2); },
+			content: function (attacker, damage) {
+				if (attacker && attacker.alive && attacker.energy !== undefined) {
+					attacker.energy = Math.max(0, attacker.energy - 1);
+					Game.Battle.log(`${attacker.name} 被减少1点能量`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*600}，抗暴+200，受到攻击时，20%几率减少来源1能量。`;
 		},
@@ -360,6 +501,17 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11111.png',
 		rank:3,
 		price: 5000,
+		hp:600,
+		shanbi:200,
+		// 治疗效果+20%：战斗开始（首轮）时给自身叠加 pctHeal（applyHeal 读取施术者 pctHeal 生效）
+		effects: [{
+			trigger: 'roundStart',
+			filter: function (round) { return round === 1 && !this._bwHealBoostDone; },
+			content: function () {
+				this._bwHealBoostDone = true;
+				this.pctHeal = (this.pctHeal || 0) + 0.2;
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*600}，闪避+200，治疗效果+20%。`;
 		},
@@ -371,6 +523,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20803.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `请输入文本。`;
+		},
 	},
 	bw_21012:{
 		id: 'bw_21012',
@@ -379,8 +534,22 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21012.png',
 		rank:3,
 		price: 5000,
+		atk:100,
+		baoji:200,
+		// 装备者发动「治疗系普攻」且命中队友时，20%几率令该队友增加1能量（正向收益，仅治疗普攻触发 healPugongHit）
+		effects: [{
+			trigger: 'healPugongHit',
+			filter: function(){ return Game.Battle.rollChance(this, 0.2); },
+			content: function(target){
+				if (target && target.alive && target.energy !== undefined){
+					target.energy = Math.min(8, target.energy + 1);
+					Game.Battle.log(`${target.name} 获得1点能量`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
-			return `攻击加${star*100}，暴击+200，治疗普攻时，20%几率令目标增加1能量。`;
+			return `攻击加${star*100}，暴击+200，发动治疗系普攻命中队友时，20%几率令该队友增加1能量。`;
 		},
 	},
 	bw_21013:{
@@ -390,6 +559,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21013.png',
 		rank:3,
 		price: 5000,
+		atk:100,
+		baoji:200,
 		desc: function(star){
 			return `攻击加${star*100}，暴击+200。`;
 		},
@@ -401,6 +572,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21014.png',
 		rank:3,
 		price: 5000,
+		atk:100,
+		mingzhong:200,
 		desc: function(star){
 			return `攻击加${star*100}，命中+200。`;
 		},
@@ -412,6 +585,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21109.png',
 		rank:3,
 		price: 5000,
+		atk:100,
+		poji:200,
 		desc: function(star){
 			return `攻击加${star*100}，破击+200。`;
 		},
@@ -423,6 +598,33 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21110.png',
 		rank:3,
 		price: 5000,
+		atk:100,
+		poji:200,
+		// 普攻命中时，对左右相邻目标造成50%溅射伤害（trigger 改为 splashHit 避免二次触发普攻特效/无限溅射）
+		effects: [{
+			trigger: 'pugongHit',
+			filter: function(){ return true; },
+			content: function(target){
+				if (!target || !target.alive) return;
+				var B = Game.Battle;
+				var self = this;
+				var bs = B.getBattleState();
+				if (!bs) return;
+				var team = target.side === 'player' ? bs.playerUnits : bs.enemyUnits;
+				var row = Math.floor(target.slotIndex / 3);
+				var col = target.slotIndex % 3;
+				var ns = [];
+				if (col > 0) ns.push(row * 3 + (col - 1));
+				if (col < 2) ns.push(row * 3 + (col + 1));
+				ns.forEach(function(i){
+					var n = team[i];
+					if (n && n.alive && n !== target) {
+						var dmg = B.calculateDamage(self, n, 0.5, 0, 'pugong');
+						B.applyDamage(n, dmg, self, function(){}, { trigger: 'splashHit', isSpecial: true });
+					}
+				});
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*100}，破击+200，普攻命中时，对左右目标造成50%伤害。`;
 		},
@@ -434,6 +636,20 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21111.png',
 		rank:3,
 		price: 5000,
+		atk:100,
+		mingzhong:200,
+		// 普攻命中时，20%几率减少目标1能量
+		effects: [{
+			trigger: 'pugongHit',
+			filter: function(){ return Game.Battle.rollChance(this, 0.2); },
+			content: function(target){
+				if (target && target.alive && target.energy !== undefined) {
+					target.energy = Math.max(0, target.energy - 1);
+					Game.Battle.log(`${target.name} 被减少1点能量`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*100}，命中+200，普攻命中时，20%几率减少目标1能量。`;
 		},
@@ -447,6 +663,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11304.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `请输入文本。`;
+		},
 	},
 	bw_11615:{
 		id: 'bw_11615',
@@ -455,6 +674,20 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11615.png',
 		rank:4,
 		price: 40000,
+		hp:1200,
+		kangbao:400,
+		// 受到暴击时，降低来源1能量（onHitSelf 触发时攻击方 _lastHitIsCrit 已记录本次是否暴击）
+		effects: [{
+			trigger: 'onHitSelf',
+			filter: function(attacker){ return !!(attacker && attacker._lastHitIsCrit); },
+			content: function(attacker){
+				if (attacker && attacker.alive && attacker.energy !== undefined) {
+					attacker.energy = Math.max(0, attacker.energy - 1);
+					Game.Battle.log(`${attacker.name} 被减少1点能量`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*1200}，抗暴+400，受到暴击时，降低来源1能量。`;
 		},
@@ -466,6 +699,26 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11616.png',
 		rank:4,
 		price: 40000,
+		hp:1200,
+		shanbi:400,
+		// 触发闪避时，对来源造成本次伤害等额真实伤害。
+		// 注意：闪避发生在 calculateDamage 命中判定处，彼时"本次伤害"尚未计算；
+		// 这里用 (来源攻击力 - 自身防御) 估算一次普攻等效伤害作为真实伤害（近似实现，避免递归调用 calculateDamage）。
+		effects: [{
+			trigger: 'onDodge',
+			filter: function(){ return true; },
+			content: function(attacker){
+				if (attacker && attacker.alive) {
+					var B = Game.Battle;
+					var dmg = Math.max(1, (attacker.atk || 0) - (this.def || 0));
+					attacker.hp -= dmg;
+					B.showDamageNumber(attacker, dmg, { isTrue: true });
+					B.log(`${attacker.name} 受到 ${dmg} 点真实伤害（闪避反伤）`);
+					if (attacker.hp <= 0) { attacker.hp = 0; attacker.alive = false; B.log(`${attacker.name} 阵亡！`); }
+					B.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*1200}，闪避+400，触发闪避时，对来源造成本次伤害等额真实伤害。`;
 		},
@@ -477,6 +730,21 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11617.png',
 		rank:4,
 		price: 40000,
+		hp:1200,
+		gedang:400,
+		// 格挡反击：格挡成功时，对来源发起一次特殊普攻（75%攻击系数）
+		effects: [{
+			trigger: 'onBlock',
+			filter: function(){ return true; },
+			content: function(attacker){
+				if (attacker && attacker.alive) {
+					var B = Game.Battle;
+					B.log(`${this.name} 触发格挡反击！`);
+					var dmg = B.calculateDamage(this, attacker, 0.75, 0, 'pugong');
+					B.applyDamage(attacker, dmg, this, function(){}, { trigger: 'counterHit', isSpecial: true });
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*1200}，格挡+400，格挡反击，造成75%伤害。`;
 			//由于可能由于角色突破或其他效果已获得格挡反击，如果已有格挡反击词条，则改为令格挡反击的伤害加上这个系数
@@ -489,6 +757,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11618.png',
 		rank:4,
 		price: 40000,
+		hp:1200,
+		kangbao:400,
+		shouhu:2000,
 		desc: function(star){
 			return `血量加${star*1200}，抗暴+400，守护+2000。`;
 		},
@@ -500,6 +771,26 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11619.png',
 		rank:4,
 		price: 40000,
+		hp:1200,
+		shanbi:400,
+		// 受到非真实伤害时，反伤20%（onHitSelf 仅在非真实伤害路径触发，自动满足"非真实"条件）
+		effects: [{
+			trigger: 'onHitSelf',
+			filter: function(){ return true; },
+			content: function(attacker, damage){
+				if (attacker && attacker.alive) {
+					var B = Game.Battle;
+					var rdmg = Math.floor((damage || 0) * 0.2);
+					if (rdmg > 0) {
+						attacker.hp -= rdmg;
+						B.showDamageNumber(attacker, rdmg, { isTrue: true });
+						B.log(`${attacker.name} 受到 ${rdmg} 点真实伤害（反伤）`);
+						if (attacker.hp <= 0) { attacker.hp = 0; attacker.alive = false; B.log(`${attacker.name} 阵亡！`); }
+						B.updateUI();
+					}
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*1200}，闪避+400，受到非真实伤害时，反伤20%。`;
 		},
@@ -511,6 +802,20 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11620.png',
 		rank:4,
 		price: 40000,
+		hp:1200,
+		gedang:400,
+		// 触发格挡时，回复1能量
+		effects: [{
+			trigger: 'onBlock',
+			filter: function(){ return true; },
+			content: function(){
+				if (this.energy !== undefined) {
+					this.energy = Math.min(8, this.energy + 1);
+					Game.Battle.log(`${this.name} 获得1点能量`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*1200}，格挡+400，触发格挡时，回复1能量。`;
 		},
@@ -522,6 +827,20 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11621.png',
 		rank:4,
 		price: 40000,
+		hp:1200,
+		kangbao:400,
+		// 受到暴击时，回复1能量
+		effects: [{
+			trigger: 'onHitSelf',
+			filter: function(attacker){ return !!(attacker && attacker._lastHitIsCrit); },
+			content: function(){
+				if (this.energy !== undefined) {
+					this.energy = Math.min(8, this.energy + 1);
+					Game.Battle.log(`${this.name} 获得1点能量`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*1200}，抗暴+400，受到暴击时，回复1能量。`;
 		},
@@ -533,10 +852,18 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11622.png',
 		rank:4,
 		price: 40000,
+		hp:1200,
+		kangbao:400,
+		// 概率修正：敌方发动特效判定概率时，其成功率 -20%（通过引擎 rollChance 的 probMod.enemy 生效）
+		effects: [{
+			trigger: '__probMod__',
+			probMod: { enemy: 0.2 },
+			filter: function(){ return false; },
+			content: function(){}
+		}],
 		desc: function(star){
-			return `血量加${star*1200}，抗暴+400，敌方判断概率时，令本次成功率降低20%。`;
+			return `血量加${star*1200}，抗暴+400，敌方发动特效判定概率时，令本次成功率降低20%。`;
 		},
-		//有些效果写的是100%，是可以被这个减少的，但是代码里直接true了没判断，先不用回头修改，等统一汇总再决策
 	},
 	bw_11623:{
 		id: 'bw_11623',
@@ -545,6 +872,20 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11623.png',
 		rank:4,
 		price: 40000,
+		hp:1200,
+		gedang:400,
+		// 被攻击时，40%几率令来源减少1能量
+		effects: [{
+			trigger: 'onHitSelf',
+			filter: function(){ return Game.Battle.rollChance(this, 0.4); },
+			content: function(attacker){
+				if (attacker && attacker.alive && attacker.energy !== undefined) {
+					attacker.energy = Math.max(0, attacker.energy - 1);
+					Game.Battle.log(`${attacker.name} 被减少1点能量`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*1200}，格挡+400，被攻击时，40%几率令来源减少1能量。`;
 		},
@@ -556,6 +897,21 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11624.png',
 		rank:4,
 		price: 40000,
+		hp:1200,
+		shanbi:400,
+		// 触发闪避时，20%几率恢复全队1能量
+		effects: [{
+			trigger: 'onDodge',
+			filter: function(){ return Game.Battle.rollChance(this, 0.2); },
+			content: function(){
+				var B = Game.Battle;
+				B.getAliveUnits(this.side).forEach(function(u){
+					if (u && u.energy !== undefined) u.energy = Math.min(8, u.energy + 1);
+				});
+				B.log(`${this.name} 全队恢复1点能量`);
+				B.updateUI();
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*1200}，闪避+400，触发闪避时，20%几率恢复全队1能量。`;
 		},
@@ -567,6 +923,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21304.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `请输入文本。`;
+		},
 	},
 	bw_21615:{
 		id: 'bw_21615',
@@ -575,9 +934,22 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21615.png',
 		rank:4,
 		price: 40000,
+		atk:200,
+		mingzhong:400,
+		// 发出攻击指令后，若实际目标数少于额定最大目标数，每少一个目标，本次伤害 +25%
+		// 额定最大目标数硬编码：全体=6，一行=3，一列=2，单体=1（由引擎 _currentAttack 提供）
+		effects: [{
+			trigger: 'onDamageCalc',
+			filter: function(){ return true; },
+			content: function(defender, finalDmg, mod){
+				var ca = this._currentAttack;
+				if (!ca) return;
+				var missing = ca.maxTargets - ca.actualTargets;
+				if (missing > 0) mod.pct += missing * 0.25;
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*200}，命中+400，若发出攻击指令后，目标数少于可指定的最大角色数，每减少一个目标，本次伤害+25%。`;
-			//（比如skill_105最大目标是6但只打了4人，则本次伤害增加50%）
 		},
 	},
 	bw_21616:{
@@ -587,6 +959,14 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21616.png',
 		rank:4,
 		price: 40000,
+		atk:200,
+		mingzhong:400,
+		// 对封印的目标造成伤害+50%
+		effects: [{
+			trigger: 'onDamageCalc',
+			filter: function(defender){ return !!(defender && defender.buffList && defender.buffList.some(function(b){ return b.type === 'seal'; })); },
+			content: function(defender, finalDmg, mod){ mod.pct += 0.5; }
+		}],
 		desc: function(star){
 			return `攻击加${star*200}，命中+400，对封印的目标造成伤害+50%。`;
 		},
@@ -598,8 +978,26 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21617.png',
 		rank:4,
 		price: 40000,
+		atk:200,
+		mingzhong:400,
+		// 普攻命中时对目标额外造成 20% 攻击力的真实伤害（原意"指令下达后先造成"，当前无前置 trigger，近似置于命中时；真实伤害无视防御/闪避）
+		effects: [{
+			trigger: 'pugongHit',
+			filter: function(){ return true; },
+			content: function(target){
+				if (target && target.alive) {
+					var B = Game.Battle;
+					var tdmg = Math.max(1, Math.floor((this.atk || 0) * 0.2));
+					target.hp -= tdmg;
+					B.showDamageNumber(target, tdmg, { isTrue: true });
+					B.log(`${target.name} 受到 ${tdmg} 点真实伤害`);
+					if (target.hp <= 0) { target.hp = 0; target.alive = false; B.log(`${target.name} 阵亡！`); }
+					B.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
-			return `攻击加${star*200}，命中+400，普攻指令下达后，先对目标造成20%普攻伤害的真实伤害。`;//（当普攻或技能锁定目标后，即使目标已死，仍会鞭尸；同时修改击杀设定：造成非真实伤害后，若目标死亡，则判定为击杀；届时可以回能等判定）
+			return `攻击加${star*200}，命中+400，普攻时，对目标造成20%普攻伤害的真实伤害。`;//（当普攻或技能锁定目标后，即使目标已死，仍会鞭尸；同时修改击杀设定：造成非真实伤害后，若目标死亡，则判定为击杀；届时可以回能等判定）
 		},
 	},
 	bw_21618:{
@@ -609,6 +1007,13 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21618.png',
 		rank:4,
 		price: 40000,
+		atk:200,
+		poji:400,
+		// 造成伤害时（普攻/技能），100%几率令目标中毒2回合（毒素伤害为施加者攻击力33%）
+		effects: [
+			{ trigger: 'pugongHit', filter: function(){ return true; }, content: function(target){ if (target && target.alive){ Game.Battle.addBuff(target, { id: 'poison', name: '中毒', type: 'poison', remainRounds: 2, sourceSide: this.side, sourceId: this.instanceId, value: Math.floor((this.atk || 0) * 0.33) }); } } },
+			{ trigger: 'skillHit', filter: function(){ return true; }, content: function(target){ if (target && target.alive){ Game.Battle.addBuff(target, { id: 'poison', name: '中毒', type: 'poison', remainRounds: 2, sourceSide: this.side, sourceId: this.instanceId, value: Math.floor((this.atk || 0) * 0.33) }); } } }
+		],
 		desc: function(star){
 			return `攻击加${star*200}，破击+400，造成伤害时，100%几率令目标中毒2回合（毒素伤害为施加者的33%）。`;
 		},
@@ -620,6 +1025,20 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21619.png',
 		rank:4,
 		price: 40000,
+		atk:200,
+		poji:400,
+		// 技能后，恢复2能量
+		effects: [{
+			trigger: 'skillEnd',
+			filter: function(){ return true; },
+			content: function(){
+				if (this.energy !== undefined) {
+					this.energy = Math.min(8, this.energy + 2);
+					Game.Battle.log(`${this.name} 获得2点能量`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*200}，破击+400，技能后，恢复2能量。`;
 		},
@@ -631,6 +1050,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21620.png',
 		rank:4,
 		price: 40000,
+		atk:200,
+		baoji:400,
+		baoshang:2000,
 		desc: function(star){
 			return `攻击加${star*200}，暴击+400，暴击伤害+2000。`;
 		},
@@ -642,6 +1064,33 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21621.png',
 		rank:4,
 		price: 40000,
+		atk:200,
+		baoji:400,
+		// 技能命中时，对左右相邻目标造成80%溅射伤害（trigger 改为 splashHit 避免二次触发技能特效/无限溅射）
+		effects: [{
+			trigger: 'skillHit',
+			filter: function(){ return true; },
+			content: function(target){
+				if (!target || !target.alive) return;
+				var B = Game.Battle;
+				var self = this;
+				var bs = B.getBattleState();
+				if (!bs) return;
+				var team = target.side === 'player' ? bs.playerUnits : bs.enemyUnits;
+				var row = Math.floor(target.slotIndex / 3);
+				var col = target.slotIndex % 3;
+				var ns = [];
+				if (col > 0) ns.push(row * 3 + (col - 1));
+				if (col < 2) ns.push(row * 3 + (col + 1));
+				ns.forEach(function(i){
+					var n = team[i];
+					if (n && n.alive && n !== target) {
+						var dmg = B.calculateDamage(self, n, 0.8, 0, 'skill');
+						B.applyDamage(n, dmg, self, function(){}, { trigger: 'splashHit', isSpecial: true });
+					}
+				});
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*200}，暴击+400，技能命中时，对左右目标造成80%伤害。`;
 		},
@@ -653,8 +1102,17 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21622.png',
 		rank:4,
 		price: 40000,
+		atk:200,
+		poji:400,
+		// 概率修正：自身发动特效判定概率时，成功率 +20%（通过引擎 rollChance 的 probMod.self 生效）
+		effects: [{
+			trigger: '__probMod__',
+			probMod: { self: 0.2 },
+			filter: function(){ return false; },
+			content: function(){}
+		}],
 		desc: function(star){
-			return `攻击加${star*200}，破击+400，发动特效判断概率时，令概率加20%。`;
+			return `攻击加${star*200}，破击+400，发动特效判定概率时，令概率加20%。`;
 		},
 	},
 	bw_21623:{
@@ -664,8 +1122,23 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21623.png',
 		rank:4,
 		price: 40000,
+		atk:200,
+		poji:400,
+		// 普攻命中时吸血60%（借鉴突破库的 lifesteal_pugong，按本次实际伤害 _lastDamage 回血）
+		effects: [{
+			trigger: 'pugongHit',
+			filter: function(){ return true; },
+			content: function(target){
+				if (this.alive && target && target._lastDamage) {
+					var healAmt = Math.floor(target._lastDamage * 0.6);
+					this.hp = Math.min(this.maxHp, this.hp + healAmt);
+					Game.Battle.log(`${this.name} 吸血 ${healAmt} 点`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
-			return `攻击加${star*200}，破击+400，普攻时回复自身60%伤害值的血量。`;
+			return `攻击加${star*200}，破击+400，普攻命中时吸血60%。`;
 		},
 	},
 	bw_21624:{
@@ -675,9 +1148,12 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21624.png',
 		rank:4,
 		price: 40000,
+		atk:200,
+		baoji:400,
 		desc: function(star){
 			return `攻击加${star*200}，暴击+400，技能系数提升20%，普攻系数提升10%。`;
 		},
+		// 【待定】技能/普攻系数提升需要引擎在 calculateDamage 处提供系数加成钩子，当前无对应支持，留空待统一汇总决策
 	},
 
 	//品质5
@@ -688,6 +1164,21 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_12025.png',
 		rank:5,
 		price: 100000,
+		hp:9000,
+		gedang:500,
+		// 格挡反击：格挡成功时，对来源发起一次特殊普攻（100%攻击系数）
+		effects: [{
+			trigger: 'onBlock',
+			filter: function(){ return true; },
+			content: function(attacker){
+				if (attacker && attacker.alive) {
+					var B = Game.Battle;
+					B.log(`${this.name} 触发格挡反击！`);
+					var dmg = B.calculateDamage(this, attacker, 1.0, 0, 'pugong');
+					B.applyDamage(attacker, dmg, this, function(){}, { trigger: 'counterHit', isSpecial: true });
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*9000}，格挡+500，格挡反击，造成100%伤害。`;
 		},
@@ -699,6 +1190,20 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_12026.png',
 		rank:5,
 		price: 100000,
+		hp:9000,
+		shanbi:500,
+		// 触发闪避时，增加自身1能量
+		effects: [{
+			trigger: 'onDodge',
+			filter: function(){ return true; },
+			content: function(){
+				if (this.energy !== undefined) {
+					this.energy = Math.min(8, this.energy + 1);
+					Game.Battle.log(`${this.name} 获得1点能量`);
+					Game.Battle.updateUI();
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*9000}，闪避+500，触发闪避时，增加自身1能量。`;
 		},
@@ -710,6 +1215,26 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_12027.png',
 		rank:5,
 		price: 100000,
+		hp:9000,
+		kangbao:500,
+		// 受到非真实伤害时，反伤50%真实伤害（onHitSelf 仅在非真实伤害路径触发，自动满足"非真实"条件）
+		effects: [{
+			trigger: 'onHitSelf',
+			filter: function(){ return true; },
+			content: function(attacker, damage){
+				if (attacker && attacker.alive) {
+					var B = Game.Battle;
+					var rdmg = Math.floor((damage || 0) * 0.5);
+					if (rdmg > 0) {
+						attacker.hp -= rdmg;
+						B.showDamageNumber(attacker, rdmg, { isTrue: true });
+						B.log(`${attacker.name} 受到 ${rdmg} 点真实伤害（反伤）`);
+						if (attacker.hp <= 0) { attacker.hp = 0; attacker.alive = false; B.log(`${attacker.name} 阵亡！`); }
+						B.updateUI();
+					}
+				}
+			}
+		}],
 		desc: function(star){
 			return `血量加${star*9000}，抗暴+500，受到非真实伤害时，反伤50%。`;
 			//反伤概念：对来源造成该伤害的指定比值，且为真实伤害，不受其他效果影响，真实伤害造成击杀不会触发亡语等结算
@@ -722,6 +1247,13 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_22025.png',
 		rank:5,
 		price: 100000,
+		atk:1500,
+		baoji:500,
+		// 暴击时，增加1能量（普攻/技能命中且本次为暴击时触发，攻击方 _lastHitIsCrit 已记录）
+		effects: [
+			{ trigger: 'pugongHit', filter: function(){ return !!this._lastHitIsCrit; }, content: function(){ if (this.energy !== undefined){ this.energy = Math.min(8, this.energy + 1); Game.Battle.log(`${this.name} 获得1点能量`); Game.Battle.updateUI(); } } },
+			{ trigger: 'skillHit', filter: function(){ return !!this._lastHitIsCrit; }, content: function(){ if (this.energy !== undefined){ this.energy = Math.min(8, this.energy + 1); Game.Battle.log(`${this.name} 获得1点能量`); Game.Battle.updateUI(); } } }
+		],
 		desc: function(star){
 			return `攻击加${star*1500}，暴击+500，暴击时，增加1能量。`;
 		},
@@ -733,6 +1265,19 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_22026.png',
 		rank:5,
 		price: 100000,
+		atk:1500,
+		mingzhong:500,
+		// 无视60%防御：战斗开始（首轮）时把 ignore_def_all_60 写入 unit.buff，供 getIgnoreDefPercent 读取
+		effects: [{
+			trigger: 'roundStart',
+			filter: function(round){ return round === 1 && !this._bwIgnoreDefDone; },
+			content: function(){
+				this._bwIgnoreDefDone = true;
+				this.buff = this.buff || [];
+				this.buff.push('ignore_def_all_60');
+				Game.Battle.log(`${this.name} 获得无视60%防御`);
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*1500}，命中+500，无视60%防御。`;
 		},
@@ -744,6 +1289,27 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_22027.png',
 		rank:5,
 		price: 100000,
+		atk:1500,
+		poji:500,
+		// 战斗开始时，对全体敌人造成攻击力55%的真实伤害（roundStart round===1 在战斗开始触发）
+		effects: [{
+			trigger: 'roundStart',
+			filter: function(round){ return round === 1 && !this._bwAoeDone; },
+			content: function(){
+				this._bwAoeDone = true;
+				var B = Game.Battle;
+				var tdmg = Math.max(1, Math.floor((this.atk || 0) * 0.55));
+				B.getAliveUnits(this.side === 'player' ? 'enemy' : 'player').forEach(function(e){
+					if (e && e.alive) {
+						e.hp -= tdmg;
+						B.showDamageNumber(e, tdmg, { isTrue: true });
+						B.log(`${e.name} 受到 ${tdmg} 点真实伤害`);
+						if (e.hp <= 0) { e.hp = 0; e.alive = false; B.log(`${e.name} 阵亡！`); }
+					}
+				});
+				B.updateUI();
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*1500}，破击+500，战斗开始时，对全体敌人造成攻击力55%的真实伤害。`;
 		},
@@ -757,6 +1323,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_13028.png',
 		rank:6,
 		price: 200000,
+		hp:12000,
+		gedang:3000,
 		desc: function(star){
 			return `血量加${star*12000}，格挡+3000。`;
 		},
@@ -768,6 +1336,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_13029.png',
 		rank:6,
 		price: 200000,
+		hp:12000,
+		shanbi:3000,
 		desc: function(star){
 			return `血量加${star*12000}，闪避+3000。`;
 		},
@@ -779,6 +1349,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_13030.png',
 		rank:6,
 		price: 200000,
+		hp:12000,
+		kangbao:3000,
 		desc: function(star){
 			return `血量加${star*12000}，抗暴+3000。`;
 		},
@@ -790,6 +1362,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_23028.png',
 		rank:6,
 		price: 200000,
+		atk:2000,
+		baoji:3000,
 		desc: function(star){
 			return `攻击加${star*2000}，暴击+3000。`;
 		},
@@ -801,6 +1375,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_23029.png',
 		rank:6,
 		price: 200000,
+		atk:2000,
+		mingzhong:3000,
 		desc: function(star){
 			return `攻击加${star*2000}，命中+3000。`;
 		},
@@ -812,6 +1388,8 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_23030.png',
 		rank:6,
 		price: 200000,
+		atk:2000,
+		poji:3000,
 		desc: function(star){
 			return `攻击加${star*2000}，破击+3000。`;
 		},

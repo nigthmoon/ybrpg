@@ -5820,6 +5820,8 @@ function buildPlayerTeamForBattle() {
 			shanbi: compiled?.shanbi ?? 0,
 			baoji: compiled?.baoji ?? 0,
 			kangbao: compiled?.kangbao ?? 0,
+			baoshang: compiled?.baoshang ?? 0,
+			shouhu: compiled?.shouhu ?? 0,
 			poji: compiled?.poji ?? 0,
 			gedang: compiled?.gedang ?? 0,
 
