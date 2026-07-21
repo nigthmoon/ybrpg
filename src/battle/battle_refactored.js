@@ -952,7 +952,9 @@ Battle.executePugong = function executePugong(actor, targets, callback, isFollow
 				}
 			});
 		} else {
-			const dmgResult = calculateDamage(actor, target, coeff, 0, 'pugong');
+			// 攻击系数加成时点（如青鸾：普攻系数 +10%）
+			const atkCoeff = coeff * (1 + Battle.getCoeffBonus(actor, 'pugong'));
+			const dmgResult = calculateDamage(actor, target, atkCoeff, 0, 'pugong');
 
 			if (dmgResult.isMiss) {
 				missCount++;  // 记录闪避
@@ -1110,7 +1112,9 @@ Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, 
 				}
 			});
 		} else {
-			const dmgResult = calculateDamage(actor, target, coeff, extraEnergy, 'skill');
+			// 攻击系数加成时点（如青鸾：技能系数 +20%）
+			const atkCoeff = coeff * (1 + Battle.getCoeffBonus(actor, 'skill'));
+			const dmgResult = calculateDamage(actor, target, atkCoeff, extraEnergy, 'skill');
 
 			if (dmgResult.isMiss) {
 				missCount++;  // 记录闪避
@@ -2721,6 +2725,28 @@ Battle.triggerSelfEffect = function triggerSelfEffect(unit, trigger, ...context)
 			effect.content.call(unit, ...context);
 		}
 	});
+}
+
+/**
+ * 【攻击系数加成时点】收集 actor 身上所有「攻击系数加成」效果的加成百分比之和。
+ * 效果通过 trigger: 'coeffBonus' 接入；content 收到 attackType（'pugong' | 'skill'），
+ * 返回加成百分比（如 0.2 表示 +20%）。多个来源累加。
+ * 供青鸾（技能+20%、普攻+10%）等「系数提升」类宝物/突破使用。
+ * @param {object} actor 攻击者
+ * @param {string} attackType 攻击类型：'pugong' | 'skill'
+ * @returns {number} 加成百分比之和（无加成返回 0）
+ */
+Battle.getCoeffBonus = function getCoeffBonus(actor, attackType) {
+	if (!actor) return 0;
+	let bonus = 0;
+	const effects = getEffectsByTrigger(actor, 'coeffBonus');
+	effects.forEach(effect => {
+		if (!effect.filter || effect.filter.call(actor, attackType)) {
+			const v = effect.content.call(actor, attackType);
+			if (typeof v === 'number' && isFinite(v)) bonus += v;
+		}
+	});
+	return bonus;
 }
 
 

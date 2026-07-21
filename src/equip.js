@@ -1116,10 +1116,19 @@ const TREASURE_DEFS= {
 		price: 40000,
 		atk:200,
 		baoji:400,
+		// 技能系数 +20%、普攻系数 +10%（通过 coeffBonus 时点接入，见 Battle.getCoeffBonus）
+		effects: [{
+			trigger: 'coeffBonus',
+			filter: function(){ return true; },
+			content: function(attackType){
+				if (attackType === 'skill') return 0.2;
+				if (attackType === 'pugong') return 0.1;
+				return 0;
+			}
+		}],
 		desc: function(star){
 			return `攻击加${star*200}，暴击+400，技能系数提升20%，普攻系数提升10%。`;
 		},
-		// 【待定】技能/普攻系数提升需要引擎在 calculateDamage 处提供系数加成钩子，当前无对应支持，留空待统一汇总决策
 	},
 
 	//品质5
