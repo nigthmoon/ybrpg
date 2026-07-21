@@ -220,6 +220,46 @@ class Bag {
 		};
 	}
 
+	/**
+	 * 获取可作为「吸收材料」的宝物实例列表（升级 / 吸收共用）
+	 * ---------------------------------------------------------------
+	 * 当前规则（与原逻辑一致）：仅允许 同名(baseId 相同)、未装备、等级为 1 的宝物。
+	 *
+	 * 【预留接口】未来「吸收宝物」方案：
+	 *  - 在宝物定义中配置 absorb: { enabled, crossBase, expYield } 即可扩展：
+	 *      · crossBase=true 时允许吸收不同 baseId 的宝物；
+	 *      · expYield 作为被吸收时提供的经验/价值（当前未参与计算，预留）。
+	 *  - 只需在此函数内根据 def.absorb 调整筛选与排序，调用方无需改动。
+	 */
+	static getAbsorbFodderList(treasureInstanceId) {
+		const target = window.treasureInventory[treasureInstanceId];
+		if (!target) return [];
+		const targetBaseId = target.baseId;
+		const targetDef = (Bag.defs() || {})[targetBaseId] || {};
+		const allowCrossBase = !!(targetDef.absorb && targetDef.absorb.crossBase);
+
+		return Object.keys(window.treasureInventory).filter(id => {
+			if (id === treasureInstanceId) return false;
+			const inv = window.treasureInventory[id];
+			if (!inv) return false;
+
+			// 同名限制（除非该宝物开启跨 id 吸收）
+			if (!allowCrossBase && inv.baseId !== targetBaseId) return false;
+
+			// 已装备的宝物不可作为材料
+			if (window.charTreasureSlots) {
+				for (const slots of Object.values(window.charTreasureSlots)) {
+					if (slots && slots.includes(id)) return false;
+				}
+			}
+
+			// 当前规则：等级 > 1 的宝物不可作为材料（未来可按 absorb.expYield 放宽）
+			if (inv.level && inv.level > 1) return false;
+
+			return true;
+		});
+	}
+
 	/** 显示宝物升级浮窗 */
 	static showUpgrade(treasureInstanceId, charInstanceId = null, slotIndex = null) {
 		const treasureData = window.treasureInventory[treasureInstanceId];
@@ -239,25 +279,7 @@ class Bag {
 			return;
 		}
 
-		const fodderInstanceIds = Object.keys(window.treasureInventory).filter(id => {
-			if (id === treasureInstanceId) return false;
-			const inv = window.treasureInventory[id];
-			if (!inv || inv.baseId !== baseId) return false;
-
-			if (window.charTreasureSlots) {
-				for (const [ownerId, slots] of Object.entries(window.charTreasureSlots)) {
-					if (slots && slots.includes(id)) {
-						return false;
-					}
-				}
-			}
-
-			if (inv.level && inv.level > 1) {
-				return false;
-			}
-
-			return true;
-		});
+		const fodderInstanceIds = Bag.getAbsorbFodderList(treasureInstanceId);
 
 		const fodderCount = fodderInstanceIds.length;
 
@@ -428,23 +450,7 @@ class Bag {
 				return;
 			}
 
-			const freshFodderIds = Object.keys(window.treasureInventory).filter(id => {
-				if (id === treasureInstanceId) return false;
-				const inv = window.treasureInventory[id];
-				if (!inv || inv.baseId !== baseId) return false;
-
-				for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
-					if (slots && slots.includes(id)) {
-						return false;
-					}
-				}
-
-				if (inv.level && inv.level > 1) {
-					return false;
-				}
-
-				return true;
-			});
+			const freshFodderIds = Bag.getAbsorbFodderList(treasureInstanceId);
 
 			const freshFodderCount = freshFodderIds.length;
 			const requiredCount = latestLevel;
@@ -469,23 +475,7 @@ class Bag {
 						return;
 					}
 
-					const confirmFodderIds = Object.keys(window.treasureInventory).filter(id => {
-						if (id === treasureInstanceId) return false;
-						const inv = window.treasureInventory[id];
-						if (!inv || inv.baseId !== baseId) return false;
-
-						for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
-							if (slots && slots.includes(id)) {
-								return false;
-							}
-						}
-
-						if (inv.level && inv.level > 1) {
-							return false;
-						}
-
-						return true;
-					});
+					const confirmFodderIds = Bag.getAbsorbFodderList(treasureInstanceId);
 
 					const confirmFodderCount = confirmFodderIds.length;
 					const confirmRequiredCount = confirmLevel;
@@ -606,23 +596,7 @@ class Bag {
 
 		const materialCount = popup.querySelector('[data-material-count]');
 		if (materialCount) {
-			const newFodderCount = Object.keys(window.treasureInventory).filter(id => {
-				if (id === treasureInstanceId) return false;
-				const inv = window.treasureInventory[id];
-				if (!inv || inv.baseId !== baseId) return false;
-
-				for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
-					if (slots && slots.includes(id)) {
-						return false;
-					}
-				}
-
-				if (inv.level && inv.level > 1) {
-					return false;
-				}
-
-				return true;
-			}).length;
+			const newFodderCount = Bag.getAbsorbFodderList(treasureInstanceId).length;
 
 			const nextNeedCount = currentLevel;
 			const isSufficient = newFodderCount >= nextNeedCount;
@@ -670,23 +644,7 @@ class Bag {
 				upgradeBtn.disabled = true;
 				upgradeBtn.style.opacity = '0.5';
 			} else {
-				const newFodderCount = Object.keys(window.treasureInventory).filter(id => {
-					if (id === treasureInstanceId) return false;
-					const inv = window.treasureInventory[id];
-					if (!inv || inv.baseId !== baseId) return false;
-
-					for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
-						if (slots && slots.includes(id)) {
-							return false;
-						}
-					}
-
-					if (inv.level && inv.level > 1) {
-						return false;
-					}
-
-					return true;
-				}).length;
+			const newFodderCount = Bag.getAbsorbFodderList(treasureInstanceId).length;
 
 				const nextNeedCount = currentLevel;
 				if (newFodderCount < nextNeedCount) {

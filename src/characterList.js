@@ -4528,12 +4528,12 @@ const characterList = {
 			},
 			{
 				type: "skill_effect",
-				desc: "普攻，50%几率令目标中毒2回合，毒素伤害为施加者攻击力的5%",
+				desc: "普攻，50%几率令目标中毒2回合，毒素伤害为施加者攻击力的33%",
 				trigger: "pugongHit",
 				filter: function () { return Math.random() < 0.5; },
 				content: function (target) {
 					if (target && target.alive) {
-						const poisonDmg = Math.floor((this.atk || 0) * 0.05);
+						const poisonDmg = Math.floor((this.atk || 0) * 0.33);
 						Game.Battle.addBuff(target, { id: "poison_target", name: "中毒", type: "poison", value: poisonDmg, remainRounds: 2, ownerSlot: this._currentActionSlotKey || null });
 					}
 				},

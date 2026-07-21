@@ -139,6 +139,16 @@ const TREASURE_DEFS= {
 		rank:1,
 		price: 200,
 		atk:20,
+		// 特效：造成伤害时，若血量高于对方，则伤害增加20%（内联完整效果，不引用库）
+		effects: [{
+			trigger: 'onDamageCalc',
+			filter: function () { return true; },
+			content: function (defender, damage, mod) {
+				if (this.hp > defender.hp) mod.pct += 0.2;
+			}
+		}],
+		// 【预留接口】吸收宝物方案：未来可开启跨 id 吸收，expYield 为作为材料时的经验产出
+		absorb: { enabled: false, crossBase: false, expYield: 1 },
 		desc: function(star){
 			return `攻击加${star*20}，造成伤害时，若血量高于对方，则伤害增加20%。`;
 		},
@@ -151,6 +161,16 @@ const TREASURE_DEFS= {
 		rank:1,
 		price: 200,
 		hp:120,
+		// 特效：受到伤害时，若血量高于对方，则伤害减少20%（内联完整效果，不引用库）
+		effects: [{
+			trigger: 'onDamageTaken',
+			filter: function () { return true; },
+			content: function (attacker, damage, mod) {
+				if (this.hp > attacker.hp) mod.pct += 0.2;
+			}
+		}],
+		// 【预留接口】吸收宝物方案
+		absorb: { enabled: false, crossBase: false, expYield: 1 },
 		desc: function(star){
 			return `血量加${star*120}，受到伤害时，若血量高于对方，则伤害减少20%。`;
 		},
@@ -163,6 +183,16 @@ const TREASURE_DEFS= {
 		rank:1,
 		price: 200,
 		atk:20,
+		// 特效：造成伤害时，若血量低于对方，则伤害增加20%（内联完整效果，不引用库）
+		effects: [{
+			trigger: 'onDamageCalc',
+			filter: function () { return true; },
+			content: function (defender, damage, mod) {
+				if (this.hp < defender.hp) mod.pct += 0.2;
+			}
+		}],
+		// 【预留接口】吸收宝物方案
+		absorb: { enabled: false, crossBase: false, expYield: 1 },
 		desc: function(star){
 			return `攻击加${star*20}，造成伤害时，若血量低于对方，则伤害增加20%。`;
 		},
@@ -175,6 +205,16 @@ const TREASURE_DEFS= {
 		rank:1,
 		price: 200,
 		hp:120,
+		// 特效：受到伤害时，若血量低于对方，则伤害减少20%（内联完整效果，不引用库）
+		effects: [{
+			trigger: 'onDamageTaken',
+			filter: function () { return true; },
+			content: function (attacker, damage, mod) {
+				if (this.hp < attacker.hp) mod.pct += 0.2;
+			}
+		}],
+		// 【预留接口】吸收宝物方案
+		absorb: { enabled: false, crossBase: false, expYield: 1 },
 		desc: function(star){
 			return `血量加${star*120}，受到伤害时，若血量低于对方，则伤害减少20%。`;
 		},
@@ -188,6 +228,10 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10606.png',
 		rank:2,
 		price: 800,
+		hp:240,
+		desc: function(star){
+			return `血量加${star*240}，普攻，50%几率令目标中毒2回合，毒素伤害为施加者攻击力的33%。`;
+		},
 	},
 	bw_10607:{
 		id: 'bw_10607',
@@ -196,6 +240,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10607.png',
 		rank:2,
 		price: 800,
+		desc: function(star){
+			return `血量加${star*240}，普攻命中时，20%几率眩晕目标1回合。`;
+		},
 	},
 	bw_10608:{
 		id: 'bw_10608',
@@ -204,6 +251,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10608.png',
 		rank:2,
 		price: 800,
+		desc: function(star){
+			return `血量加${star*240}，普攻后，80%几率减少目标45%防御1回合。`;
+		},
 	},
 	bw_20605:{
 		id: 'bw_20605',
@@ -212,6 +262,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20605.png',
 		rank:2,
 		price: 800,
+		desc: function(star){
+			return `攻击加${star*40}，技能命中时，20%几率封印目标1回合`;
+		},
 	},
 	bw_20606:{
 		id: 'bw_20606',
@@ -220,6 +273,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20606.png',
 		rank:2,
 		price: 800,
+		desc: function(star){
+			return `攻击加${star*40}，技能命中时，20%几率减少目标1能量`;
+		},
 	},
 	bw_20607:{
 		id: 'bw_20607',
@@ -228,6 +284,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20607.png',
 		rank:2,
 		price: 800,
+		desc: function(star){
+			return `攻击加${star*40}，技能命中时，50%几率令目标中毒2回合，毒素伤害为施加者攻击力的33%。`;
+		},
 	},
 
 	//品质3
@@ -246,6 +305,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11012.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `血量加${star*600}，格挡+200，格挡反击，造成50%伤害。`;
+		},
 	},
 	bw_11013:{
 		id: 'bw_11013',
@@ -254,6 +316,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11013.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `血量加${star*600}，闪避+200。`;
+		},
 	},
 	bw_11014:{
 		id: 'bw_11014',
@@ -262,6 +327,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11014.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `血量加${star*600}，抗暴+200。`;
+		},
 	},
 	bw_11109:{
 		id: 'bw_11109',
@@ -270,6 +338,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11109.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `血量加${star*600}，格挡+200。`;
+		},
 	},
 	bw_11110:{
 		id: 'bw_11110',
@@ -278,6 +349,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11110.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `血量加${star*600}，抗暴+200，受到攻击时，20%几率减少来源1能量。`;
+		},
 	},
 	bw_11111:{
 		id: 'bw_11111',
@@ -286,6 +360,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11111.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `血量加${star*600}，闪避+200，治疗效果+20%。`;
+		},
 	},
 	bw_20803:{
 		id: 'bw_20803',
@@ -302,6 +379,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21012.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `攻击加${star*100}，暴击+200，治疗普攻时，20%几率令目标增加1能量。`;
+		},
 	},
 	bw_21013:{
 		id: 'bw_21013',
@@ -310,6 +390,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21013.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `攻击加${star*100}，暴击+200。`;
+		},
 	},
 	bw_21014:{
 		id: 'bw_21014',
@@ -318,6 +401,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21014.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `攻击加${star*100}，命中+200。`;
+		},
 	},
 	bw_21109:{
 		id: 'bw_21109',
@@ -326,6 +412,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21109.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `攻击加${star*100}，破击+200。`;
+		},
 	},
 	bw_21110:{
 		id: 'bw_21110',
@@ -334,6 +423,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21110.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `攻击加${star*100}，破击+200，普攻命中时，对左右目标造成50%伤害。`;
+		},
 	},
 	bw_21111:{
 		id: 'bw_21111',
@@ -342,6 +434,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21111.png',
 		rank:3,
 		price: 5000,
+		desc: function(star){
+			return `攻击加${star*100}，命中+200，普攻命中时，20%几率减少目标1能量。`;
+		},
 	},
 
 	//品质4
@@ -360,6 +455,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11615.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `血量加${star*1200}，抗暴+400，受到暴击时，降低来源1能量。`;
+		},
 	},
 	bw_11616:{
 		id: 'bw_11616',
@@ -368,6 +466,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11616.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `血量加${star*1200}，闪避+400，触发闪避时，对来源造成本次伤害等额真实伤害。`;
+		},
 	},
 	bw_11617:{
 		id: 'bw_11617',
@@ -376,6 +477,10 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11617.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `血量加${star*1200}，格挡+400，格挡反击，造成75%伤害。`;
+			//由于可能由于角色突破或其他效果已获得格挡反击，如果已有格挡反击词条，则改为令格挡反击的伤害加上这个系数
+		},
 	},
 	bw_11618:{
 		id: 'bw_11618',
@@ -384,6 +489,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11618.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `血量加${star*1200}，抗暴+400，守护+2000。`;
+		},
 	},
 	bw_11619:{
 		id: 'bw_11619',
@@ -392,6 +500,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11619.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `血量加${star*1200}，闪避+400，受到非真实伤害时，反伤20%。`;
+		},
 	},
 	bw_11620:{
 		id: 'bw_11620',
@@ -400,6 +511,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11620.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `血量加${star*1200}，格挡+400，触发格挡时，回复1能量。`;
+		},
 	},
 	bw_11621:{
 		id: 'bw_11621',
@@ -408,6 +522,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11621.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `血量加${star*1200}，抗暴+400，受到暴击时，回复1能量。`;
+		},
 	},
 	bw_11622:{
 		id: 'bw_11622',
@@ -416,6 +533,10 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11622.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `血量加${star*1200}，抗暴+400，敌方判断概率时，令本次成功率降低20%。`;
+		},
+		//有些效果写的是100%，是可以被这个减少的，但是代码里直接true了没判断，先不用回头修改，等统一汇总再决策
 	},
 	bw_11623:{
 		id: 'bw_11623',
@@ -424,6 +545,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11623.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `血量加${star*1200}，格挡+400，被攻击时，40%几率令来源减少1能量。`;
+		},
 	},
 	bw_11624:{
 		id: 'bw_11624',
@@ -432,6 +556,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11624.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `血量加${star*1200}，闪避+400，触发闪避时，20%几率恢复全队1能量。`;
+		},
 	},
 	bw_21304:{
 		id: 'bw_21304',
@@ -448,6 +575,10 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21615.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `攻击加${star*200}，命中+400，若发出攻击指令后，目标数少于可指定的最大角色数，每减少一个目标，本次伤害+25%。`;
+			//（比如skill_105最大目标是6但只打了4人，则本次伤害增加50%）
+		},
 	},
 	bw_21616:{
 		id: 'bw_21616',
@@ -456,6 +587,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21616.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `攻击加${star*200}，命中+400，对封印的目标造成伤害+50%。`;
+		},
 	},
 	bw_21617:{
 		id: 'bw_21617',
@@ -464,6 +598,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21617.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `攻击加${star*200}，命中+400，普攻指令下达后，先对目标造成20%普攻伤害的真实伤害。`;//（当普攻或技能锁定目标后，即使目标已死，仍会鞭尸；同时修改击杀设定：造成非真实伤害后，若目标死亡，则判定为击杀；届时可以回能等判定）
+		},
 	},
 	bw_21618:{
 		id: 'bw_21618',
@@ -472,6 +609,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21618.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `攻击加${star*200}，破击+400，造成伤害时，100%几率令目标中毒2回合（毒素伤害为施加者的33%）。`;
+		},
 	},
 	bw_21619:{
 		id: 'bw_21619',
@@ -480,6 +620,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21619.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `攻击加${star*200}，破击+400，技能后，恢复2能量。`;
+		},
 	},
 	bw_21620:{
 		id: 'bw_21620',
@@ -488,6 +631,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21620.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `攻击加${star*200}，暴击+400，暴击伤害+2000。`;
+		},
 	},
 	bw_21621:{
 		id: 'bw_21621',
@@ -496,6 +642,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21621.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `攻击加${star*200}，暴击+400，技能命中时，对左右目标造成80%伤害。`;
+		},
 	},
 	bw_21622:{
 		id: 'bw_21622',
@@ -504,6 +653,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21622.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `攻击加${star*200}，破击+400，发动特效判断概率时，令概率加20%。`;
+		},
 	},
 	bw_21623:{
 		id: 'bw_21623',
@@ -512,6 +664,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21623.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `攻击加${star*200}，破击+400，普攻时回复自身60%伤害值的血量。`;
+		},
 	},
 	bw_21624:{
 		id: 'bw_21624',
@@ -520,6 +675,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21624.png',
 		rank:4,
 		price: 40000,
+		desc: function(star){
+			return `攻击加${star*200}，暴击+400，技能系数提升20%，普攻系数提升10%。`;
+		},
 	},
 
 	//品质5
@@ -530,6 +688,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_12025.png',
 		rank:5,
 		price: 100000,
+		desc: function(star){
+			return `血量加${star*9000}，格挡+500，格挡反击，造成100%伤害。`;
+		},
 	},
 	bw_12026:{
 		id: 'bw_12026',
@@ -538,6 +699,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_12026.png',
 		rank:5,
 		price: 100000,
+		desc: function(star){
+			return `血量加${star*9000}，闪避+500，触发闪避时，增加自身1能量。`;
+		},
 	},
 	bw_12027:{
 		id: 'bw_12027',
@@ -546,6 +710,10 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_12027.png',
 		rank:5,
 		price: 100000,
+		desc: function(star){
+			return `血量加${star*9000}，抗暴+500，受到非真实伤害时，反伤50%。`;
+			//反伤概念：对来源造成该伤害的指定比值，且为真实伤害，不受其他效果影响，真实伤害造成击杀不会触发亡语等结算
+		},
 	},
 	bw_22025:{
 		id: 'bw_22025',
@@ -554,6 +722,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_22025.png',
 		rank:5,
 		price: 100000,
+		desc: function(star){
+			return `攻击加${star*1500}，暴击+500，暴击时，增加1能量。`;
+		},
 	},
 	bw_22026:{
 		id: 'bw_22026',
@@ -562,6 +733,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_22026.png',
 		rank:5,
 		price: 100000,
+		desc: function(star){
+			return `攻击加${star*1500}，命中+500，无视60%防御。`;
+		},
 	},
 	bw_22027:{
 		id: 'bw_22027',
@@ -570,6 +744,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_22027.png',
 		rank:5,
 		price: 100000,
+		desc: function(star){
+			return `攻击加${star*1500}，破击+500，战斗开始时，对全体敌人造成攻击力55%的真实伤害。`;
+		},
 	},
 
 	//品质6
@@ -580,6 +757,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_13028.png',
 		rank:6,
 		price: 200000,
+		desc: function(star){
+			return `血量加${star*12000}，格挡+3000。`;
+		},
 	},
 	bw_13029:{
 		id: 'bw_13029',
@@ -588,6 +768,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_13029.png',
 		rank:6,
 		price: 200000,
+		desc: function(star){
+			return `血量加${star*12000}，闪避+3000。`;
+		},
 	},
 	bw_13030:{
 		id: 'bw_13030',
@@ -596,6 +779,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_13030.png',
 		rank:6,
 		price: 200000,
+		desc: function(star){
+			return `血量加${star*12000}，抗暴+3000。`;
+		},
 	},
 	bw_23028:{
 		id: 'bw_23028',
@@ -604,6 +790,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_23028.png',
 		rank:6,
 		price: 200000,
+		desc: function(star){
+			return `攻击加${star*2000}，暴击+3000。`;
+		},
 	},
 	bw_23029:{
 		id: 'bw_23029',
@@ -612,6 +801,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_23029.png',
 		rank:6,
 		price: 200000,
+		desc: function(star){
+			return `攻击加${star*2000}，命中+3000。`;
+		},
 	},
 	bw_23030:{
 		id: 'bw_23030',
@@ -620,6 +812,9 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_23030.png',
 		rank:6,
 		price: 200000,
+		desc: function(star){
+			return `攻击加${star*2000}，破击+3000。`;
+		},
 	},
 
 

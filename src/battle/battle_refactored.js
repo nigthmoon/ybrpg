@@ -2081,7 +2081,10 @@ Battle.adaptBreakthroughSkillEffect = function adaptBreakthroughSkillEffect(buff
  */
 Battle.adaptTreasureEffects = function adaptTreasureEffects(treasureDef) {
 	var out = [];
-	var ids = (treasureDef && treasureDef.effectSkills) || [];
+	if (!treasureDef) return out;
+
+	// 旧式：字符串 id 引用 BREAKTHROUGH_BUFF_LIBRARY（如 wansha 的 seal_target_100_skill）
+	var ids = treasureDef.effectSkills || [];
 	ids.forEach(function (id) {
 		var buff = (BREAKTHROUGH_BUFF_LIBRARY || {})[id];
 		var eff = adaptBreakthroughSkillEffect(buff);
@@ -2092,6 +2095,21 @@ Battle.adaptTreasureEffects = function adaptTreasureEffects(treasureDef) {
 			console.warn('[宝物] effectSkills id \'' + id + '\' 未找到');
 		}
 	});
+
+	// 新式：宝物内联完整效果（不引用库，直接在宝物定义里写 {trigger, filter, content}）
+	// 这样每个宝物的特效自包含、可读，便于独立维护。
+	var inlineEffects = treasureDef.effects || [];
+	inlineEffects.forEach(function (eff) {
+		if (!eff || !eff.trigger || typeof eff.content !== 'function') return;
+		out.push({
+			trigger: eff.trigger,
+			filter: typeof eff.filter === 'function' ? eff.filter : function () { return true; },
+			content: eff.content,
+			source: 'treasure',
+			id: eff.id || ''
+		});
+	});
+
 	return out;
 }
 
