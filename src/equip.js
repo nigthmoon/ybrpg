@@ -150,6 +150,10 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10502.png',
 		rank:1,
 		price: 200,
+		hp:120,
+		desc: function(star){
+			return `血量加${star*120}，受到伤害时，若血量高于对方，则伤害减少20%。`;
+		},
 	},
 	bw_20501:{
 		id: 'bw_20501',
@@ -158,6 +162,10 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20501.png',
 		rank:1,
 		price: 200,
+		atk:20,
+		desc: function(star){
+			return `攻击加${star*20}，造成伤害时，若血量低于对方，则伤害增加20%。`;
+		},
 	},
 	bw_20502:{
 		id: 'bw_20502',
@@ -166,6 +174,10 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20502.png',
 		rank:1,
 		price: 200,
+		hp:120,
+		desc: function(star){
+			return `血量加${star*120}，受到伤害时，若血量低于对方，则伤害减少20%。`;
+		},
 	},
 
 	//品质2

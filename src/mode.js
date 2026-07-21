@@ -3747,17 +3747,21 @@ function renderBagEquipContent(container) {
 		const aIsEquipped = !!aOwnerInfo;
 		const bIsEquipped = !!bOwnerInfo;
 
-		// 1. 已装备的排最前面
-		if (aIsEquipped && !bIsEquipped) return -1;
-		if (!aIsEquipped && bIsEquipped) return 1;
+		// 1. 是否上阵：已装备的排最前面
+		if (aIsEquipped !== bIsEquipped) return aIsEquipped ? -1 : 1;
 
-		// 2. 如果都装备了或都没装备，按等级降序（高等级优先）
+		// 2. 培养进度：等级降序（高等级优先）
 		const aLevel = window.treasureInventory[a.instanceId]?.level || 1;
 		const bLevel = window.treasureInventory[b.instanceId]?.level || 1;
 		if (bLevel !== aLevel) return bLevel - aLevel;
 
-		// 3. 等级相同，按名称排序
-		return (a.name || '').localeCompare(b.name || '');
+		// 3. 品质从高到低（rank 越大品质越高，无 rank 视为 0 排在最后）
+		const aRank = a.rank || 0;
+		const bRank = b.rank || 0;
+		if (bRank !== aRank) return bRank - aRank;
+
+		// 4. 宝物对应的原始 id 排序
+		return (a.baseId || '').localeCompare(b.baseId || '');
 	});
 
 	// 遍历所有宝物实例，每个独立展示
@@ -3874,12 +3878,31 @@ function renderBagEquipContent(container) {
 
 		card.appendChild(iconDiv);
 
-		// 名称（不再变色），显示等级
+		// 名称（不再显示等级）
 		const nameDiv = document.createElement('div');
 		nameDiv.className = 'gallery-char-name';
-		const treasureLevel = window.treasureInventory[item.instanceId]?.level || 1;
-		nameDiv.innerHTML = `${item.name} <span style="color:#ffd700;font-size:10px;">Lv.${treasureLevel}</span>`;
+		nameDiv.textContent = item.name;
 		card.appendChild(nameDiv);
+
+		// 等级标签：写在图标下方区域（覆盖在图标底部）
+		const treasureLevel = window.treasureInventory[item.instanceId]?.level || 1;
+		const levelBadge = document.createElement('div');
+		levelBadge.style.cssText = `
+			position: absolute;
+			bottom: 1px;
+			right: 1px;
+			background: rgba(0, 0, 0, 0.8);
+			color: #ffd700;
+			font-size: 8px;
+			padding: 0 2px;
+			border-radius: 2px;
+			font-weight: bold;
+			z-index: 2;
+			line-height: 12px;
+			pointer-events: none;
+		`;
+		levelBadge.textContent = `Lv.${treasureLevel}`;
+		iconDiv.appendChild(levelBadge);
 
 
 
@@ -3950,7 +3973,7 @@ function updateBagEquipDetailBar(baseId, tDef, bagItem) {
 	const iconDiv = document.getElementById('bag-detail-equip-icon');
 	if (iconDiv) {
 		iconDiv.textContent = '';
-		const detailIcon = tDef.iconbig || tDef.icon;
+		const detailIcon = tDef.icon || tDef.iconbig;
 		if (detailIcon) {
 			const img = document.createElement('img');
 			img.src = detailIcon;
@@ -3970,12 +3993,38 @@ function updateBagEquipDetailBar(baseId, tDef, bagItem) {
 		}
 	}
 
-	// 更新名称
+	// 更新名称（不再显示等级）
 	const nameEl = document.getElementById('bag-detail-equip-name');
 	if (nameEl) {
-		// 【修改】名称后显示等级
-		nameEl.textContent = `${tDef.name} Lv.${treasureLevel}`;
+		nameEl.textContent = tDef.name;
 		nameEl.style.color = '#ffd700';
+	}
+
+	// 等级写在预览图标下方（覆盖在图标底部）
+	const detailIconDiv = document.getElementById('bag-detail-equip-icon');
+	if (detailIconDiv) {
+		detailIconDiv.style.position = 'relative';
+		let lvEl = document.getElementById('bag-detail-equip-level');
+		if (!lvEl) {
+			lvEl = document.createElement('div');
+			lvEl.id = 'bag-detail-equip-level';
+			lvEl.style.cssText = `
+				position: absolute;
+				bottom: 1px;
+				right: 1px;
+				background: rgba(0, 0, 0, 0.8);
+				color: #ffd700;
+				font-size: 8px;
+				padding: 0 2px;
+				border-radius: 2px;
+				font-weight: bold;
+				z-index: 2;
+				line-height: 12px;
+				pointer-events: none;
+			`;
+			detailIconDiv.appendChild(lvEl);
+		}
+		lvEl.textContent = `Lv.${treasureLevel}`;
 	}
 
 	// 更新描述
@@ -5164,34 +5213,30 @@ function renderTreasureGalleryView(container) {
 	statDiv.textContent = `已收集 ${ownedCount} / ${treasureIds.length}`;
 	container.appendChild(statDiv);
 
-	// 按触发时点分类
-	// 按触发时点分类
-	const TYPE_ORDER = ['passive', 'on_turn_start', 'on_pugong', 'on_hit', 'on_skill', 'on_damage_dealt', 'on_kill', 'on_any_death', 'on_death', 'other'];
-	const VALID_TYPES = new Set(TYPE_ORDER);
+	// 按品质(rank)分类：1=普通 2=稀有 3=精品 4=伪史诗 5=史诗 6=传说
+	const RANK_ORDER = [1, 2, 3, 4, 5, 6];
+	const RANK_LABELS = { 1: '普通', 2: '稀有', 3: '精品', 4: '伪史诗', 5: '史诗', 6: '传说' };
 	const grouped = {};
 	for (const tid of treasureIds) {
 		const tDef = treasureDefs[tid];
-		// 如果 type 为空或不在有效类型中，则归入 'other'
-		let type = tDef.type;
-		if (!type || !VALID_TYPES.has(type)) {
-			type = 'other';
-		}
-		if (!grouped[type]) grouped[type] = [];
-		grouped[type].push({ id: tid, ...tDef });
+		// 未配置 rank 的宝物归入 0（未分级）
+		let rank = tDef.rank;
+		if (rank == null || !RANK_ORDER.includes(rank)) rank = 0;
+		if (!grouped[rank]) grouped[rank] = [];
+		grouped[rank].push({ id: tid, ...tDef });
 	}
 
 	// 滚动容器
 	const scrollDiv = document.createElement('div');
 	scrollDiv.className = 'gallery-scroll';
 
-	for (const typeKey of TYPE_ORDER) {
-		if (!grouped[typeKey] || grouped[typeKey].length === 0) continue;
+	for (const rankKey of [6, 5, 4, 3, 2, 1, 0]) {
+		if (!grouped[rankKey] || grouped[rankKey].length === 0) continue;
 
 		const sectionTitle = document.createElement('div');
 		sectionTitle.className = 'gallery-section-title';
-		// 处理 'other' 的中文显示
-		const typeLabel = typeKey === 'other' ? '其他' : (TREASURE_TYPE_LABELS[typeKey] || typeKey);
-		sectionTitle.textContent = typeLabel;
+		const rankLabel = rankKey === 0 ? '未分级' : (RANK_LABELS[rankKey] || ('rank' + rankKey));
+		sectionTitle.textContent = rankLabel;
 		sectionTitle.style.borderLeftColor = '#c0a060';
 		scrollDiv.appendChild(sectionTitle);
 
@@ -5199,7 +5244,7 @@ function renderTreasureGalleryView(container) {
 		const grid = document.createElement('div');
 		grid.className = 'gallery-grid';
 
-		for (const t of grouped[typeKey]) {
+		for (const t of grouped[rankKey]) {
 			const isOwned = ownedTreasureBaseIds.has(t.id);
 			const rankInfo = getTreasureRankInfo(t.price || 0);
 
