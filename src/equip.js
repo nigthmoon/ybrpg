@@ -129,6 +129,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21626.png',
 		iconbig: '/image/equip-big/bw_21626.png',
 	},
+
 	//品质1
 	bw_10501:{
 		id: 'bw_10501',
@@ -136,6 +137,11 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_10501.png',
 		iconbig: '/image/equip-big/bw_10501.png',
 		rank:1,
+		price: 200,
+		atk:20,
+		desc: function(star){
+			return `攻击加${star*20}，造成伤害时，若血量高于对方，则伤害增加20%。`;
+		},
 	},
 	bw_10502:{
 		id: 'bw_10502',
@@ -143,6 +149,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_10502.png',
 		iconbig: '/image/equip-big/bw_10502.png',
 		rank:1,
+		price: 200,
 	},
 	bw_20501:{
 		id: 'bw_20501',
@@ -150,6 +157,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_20501.png',
 		iconbig: '/image/equip-big/bw_20501.png',
 		rank:1,
+		price: 200,
 	},
 	bw_20502:{
 		id: 'bw_20502',
@@ -157,7 +165,9 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_20502.png',
 		iconbig: '/image/equip-big/bw_20502.png',
 		rank:1,
+		price: 200,
 	},
+
 	//品质2
 	bw_10606:{
 		id: 'bw_10606',
@@ -165,6 +175,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_10606.png',
 		iconbig: '/image/equip-big/bw_10606.png',
 		rank:2,
+		price: 800,
 	},
 	bw_10607:{
 		id: 'bw_10607',
@@ -172,6 +183,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_10607.png',
 		iconbig: '/image/equip-big/bw_10607.png',
 		rank:2,
+		price: 800,
 	},
 	bw_10608:{
 		id: 'bw_10608',
@@ -179,6 +191,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_10608.png',
 		iconbig: '/image/equip-big/bw_10608.png',
 		rank:2,
+		price: 800,
 	},
 	bw_20605:{
 		id: 'bw_20605',
@@ -186,6 +199,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_20605.png',
 		iconbig: '/image/equip-big/bw_20605.png',
 		rank:2,
+		price: 800,
 	},
 	bw_20606:{
 		id: 'bw_20606',
@@ -193,6 +207,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_20606.png',
 		iconbig: '/image/equip-big/bw_20606.png',
 		rank:2,
+		price: 800,
 	},
 	bw_20607:{
 		id: 'bw_20607',
@@ -200,7 +215,9 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_20607.png',
 		iconbig: '/image/equip-big/bw_20607.png',
 		rank:2,
+		price: 800,
 	},
+
 	//品质3
 	bw_10803:{
 		id: 'bw_10803',
@@ -208,6 +225,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_10803.png',
 		iconbig: '/image/equip-big/bw_10803.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_11012:{
 		id: 'bw_11012',
@@ -215,6 +233,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11012.png',
 		iconbig: '/image/equip-big/bw_11012.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_11013:{
 		id: 'bw_11013',
@@ -222,6 +241,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11013.png',
 		iconbig: '/image/equip-big/bw_11013.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_11014:{
 		id: 'bw_11014',
@@ -229,6 +249,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11014.png',
 		iconbig: '/image/equip-big/bw_11014.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_11109:{
 		id: 'bw_11109',
@@ -236,6 +257,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11109.png',
 		iconbig: '/image/equip-big/bw_11109.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_11110:{
 		id: 'bw_11110',
@@ -243,6 +265,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11110.png',
 		iconbig: '/image/equip-big/bw_11110.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_11111:{
 		id: 'bw_11111',
@@ -250,6 +273,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11111.png',
 		iconbig: '/image/equip-big/bw_11111.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_20803:{
 		id: 'bw_20803',
@@ -257,6 +281,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_20803.png',
 		iconbig: '/image/equip-big/bw_20803.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_21012:{
 		id: 'bw_21012',
@@ -264,6 +289,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21012.png',
 		iconbig: '/image/equip-big/bw_21012.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_21013:{
 		id: 'bw_21013',
@@ -271,6 +297,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21013.png',
 		iconbig: '/image/equip-big/bw_21013.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_21014:{
 		id: 'bw_21014',
@@ -278,6 +305,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21014.png',
 		iconbig: '/image/equip-big/bw_21014.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_21109:{
 		id: 'bw_21109',
@@ -285,6 +313,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21109.png',
 		iconbig: '/image/equip-big/bw_21109.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_21110:{
 		id: 'bw_21110',
@@ -292,6 +321,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21110.png',
 		iconbig: '/image/equip-big/bw_21110.png',
 		rank:3,
+		price: 5000,
 	},
 	bw_21111:{
 		id: 'bw_21111',
@@ -299,7 +329,9 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21111.png',
 		iconbig: '/image/equip-big/bw_21111.png',
 		rank:3,
+		price: 5000,
 	},
+
 	//品质4
 	bw_11304:{
 		id: 'bw_11304',
@@ -307,6 +339,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11304.png',
 		iconbig: '/image/equip-big/bw_11304.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_11615:{
 		id: 'bw_11615',
@@ -314,6 +347,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11615.png',
 		iconbig: '/image/equip-big/bw_11615.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_11616:{
 		id: 'bw_11616',
@@ -321,6 +355,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11616.png',
 		iconbig: '/image/equip-big/bw_11616.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_11617:{
 		id: 'bw_11617',
@@ -328,6 +363,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11617.png',
 		iconbig: '/image/equip-big/bw_11617.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_11618:{
 		id: 'bw_11618',
@@ -335,6 +371,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11618.png',
 		iconbig: '/image/equip-big/bw_11618.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_11619:{
 		id: 'bw_11619',
@@ -342,6 +379,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11619.png',
 		iconbig: '/image/equip-big/bw_11619.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_11620:{
 		id: 'bw_11620',
@@ -349,6 +387,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11620.png',
 		iconbig: '/image/equip-big/bw_11620.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_11621:{
 		id: 'bw_11621',
@@ -356,6 +395,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11621.png',
 		iconbig: '/image/equip-big/bw_11621.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_11622:{
 		id: 'bw_11622',
@@ -363,6 +403,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11622.png',
 		iconbig: '/image/equip-big/bw_11622.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_11623:{
 		id: 'bw_11623',
@@ -370,6 +411,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11623.png',
 		iconbig: '/image/equip-big/bw_11623.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_11624:{
 		id: 'bw_11624',
@@ -377,6 +419,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11624.png',
 		iconbig: '/image/equip-big/bw_11624.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21304:{
 		id: 'bw_21304',
@@ -384,6 +427,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21304.png',
 		iconbig: '/image/equip-big/bw_21304.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21615:{
 		id: 'bw_21615',
@@ -391,6 +435,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21615.png',
 		iconbig: '/image/equip-big/bw_21615.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21616:{
 		id: 'bw_21616',
@@ -398,6 +443,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21616.png',
 		iconbig: '/image/equip-big/bw_21616.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21617:{
 		id: 'bw_21617',
@@ -405,6 +451,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21617.png',
 		iconbig: '/image/equip-big/bw_21617.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21618:{
 		id: 'bw_21618',
@@ -412,6 +459,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21618.png',
 		iconbig: '/image/equip-big/bw_21618.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21619:{
 		id: 'bw_21619',
@@ -419,6 +467,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21619.png',
 		iconbig: '/image/equip-big/bw_21619.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21620:{
 		id: 'bw_21620',
@@ -426,6 +475,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21620.png',
 		iconbig: '/image/equip-big/bw_21620.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21621:{
 		id: 'bw_21621',
@@ -433,6 +483,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21621.png',
 		iconbig: '/image/equip-big/bw_21621.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21622:{
 		id: 'bw_21622',
@@ -440,6 +491,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21622.png',
 		iconbig: '/image/equip-big/bw_21622.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21623:{
 		id: 'bw_21623',
@@ -447,6 +499,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21623.png',
 		iconbig: '/image/equip-big/bw_21623.png',
 		rank:4,
+		price: 40000,
 	},
 	bw_21624:{
 		id: 'bw_21624',
@@ -454,7 +507,9 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21624.png',
 		iconbig: '/image/equip-big/bw_21624.png',
 		rank:4,
+		price: 40000,
 	},
+
 	//品质5
 	bw_12025:{
 		id: 'bw_12025',
@@ -462,6 +517,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_12025.png',
 		iconbig: '/image/equip-big/bw_12025.png',
 		rank:5,
+		price: 100000,
 	},
 	bw_12026:{
 		id: 'bw_12026',
@@ -469,6 +525,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_12026.png',
 		iconbig: '/image/equip-big/bw_12026.png',
 		rank:5,
+		price: 100000,
 	},
 	bw_12027:{
 		id: 'bw_12027',
@@ -476,6 +533,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_12027.png',
 		iconbig: '/image/equip-big/bw_12027.png',
 		rank:5,
+		price: 100000,
 	},
 	bw_22025:{
 		id: 'bw_22025',
@@ -483,6 +541,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_22025.png',
 		iconbig: '/image/equip-big/bw_22025.png',
 		rank:5,
+		price: 100000,
 	},
 	bw_22026:{
 		id: 'bw_22026',
@@ -490,6 +549,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_22026.png',
 		iconbig: '/image/equip-big/bw_22026.png',
 		rank:5,
+		price: 100000,
 	},
 	bw_22027:{
 		id: 'bw_22027',
@@ -497,7 +557,9 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_22027.png',
 		iconbig: '/image/equip-big/bw_22027.png',
 		rank:5,
+		price: 100000,
 	},
+
 	//品质6
 	bw_13028:{
 		id: 'bw_13028',
@@ -505,6 +567,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_13028.png',
 		iconbig: '/image/equip-big/bw_13028.png',
 		rank:6,
+		price: 200000,
 	},
 	bw_13029:{
 		id: 'bw_13029',
@@ -512,6 +575,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_13029.png',
 		iconbig: '/image/equip-big/bw_13029.png',
 		rank:6,
+		price: 200000,
 	},
 	bw_13030:{
 		id: 'bw_13030',
@@ -519,6 +583,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_13030.png',
 		iconbig: '/image/equip-big/bw_13030.png',
 		rank:6,
+		price: 200000,
 	},
 	bw_23028:{
 		id: 'bw_23028',
@@ -526,6 +591,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_23028.png',
 		iconbig: '/image/equip-big/bw_23028.png',
 		rank:6,
+		price: 200000,
 	},
 	bw_23029:{
 		id: 'bw_23029',
@@ -533,6 +599,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_23029.png',
 		iconbig: '/image/equip-big/bw_23029.png',
 		rank:6,
+		price: 200000,
 	},
 	bw_23030:{
 		id: 'bw_23030',
@@ -540,6 +607,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_23030.png',
 		iconbig: '/image/equip-big/bw_23030.png',
 		rank:6,
+		price: 200000,
 	},
 
 
