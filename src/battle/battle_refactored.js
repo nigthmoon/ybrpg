@@ -582,10 +582,12 @@ Battle.calculateDamage = function calculateDamage(attacker, defender, coefficien
  * @returns 结算伤害事件
  */
 Battle.applyDamage = function applyDamage(target, dmgResult, attacker, callback, skillContext = {}) {
-	if (!target || !target.alive) {
+	if (!target) {
 		if (callback) callback();
 		return;
 	}
+	// 进入本函数时目标是否存活：false 表示「鞭尸」场景（目标已被真实伤害等先杀死，但攻击已锁定它）
+	const wasAlive = target.alive;
 
 	// 解构伤害结果
 	let dmg, isCrit, isBlock;
@@ -678,49 +680,61 @@ Battle.applyDamage = function applyDamage(target, dmgResult, attacker, callback,
 		isBlock
 	}, () => {
 		// ===== 不死效果：致命伤时消耗不死buff，生命回复至1点（不进入阵亡流程） =====
-		const undyingIdx = (target.buffList || []).findIndex(b => b.type === 'undying');
-		if (target.hp <= 0 && undyingIdx !== -1) {
-			const ub = target.buffList[undyingIdx];
-			target.buffList.splice(undyingIdx, 1);
-			removeBuffEffect(target, ub);
-			target.hp = 1;
-			addBattleLog(`${target.name} 触发【不死】，生命回复至1点！`);
-			showDamageNumber(target, 1, { isHeal: true });
-			updateBattleUI();
-			if (callback) callback();
-			return;
-		}
-
+		const diedByTrueDmg = !!target._trueDeath; // 本次死亡由「真实伤害」造成（bw_21617 等设 target._trueDeath），设计上绕过亡语
 		if (target.hp <= 0) {
 			target.hp = 0;
-			target.alive = false;
-			clearBuffsOnDeath(target);
-			addBattleLog(`${target.name} 阵亡！`);
-
-			// 触发亡语：单位已阵亡，需绕过 triggerSelfEffect 的 alive 守卫，直接遍历 dieSelf 效果
-			const deathEffects = getEffectsByTrigger(target, 'dieSelf');
-			deathEffects.forEach(effect => {
-				if (effect.filter && effect.filter.call(target, attacker)) {
-					effect.content.call(target, attacker);
+			if (wasAlive) {
+				// ===== 不死：仅当本次真正从活变死时生效 =====
+				const undyingIdx = (target.buffList || []).findIndex(b => b.type === 'undying');
+				if (undyingIdx !== -1) {
+					const ub = target.buffList[undyingIdx];
+					target.buffList.splice(undyingIdx, 1);
+					removeBuffEffect(target, ub);
+					target.hp = 1;
+					addBattleLog(`${target.name} 触发【不死】，生命回复至1点！`);
+					showDamageNumber(target, 1, { isHeal: true });
+					updateBattleUI();
+					if (callback) callback();
+					return;
 				}
-			});
-			triggerGlobalEffect('dieGlobal', target, attacker);
 
-			// 若亡语将单位复活，则不再视为击杀（不触发 onKill / 击杀能量）
-			if (!target.alive && attacker && attacker.alive) {
-				triggerSelfEffect(attacker, 'onKill', target);
-				attacker.energy = Math.min(8, attacker.energy + 1);
-				// ===== 【移除以移除】 =====
-				// 击杀能量回复改由 onKill 效果控制
-			}
+				target.alive = false;
+				clearBuffsOnDeath(target);
+				target._trueDeath = false; // 消费标记，避免复活后再次死亡误判为「真伤致死」而跳过亡语
+				addBattleLog(`${target.name} 阵亡！`);
 
-			updateBattleUI();
-			setTimeout(() => {
+				// 亡语：真实伤害致死时不触发（设计意图：真伤致死→亡语不触发）
+				if (!diedByTrueDmg) {
+					const deathEffects = getEffectsByTrigger(target, 'dieSelf');
+					deathEffects.forEach(effect => {
+						if (effect.filter && effect.filter.call(target, attacker)) {
+							effect.content.call(target, attacker);
+						}
+					});
+					triggerGlobalEffect('dieGlobal', target, attacker);
+				}
+
+				// 击杀回能（真正从活变死）
+				if (attacker && attacker.alive) {
+					triggerSelfEffect(attacker, 'onKill', target);
+					attacker.energy = Math.min(8, attacker.energy + 1);
+				}
+
+				updateBattleUI();
+				setTimeout(() => {
+					if (callback) callback();
+				}, 500);
+			} else {
+				// 鞭尸：目标进入本函数时已死（被真实伤害等先杀死），仅结算「击杀回能」，不触发亡语 / 不重复死亡流程
+				addBattleLog(`${attacker ? attacker.name : '攻击者'} 鞭尸 ${target.name}`);
+				if (attacker && attacker.alive) {
+					triggerSelfEffect(attacker, 'onKill', target);
+					attacker.energy = Math.min(8, attacker.energy + 1);
+				}
+				updateBattleUI();
 				if (callback) callback();
-			}, 500);
-		}
-		else {
-			// ===== 【移除】target.energy = Math.min(8, target.energy + 1); =====
+			}
+		} else {
 			updateBattleUI();
 			if (callback) callback();
 		}
@@ -914,7 +928,8 @@ Battle.executePugong = function executePugong(actor, targets, callback, isFollow
 		}
 
 		const target = targets[index++];
-		if (!target || !target.alive) {
+		// 执行阶段锁定已选目标：选目标时已过滤死人，此处不再因中途死亡（如被真伤先杀）而跳过，允许「鞭尸」
+		if (!target) {
 			processNextTarget();
 			return;
 		}
@@ -1068,7 +1083,8 @@ Battle.executeSkill = function executeSkill(actor, skillType, skillId, targets, 
 		}
 
 		const target = targets[index++];
-		if (!target || !target.alive) {
+		// 执行阶段锁定已选目标：选目标时已过滤死人，此处不再因中途死亡（如被真伤先杀）而跳过，允许「鞭尸」
+		if (!target) {
 			processNextTarget();
 			return;
 		}
@@ -3002,6 +3018,39 @@ Battle.flyEmoji = function flyEmoji(fromUnit, toUnit, emojiChar) {
 /**
  * 溅射专用指示线：从主目标(fromUnit)向被溅射目标(toUnit)画一条快速延伸并消散的定向冲击线，
  * 末端带一个溅射爆点标记。用于表达「溅射连锁」，与技能特效 emoji 体系解耦、避免混淆。
+/**
+ * 【共享】对命中目标 target 的左右相邻单位造成溅射伤害（提炼自【吴爽】的完整溅射写法）
+ * - 同排内取左右相邻列（每排3人，避免前排右误连后排左）
+ * - 飞溅射视觉指示线 splashLine
+ * - 用 extraHit 触发，避免二次触发普攻/技能特效造成无限溅射
+ * @param {object} attacker 施放者（溅射伤害来源）
+ * @param {object} target 主攻击命中的目标
+ * @param {number} ratio 溅射伤害系数（相对攻击者攻击力）
+ * @param {string} damageType 伤害类型，'pugong' / 'skill' 等
+ */
+Battle.splashToAdjacent = function splashToAdjacent(attacker, target, ratio, damageType) {
+	// 注意：主目标可能已在本轮其它 pugongHit/skillHit 效果（如真实伤害）中被击杀(alive=false)，
+	// 但溅射仍应向【活着的】左右邻居生效，故只校验 target 存在，不校验 target.alive。
+	if (!target) return;
+	var side = target.side;
+	var idx = target.slotIndex;
+	var perRow = 3;
+	var row = Math.floor(idx / perRow);
+	var col = idx % perRow;
+	var neighbors = [col - 1, col + 1]
+		.filter(function (c) { return c >= 0 && c < perRow; })
+		.map(function (c) { return row * perRow + c; })
+		.map(function (i) { return Battle.getAliveUnits(side).find(function (u) { return u.slotIndex === i; }); })
+		.filter(Boolean);
+	neighbors.forEach(function (n) {
+		if (Battle.splashLine) Battle.splashLine(target, n);
+		var dmg = Battle.calculateDamage(attacker, n, ratio, 0, damageType);
+		Battle.applyDamage(n, dmg, attacker, function () {}, { trigger: 'extraHit', isSpecial: true });
+	});
+};
+
+/**
+ * 溅射冲击指示线：从主目标飞向被溅射的邻居单位（视觉表现，与特效 emoji 体系解耦）
  * 用 position:fixed + 视口坐标，避免被槽位 overflow:hidden 裁切。
  * @param {object} fromUnit 起点单位（被主攻击命中的目标）
  * @param {object} toUnit 终点单位（被溅射的邻居）

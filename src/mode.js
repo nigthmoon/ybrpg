@@ -2429,26 +2429,8 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
 		};
 	});
 
-	// 排序：当前槽位的 → 当前角色已装备的（高等级优先）→ 空闲（高等级优先）→ 其他角色装备的
-	displayList.sort((a, b) => {
-		if (a.isSelfEquipped) return -1;
-		if (b.isSelfEquipped) return 1;
-
-		// 当前角色已装备的排前面
-		if (a.status === 'self' && b.status !== 'self') return -1;
-		if (a.status !== 'self' && b.status === 'self') return 1;
-
-		// 空闲的排中间
-		if (a.status === 'free' && b.status !== 'free') return -1;
-		if (a.status !== 'free' && b.status === 'free') return 1;
-
-		// 同状态按等级排序（高等级优先）
-		const aLevel = window.treasureInventory[a.instanceId]?.level || 1;
-		const bLevel = window.treasureInventory[b.instanceId]?.level || 1;
-		if (bLevel !== aLevel) return bLevel - aLevel;
-
-		return 0;
-	});
+	// 排序：与「宝物背包」保持一致（已装备 → 等级 → 品质 → baseId）
+	sortTreasuresByBagOrder(displayList, treasureOwnerMap);
 
 	if (displayList.length === 0) {
 		const emptyTip = document.createElement('div');
@@ -3713,6 +3695,32 @@ function renderBagView(container) {
  * 渲染装备背包内容（宝物浏览 - 独立实例版）
  * 每个宝物实例独立显示，不再按 baseId 堆叠
  */
+/**
+ * 宝物排序（背包与「更换宝物」弹窗共用，保证排序一致）
+ * 规则：已装备(任意角色) → 等级降序 → 品质降序(rank) → baseId 升序
+ * @param {Array} list 宝物实例数组（需含 instanceId / rank / baseId）
+ * @param {Object} ownerMap 宝物实例ID → { ownerId, slotIndex } 的查询表
+ */
+function sortTreasuresByBagOrder(list, ownerMap) {
+	list.sort((a, b) => {
+		const aIsEquipped = !!(ownerMap && ownerMap[a.instanceId]);
+		const bIsEquipped = !!(ownerMap && ownerMap[b.instanceId]);
+		// 1. 是否上阵：已装备的排最前面
+		if (aIsEquipped !== bIsEquipped) return aIsEquipped ? -1 : 1;
+		// 2. 培养进度：等级降序（高等级优先）
+		const aLevel = window.treasureInventory[a.instanceId]?.level || 1;
+		const bLevel = window.treasureInventory[b.instanceId]?.level || 1;
+		if (bLevel !== aLevel) return bLevel - aLevel;
+		// 3. 品质从高到低（rank 越大品质越高，无 rank 视为 0 排在最后）
+		const aRank = a.rank || 0;
+		const bRank = b.rank || 0;
+		if (bRank !== aRank) return bRank - aRank;
+		// 4. 宝物对应的原始 id 排序
+		return (a.baseId || '').localeCompare(b.baseId || '');
+	});
+	return list;
+}
+
 function renderBagEquipContent(container) {
 	const defs = Game.Bag.defs();
 	const allInstances = Game.Bag.list(); // 获取所有宝物实例（独立）
@@ -3741,28 +3749,8 @@ function renderBagEquipContent(container) {
 		emptyTip.textContent = '暂无宝物';
 		grid.appendChild(emptyTip);
 	}
-	allInstances.sort((a, b) => {
-		const aOwnerInfo = treasureOwnerMap[a.instanceId];
-		const bOwnerInfo = treasureOwnerMap[b.instanceId];
-		const aIsEquipped = !!aOwnerInfo;
-		const bIsEquipped = !!bOwnerInfo;
-
-		// 1. 是否上阵：已装备的排最前面
-		if (aIsEquipped !== bIsEquipped) return aIsEquipped ? -1 : 1;
-
-		// 2. 培养进度：等级降序（高等级优先）
-		const aLevel = window.treasureInventory[a.instanceId]?.level || 1;
-		const bLevel = window.treasureInventory[b.instanceId]?.level || 1;
-		if (bLevel !== aLevel) return bLevel - aLevel;
-
-		// 3. 品质从高到低（rank 越大品质越高，无 rank 视为 0 排在最后）
-		const aRank = a.rank || 0;
-		const bRank = b.rank || 0;
-		if (bRank !== aRank) return bRank - aRank;
-
-		// 4. 宝物对应的原始 id 排序
-		return (a.baseId || '').localeCompare(b.baseId || '');
-	});
+	// 与「更换宝物」弹窗共用同一套排序（已装备 → 等级 → 品质 → baseId）
+	sortTreasuresByBagOrder(allInstances, treasureOwnerMap);
 
 	// 遍历所有宝物实例，每个独立展示
 	allInstances.forEach(item => {
@@ -6393,8 +6381,9 @@ function refreshShopItems(type = 'normal') {
 	if (!window.shopData) window.shopData = { items: [], spitems: [], refreshCost: 50 };
 	const items = [];
 	const spitems = [];
-	// 3宝物
-	const allTreasureIds = Object.keys(Game.Data.getTreasureList());
+	// 3宝物（只售卖有 rank 的宝物）
+	const allTreasureList = Game.Data.getTreasureList();
+	const allTreasureIds = Object.keys(allTreasureList).filter(id => allTreasureList[id].rank);
 	const selectedTreasures = allTreasureIds.sort(() => 0.5 - Math.random()).slice(0, 3);
 	// 3武将
 	const allCharIds = Object.keys(characterList || {}).filter(cid => characterList[cid].group != 'zhujue');

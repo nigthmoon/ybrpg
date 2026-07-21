@@ -600,29 +600,12 @@ const TREASURE_DEFS= {
 		price: 5000,
 		atk:100,
 		poji:200,
-		// 普攻命中时，对左右相邻目标造成50%溅射伤害（trigger 改为 splashHit 避免二次触发普攻特效/无限溅射）
+		// 普攻命中时，对左右相邻目标造成50%溅射伤害（复用【吴爽】溅射写法 Battle.splashToAdjacent）
 		effects: [{
 			trigger: 'pugongHit',
 			filter: function(){ return true; },
 			content: function(target){
-				if (!target || !target.alive) return;
-				var B = Game.Battle;
-				var self = this;
-				var bs = B.getBattleState();
-				if (!bs) return;
-				var team = target.side === 'player' ? bs.playerUnits : bs.enemyUnits;
-				var row = Math.floor(target.slotIndex / 3);
-				var col = target.slotIndex % 3;
-				var ns = [];
-				if (col > 0) ns.push(row * 3 + (col - 1));
-				if (col < 2) ns.push(row * 3 + (col + 1));
-				ns.forEach(function(i){
-					var n = team[i];
-					if (n && n.alive && n !== target) {
-						var dmg = B.calculateDamage(self, n, 0.5, 0, 'pugong');
-						B.applyDamage(n, dmg, self, function(){}, { trigger: 'splashHit', isSpecial: true });
-					}
-				});
+				Game.Battle.splashToAdjacent(this, target, 0.5, 'pugong');
 			}
 		}],
 		desc: function(star){
@@ -991,7 +974,7 @@ const TREASURE_DEFS= {
 					target.hp -= tdmg;
 					B.showDamageNumber(target, tdmg, { isTrue: true });
 					B.log(`${target.name} 受到 ${tdmg} 点真实伤害`);
-					if (target.hp <= 0) { target.hp = 0; target.alive = false; B.log(`${target.name} 阵亡！`); }
+					if (target.hp <= 0) { target.hp = 0; target.alive = false; target._trueDeath = true; B.log(`${target.name} 阵亡！`); }
 					B.updateUI();
 				}
 			}
@@ -1066,29 +1049,12 @@ const TREASURE_DEFS= {
 		price: 40000,
 		atk:200,
 		baoji:400,
-		// 技能命中时，对左右相邻目标造成80%溅射伤害（trigger 改为 splashHit 避免二次触发技能特效/无限溅射）
+		// 技能命中时，对左右相邻目标造成80%溅射伤害（复用【吴爽】溅射写法 Battle.splashToAdjacent）
 		effects: [{
 			trigger: 'skillHit',
 			filter: function(){ return true; },
 			content: function(target){
-				if (!target || !target.alive) return;
-				var B = Game.Battle;
-				var self = this;
-				var bs = B.getBattleState();
-				if (!bs) return;
-				var team = target.side === 'player' ? bs.playerUnits : bs.enemyUnits;
-				var row = Math.floor(target.slotIndex / 3);
-				var col = target.slotIndex % 3;
-				var ns = [];
-				if (col > 0) ns.push(row * 3 + (col - 1));
-				if (col < 2) ns.push(row * 3 + (col + 1));
-				ns.forEach(function(i){
-					var n = team[i];
-					if (n && n.alive && n !== target) {
-						var dmg = B.calculateDamage(self, n, 0.8, 0, 'skill');
-						B.applyDamage(n, dmg, self, function(){}, { trigger: 'splashHit', isSpecial: true });
-					}
-				});
+				Game.Battle.splashToAdjacent(this, target, 0.8, 'skill');
 			}
 		}],
 		desc: function(star){
