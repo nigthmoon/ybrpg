@@ -3950,9 +3950,10 @@ function updateBagEquipDetailBar(baseId, tDef, bagItem) {
 	const iconDiv = document.getElementById('bag-detail-equip-icon');
 	if (iconDiv) {
 		iconDiv.textContent = '';
-		if (tDef.icon) {
+		const detailIcon = tDef.iconbig || tDef.icon;
+		if (detailIcon) {
 			const img = document.createElement('img');
-			img.src = tDef.icon;
+			img.src = detailIcon;
 			img.alt = tDef.name;
 			img.style.cssText = 'width:100%;height:100%;object-fit:contain;border-radius:4px;';
 			img.onerror = function () {
@@ -4272,10 +4273,11 @@ function showBagTreasureDetail(tid, instanceId) {
 	// 图标
 	const imgDiv = document.createElement('div');
 	imgDiv.className = 'gallery-detail-img-container';
-	if (tDef.icon) {
+	const detailIcon = tDef.iconbig || tDef.icon;
+	if (detailIcon) {
 		const img = document.createElement('img');
 		img.className = 'gallery-detail-img';
-		img.src = tDef.icon;
+		img.src = detailIcon;
 		img.alt = tDef.name;
 		// img.style.objectFit = 'contain';
 		img.onerror = function () {
@@ -5283,9 +5285,9 @@ function showTreasureGalleryDetail(tDef, isOwned, rankInfo) {
 	imgDiv.className = 'gallery-detail-img-container';
 	imgDiv.style.cssText = 'width:140px;height:140px;display:flex;align-items:center;justify-content:center;background:#2a2a2a;';
 
-	if (isOwned && tDef.icon) {
+	if (isOwned && (tDef.icon || tDef.iconbig)) {
 		const img = document.createElement('img');
-		img.src = tDef.icon;
+		img.src = tDef.iconbig || tDef.icon;
 		img.alt = tDef.name;
 		img.style.cssText = 'max-width:120px;max-height:120px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,215,0,0.4));';
 		img.onerror = function () {
