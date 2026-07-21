@@ -521,6 +521,11 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 		tupoList.forEach((buff, index) => {
 			const isUnlocked = (index + 1) <= currentTupoLevel;
 
+			// 无效果占位项检测
+			const isNoEffect = isNoEffectBreakthrough(buff);
+			// 突破1阶（index 0）按设计「首次突破不带任何技能」，无效果时直接隐藏
+			if (isNoEffect && index === 0) return;
+
 			const item = document.createElement('div');
 			item.style.cssText = `
 				background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
@@ -545,7 +550,7 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 			const statusIcon = document.createElement('span');
 			statusIcon.style.cssText = 'font-size:12px;';
 			statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
-			statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
+			statusIcon.style.color = isUnlocked ? '#44ff88' : '#c9a86a';
 
 			headerRow.appendChild(levelTitle);
 			headerRow.appendChild(statusIcon);
@@ -553,12 +558,14 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 
 			// 描述内容
 			const descDiv = document.createElement('div');
-			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#666'};`;
 
-			if (!buff) {
-				descDiv.textContent = '暂无详细描述';
+			if (isNoEffect) {
+				// 无效果占位：用明显不同的样式，便于一眼区分「有/无效果」
+				descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#8a8a8a;font-style:italic;opacity:0.85;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;`;
+				descDiv.textContent = '（暂无效果 · 待配置）';
 			}
 			else {
+				descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#c9a86a'};`;
 				if (typeof buff == 'string') {
 					if (BREAKTHROUGH_BUFF_LIBRARY[buff]) buff = BREAKTHROUGH_BUFF_LIBRARY[buff];
 				} else if (typeof buff !== 'object') {
@@ -899,6 +906,25 @@ function refreshBreakthroughPopupContent(popup, instanceId) {
 	SaveManager.autoSave();
 }
 /**
+ * 判断某个突破项是否为「无效果 / 待配置」占位项
+ *  - null / undefined
+ *  - 字符串但库中查不到对应配置
+ *  - 对象但没有 desc 也没有 type（如空 {} 或仅含 level 的占位）
+ */
+function isNoEffectBreakthrough(buff) {
+	if (!buff) return true;
+	if (typeof buff === 'string') {
+		const lib = BREAKTHROUGH_BUFF_LIBRARY || {};
+		const resolved = lib[buff];
+		return !resolved || (!resolved.desc && !resolved.type);
+	}
+	if (typeof buff === 'object') {
+		return !buff.desc && !buff.type;
+	}
+	return false;
+}
+
+/**
  * 渲染突破列表到指定容器
  * @param {HTMLElement} container - 列表容器
  * @param {Object} baseChar - 角色基础数据
@@ -917,6 +943,11 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel) {
 
 	tupoList.forEach((buff, index) => {
 		const isUnlocked = (index + 1) <= currentTupoLevel;
+
+		// 无效果占位项检测
+		const isNoEffect = isNoEffectBreakthrough(buff);
+		// 突破1阶（index 0）按设计「首次突破不带任何技能」，无效果时直接隐藏
+		if (isNoEffect && index === 0) return;
 
 		const item = document.createElement('div');
 		item.style.cssText = `
@@ -942,7 +973,7 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel) {
 		const statusIcon = document.createElement('span');
 		statusIcon.style.cssText = 'font-size:12px;';
 		statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
-		statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
+		statusIcon.style.color = isUnlocked ? '#44ff88' : '#c9a86a';
 
 		headerRow.appendChild(levelTitle);
 		headerRow.appendChild(statusIcon);
@@ -950,14 +981,16 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel) {
 
 		// 描述内容
 		const descDiv = document.createElement('div');
-		descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#666'};`;
 
-		if (!buff) {
-			descDiv.textContent = '暂无详细描述';
+		if (isNoEffect) {
+			// 无效果占位：用明显不同的样式，便于一眼区分「有/无效果」
+			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#8a8a8a;font-style:italic;opacity:0.85;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;`;
+			descDiv.textContent = '（暂无效果 · 待配置）';
 		} else {
+			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#c9a86a'};`;
 			let resolvedBuff = buff;
 			if (typeof buff === 'string') {
-				const lib = BREAKTHROUGH_BUFF_LIBRARY || BREAKTHROUGH_BUFF_LIBRARY || {};
+				const lib = BREAKTHROUGH_BUFF_LIBRARY || {};
 				resolvedBuff = lib[buff];
 				if (!resolvedBuff) resolvedBuff = { desc: '暂无详细描述' };
 			} else if (typeof buff === 'object') {
@@ -1270,6 +1303,11 @@ function showBreakthroughPreviewPopupByCharId(charId) {
 		tupoList.forEach((buff, index) => {
 			const isUnlocked = (index + 1) <= currentTupoLevel;
 
+			// 无效果占位项检测
+			const isNoEffect = isNoEffectBreakthrough(buff);
+			// 突破1阶（index 0）按设计「首次突破不带任何技能」，无效果时直接隐藏
+			if (isNoEffect && index === 0) return;
+
 			const item = document.createElement('div');
 			item.style.cssText = `
 				background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
@@ -1293,14 +1331,14 @@ function showBreakthroughPreviewPopupByCharId(charId) {
 			const statusIcon = document.createElement('span');
 			statusIcon.style.cssText = 'font-size:12px;';
 			statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
-			statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
+			statusIcon.style.color = isUnlocked ? '#44ff88' : '#c9a86a';
 
 			headerRow.appendChild(levelTitle);
 			headerRow.appendChild(statusIcon);
 			item.appendChild(headerRow);
 
 			const descDiv = document.createElement('div');
-			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#666'};`;
+			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#c9a86a'};`;
 
 			if (!buff) {
 				descDiv.textContent = '暂无详细描述';
@@ -1561,7 +1599,7 @@ function renderBreakthroughContent() {
 		const statusIcon = document.createElement('span');
 		statusIcon.style.cssText = 'font-size:12px;';
 		statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
-		statusIcon.style.color = isUnlocked ? '#44ff88' : '#666';
+		statusIcon.style.color = isUnlocked ? '#44ff88' : '#c9a86a';
 
 		headerRow.appendChild(levelTitle);
 		headerRow.appendChild(statusIcon);
@@ -1569,7 +1607,7 @@ function renderBreakthroughContent() {
 
 		// 描述内容
 		const descDiv = document.createElement('div');
-		descDiv.style.cssText = `font-size:13px; line-height:1.4; color:${isUnlocked ? '#ddd' : '#666'};`;
+		descDiv.style.cssText = `font-size:13px; line-height:1.4; color:${isUnlocked ? '#ddd' : '#c9a86a'};`;
 
 
 		if (!buff) {
@@ -4952,16 +4990,16 @@ function showBreakthroughPreviewPopupForGallery(charData) {
 			levelTitle.style.cssText = `font-weight:bold;font-size:14px;color:#888;`;
 			levelTitle.textContent = `突破 ${index + 1} 阶`;
 
-			const statusIcon = document.createElement('span');
-			statusIcon.style.cssText = 'font-size:12px;color:#666;';
-			statusIcon.textContent = '🔒 未解锁';
+		const statusIcon = document.createElement('span');
+		statusIcon.style.cssText = 'font-size:12px;color:#d9bd7a;';
+		statusIcon.textContent = '🔒 未解锁';
 
 			headerRow.appendChild(levelTitle);
 			headerRow.appendChild(statusIcon);
 			item.appendChild(headerRow);
 
-			const descDiv = document.createElement('div');
-			descDiv.style.cssText = 'font-size:13px;line-height:1.4;color:#666;';
+		const descDiv = document.createElement('div');
+		descDiv.style.cssText = 'font-size:13px;line-height:1.4;color:#d9bd7a;';
 
 			if (!buff) {
 				descDiv.textContent = '暂无详细描述';
