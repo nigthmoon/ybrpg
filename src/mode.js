@@ -697,33 +697,8 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 						}
 					);
 				};
-			actionBtnRow.appendChild(promoteBtn);
-		}
-
-		// ===== 【新增】吸收宝物按钮：自动选空槽，无空槽则追加新槽 =====
-		const absorbBtn = document.createElement('button');
-		absorbBtn.style.cssText = `
-			flex: 1;
-			padding: 8px;
-			font-size: 13px;
-			cursor: pointer;
-			background: #2a1a3a;
-			color: #d000ff;
-			border: 1px solid #d000ff;
-			border-radius: 6px;
-			transition: all 0.2s;
-		`;
-		absorbBtn.textContent = '🧪 吸收宝物';
-		absorbBtn.onmouseover = () => { absorbBtn.style.background = '#3a2a4a'; };
-		absorbBtn.onmouseout = () => { absorbBtn.style.background = '#2a1a3a'; };
-		absorbBtn.onclick = (e) => {
-			e.stopPropagation();
-			const tl = Array.isArray(instData.tupoList) ? instData.tupoList : [];
-			let targetIndex = tl.findIndex(s => isNoEffectBreakthrough(s));
-			if (targetIndex < 0) targetIndex = tl.length;
-			openTreasureAbsorbPicker(targetIndex, instanceId, popup);
-		};
-		actionBtnRow.appendChild(absorbBtn);
+		actionBtnRow.appendChild(promoteBtn);
+	}
 
 		// 已满级提示
 			if (breakInfo.maxed) {
@@ -921,8 +896,12 @@ function compileTreasureToBreakthroughEntries(baseId, level) {
 	// 2) 新式内联 effects：{trigger, filter, content}
 	if (Array.isArray(def.effects)) {
 		def.effects.forEach(eff => {
-			if (eff && eff.trigger && typeof eff.content === 'function')
-				entries.push({ type: 'skill_effect', trigger: eff.trigger, filter: eff.filter || null, content: eff.content, desc: eff.desc || def.name, sourceName: def.name });
+			if (eff && eff.trigger && typeof eff.content === 'function') {
+				// roundStart 在引擎中只走全局派发点，单位技能需归一为 onTurnStart 才能触发；
+				// 且 onTurnStart 派发会传入 round，故原 filter(round===1) 仍可正确判定首轮。
+				const _trigger = (eff.trigger === 'roundStart') ? 'onTurnStart' : eff.trigger;
+				entries.push({ type: 'skill_effect', trigger: _trigger, filter: eff.filter || null, content: eff.content, probMod: eff.probMod || null, desc: eff.desc || def.name, sourceName: def.name });
+			}
 		});
 	}
 	// 3) 旧式 effectSkills 引用 BREAKTHROUGH_BUFF_LIBRARY
@@ -1006,20 +985,68 @@ function absorbTreasureIntoSlot(instanceId, slotIndex, treasureInstanceId, popup
 		}
 	});
 	const descText = (compiledEntries[0] && compiledEntries[0].desc) || (TREASURE_DEFS[baseId] || {}).name || baseId;
+	// 写入突破槽（吸收核心逻辑）
+		const doAbsorb = () => {
+			// 记录被吸收宝物的实例ID与完整属性快照（含 level），
+			// 卸下时可原样返还背包、沿用原实例ID。
+			const _absorbedInv = inv ? Object.assign({}, inv) : { baseId: baseId, level: level };
+			instData.tupoList[slotIndex] = Object.assign({
+				type: 'absorbed_treasure',
+				_absorbedTreasure: {
+					baseId, level,
+					sourceName: (TREASURE_DEFS[baseId] || {}).name || baseId,
+					treasureInstanceId: treasureInstanceId,
+					inv: _absorbedInv
+				},
+				desc: descText
+			}, inlineFlat);
+			// 消耗（移出背包）；快照已存入 _absorbedTreasure，返还时可恢复
+			delete window.treasureInventory[treasureInstanceId];
+		// 持久化 + 刷新
+		if (window.SaveManager) SaveManager.autoSave();
+		refreshBreakthroughPopupContent(popup, instanceId);
+		if (typeof renderBagView === 'function') {
+			const bagView = document.getElementById('bag-view');
+			if (bagView && bagView.style.display !== 'none') renderBagView(bagView);
+		}
+	};
 	// 若目标槽已有「非吸收的突破效果」，吸收会覆盖它，先确认
 	const existing = instData.tupoList && instData.tupoList[slotIndex];
 	if (existing && !existing._absorbedTreasure && !isNoEffectBreakthrough(existing)) {
 		const existDesc = existing.desc || (existing.type ? `效果类型: ${existing.type}` : '未知突破效果');
-		if (!confirm(`该突破槽已存在突破效果（${existDesc}），\n吸收宝物将覆盖它。确定继续？`)) return;
+		Game.confirmDialog(`该突破槽已存在突破效果（${existDesc}），\n吸收宝物将覆盖它。确定继续？`, doAbsorb);
+		return;
 	}
-	instData.tupoList[slotIndex] = Object.assign({
-		type: 'absorbed_treasure',
-		_absorbedTreasure: { baseId, level, sourceName: (TREASURE_DEFS[baseId] || {}).name || baseId },
-		desc: descText
-	}, inlineFlat);
-	// 消耗宝物实例
-	delete window.treasureInventory[treasureInstanceId];
-	// 持久化 + 刷新
+	doAbsorb();
+}
+
+/**
+ * 卸下突破槽已吸收的宝物：把槽位恢复为空白槽（可重新吸收）
+ * @param {string} instanceId
+ * @param {number} slotIndex
+ * @param {HTMLElement} popup
+ */
+function removeAbsorbedTreasureFromSlot(instanceId, slotIndex, popup) {
+	const instData = window.charBagData && window.charBagData[instanceId];
+	if (!instData || !Array.isArray(instData.tupoList)) return;
+	const slot = instData.tupoList[slotIndex];
+	if (!slot || !slot._absorbedTreasure) return;
+	const abs = slot._absorbedTreasure;
+	// 返还宝物到背包：沿用原实例ID（若已被占用则新生成，绝不覆盖他人）；等级/属性按吸收前快照恢复
+	const baseId = abs.baseId || (abs.inv && abs.inv.baseId);
+	const restoreId = abs.treasureInstanceId || (baseId ? Game.Bag.newId(baseId) : null);
+	if (restoreId && baseId) {
+		const restored = Object.assign({}, abs.inv || { baseId: baseId, level: abs.level || 1 });
+		restored.equippedBy = null; // 返还后处于未装备状态
+		if (window.treasureInventory[restoreId]) {
+			// 极小概率ID冲突：改用全新ID，避免覆盖已有实例
+			window.treasureInventory[Game.Bag.newId(baseId)] = restored;
+		} else {
+			window.treasureInventory[restoreId] = restored;
+		}
+	}
+	// 恢复为空白槽（无效果占位项，可重新被吸收）
+	instData.tupoList[slotIndex] = {};
 	if (window.SaveManager) SaveManager.autoSave();
 	refreshBreakthroughPopupContent(popup, instanceId);
 	if (typeof renderBagView === 'function') {
@@ -1034,13 +1061,14 @@ function absorbTreasureIntoSlot(instanceId, slotIndex, treasureInstanceId, popup
 function openTreasureAbsorbPicker(slotIndex, instanceId, popup) {
 	const overlay = document.createElement('div');
 	overlay.className = 'ybrpg-confirm-overlay';
-	overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
+	overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10002;';
 
 	const box = document.createElement('div');
-	box.style.cssText = 'background:#1a1a2e;border:1px solid #d000ff;border-radius:8px;padding:16px;width:420px;max-height:70vh;overflow:auto;color:#eee;';
-	box.innerHTML = `<div style="font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:10px;">选择要吸收的宝物（突破槽 ${slotIndex + 1}）</div>`;
+	box.style.cssText = 'background:#1a1a2e;border:1px solid #d000ff;border-radius:8px;padding:16px;width:420px;max-height:75vh;display:flex;flex-direction:column;color:#eee;';
+	box.innerHTML = `<div style="font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:10px;flex-shrink:0;">选择要吸收的宝物（突破槽 ${slotIndex + 1}）</div>`;
 
 	const list = document.createElement('div');
+	list.style.cssText = 'flex:1;overflow:auto;min-height:0;';
 	box.appendChild(list);
 
 	const invEntries = Object.entries(window.treasureInventory || {});
@@ -1073,12 +1101,35 @@ function openTreasureAbsorbPicker(slotIndex, instanceId, popup) {
 		list.appendChild(row);
 	});
 
+	// 判断当前槽是否已吸收宝物（用于显示「卸下」）
+	const _inst = window.charBagData && window.charBagData[instanceId];
+	const _curSlot = _inst && Array.isArray(_inst.tupoList) ? _inst.tupoList[slotIndex] : null;
+	const slotAbsorbed = !!(_curSlot && _curSlot._absorbedTreasure);
+
+	// 底部固定操作栏（不随列表滚动）
+	const footer = document.createElement('div');
+	footer.style.cssText = 'flex-shrink:0;margin-top:12px;padding-top:12px;border-top:1px solid #333;display:flex;flex-direction:column;gap:8px;';
+
+	if (slotAbsorbed) {
+		const unequipBtn = document.createElement('button');
+		unequipBtn.className = 'ybrpg-btn';
+		unequipBtn.style.cssText = 'width:100%;padding:8px;background:#3a2a2a;border:1px solid #ff5555;color:#ff8888;';
+		unequipBtn.textContent = '🗑️ 卸下当前宝物';
+		unequipBtn.onclick = () => {
+			removeAbsorbedTreasureFromSlot(instanceId, slotIndex, popup);
+			document.body.removeChild(overlay);
+		};
+		footer.appendChild(unequipBtn);
+	}
+
 	const closeBtn = document.createElement('button');
 	closeBtn.className = 'ybrpg-btn';
-	closeBtn.style.cssText = 'margin-top:12px;width:100%;padding:8px;background:#333;border-color:#666;color:#ccc;';
-	closeBtn.textContent = '取消';
+	closeBtn.style.cssText = 'width:100%;padding:8px;background:#333;border-color:#666;color:#ccc;';
+	closeBtn.textContent = '返回';
 	closeBtn.onclick = () => document.body.removeChild(overlay);
-	box.appendChild(closeBtn);
+	footer.appendChild(closeBtn);
+
+	box.appendChild(footer);
 
 	overlay.appendChild(box);
 	document.body.appendChild(overlay);
@@ -1112,6 +1163,8 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel, instData,
 		const isNoEffect = isNoEffectBreakthrough(buff);
 		// 突破1阶（index 0）按设计「首次突破不带任何技能」，无效果时直接隐藏
 		if (isNoEffect && index === 0) return;
+		// 已吸收槽的宝物描述（用于另起一行展示）
+		let detailDiv = null;
 
 		const item = document.createElement('div');
 		item.style.cssText = `
@@ -1134,13 +1187,17 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel, instData,
 		levelTitle.style.cssText = `font-weight:bold;font-size:14px;color:${isUnlocked ? '#ffd700' : '#888'};`;
 		levelTitle.textContent = `突破 ${index + 1} 阶`;
 
+		const rightGroup = document.createElement('div');
+		rightGroup.style.cssText = 'display:flex;align-items:center;gap:8px;';
+
 		const statusIcon = document.createElement('span');
 		statusIcon.style.cssText = 'font-size:12px;';
 		statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
 		statusIcon.style.color = isUnlocked ? '#44ff88' : '#c9a86a';
 
+		rightGroup.appendChild(statusIcon);
 		headerRow.appendChild(levelTitle);
-		headerRow.appendChild(statusIcon);
+		headerRow.appendChild(rightGroup);
 		item.appendChild(headerRow);
 
 		// 描述内容
@@ -1148,22 +1205,43 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel, instData,
 
 		const absorbedRec = (buff && buff._absorbedTreasure) ? buff._absorbedTreasure : null;
 		if (absorbedRec) {
-			// 已吸收：显示来源宝物（点击可重新吸收替换同一槽）
+			// 已吸收：显示来源宝物（非突破1阶且已解锁时，点击可重新吸收替换同一槽）
 			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#7CFC00;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;`;
 			descDiv.textContent = `🧪 已吸收：${absorbedRec.sourceName}（Lv.${absorbedRec.level}）`;
 			item.style.border = '1px solid #44ff88';
-			if (isUnlocked) {
+			// 另起一行显示宝物描述
+			const tDef = TREASURE_DEFS[absorbedRec.baseId] || {};
+			const tdesc = (tDef.desc && typeof tDef.desc === 'function') ? tDef.desc(absorbedRec.level || 1) : (tDef.desc || '');
+			if (tdesc) {
+				detailDiv = document.createElement('div');
+				detailDiv.style.cssText = `font-size:12px;line-height:1.5;color:#9adf9a;padding-top:4px;margin-top:4px;`;
+				detailDiv.textContent = tdesc;
+			}
+			if (isUnlocked && index !== 0) {
 				item.style.cursor = 'pointer';
 				item.onclick = () => { openTreasureAbsorbPicker(index, instanceId, popup); };
 				item.onmouseover = () => { item.style.background = '#33334a'; };
 				item.onmouseout = () => { item.style.background = '#1a1a1a'; };
 			}
+			// 卸下按钮（非突破1阶）：把已吸收宝物从槽位卸下，恢复为空白槽
+			if (index !== 0) {
+				const unequipBtn = document.createElement('button');
+				unequipBtn.textContent = '🗑️ 卸下';
+				unequipBtn.style.cssText = 'padding:2px 8px;font-size:11px;background:#3a2a2a;border:1px solid #ff5555;color:#ff8888;border-radius:4px;cursor:pointer;';
+				unequipBtn.onclick = (e) => {
+					e.stopPropagation();
+					Game.confirmDialog('确定卸下该突破槽已吸收的宝物？', () => {
+						removeAbsorbedTreasureFromSlot(instanceId, index, popup);
+					});
+				};
+				rightGroup.appendChild(unequipBtn);
+			}
 		} else if (isNoEffect) {
-			// 空突破槽：始终可点击吸收（锁定槽吸收后需突破到该阶才生效）
+			// 空突破槽（突破1阶除外）：点击吸收宝物（锁定槽吸收后需突破到该阶才生效）
 			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#ffd700;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;cursor:pointer;`;
 			descDiv.textContent = isUnlocked ? '➕ 空突破槽 · 点击吸收宝物' : '➕ 空突破槽 · 点击吸收宝物（需突破到该阶生效）';
 			item.style.cursor = 'pointer';
-			item.onclick = () => { openTreasureAbsorbPicker(index, instanceId, popup); };
+			item.onclick = () => { if (index === 0) return; openTreasureAbsorbPicker(index, instanceId, popup); };
 			item.onmouseover = () => { item.style.background = '#33334a'; };
 			item.onmouseout = () => { item.style.background = '#1a1a1a'; };
 		} else {
@@ -1202,6 +1280,7 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel, instData,
 		}
 
 		item.appendChild(descDiv);
+		if (detailDiv) item.appendChild(detailDiv);
 
 		// 已解锁项的悬停效果
 		if (isUnlocked) {
@@ -1373,31 +1452,6 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 		}
 		container.appendChild(promoteBtn);
 	}
-
-	// ===== 【新增】吸收宝物按钮 =====
-	const absorbBtn = document.createElement('button');
-	absorbBtn.style.cssText = `
-		flex: 1;
-		padding: 8px;
-		font-size: 13px;
-		cursor: pointer;
-		background: #2a1a3a;
-		color: #d000ff;
-		border: 1px solid #d000ff;
-		border-radius: 6px;
-		transition: all 0.2s;
-	`;
-	absorbBtn.textContent = '🧪 吸收宝物';
-	absorbBtn.onmouseover = () => { absorbBtn.style.background = '#3a2a4a'; };
-	absorbBtn.onmouseout = () => { absorbBtn.style.background = '#2a1a3a'; };
-	absorbBtn.onclick = (e) => {
-		e.stopPropagation();
-		const tl = Array.isArray(instData.tupoList) ? instData.tupoList : [];
-		let targetIndex = tl.findIndex(s => isNoEffectBreakthrough(s));
-		if (targetIndex < 0) targetIndex = tl.length;
-		openTreasureAbsorbPicker(targetIndex, instanceId, popup);
-	};
-	container.appendChild(absorbBtn);
 
 	// 已满级提示
 	if (breakInfo.maxed) {
@@ -6005,9 +6059,25 @@ function buildPlayerTeamForBattle() {
 				return equippedDefs;
 			})(),
 			rank: instData.rank || (base ? base.rank : 'common'),
-			tupolevel: instData.tupolevel || 0,
-			// 突破定义以 characterList 原对象为准（含 content/filter 函数），避免实例存档反序列化后函数丢失
-			tupoList: base ? base.tupoList : (instData.tupoList || []),
+		tupolevel: instData.tupolevel || 0,
+		// 突破定义优先用 characterList 原对象（含 content/filter 函数，防反序列化丢函数）；
+		// 但「已吸收的宝物槽」只存在于实例 instData.tupoList，必须按槽位合并回来，否则进战斗后吸收特效不生效。
+		// 同时兼容超出模板长度的「追加吸收槽」（syncInstanceTupoList 已写入实例）。
+		tupoList: (function () {
+			const _baseTupo = base ? (base.tupoList || []) : [];
+			const _instTupo = instData.tupoList || [];
+			const _len = Math.max(_baseTupo.length, _instTupo.length);
+			const _merged = [];
+			for (let _i = 0; _i < _len; _i++) {
+				const _instSlot = _instTupo[_i];
+				if (_instSlot && typeof _instSlot === 'object' && _instSlot._absorbedTreasure) {
+					_merged[_i] = _instSlot; // 吸收槽用实例数据（含 _absorbedTreasure）
+				} else {
+					_merged[_i] = (_i < _baseTupo.length) ? _baseTupo[_i] : _instTupo[_i];
+				}
+			}
+			return _merged;
+		})(),
 
 			// ===== 【新增】传递 openSpskill =====
 			openSpskill: instData.openSpskill === true,

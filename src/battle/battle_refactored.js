@@ -1234,7 +1234,7 @@ Battle.nextTurn = function nextTurn() {
 
 		// ===== 【新增】吸收宝物 / 突破的 onTurnStart 时机 =====
 		getEffectsByTrigger(nextActor, 'onTurnStart').forEach(eff => {
-			if (!eff.filter || eff.filter.call(nextActor)) {
+			if (!eff.filter || eff.filter.call(nextActor, bs.round)) {
 				try { eff.content.call(nextActor); } catch (err) { console.warn('[onTurnStart] 吸收宝物效果出错', err); }
 			}
 		});
@@ -2166,7 +2166,8 @@ Battle.adaptBreakthroughSkillEffect = function adaptBreakthroughSkillEffect(buff
 		content: buff.content,
 		desc: buff.desc || '',
 		source: 'breakthrough',
-		id: buff.id || buff._libId || ''
+		id: buff.id || buff._libId || '',
+		probMod: buff.probMod || null
 	};
 }
 
@@ -2295,9 +2296,13 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 		}
 
 		// 编译非属性类的突破效果
-		for (let i = 0; i < tupolevel; i++) {
-			if (!normalizedTupoList[i]) continue;
+		for (let i = 0; i < normalizedTupoList.length; i++) {
 			const buff = normalizedTupoList[i];
+			if (!buff) continue;
+			// 吸收的宝物槽：吸收即生效（不受突破等级门槛限制）；
+			// 其余真实突破效果需已解锁（i < tupolevel）才生效
+			const _isAbsorbed = buff.type === 'absorbed_treasure' && !!buff._absorbedTreasure;
+			if (!_isAbsorbed && i >= tupolevel) continue;
 			const type = buff.type;
 
 			switch (type) {

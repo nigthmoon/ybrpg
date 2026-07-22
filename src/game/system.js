@@ -11,15 +11,24 @@ import { toast, confirmDialog, generateInstanceId, getMainCharacterSlotIndex } f
 
 // ====== Bag - 宝物/背包/装备系统 ======
 
+// 单调递增序号：避免同一毫秒内批量生成实例时（如存档迁移一次创建多个）
+// Date.now() 相同、仅靠随机区分而产生实例ID碰撞，进而覆盖已有宝物实例。
+let __bagIdSeq = 0;
+
 class Bag {
 	/** 获取宝物定义列表 */
 	static defs() {
 		return TREASURE_DEFS || {};
 	}
 
-	/** 生成宝物实例ID */
+	/** 生成宝物实例ID：时间戳(Date.now) + 单调递增序号，并对已存在ID做兜底去重，保证必定不重复 */
 	static newId(baseId) {
-		return `${baseId}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+		let id;
+		do {
+			__bagIdSeq += 1;
+			id = `${baseId}_${Date.now()}_${__bagIdSeq}`;
+		} while (window.treasureInventory && window.treasureInventory[id]);
+		return id;
 	}
 
 	/** 初始化宝物背包（如果不存在） */
@@ -814,9 +823,13 @@ class Stat {
 
 		const tupoList = instData.tupoList || baseChar.tupoList || [];
 
-		for (let i = 0; i < tupolevel; i++) {
+		for (let i = 0; i < tupoList.length; i++) {
 			const buff = tupoList[i];
 			if (!buff) continue;
+			// 吸收的宝物槽：吸收即生效（不受突破等级门槛限制）；
+			// 其余真实突破效果需已解锁（i < tupolevel）才生效
+			const _isAbsorbed = (typeof buff === 'object') && buff.type === 'absorbed_treasure' && !!buff._absorbedTreasure;
+			if (!_isAbsorbed && i >= tupolevel) continue;
 
 			let resolvedBuff = buff;
 			if (typeof buff === 'string') {
