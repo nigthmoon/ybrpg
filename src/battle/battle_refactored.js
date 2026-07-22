@@ -712,6 +712,16 @@ Battle.applyDamage = function applyDamage(target, dmgResult, attacker, callback,
 						}
 					});
 					triggerGlobalEffect('dieGlobal', target, attacker);
+
+					// ===== 【新增】吸收宝物 / 突破的 onAnyDeath 时机（任意角色阵亡时，存活持有者反应） =====
+					const _allUnits = [].concat(Battle.getAliveUnits('player'), Battle.getAliveUnits('enemy'));
+					_allUnits.forEach(u => {
+						getEffectsByTrigger(u, 'onAnyDeath').forEach(eff => {
+							if (!eff.filter || eff.filter.call(u, target)) {
+								try { eff.content.call(u, target); } catch (err) { console.warn('[onAnyDeath] 吸收宝物效果出错', err); }
+							}
+						});
+					});
 				}
 
 				// 击杀回能（真正从活变死）
@@ -1221,6 +1231,13 @@ Battle.nextTurn = function nextTurn() {
 
 		triggerGlobalEffect('actionStartGlobal', nextActor);
 		triggerSelfEffect(nextActor, 'actionStartSelf');
+
+		// ===== 【新增】吸收宝物 / 突破的 onTurnStart 时机 =====
+		getEffectsByTrigger(nextActor, 'onTurnStart').forEach(eff => {
+			if (!eff.filter || eff.filter.call(nextActor)) {
+				try { eff.content.call(nextActor); } catch (err) { console.warn('[onTurnStart] 吸收宝物效果出错', err); }
+			}
+		});
 
 		const sideName = nextSide === 'player' ? '我方' : '敌方';
 		const turnNumber = currentActorNumberInSide;
@@ -2352,6 +2369,24 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 							return damage;
 						}
 					});
+					break;
+
+				case 'absorbed_treasure':
+					{
+						// 吸收的宝物：原型存于 _absorbedTreasure，运行时解析成技能特效
+						const abs = buff._absorbedTreasure;
+						if (abs && abs.baseId) {
+							const compiler = window.compileTreasureToBreakthroughEntries;
+							const entries = compiler ? compiler(abs.baseId, abs.level) : [];
+							entries.forEach(entry => {
+								if (entry.type === 'skill_effect') {
+									const e = adaptBreakthroughSkillEffect(entry);
+									if (e) { e.source = 'absorbed'; effectSkills.push(e); }
+								}
+								// 当前 TREASURE_DEFS 宝物无属性字段，self_stat_flat 分支暂未触发
+							});
+						}
+					}
 					break;
 
 				default:

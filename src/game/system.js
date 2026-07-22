@@ -862,10 +862,34 @@ class Stat {
 					if (resolvedBuff.pctDealUp !== undefined) breakPctDealUp += Number(resolvedBuff.pctDealUp);
 					if (resolvedBuff.pctTakeDn !== undefined) breakPctTakeDn += Number(resolvedBuff.pctTakeDn);
 					if (resolvedBuff.pctHeal !== undefined) breakPctHeal += Number(resolvedBuff.pctHeal);
-					if (resolvedBuff.pctBeHeal !== undefined) breakPctBeHeal += Number(resolvedBuff.pctBeHeal);
-					break;
+			if (resolvedBuff.pctBeHeal !== undefined) breakPctBeHeal += Number(resolvedBuff.pctBeHeal);
+			break;
 
-				case 'team_stat_flat':
+		case 'absorbed_treasure':
+			// 吸收宝物：内联的 flat / percent 属性与 self_stat_flat / self_stat_percent 同源，直接结算
+			if (resolvedBuff.atk !== undefined) selfFlat.atk += Number(resolvedBuff.atk);
+			if (resolvedBuff.def !== undefined) selfFlat.def += Number(resolvedBuff.def);
+			if (resolvedBuff.hp !== undefined) selfFlat.hp += Number(resolvedBuff.hp);
+			if (resolvedBuff.spe !== undefined) selfFlat.spe += Number(resolvedBuff.spe);
+			if (resolvedBuff.mingzhong !== undefined) breakHit += Number(resolvedBuff.mingzhong);
+			if (resolvedBuff.shanbi !== undefined) breakDodge += Number(resolvedBuff.shanbi);
+			if (resolvedBuff.baoji !== undefined) breakCrit += Number(resolvedBuff.baoji);
+			if (resolvedBuff.baoshang !== undefined) breakBaoShang += Number(resolvedBuff.baoshang);
+			if (resolvedBuff.kangbao !== undefined) breakCritResist += Number(resolvedBuff.kangbao);
+			if (resolvedBuff.shouhu !== undefined) breakShouhu += Number(resolvedBuff.shouhu);
+			if (resolvedBuff.poji !== undefined) breakPierce += Number(resolvedBuff.poji);
+			if (resolvedBuff.gedang !== undefined) breakBlock += Number(resolvedBuff.gedang);
+			if (resolvedBuff.fixedDealUp !== undefined) breakFixedDealUp += Number(resolvedBuff.fixedDealUp);
+			if (resolvedBuff.fixedTakeDn !== undefined) breakFixedTakeDn += Number(resolvedBuff.fixedTakeDn);
+			if (resolvedBuff.fixedHeal !== undefined) breakFixedHeal += Number(resolvedBuff.fixedHeal);
+			if (resolvedBuff.fixedBeHeal !== undefined) breakFixedBeHeal += Number(resolvedBuff.fixedBeHeal);
+			if (resolvedBuff.pctDealUp !== undefined) breakPctDealUp += Number(resolvedBuff.pctDealUp);
+			if (resolvedBuff.pctTakeDn !== undefined) breakPctTakeDn += Number(resolvedBuff.pctTakeDn);
+			if (resolvedBuff.pctHeal !== undefined) breakPctHeal += Number(resolvedBuff.pctHeal);
+			if (resolvedBuff.pctBeHeal !== undefined) breakPctBeHeal += Number(resolvedBuff.pctBeHeal);
+			break;
+
+		case 'team_stat_flat':
 					if (!externalTeamBonuses) {
 						if (resolvedBuff.atk !== undefined) teamFlat.atk += Number(resolvedBuff.atk);
 						if (resolvedBuff.def !== undefined) teamFlat.def += Number(resolvedBuff.def);

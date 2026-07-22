@@ -508,105 +508,8 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 	listContainer.style.scrollbarWidth = 'thin';
 	listContainer.style.scrollbarColor = '#555 #222';
 
-	// 获取突破配置
-	const tupoList = baseChar.tupoList || STANDARD_BREAKTHROUGH_TEMPLATE || [];
-
-	if (tupoList.length === 0) {
-		const emptyTip = document.createElement('div');
-		emptyTip.style.cssText = 'color:#666;text-align:center;padding:30px;font-size:14px;';
-		emptyTip.textContent = '该角色暂无突破数据';
-		listContainer.appendChild(emptyTip);
-	} else {
-		// 遍历突破列表
-		tupoList.forEach((buff, index) => {
-			const isUnlocked = (index + 1) <= currentTupoLevel;
-
-			// 无效果占位项检测
-			const isNoEffect = isNoEffectBreakthrough(buff);
-			// 突破1阶（index 0）按设计「首次突破不带任何技能」，无效果时直接隐藏
-			if (isNoEffect && index === 0) return;
-
-			const item = document.createElement('div');
-			item.style.cssText = `
-				background: ${isUnlocked ? '#2a2a3a' : '#1a1a1a'};
-				border: 1px solid ${isUnlocked ? '#d000ff' : '#333'};
-				border-left: 4px solid ${isUnlocked ? '#ffd700' : '#555'};
-				border-radius: 4px;
-				padding: 10px;
-				margin-bottom: 8px;
-				opacity: ${isUnlocked ? 1 : 0.6};
-				transition: all 0.2s;
-				cursor: ${isUnlocked ? 'pointer' : 'default'};
-			`;
-
-			// 标题行
-			const headerRow = document.createElement('div');
-			headerRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;';
-
-			const levelTitle = document.createElement('span');
-			levelTitle.style.cssText = `font-weight:bold;font-size:14px;color:${isUnlocked ? '#ffd700' : '#888'};`;
-			levelTitle.textContent = `突破 ${index + 1} 阶`;
-
-			const statusIcon = document.createElement('span');
-			statusIcon.style.cssText = 'font-size:12px;';
-			statusIcon.textContent = isUnlocked ? '✅ 已解锁' : '🔒 未解锁';
-			statusIcon.style.color = isUnlocked ? '#44ff88' : '#c9a86a';
-
-			headerRow.appendChild(levelTitle);
-			headerRow.appendChild(statusIcon);
-			item.appendChild(headerRow);
-
-			// 描述内容
-			const descDiv = document.createElement('div');
-
-			if (isNoEffect) {
-				// 无效果占位：用明显不同的样式，便于一眼区分「有/无效果」
-				descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#8a8a8a;font-style:italic;opacity:0.85;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;`;
-				descDiv.textContent = '（暂无效果 · 待配置）';
-			}
-			else {
-				descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#c9a86a'};`;
-				if (typeof buff == 'string') {
-					if (BREAKTHROUGH_BUFF_LIBRARY[buff]) buff = BREAKTHROUGH_BUFF_LIBRARY[buff];
-				} else if (typeof buff !== 'object') {
-					// 仅当既非字符串也非对象（如数字/布尔等异常类型）时才用占位对象
-					buff = {
-						desc: '暂无详细描述'
-					}
-				}
-				// 对象型能力（self_stat_flat / skill_effect / passive_effect 等）保持原样，直接读取其 desc
-				if (buff.desc) {
-					descDiv.textContent = buff.desc;
-				} else if (buff.type) {
-					let typeDesc = '';
-					if (buff.type === 'self_stat_flat') {
-						const val = Array.isArray(buff.value) ? buff.value.join('/') : buff.value;
-						const stat = Array.isArray(buff.stat) ? buff.stat.join('/') : buff.stat;
-						typeDesc = `永久增加 ${stat}: ${val}`;
-					} else if (buff.type === 'passive_effect') {
-						typeDesc = `获得被动效果: ${buff.effectId || '未知'}`;
-					} else if (buff.type === 'skill_effect') {
-						typeDesc = `技能效果增强: ${buff.desc || '未知效果'}`;
-					} else {
-						typeDesc = `效果类型: ${buff.type}`;
-					}
-					descDiv.textContent = typeDesc;
-				} else {
-					descDiv.textContent = '暂无详细描述';
-				}
-			}
-
-			item.appendChild(descDiv);
-
-			// 已解锁项的悬停效果
-			if (isUnlocked) {
-				item.onmouseover = () => { item.style.background = '#33334a'; };
-				item.onmouseout = () => { item.style.background = '#2a2a3a'; };
-			}
-
-			listContainer.appendChild(item);
-		});
-	}
+	// 复用 renderBreakthroughList（已支持实例 tupoList / 已吸收宝物槽识别 / 空槽点击吸收）
+	renderBreakthroughList(listContainer, baseChar, currentTupoLevel, instData, instanceId, popup);
 
 	popup.appendChild(listContainer);
 	// ===== 【新增】突破/升阶操作按钮 =====
@@ -794,10 +697,35 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 						}
 					);
 				};
-				actionBtnRow.appendChild(promoteBtn);
-			}
+			actionBtnRow.appendChild(promoteBtn);
+		}
 
-			// 已满级提示
+		// ===== 【新增】吸收宝物按钮：自动选空槽，无空槽则追加新槽 =====
+		const absorbBtn = document.createElement('button');
+		absorbBtn.style.cssText = `
+			flex: 1;
+			padding: 8px;
+			font-size: 13px;
+			cursor: pointer;
+			background: #2a1a3a;
+			color: #d000ff;
+			border: 1px solid #d000ff;
+			border-radius: 6px;
+			transition: all 0.2s;
+		`;
+		absorbBtn.textContent = '🧪 吸收宝物';
+		absorbBtn.onmouseover = () => { absorbBtn.style.background = '#3a2a4a'; };
+		absorbBtn.onmouseout = () => { absorbBtn.style.background = '#2a1a3a'; };
+		absorbBtn.onclick = (e) => {
+			e.stopPropagation();
+			const tl = Array.isArray(instData.tupoList) ? instData.tupoList : [];
+			let targetIndex = tl.findIndex(s => isNoEffectBreakthrough(s));
+			if (targetIndex < 0) targetIndex = tl.length;
+			openTreasureAbsorbPicker(targetIndex, instanceId, popup);
+		};
+		actionBtnRow.appendChild(absorbBtn);
+
+		// 已满级提示
 			if (breakInfo.maxed) {
 				const maxedLabel = document.createElement('div');
 				maxedLabel.style.cssText = 'flex:1;padding:8px;text-align:center;color:#ffd700;font-size:13px;';
@@ -873,7 +801,7 @@ function refreshBreakthroughPopupContent(popup, instanceId) {
 	const listContainer = popup.querySelector('.bp-list-container');
 	if (listContainer) {
 		listContainer.innerHTML = '';
-		renderBreakthroughList(listContainer, baseChar, currentTupoLevel);
+		renderBreakthroughList(listContainer, baseChar, currentTupoLevel, instData, instanceId, popup);
 	}
 
 	// 4. 更新操作按钮区域
@@ -924,14 +852,250 @@ function isNoEffectBreakthrough(buff) {
 	return false;
 }
 
+// ======================================================================
+// 【吸收宝物机制】宝物 → 突破条目 编译器 + 吸收 API + 选择弹窗
+// 设计（按策划简化）：吸收的宝物直接编译成突破条目，写入角色实例的
+// tupoList 空槽（替换 null），原型引用以 _absorbedTreasure 键值随槽位持久化；
+// syncInstanceTupoList 重建列表时会保留带 _absorbedTreasure 标记的槽，不被模板覆盖。
+// 当前 equip.js 的 TREASURE_DEFS 宝物为「属性型」（atk/baoji/def/... + desc(star) 函数），
+// 故主路径走 self_stat_flat 属性吸收；若宝物额外定义 type+effect / effects / effectSkills，
+// 也会一并编译成 skill_effect（与突破库同源，引擎已支持对应触发点）。
+// ======================================================================
+
+// 宝物 type → 突破 trigger 映射（仅含引擎已触发/已补触发点的类型）
+const TREASURE_TYPE_TRIGGER_MAP = {
+	on_kill: 'onKill',
+	on_hit: 'onHitSelf',
+	on_pugong: 'pugongHit',
+	on_skill: 'skillEnd',
+	on_death: 'dieSelf',
+	on_turn_start: 'onTurnStart',   // 已补触发点
+	on_any_death: 'onAnyDeath',     // 已补触发点
+	// passive / on_damage_dealt 暂不支持吸收（无对应引擎触发点）
+};
+
+// 构造兼容宝物 effect(ctx) 的上下文，桥接到 Battle 环境
+function makeTreasureCtx(unit, extra) {
+	const B = (window.Game && window.Game.Battle) || (typeof Battle !== 'undefined' ? Battle : null);
+	return Object.assign({
+		unit: unit,
+		killer: unit,
+		attacker: null,
+		target: null,
+		deadUnit: null,
+		addLog: (msg) => { if (B && B.log) B.log(msg); else console.log(msg); },
+		showDamageNumber: (u, v, isHeal) => { if (B && B.showDamageNumber) B.showDamageNumber(u, v, isHeal); },
+		calcDamage: (src, defVal, coeff) => {
+			if (B && B.calculateDamage) {
+				try { return B.calculateDamage(src, { def: defVal }, coeff, 0, 'pugong').damage; } catch (e) { return 0; }
+			}
+			return 0;
+		},
+		triggerOnDeath: (victim, killer) => { if (B && B.triggerOnDeath) B.triggerOnDeath(victim, killer); },
+		triggerOnEnemyDeath: (victim, killer) => { if (B && B.triggerOnEnemyDeath) B.triggerOnEnemyDeath(victim, killer); },
+	}, extra || {});
+}
+
+/**
+ * 把背包宝物编译成突破条目数组（供 buildUnit / UI 预览复用）
+ * @param {string} baseId 宝物定义 id（TREASURE_DEFS）
+ * @param {number} level 宝物强化等级
+ * @returns {Array} 突破条目：{type:'skill_effect', trigger, filter, content, desc, sourceName} 或 {type:'self_stat_flat',...}
+ */
+function compileTreasureToBreakthroughEntries(baseId, level) {
+	const defs = TREASURE_DEFS || {};
+	const def = defs[baseId];
+	if (!def) return [];
+	const entries = [];
+	const lvl = level || 1;
+	// desc 可能是函数 desc(star)，兼容字符串
+	const descText = (typeof def.desc === 'function') ? def.desc(lvl) : (def.desc || def.name || '');
+
+	// 1) 属性类（self_stat_flat）：当前 equip.js 宝物主路径，按强化等级 star 缩放
+	const flatKeys = ['atk', 'def', 'hp', 'spe', 'mingzhong', 'shanbi', 'baoji', 'kangbao', 'baoshang', 'shouhu', 'poji', 'gedang',
+		'fixedDealUp', 'fixedTakeDn', 'fixedHeal', 'fixedBeHeal', 'pctDealUp', 'pctTakeDn', 'pctHeal', 'pctBeHeal'];
+	const flat = {}; let hasFlat = false;
+	flatKeys.forEach(k => { if (def[k] !== undefined) { flat[k] = Number(def[k]) * lvl; hasFlat = true; } });
+	if (hasFlat) entries.push(Object.assign({ type: 'self_stat_flat', desc: descText, sourceName: def.name }, flat));
+
+	// 2) 新式内联 effects：{trigger, filter, content}
+	if (Array.isArray(def.effects)) {
+		def.effects.forEach(eff => {
+			if (eff && eff.trigger && typeof eff.content === 'function')
+				entries.push({ type: 'skill_effect', trigger: eff.trigger, filter: eff.filter || null, content: eff.content, desc: eff.desc || def.name, sourceName: def.name });
+		});
+	}
+	// 3) 旧式 effectSkills 引用 BREAKTHROUGH_BUFF_LIBRARY
+	if (Array.isArray(def.effectSkills)) {
+		def.effectSkills.forEach(id => {
+			const buff = (typeof BREAKTHROUGH_BUFF_LIBRARY !== 'undefined' ? BREAKTHROUGH_BUFF_LIBRARY : {})[id];
+			if (buff) entries.push(Object.assign({ type: 'skill_effect' }, buff, { sourceName: def.name }));
+		});
+	}
+	// 4) type + effect(ctx) 风格（TREASURE_DEFS 背包宝物主流）
+	if (def.type && typeof def.effect === 'function') {
+		const trigger = TREASURE_TYPE_TRIGGER_MAP[def.type];
+		if (trigger) {
+			const effectFn = def.effect;
+			const content = function (arg1, arg2) {
+				const ctx = makeTreasureCtx(this, {});
+				if (trigger === 'onHitSelf') ctx.attacker = arg1;
+				else if (trigger === 'onKill') ctx.target = arg1;
+				else if (trigger === 'pugongHit') ctx.target = arg1;
+				else if (trigger === 'dieSelf') ctx.killer = arg1;
+				else if (trigger === 'onAnyDeath') ctx.deadUnit = arg1;
+				try { effectFn.call(def, ctx); }
+				catch (e) { console.warn('[吸收宝物] effect 执行失败', baseId, e); }
+			};
+			entries.push({ type: 'skill_effect', trigger, filter: null, content, desc: def.desc || def.name, sourceName: def.name });
+		} else {
+			console.warn(`[吸收宝物] 宝物 ${baseId} 的特效类型 ${def.type} 暂不支持吸收`);
+		}
+	}
+	return entries;
+}
+window.compileTreasureToBreakthroughEntries = compileTreasureToBreakthroughEntries;
+
+// 判断某宝物是否可被吸收（含至少一个可编译能力）
+function canAbsorbTreasure(baseId, level) {
+	const entries = compileTreasureToBreakthroughEntries(baseId, level);
+	return entries.length > 0;
+}
+
+/**
+ * 执行吸收：把背包宝物实例吸收进指定突破空槽
+ * @param {string} instanceId 角色实例ID
+ * @param {number} slotIndex 突破槽索引（0-based）
+ * @param {string} treasureInstanceId 背包宝物实例ID
+ * @param {HTMLElement} popup 突破详情弹窗（用于刷新）
+ */
+function absorbTreasureIntoSlot(instanceId, slotIndex, treasureInstanceId, popup) {
+	const instData = window.charBagData && window.charBagData[instanceId];
+	const inv = window.treasureInventory && window.treasureInventory[treasureInstanceId];
+	if (!instData || !inv) return;
+	const baseId = inv.baseId;
+	const level = inv.level || 1;
+	if (!canAbsorbTreasure(baseId, level)) {
+		alert('该宝物暂无可吸收的能力');
+		return;
+	}
+	// 若宝物已装备，先卸下
+	if (inv.equippedBy) {
+		const ownerSlots = window.charTreasureSlots && window.charTreasureSlots[inv.equippedBy];
+		if (ownerSlots) {
+			const idx = ownerSlots.indexOf(treasureInstanceId);
+			if (idx !== -1) ownerSlots[idx] = null;
+		}
+		inv.equippedBy = null;
+	}
+	// 直接把吸收数据写入突破列表对应空槽（替换 null）。
+	// - 属性类（self_stat_flat）：把编译出的数值内联进槽位对象，computeStats 会按 self_stat_flat 同源结算；
+	// - 特效类（skill_effect）：content 是函数无法 JSON 序列化，故只存原型 _absorbedTreasure，
+	//   buildUnit 时再由 compileTreasureToBreakthroughEntries 重新解析成技能特效。
+	const charId = instData.charId || instanceId;
+	if (!Array.isArray(instData.tupoList)) {
+		instData.tupoList = ((characterList[charId] && characterList[charId].tupoList) || []).slice();
+	}
+	const compiledEntries = compileTreasureToBreakthroughEntries(baseId, level);
+	const flatKeys = ['atk', 'def', 'hp', 'spe', 'mingzhong', 'shanbi', 'baoji', 'kangbao', 'baoshang', 'shouhu', 'poji', 'gedang',
+		'fixedDealUp', 'fixedTakeDn', 'fixedHeal', 'fixedBeHeal', 'pctDealUp', 'pctTakeDn', 'pctHeal', 'pctBeHeal'];
+	const inlineFlat = {};
+	compiledEntries.forEach(e => {
+		if (e.type === 'self_stat_flat') {
+			flatKeys.forEach(k => { if (e[k] !== undefined) inlineFlat[k] = (inlineFlat[k] || 0) + Number(e[k]); });
+		}
+	});
+	const descText = (compiledEntries[0] && compiledEntries[0].desc) || (TREASURE_DEFS[baseId] || {}).name || baseId;
+	// 若目标槽已有「非吸收的突破效果」，吸收会覆盖它，先确认
+	const existing = instData.tupoList && instData.tupoList[slotIndex];
+	if (existing && !existing._absorbedTreasure && !isNoEffectBreakthrough(existing)) {
+		const existDesc = existing.desc || (existing.type ? `效果类型: ${existing.type}` : '未知突破效果');
+		if (!confirm(`该突破槽已存在突破效果（${existDesc}），\n吸收宝物将覆盖它。确定继续？`)) return;
+	}
+	instData.tupoList[slotIndex] = Object.assign({
+		type: 'absorbed_treasure',
+		_absorbedTreasure: { baseId, level, sourceName: (TREASURE_DEFS[baseId] || {}).name || baseId },
+		desc: descText
+	}, inlineFlat);
+	// 消耗宝物实例
+	delete window.treasureInventory[treasureInstanceId];
+	// 持久化 + 刷新
+	if (window.SaveManager) SaveManager.autoSave();
+	refreshBreakthroughPopupContent(popup, instanceId);
+	if (typeof renderBagView === 'function') {
+		const bagView = document.getElementById('bag-view');
+		if (bagView && bagView.style.display !== 'none') renderBagView(bagView);
+	}
+}
+
+/**
+ * 二次选择弹窗：列出背包中可吸收的宝物，点击吸收
+ */
+function openTreasureAbsorbPicker(slotIndex, instanceId, popup) {
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
+
+	const box = document.createElement('div');
+	box.style.cssText = 'background:#1a1a2e;border:1px solid #d000ff;border-radius:8px;padding:16px;width:420px;max-height:70vh;overflow:auto;color:#eee;';
+	box.innerHTML = `<div style="font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:10px;">选择要吸收的宝物（突破槽 ${slotIndex + 1}）</div>`;
+
+	const list = document.createElement('div');
+	box.appendChild(list);
+
+	const invEntries = Object.entries(window.treasureInventory || {});
+	if (invEntries.length === 0) {
+		const empty = document.createElement('div');
+		empty.style.cssText = 'color:#888;padding:20px;text-align:center;';
+		empty.textContent = '背包中没有可吸收的宝物';
+		list.appendChild(empty);
+	}
+	invEntries.forEach(([tInstId, inv]) => {
+		const def = TREASURE_DEFS[inv.baseId] || {};
+		const tdesc = (def.desc && typeof def.desc === 'function') ? def.desc(inv.level || 1) : (def.desc || '');
+		const row = document.createElement('div');
+		row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #333;cursor:pointer;';
+		const info = document.createElement('div');
+		info.innerHTML = `<span style="color:#ffd700;">${def.name || inv.baseId}</span> <span style="color:#aaa;font-size:12px;">Lv.${inv.level || 1}</span><br><span style="color:#bbb;font-size:12px;">${tdesc}</span>`;
+		const btn = document.createElement('button');
+		btn.className = 'ybrpg-btn';
+		btn.style.cssText = 'padding:4px 10px;font-size:12px;background:#2a1a3a;border-color:#d000ff;color:#d000ff;';
+		btn.textContent = '吸收';
+		btn.onclick = (e) => {
+			e.stopPropagation();
+			absorbTreasureIntoSlot(instanceId, slotIndex, tInstId, popup);
+			document.body.removeChild(overlay);
+		};
+		row.appendChild(info);
+		row.appendChild(btn);
+		row.onmouseover = () => { row.style.background = '#2a2a3a'; };
+		row.onmouseout = () => { row.style.background = 'transparent'; };
+		list.appendChild(row);
+	});
+
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-btn';
+	closeBtn.style.cssText = 'margin-top:12px;width:100%;padding:8px;background:#333;border-color:#666;color:#ccc;';
+	closeBtn.textContent = '取消';
+	closeBtn.onclick = () => document.body.removeChild(overlay);
+	box.appendChild(closeBtn);
+
+	overlay.appendChild(box);
+	document.body.appendChild(overlay);
+}
+
 /**
  * 渲染突破列表到指定容器
+
  * @param {HTMLElement} container - 列表容器
  * @param {Object} baseChar - 角色基础数据
  * @param {number} currentTupoLevel - 当前突破等级
  */
-function renderBreakthroughList(container, baseChar, currentTupoLevel) {
-	const tupoList = baseChar.tupoList || STANDARD_BREAKTHROUGH_TEMPLATE || [];
+function renderBreakthroughList(container, baseChar, currentTupoLevel, instData, instanceId, popup) {
+	// 优先用实例自身的突破列表（含已吸收的宝物槽），回退到角色库模板
+	const tupoList = (instData && Array.isArray(instData.tupoList) && instData.tupoList.length)
+		? instData.tupoList
+		: (baseChar.tupoList || STANDARD_BREAKTHROUGH_TEMPLATE || []);
 
 	if (tupoList.length === 0) {
 		const emptyTip = document.createElement('div');
@@ -982,11 +1146,28 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel) {
 		// 描述内容
 		const descDiv = document.createElement('div');
 
-		if (isNoEffect) {
-			// 无效果占位：用明显不同的样式，便于一眼区分「有/无效果」
-			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#8a8a8a;font-style:italic;opacity:0.85;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;`;
-			descDiv.textContent = '（暂无效果 · 待配置）';
+		const absorbedRec = (buff && buff._absorbedTreasure) ? buff._absorbedTreasure : null;
+		if (absorbedRec) {
+			// 已吸收：显示来源宝物（点击可重新吸收替换同一槽）
+			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#7CFC00;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;`;
+			descDiv.textContent = `🧪 已吸收：${absorbedRec.sourceName}（Lv.${absorbedRec.level}）`;
+			item.style.border = '1px solid #44ff88';
+			if (isUnlocked) {
+				item.style.cursor = 'pointer';
+				item.onclick = () => { openTreasureAbsorbPicker(index, instanceId, popup); };
+				item.onmouseover = () => { item.style.background = '#33334a'; };
+				item.onmouseout = () => { item.style.background = '#1a1a1a'; };
+			}
+		} else if (isNoEffect) {
+			// 空突破槽：始终可点击吸收（锁定槽吸收后需突破到该阶才生效）
+			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#ffd700;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;cursor:pointer;`;
+			descDiv.textContent = isUnlocked ? '➕ 空突破槽 · 点击吸收宝物' : '➕ 空突破槽 · 点击吸收宝物（需突破到该阶生效）';
+			item.style.cursor = 'pointer';
+			item.onclick = () => { openTreasureAbsorbPicker(index, instanceId, popup); };
+			item.onmouseover = () => { item.style.background = '#33334a'; };
+			item.onmouseout = () => { item.style.background = '#1a1a1a'; };
 		} else {
+			// 普通突破槽：显示自身效果，不作吸收提示、不可点击吸收
 			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#c9a86a'};`;
 			let resolvedBuff = buff;
 			if (typeof buff === 'string') {
@@ -1192,6 +1373,31 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 		}
 		container.appendChild(promoteBtn);
 	}
+
+	// ===== 【新增】吸收宝物按钮 =====
+	const absorbBtn = document.createElement('button');
+	absorbBtn.style.cssText = `
+		flex: 1;
+		padding: 8px;
+		font-size: 13px;
+		cursor: pointer;
+		background: #2a1a3a;
+		color: #d000ff;
+		border: 1px solid #d000ff;
+		border-radius: 6px;
+		transition: all 0.2s;
+	`;
+	absorbBtn.textContent = '🧪 吸收宝物';
+	absorbBtn.onmouseover = () => { absorbBtn.style.background = '#3a2a4a'; };
+	absorbBtn.onmouseout = () => { absorbBtn.style.background = '#2a1a3a'; };
+	absorbBtn.onclick = (e) => {
+		e.stopPropagation();
+		const tl = Array.isArray(instData.tupoList) ? instData.tupoList : [];
+		let targetIndex = tl.findIndex(s => isNoEffectBreakthrough(s));
+		if (targetIndex < 0) targetIndex = tl.length;
+		openTreasureAbsorbPicker(targetIndex, instanceId, popup);
+	};
+	container.appendChild(absorbBtn);
 
 	// 已满级提示
 	if (breakInfo.maxed) {
@@ -1641,6 +1847,12 @@ function renderBreakthroughContent() {
 				descDiv.textContent = typeDesc;
 			} else {
 				descDiv.textContent = '暂无详细描述';
+			}
+			// 已解锁的普通突破槽也可点击吸收宝物（替换该槽内容），避免「空突破槽不可点」的情况
+			if (isUnlocked) {
+				descDiv.textContent += '　🧪 点击可将宝物吸收进此槽';
+				item.style.cursor = 'pointer';
+				item.onclick = () => { openTreasureAbsorbPicker(index, instanceId, popup); };
 			}
 		}
 		item.appendChild(descDiv);
@@ -5820,10 +6032,10 @@ function buildPlayerTeamForBattle() {
 
 			fixedHeal: compiled?.fixedHeal ?? 0,
 			fixedBeHeal: compiled?.fixedBeHeal ?? 0,
-			pctHeal: compiled?.pctHeal ?? 0,
-			pctBeHeal: compiled?.pctBeHeal ?? 0,
-		};
-	});
+		pctHeal: compiled?.pctHeal ?? 0,
+		pctBeHeal: compiled?.pctBeHeal ?? 0,
+	};
+});
 }
 
 
@@ -9968,7 +10180,16 @@ function syncInstanceTupoList(instanceId) {
 	if (newTupoList.length > 0) {
 		// 【关键】浅拷贝数组即可。注意：内联突破对象含 content/filter 函数，
 		// JSON 深拷贝会丢失函数导致 skill_effect 类突破失效，故用 slice 保留元素引用（函数不丢）
-		instData.tupoList = newTupoList.slice();
+		// 重建突破列表，但保留实例已吸收的宝物槽（以 _absorbedTreasure 标记），
+		// 避免被角色库模板覆盖，从而让吸收数据随实例持久化
+		// 重建突破列表，但保留实例已吸收的宝物槽（含超出模板长度、以「追加」方式吸收的槽），
+		// 避免被角色库模板覆盖，从而让吸收数据随实例持久化
+		const oldTupoList = instData.tupoList || [];
+		const rebuilt = newTupoList.slice();
+		oldTupoList.forEach((old, i) => {
+			if (old && old._absorbedTreasure) rebuilt[i] = old; // 覆盖模板槽，或扩展到追加槽
+		});
+		instData.tupoList = rebuilt;
 
 		// 如果实例中没有记录当前突破等级，初始化为 0
 		if (instData.tupolevel === undefined || instData.tupolevel === null) {
