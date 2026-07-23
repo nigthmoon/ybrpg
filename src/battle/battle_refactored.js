@@ -3946,6 +3946,23 @@ Battle.compileEnemyStats = function compileEnemyStats(charId, level, tupolevel, 
 		pctBeHeal += teamBonuses.teamPercent.pctBeHeal || 0;
 	}
 
+	// ===== 【新增】难度固定加成（噩梦/地狱）：全特种属性 +N =====
+	if (overrides.flatStat) {
+		const fs = overrides.flatStat;
+		if (fs.hp !== undefined) hp += Number(fs.hp);
+		if (fs.atk !== undefined) atk += Number(fs.atk);
+		if (fs.def !== undefined) def += Number(fs.def);
+		if (fs.spe !== undefined) spe += Number(fs.spe);
+		if (fs.mingzhong !== undefined) mingzhong += Number(fs.mingzhong);
+		if (fs.shanbi !== undefined) shanbi += Number(fs.shanbi);
+		if (fs.baoji !== undefined) baoji += Number(fs.baoji);
+		if (fs.kangbao !== undefined) kangbao += Number(fs.kangbao);
+		if (fs.baoshang !== undefined) baoshang += Number(fs.baoshang);
+		if (fs.shouhu !== undefined) shouhu += Number(fs.shouhu);
+		if (fs.poji !== undefined) poji += Number(fs.poji);
+		if (fs.gedang !== undefined) gedang += Number(fs.gedang);
+	}
+
 	// 5. 应用覆盖值
 	if (overrides.hp !== undefined) hp = overrides.hp;
 	if (overrides.atk !== undefined) atk = overrides.atk;

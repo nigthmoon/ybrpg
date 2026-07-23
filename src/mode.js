@@ -5980,9 +5980,9 @@ function renderDungeonView(container, selectedChapterKey = null) {
 
 // 新增: 难度缩放配置
 const DIFFICULTY_SCALE = {
-	normal: { hp: 1.0, atk: 1.0, def: 1.0, gold: 1.0, name: '普通', buffs: [], treasures: [], },
-	nightmare: { hp: 1.5, atk: 1.3, def: 1.3, gold: 1.5, name: '噩梦', buffs: [], treasures: [], },
-	hell: { hp: 2.0, atk: 1.6, def: 1.6, gold: 2.0, name: '地狱', buffs: [], treasures: [], }
+	normal: { hp: 1.0, atk: 1.0, def: 1.0, gold: 1.0, name: '普通', buffs: [], treasures: [], addTupo: 0, addStat: 0 },
+	nightmare: { hp: 1.5, atk: 1.3, def: 1.3, gold: 1.5, name: '噩梦', buffs: [], treasures: [], addTupo: 8, addStat: 3000 },
+	hell: { hp: 2.0, atk: 1.6, def: 1.6, gold: 2.0, name: '地狱', buffs: [], treasures: [], addTupo: 16, addStat: 6000 }
 };
 // 根据难度获取事件数据（支持噩梦和地狱难度）
 function getEventForDifficulty(chapterKey, eventId, difficulty) {
@@ -6526,6 +6526,13 @@ function renderChapterEventList(container, chapterKey) {
 					const enemyTeam = (event.enemy || []).map(function (e) {
 						if (!e || !e.id) return { id: null, name: '', skills: [], buff: [], treasures: [], tupolevel: 0, tupoList: [] };
 						var base = characterList[e.id] || {};
+						// ===== 【噩梦/地狱】突破 +N（主属性随之提升）+ 全特种属性 +N =====
+						const addTupo = scale.addTupo || 0;
+						const addStat = scale.addStat || 0;
+						const flatStat = addStat > 0 ? {
+							mingzhong: addStat, shanbi: addStat, baoji: addStat, kangbao: addStat,
+							baoshang: addStat, shouhu: addStat, poji: addStat, gedang: addStat
+						} : null;
 						return {
 							id: e.id,
 							name: e.name || base.name || e.id,
@@ -6535,8 +6542,9 @@ function renderChapterEventList(container, chapterKey) {
 							buff: e.buff || [],
 							treasures: e.treasures || [],
 							rank: e.rank || base.rank || 'common',
-							tupolevel: e.tupolevel || 0,
+							tupolevel: (e.tupolevel || 0) + addTupo,
 							tupoList: e.tupoList || base.tupoList || [],
+							flatStat: flatStat,
 						};
 					});
 					// for(k of cards.filter(c=>!upe.includes(c))){
