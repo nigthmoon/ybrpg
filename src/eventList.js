@@ -460,163 +460,187 @@ const eventList = {//事件列表
 	// 空对象 {} 代表该位置无敌人
 	// 注意: 普通难度敌人使用初始值(无skills)，困难/地狱难度数值递增
 
-	// ========== 第一章：初入梦境 ==========
+	// ========== 第一章：神秘教会 ==========
+	// 敌人布阵规则：
+	// - 除第1小节外，每小节3名敌人放在 1/3/5 号位（数组索引 0/2/4）
+	// - boss 关：boss 固定 5 号位（索引 4）
+	// - 杂兵用稀有(rare)角色顶皮套登场（配置里的 name 即临时命名）
+	// 章节 boss：c1-1 雪琅（单人）、c1-5 张玉洁、c1-10 吴爽（雪琅/张玉洁/吴爽 依次站 1/3/5 号位）
 	chapter1: {
-		name: '第一章：初入梦境',
+		name: '第一章：神秘教会',
 		difficulty: 'normal',
 		procedure: [
 			'c1-1', 'c1-2', 'c1-3', 'c1-4', 'c1-5',
 			'c1-6', 'c1-7', 'c1-8', 'c1-9', 'c1-10'
 		],
 		eventPack: {
-			// --- 1~3关: 1名稀有敌人 ---
+			// --- 第1小节：单个雪琅（5号位，索引4） ---
 			'c1-1': {
-				name: '初遇陈爱琳',
+				name: '雪夜的不速之客',
 				id: 'c1-1',
 				type: 'battle',
-				text: '在记忆的深处，你遇见了她...',
+				text: '风雪中，一名白衣少女拦住了你的去路。她自称来自「教会」...',
 				prev: null,
 				enemy: [
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 100, atk: 50, def: 50, spe: 150, buff: [] },
+					{}, {}, {}, {},
+					{ name: '雪琅', id: 'ybsl_123xuelang', level: 1, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
+					{}
 				],
 			},
 			'c1-2': {
-				name: '挑战张玉洁',
+				name: '教会的耳目',
 				id: 'c1-2',
 				type: 'battle',
-				text: '她的剑术凌厉无比...',
+				text: '雪琅退走后，教会的眼线很快盯上了你...',
 				prev: 'c1-1',
 				enemy: [
-					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 600, atk: 150, def: 50, spe: 150, buff: [] },
+					{ name: '教会信徒', id: 'ybsl_019shengyan', level: 1, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
+					{},
+					{ name: '唱诗班修女', id: 'ybsl_045gaocong', level: 1, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
+					{},
+					{ name: '持烛者', id: 'ybsl_024yuetong', level: 1, tupolevel: 0, rank: 'rare', template: 'defense', buff: [] },
+					{}
 				],
 			},
 			'c1-3': {
-				name: '双敌来袭', // 原文本是双敌，但按要求1-3关只有一名敌人，这里修正为单敌，或者你可以保留双敌但降低数值。根据要求“1~3小关只有一名敌人”，此处改为单敌。
+				name: '深巷堵截',
 				id: 'c1-3',
 				type: 'battle',
-				text: '一名强敌拦在前方...',
+				text: '狭窄的巷子两头被堵死了，只能杀出一条路...',
 				prev: 'c1-2',
 				enemy: [
-					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{}, {}, {}, {}, {}
+					{ name: '守门人', id: 'ybsl_053qiuer', level: 2, tupolevel: 0, rank: 'rare', template: 'defense', buff: [] },
+					{},
+					{ name: '狂信者', id: 'ybsl_054yueer', level: 2, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
+					{},
+					{ name: '灰袍见习生', id: 'ybsl_055zhengyan', level: 2, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
+					{}
+				],
+			},
+			'c1-4': {
+				name: '礼拜堂外围',
+				id: 'c1-4',
+				type: 'battle',
+				text: '教会礼拜堂近在眼前，守卫却比想象中森严...',
+				prev: 'c1-3',
+				enemy: [
+					{ name: '苦修士', id: 'ybsl_012zhengjiayi', level: 3, tupolevel: 0, rank: 'rare', template: 'defense', buff: [] },
+					{},
+					{ name: '圣殿侍卫', id: 'ybsl_037diamondqueen', level: 3, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
+					{},
+					{ name: '黑袍执事', id: 'ybsl_019shengyan', level: 3, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
+					{}
 				],
 			},
 
-			// --- 4~6关: 2名稀有敌人 ---
-			'c1-4': {
-				name: '涂山小红',
-				id: 'c1-4',
-				type: 'battle',
-				text: '来自涂山的少女...',
-				prev: 'c1-3',
-				enemy: [
-					{ name: '涂山小红', id: 'ybsl_017xiaohong', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '吴格格', id: 'ybsl_007wugege', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{}, {}, {}, {}
-				],
-			},
+			// --- 第5小节 BOSS：张玉洁（5号位，索引4） ---
 			'c1-5': {
-				name: '记忆交错',
+				name: 'BOSS·执刑者张玉洁',
 				id: 'c1-5',
-				type: 'battle',
-				text: '两名故人拦在前方...',
+				type: 'boss',
+				text: '礼拜堂深处，执刑者张玉洁缓缓起身：「不请自来者，接受裁决吧。」',
 				prev: 'c1-4',
 				enemy: [
-					{ name: '李玉珊', id: 'ybsl_009liyushan', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '周玥', id: 'ybsl_010zhouyue', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{}, {}, {}, {}
+					{ name: '祭坛护卫', id: 'ybsl_121tujing', level: 3, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
+					{},
+					{ name: '祷告修女', id: 'ybsl_122wangbingyu', level: 3, tupolevel: 0, rank: 'rare', template: 'defense', buff: [] },
+					{},
+					{ name: '张玉洁', id: 'ybsl_004zhangyujie', level: 4, tupolevel: 0, rank: 'epicfake', template: 'balanced', buff: [] },
+					{}
 				],
 			},
 			'c1-6': {
-				name: '高宇航',
+				name: '地下回廊',
 				id: 'c1-6',
 				type: 'battle',
-				text: '她的攻击迅猛无比...',
+				text: '击败张玉洁后，你循着密道深入教会地下...',
 				prev: 'c1-5',
 				enemy: [
-					{ name: '高宇航', id: 'ybsl_011gaoyuhang', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{}, {}, {}, {}
+					{ name: '忏悔者', id: 'ybsl_024yuetong', level: 4, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
+					{},
+					{ name: '香炉侍者', id: 'ybsl_053qiuer', level: 4, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
+					{},
+					{ name: '执灯修士', id: 'ybsl_019shengyan', level: 4, tupolevel: 0, rank: 'rare', template: 'defense', buff: [] },
+					{}
 				],
 			},
 
-			// --- 7~9关: 3名稀有敌人 ---
+			// --- 7~9关: 3名稀有敌人（1/3/5号位，索引 0/2/4） ---
 			'c1-7': {
-				name: '双重考验',
+				name: '回廊伏击',
 				id: 'c1-7',
 				type: 'battle',
-				text: '考验你的实力！',
+				text: '幽暗的回廊里杀机四伏，教会的死士早已在此设伏...',
 				prev: 'c1-6',
 				enemy: [
-					{ name: '尹超跃', id: 'ybsl_013yinji', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '贾雨桐', id: 'ybsl_020jiayutong', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '王汉桢', id: 'ybsl_006wanghanzhen', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{}, {}, {}
+					{ name: '守夜人', id: 'ybsl_054yueer', level: 5, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
+					{},
+					{ name: '巡游祭司', id: 'ybsl_055zhengyan', level: 5, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
+					{},
+					{ name: '持盾修士', id: 'ybsl_053qiuer', level: 5, tupolevel: 0, rank: 'rare', template: 'defense', buff: [] },
+					{}
 				],
 			},
 			'c1-8': {
-				name: '满城柒',
+				name: '圣堂守卫',
 				id: 'c1-8',
 				type: 'battle',
-				text: '传说级角色登场...',
+				text: '逼近圣堂核心，守卫的实力又上了一层台阶...',
 				prev: 'c1-7',
 				enemy: [
-					{ name: '满城柒', id: 'ybsl_016manchengqi', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '闫爽', id: 'ybsl_003yanshuang', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '张晴', id: 'ybsl_018zhangqing', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{}, {}, {}
+					{ name: '圣咏者', id: 'ybsl_012zhengjiayi', level: 6, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
+					{},
+					{ name: '烛光侍女', id: 'ybsl_122wangbingyu', level: 6, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
+					{},
+					{ name: '密令信使', id: 'ybsl_121tujing', level: 6, tupolevel: 0, rank: 'rare', template: 'defense', buff: [] },
+					{}
 				],
 			},
 			'c1-9': {
-				name: '双子拦路',
+				name: '审判前夜',
 				id: 'c1-9',
 				type: 'battle',
-				text: '她们不会让你轻易通过...',
+				text: '审判将至，最后的阻挡者倾巢而出，只为拖延你的脚步...',
 				prev: 'c1-8',
 				enemy: [
-					{ name: '岳瞳', id: 'ybsl_024yuetong', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '王贺', id: 'ybsl_025wanghe', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '史庆宇', id: 'ybsl_025shiqingyu', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{}, {}, {}
+					{ name: '黑纱修女', id: 'ybsl_045gaocong', level: 7, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
+					{},
+					{ name: '银甲卫', id: 'ybsl_037diamondqueen', level: 7, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
+					{},
+					{ name: '泪痕信徒', id: 'ybsl_019shengyan', level: 7, tupolevel: 0, rank: 'rare', template: 'defense', buff: [] },
+					{}
 				],
 			},
 
-			// --- Boss关: 1伪史诗 + 3稀有 ---
+			// --- 第10小节 BOSS：雪琅(1号位)、张玉洁(3号位)、吴爽(5号位/BOSS，索引 0/2/4) ---
 			'c1-10': {
-				name: '第一章BOSS',
+				name: 'BOSS·教廷三方审判',
 				id: 'c1-10',
 				type: 'boss',
-				text: '第一章最终BOSS战！',
+				text: '圣堂之巅，雪琅、张玉洁与传说中的吴爽同时现身：「踏入此地者，当受三方审判。」',
 				prev: 'c1-9',
 				enemy: [
-					// 伪史诗 Boss
-					{ name: '吴雨欣', id: 'ybsl_008wuyuxin', hp: 1500, atk: 220, def: 80, spe: 160, buff: [] },
-					// 3个稀有小弟
-					{ name: '秋儿', id: 'ybsl_053qiuer', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '孙丽松', id: 'ybsl_001sunlisong', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '王海茹', id: 'ybsl_015wanghairu', hp: 1000, atk: 150, def: 50, spe: 150, buff: [] },
-					{}, {}
+					// 雪琅（1号位，索引0）
+					{ name: '雪琅', id: 'ybsl_123xuelang', level: 8, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
+					{},
+					// 张玉洁（3号位，索引2）
+					{ name: '张玉洁', id: 'ybsl_004zhangyujie', level: 10, tupolevel: 0, rank: 'epicfake', template: 'balanced', buff: [] },
+					{},
+					// 吴爽（5号位/BOSS，索引4）
+					{ name: '吴爽', id: 'ybsl_048wushuang', level: 12, tupolevel: 0, rank: 'legend', template: 'balanced', buff: [] },
+					{}
 				],
 			},
 		}
 	},
 
-	// ========== 第二章：记忆觉醒 ==========
-	// 系数: HP*1.15, ATK*1.1, DEF*1.08, SPE*1.02
-	// 稀有基准: HP:1150, ATK:165, DEF:54, SPE:153
-	// 伪史诗基准: HP:1725, ATK:242, DEF:86, SPE:163
+	// ========== 第二章：雪国学院篇·上 ==========
+	// 敌人阵容：每小节 6 人（填满 6 个位置）
+	// 第 2、5 小节为小 BOSS，第 10 小节为大 BOSS
+	// 默认突破等级 tupolevel = 2；等级随小节递进（Lv.3 → Lv.16）
+	// 主力角色：高宇航/周玥/吴雨欣/李玉珊/王若冰/吴格格/闫爽/郑佳怡（尽可能全部登场）
 	chapter2: {
-		name: '第二章：记忆觉醒',
+		name: '第二章：雪国学院篇·上',
 		difficulty: 'normal',
 		procedure: [
 			'c2-1', 'c2-2', 'c2-3', 'c2-4', 'c2-5',
@@ -625,160 +649,167 @@ const eventList = {//事件列表
 		eventPack: {
 			// --- 1~9关: 4名稀有敌人 ---
 			'c2-1': {
-				name: '记忆碎片',
+				name: '入学测验',
 				id: 'c2-1',
 				type: 'battle',
-				text: '新的记忆正在苏醒...',
+				text: '踏进雪国学院的第一道门槛，便是这群拦路的学员...',
 				prev: null,
 				enemy: [
-					{ name: '闫爽', id: 'ybsl_003yanshuang', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '张晴', id: 'ybsl_018zhangqing', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '岳瞳', id: 'ybsl_024yuetong', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '王贺', id: 'ybsl_025wanghe', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{}, {}
+					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 3, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 3, tupolevel: 2, rank: 'epicfake', template: 'balanced', buff: [] },
+					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', level: 3, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '学院卫兵', id: 'ybsl_019shengyan', level: 3, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '风纪委员', id: 'ybsl_045gaocong', level: 3, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '图书管理员', id: 'ybsl_024yuetong', level: 3, tupolevel: 2, rank: 'rare', template: 'defense', buff: [] }
 				],
 			},
 			'c2-2': {
-				name: '岳瞳',
+				name: '小BOSS·学生会会长周玥',
 				id: 'c2-2',
-				type: 'battle',
-				text: '她的眼神中藏着秘密...',
+				type: 'boss',
+				text: '学生会长周玥挡在阶前：「想通过？先胜过我。」',
 				prev: 'c2-1',
 				enemy: [
-					{ name: '史庆宇', id: 'ybsl_025shiqingyu', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '蘋姉', id: 'ybsl_042pingzi', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '盛妍', id: 'ybsl_019shengyan', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '王婉儿', id: 'ybsl_049waner', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{}, {}
+					{ name: '周玥', id: 'ybsl_010zhouyue', level: 5, tupolevel: 2, rank: 'epic', template: 'balanced', buff: [] },
+					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 5, tupolevel: 2, rank: 'epicfake', template: 'defense', buff: [] },
+					{ name: '吴格格', id: 'ybsl_007wugege', level: 5, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '学生会干事', id: 'ybsl_053qiuer', level: 5, tupolevel: 2, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '冰晶傀儡', id: 'ybsl_054yueer', level: 5, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '巡逻队员', id: 'ybsl_055zhengyan', level: 5, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
 			'c2-3': {
-				name: '双重身影',
+				name: '学院后山',
 				id: 'c2-3',
 				type: 'battle',
-				text: '她们的身影重叠在一起...',
+				text: '后山的试炼场里，守卫倾巢而出...',
 				prev: 'c2-2',
 				enemy: [
-					{ name: '悦儿', id: 'ybsl_054yueer', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '郑琰', id: 'ybsl_055zhengyan', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '房佳谕', id: 'ybsl_043fangjiayu', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '高聪', id: 'ybsl_045gaocong', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{}, {}
+					{ name: '李玉珊', id: 'ybsl_009liyushan', level: 6, tupolevel: 2, rank: 'epic', template: 'defense', buff: [] },
+					{ name: '学院医师', id: 'ybsl_037diamondqueen', level: 6, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '试炼傀儡', id: 'ybsl_024yuetong', level: 6, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '雪原猎手', id: 'ybsl_121tujing', level: 6, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '低年级生', id: 'ybsl_122wangbingyu', level: 6, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '高年级生', id: 'ybsl_123xuelang', level: 6, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
 			'c2-4': {
-				name: '蘋姉',
+				name: '风纪巡查',
 				id: 'c2-4',
 				type: 'battle',
-				text: '神秘的角色出现了...',
+				text: '风纪队循着踪迹追来，态度强硬...',
 				prev: 'c2-3',
 				enemy: [
-					{ name: '鞠熒', id: 'ybsl_059starsFall1', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '宋橤', id: 'ybsl_059starsFall2', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '周靈', id: 'ybsl_059starsFall3', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '李曉', id: 'ybsl_059starsFall4', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{}, {}
+					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 7, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 7, tupolevel: 2, rank: 'epicfake', template: 'balanced', buff: [] },
+					{ name: '学院卫兵', id: 'ybsl_019shengyan', level: 7, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '风纪委员', id: 'ybsl_045gaocong', level: 7, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '图书管理员', id: 'ybsl_024yuetong', level: 7, tupolevel: 2, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '巡逻队员', id: 'ybsl_055zhengyan', level: 7, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
 			'c2-5': {
-				name: '三人同行',
+				name: '小BOSS·剑道导师李玉珊',
 				id: 'c2-5',
-				type: 'battle',
-				text: '三位记忆中的伙伴...',
+				type: 'boss',
+				text: '剑道导师李玉珊横剑而立：「此路，唯胜者可行。」',
 				prev: 'c2-4',
 				enemy: [
-					{ name: '清月姑娘', id: 'ybsl_068qingyue', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '吕艳秋', id: 'ybsl_070lvyanqiu', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '小慧', id: 'ybsl_033xiaohui', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '蛇妃', id: 'db_ybsl_067snake', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{}, {}
+					{ name: '李玉珊', id: 'ybsl_009liyushan', level: 9, tupolevel: 2, rank: 'epic', template: 'defense', buff: [] },
+					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 9, tupolevel: 2, rank: 'epicfake', template: 'defense', buff: [] },
+					{ name: '吴格格', id: 'ybsl_007wugege', level: 9, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '学生会干事', id: 'ybsl_053qiuer', level: 9, tupolevel: 2, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '冰晶傀儡', id: 'ybsl_054yueer', level: 9, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '试炼傀儡', id: 'ybsl_019shengyan', level: 9, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
 			'c2-6': {
-				name: '郑琰',
+				name: '图书馆骚动',
 				id: 'c2-6',
 				type: 'battle',
-				text: '她的攻击令人防不胜防...',
+				text: '图书馆深处传来异响，埋伏者一拥而上...',
 				prev: 'c2-5',
 				enemy: [
-					{ name: '幻晴', id: 'ybsl_018huanqing', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '江雪舞', id: 'ybsl_046jiangxuewu', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '蚕', id: 'ybsl_026can', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '雨', id: 'ybsl_027rain', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{}, {}
+					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', level: 10, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '学院医师', id: 'ybsl_037diamondqueen', level: 10, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '雪原猎手', id: 'ybsl_121tujing', level: 10, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '低年级生', id: 'ybsl_122wangbingyu', level: 10, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '高年级生', id: 'ybsl_123xuelang', level: 10, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '风纪委员', id: 'ybsl_045gaocong', level: 10, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
 			'c2-7': {
-				name: '记忆漩涡',
+				name: '冰封回廊',
 				id: 'c2-7',
 				type: 'battle',
-				text: '记忆的漩涡将你卷入...',
+				text: '回廊结满寒霜，冰系学员封锁了去路...',
 				prev: 'c2-6',
 				enemy: [
-					{ name: '彡', id: 'ybsl_047shan', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '玉蝶心', id: 'ybsl_092handan', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '黎', id: 'ybsl_029dawn', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '熙', id: 'ybsl_036bright', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{}, {}
+					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 11, tupolevel: 2, rank: 'epicfake', template: 'defense', buff: [] },
+					{ name: '吴格格', id: 'ybsl_007wugege', level: 11, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '学院卫兵', id: 'ybsl_019shengyan', level: 11, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '图书管理员', id: 'ybsl_024yuetong', level: 11, tupolevel: 2, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '巡逻队员', id: 'ybsl_055zhengyan', level: 11, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '学生会干事', id: 'ybsl_053qiuer', level: 11, tupolevel: 2, rank: 'rare', template: 'defense', buff: [] }
 				],
 			},
 			'c2-8': {
-				name: '闫爽',
+				name: '社团冲突',
 				id: 'c2-8',
 				type: 'battle',
-				text: '她再次出现在你面前...',
+				text: '两大学生社团爆发冲突，你被卷了进来...',
 				prev: 'c2-7',
 				enemy: [
-					{ name: '方块公主', id: 'ybsl_037diamondqueen', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '卞秋雯', id: 'ybsl_038bianqiuwen', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '胡瑞航', id: 'ybsl_044huruihang', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '张汨', id: 'ybsl_047zhangmi', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{}, {}
+					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 12, tupolevel: 2, rank: 'epicfake', template: 'balanced', buff: [] },
+					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 12, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '冰晶傀儡', id: 'ybsl_054yueer', level: 12, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '试炼傀儡', id: 'ybsl_122wangbingyu', level: 12, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '学院医师', id: 'ybsl_037diamondqueen', level: 12, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '雪原猎手', id: 'ybsl_121tujing', level: 12, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
 			'c2-9': {
-				name: '星辰汇聚',
+				name: '学院祭前夜',
 				id: 'c2-9',
 				type: 'battle',
-				text: '星辰之力在此汇聚...',
+				text: '学院祭前夜，群聚的学员将你团团围住...',
 				prev: 'c2-8',
 				enemy: [
-					{ name: '吴爽', id: 'ybsl_048wushuang', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '王冰雨', id: 'ybsl_122wangbingyu', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '涂静', id: 'ybsl_121tujing', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '雪琅', id: 'ybsl_123xuelang', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{}, {}
+					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', level: 13, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '高年级生', id: 'ybsl_123xuelang', level: 13, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '低年级生', id: 'ybsl_122wangbingyu', level: 13, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '学院卫兵', id: 'ybsl_019shengyan', level: 13, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '风纪委员', id: 'ybsl_045gaocong', level: 13, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '图书管理员', id: 'ybsl_024yuetong', level: 13, tupolevel: 2, rank: 'rare', template: 'defense', buff: [] }
 				],
 			},
 
-			// --- Boss关: 1伪史诗 + 5稀有 ---
+			// --- 第10小节 大BOSS：吴雨欣（legend） ---
 			'c2-10': {
-				name: '第二章BOSS',
+				name: '大BOSS·学院首席吴雨欣',
 				id: 'c2-10',
 				type: 'boss',
-				text: '第二章最终BOSS战！',
+				text: '学院首席吴雨欣立于高台：「能通过此战，方算真正的雪国学院之人。」',
 				prev: 'c2-9',
 				enemy: [
-					// 伪史诗 Boss
-					{ name: '香紫姑娘', id: 'ybsl_069xiangzi', hp: 1725, atk: 242, def: 86, spe: 163, buff: [] },
-					// 5个稀有
-					{ name: '朱焌', id: 'ybsl_076zhujun', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '涂山水璃', id: 'ybsl_107tushanshuili', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1150, atk: 165, def: 54, spe: 153, buff: [] },
-					{}
+					{ name: '吴雨欣', id: 'ybsl_008wuyuxin', level: 16, tupolevel: 2, rank: 'legend', template: 'balanced', buff: [] },
+					{ name: '周玥', id: 'ybsl_010zhouyue', level: 16, tupolevel: 2, rank: 'epic', template: 'balanced', buff: [] },
+					{ name: '李玉珊', id: 'ybsl_009liyushan', level: 16, tupolevel: 2, rank: 'epic', template: 'defense', buff: [] },
+					{ name: '学生会干事', id: 'ybsl_053qiuer', level: 16, tupolevel: 2, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '冰晶傀儡', id: 'ybsl_054yueer', level: 16, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '试炼傀儡', id: 'ybsl_024yuetong', level: 16, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
 		}
 	},
 
-	// ========== 第三章：梦境交错 ==========
-	// 系数: HP*1.32 (1.15^2), ATK*1.21, DEF*1.17, SPE*1.04
-	// 稀有基准: HP:1320, ATK:181, DEF:58, SPE:156
-	// 伪史诗基准: HP:1980, ATK:266, DEF:94, SPE:166
+	// ========== 第三章：雪国学院篇·下 ==========
+	// 敌人阵容：每小节 6 人（填满 6 个位置）
+	// 第 2、5 小节为小 BOSS，第 10 小节为大 BOSS
+	// 默认突破等级 tupolevel = 4；等级随小节递进（Lv.8 → Lv.25）
+	// 主力角色同上篇，沿用并强化
 	chapter3: {
-		name: '第三章：梦境交错',
+		name: '第三章：雪国学院篇·下',
 		difficulty: 'normal',
 		procedure: [
 			'c3-1', 'c3-2', 'c3-3', 'c3-4', 'c3-5',
@@ -787,328 +818,327 @@ const eventList = {//事件列表
 		eventPack: {
 			// --- 1~9关: 6名稀有敌人 (塞满) ---
 			'c3-1': {
-				name: '吕艳秋',
+				name: '深冬返校',
 				id: 'c3-1',
 				type: 'battle',
-				text: '秋日的记忆如此清晰...',
+				text: '雪国学院的下篇拉开帷幕，归校的学员已非吴下阿蒙...',
 				prev: null,
 				enemy: [
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '满城柒', id: 'ybsl_016manchengqi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '涂山小红', id: 'ybsl_017xiaohong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '贾雨桐', id: 'ybsl_020jiayutong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
+					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 8, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 8, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },
+					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', level: 8, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '学院卫兵', id: 'ybsl_019shengyan', level: 8, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '风纪委员', id: 'ybsl_045gaocong', level: 8, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '图书管理员', id: 'ybsl_024yuetong', level: 8, tupolevel: 4, rank: 'rare', template: 'defense', buff: [] }
 				],
 			},
 			'c3-2': {
-				name: '三人幻影',
+				name: '小BOSS·学生会会长周玥',
 				id: 'c3-2',
-				type: 'battle',
-				text: '幻影中浮现三个身影...',
+				type: 'boss',
+				text: '再度相遇，周玥的气势已截然不同：「这次，可没那么好对付了。」',
 				prev: 'c3-1',
 				enemy: [
-					{ name: '李玉珊', id: 'ybsl_009liyushan', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '周玥', id: 'ybsl_010zhouyue', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '高宇航', id: 'ybsl_011gaoyuhang', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '尹超跃', id: 'ybsl_013yinji', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '吴格格', id: 'ybsl_007wugege', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
+					{ name: '周玥', id: 'ybsl_010zhouyue', level: 10, tupolevel: 4, rank: 'epic', template: 'balanced', buff: [] },
+					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 10, tupolevel: 4, rank: 'epicfake', template: 'defense', buff: [] },
+					{ name: '吴格格', id: 'ybsl_007wugege', level: 10, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '学生会干事', id: 'ybsl_053qiuer', level: 10, tupolevel: 4, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '冰晶傀儡', id: 'ybsl_054yueer', level: 10, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '巡逻队员', id: 'ybsl_055zhengyan', level: 10, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
 			'c3-3': {
-				name: '蛇妃',
+				name: '学院后山·夜',
 				id: 'c3-3',
 				type: 'battle',
-				text: '危险的气息弥漫开来...',
+				text: '夜幕下的后山试炼场，守卫的实力水涨船高...',
 				prev: 'c3-2',
 				enemy: [
-					{ name: '闫爽', id: 'ybsl_003yanshuang', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '张晴', id: 'ybsl_018zhangqing', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '岳瞳', id: 'ybsl_024yuetong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '王贺', id: 'ybsl_025wanghe', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '史庆宇', id: 'ybsl_025shiqingyu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '蘋姉', id: 'ybsl_042pingzi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
+					{ name: '李玉珊', id: 'ybsl_009liyushan', level: 12, tupolevel: 4, rank: 'epic', template: 'defense', buff: [] },
+					{ name: '学院医师', id: 'ybsl_037diamondqueen', level: 12, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '试炼傀儡', id: 'ybsl_054yueer', level: 12, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '雪原猎手', id: 'ybsl_121tujing', level: 12, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '低年级生', id: 'ybsl_122wangbingyu', level: 12, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '高年级生', id: 'ybsl_123xuelang', level: 12, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
 			'c3-4': {
-				name: '梦境四重奏',
+				name: '风纪巡查·夜',
 				id: 'c3-4',
 				type: 'battle',
-				text: '四个身影在梦境中起舞...',
+				text: '夜间巡查的风纪队战力再升，配合默契...',
 				prev: 'c3-3',
 				enemy: [
-					{ name: '盛妍', id: 'ybsl_019shengyan', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '王婉儿', id: 'ybsl_049waner', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '悦儿', id: 'ybsl_054yueer', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '郑琰', id: 'ybsl_055zhengyan', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '房佳谕', id: 'ybsl_043fangjiayu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '高聪', id: 'ybsl_045gaocong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
+					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 13, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 13, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },
+					{ name: '学院卫兵', id: 'ybsl_019shengyan', level: 13, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '风纪委员', id: 'ybsl_045gaocong', level: 13, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '图书管理员', id: 'ybsl_024yuetong', level: 13, tupolevel: 4, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '巡逻队员', id: 'ybsl_055zhengyan', level: 13, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
 			'c3-5': {
-				name: '黎明的使者',
+				name: '小BOSS·剑道导师李玉珊',
 				id: 'c3-5',
-				type: 'battle',
-				text: '黎明前的黑暗最为深沉...',
+				type: 'boss',
+				text: '李玉珊剑势更盛：「学院的下篇，由我亲自送你过关。」',
 				prev: 'c3-4',
 				enemy: [
-					{ name: '鞠熒', id: 'ybsl_059starsFall1', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '宋橤', id: 'ybsl_059starsFall2', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '周靈', id: 'ybsl_059starsFall3', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '李曉', id: 'ybsl_059starsFall4', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '清月姑娘', id: 'ybsl_068qingyue', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '吕艳秋', id: 'ybsl_070lvyanqiu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
+					{ name: '李玉珊', id: 'ybsl_009liyushan', level: 15, tupolevel: 4, rank: 'epic', template: 'defense', buff: [] },
+					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 15, tupolevel: 4, rank: 'epicfake', template: 'defense', buff: [] },
+					{ name: '吴格格', id: 'ybsl_007wugege', level: 15, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '学生会干事', id: 'ybsl_053qiuer', level: 15, tupolevel: 4, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '冰晶傀儡', id: 'ybsl_054yueer', level: 15, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '试炼傀儡', id: 'ybsl_019shengyan', level: 15, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
 			'c3-6': {
-				name: '五重梦境',
+				name: '图书馆骚动·夜',
 				id: 'c3-6',
 				type: 'battle',
-				text: '五道身影将你包围...',
+				text: '深夜的图书馆，伏击者比白日更凶悍...',
 				prev: 'c3-5',
 				enemy: [
-					{ name: '小慧', id: 'ybsl_033xiaohui', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '蛇妃', id: 'db_ybsl_067snake', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '幻晴', id: 'ybsl_018huanqing', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '江雪舞', id: 'ybsl_046jiangxuewu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '蚕', id: 'ybsl_026can', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '雨', id: 'ybsl_027rain', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
+					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', level: 16, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '学院医师', id: 'ybsl_037diamondqueen', level: 16, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '雪原猎手', id: 'ybsl_121tujing', level: 16, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '低年级生', id: 'ybsl_122wangbingyu', level: 16, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '高年级生', id: 'ybsl_123xuelang', level: 16, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '风纪委员', id: 'ybsl_045gaocong', level: 16, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
 			'c3-7': {
-				name: '香紫姑娘',
+				name: '冰封回廊·极',
 				id: 'c3-7',
 				type: 'battle',
-				text: '紫色的香气令人沉醉...',
+				text: '极寒回廊中，冰系精锐结阵以待...',
 				prev: 'c3-6',
 				enemy: [
-					{ name: '彡', id: 'ybsl_047shan', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '玉蝶心', id: 'ybsl_092handan', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '黎', id: 'ybsl_029dawn', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '熙', id: 'ybsl_036bright', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '方块公主', id: 'ybsl_037diamondqueen', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '卞秋雯', id: 'ybsl_038bianqiuwen', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
+					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 18, tupolevel: 4, rank: 'epicfake', template: 'defense', buff: [] },
+					{ name: '吴格格', id: 'ybsl_007wugege', level: 18, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '学院卫兵', id: 'ybsl_019shengyan', level: 18, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '图书管理员', id: 'ybsl_024yuetong', level: 18, tupolevel: 4, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '巡逻队员', id: 'ybsl_055zhengyan', level: 18, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '学生会干事', id: 'ybsl_053qiuer', level: 18, tupolevel: 4, rank: 'rare', template: 'defense', buff: [] }
 				],
 			},
 			'c3-8': {
-				name: '四方围攻',
+				name: '社团冲突·总决',
 				id: 'c3-8',
 				type: 'battle',
-				text: '四面的敌人同时袭来...',
+				text: '社团总决战，双方精锐悉数上阵...',
 				prev: 'c3-7',
 				enemy: [
-					{ name: '胡瑞航', id: 'ybsl_044huruihang', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '张汨', id: 'ybsl_047zhangmi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '吴爽', id: 'ybsl_048wushuang', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '王冰雨', id: 'ybsl_122wangbingyu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '涂静', id: 'ybsl_121tujing', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '雪琅', id: 'ybsl_123xuelang', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
+					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 19, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },
+					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 19, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '冰晶傀儡', id: 'ybsl_054yueer', level: 19, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '试炼傀儡', id: 'ybsl_045gaocong', level: 19, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '学院医师', id: 'ybsl_037diamondqueen', level: 19, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '雪原猎手', id: 'ybsl_121tujing', level: 19, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
 			'c3-9': {
-				name: '朱焌',
+				name: '学院祭前夜·终',
 				id: 'c3-9',
 				type: 'battle',
-				text: '朱红的身影闪烁着危险的光芒...',
+				text: '学院祭前夜的最后围堵，学员倾尽所学...',
 				prev: 'c3-8',
 				enemy: [
-					{ name: '香紫姑娘', id: 'ybsl_069xiangzi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '朱焌', id: 'ybsl_076zhujun', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '涂山水璃', id: 'ybsl_107tushanshuili', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '王海茹', id: 'ybsl_015wanghairu', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '孙丽松', id: 'ybsl_001sunlisong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '吴雨欣', id: 'ybsl_008wuyuxin', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] }
+					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', level: 20, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '高年级生', id: 'ybsl_123xuelang', level: 20, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '低年级生', id: 'ybsl_122wangbingyu', level: 20, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '学院卫兵', id: 'ybsl_019shengyan', level: 20, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '风纪委员', id: 'ybsl_045gaocong', level: 20, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '图书管理员', id: 'ybsl_024yuetong', level: 20, tupolevel: 4, rank: 'rare', template: 'defense', buff: [] }
 				],
 			},
 
-			// --- Boss关: 1伪史诗 + 5稀有 ---
+			// --- 第10小节 大BOSS：吴雨欣（legend） ---
 			'c3-10': {
-				name: '第三章BOSS',
+				name: '大BOSS·学院首席吴雨欣·极',
 				id: 'c3-10',
 				type: 'boss',
-				text: '第三章最终BOSS战！',
+				text: '学院首席吴雨欣全力出手：「雪国学院的下篇，到此为止——若你接得住。」',
 				prev: 'c3-9',
 				enemy: [
-					// 伪史诗 Boss
-					{ name: '王汉桢', id: 'ybsl_006wanghanzhen', hp: 1980, atk: 266, def: 94, spe: 166, buff: [] },
-					// 5个稀有
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '满城柒', id: 'ybsl_016manchengqi', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{ name: '涂山小红', id: 'ybsl_017xiaohong', hp: 1320, atk: 181, def: 58, spe: 156, buff: [] },
-					{}
+					{ name: '吴雨欣', id: 'ybsl_008wuyuxin', level: 25, tupolevel: 4, rank: 'legend', template: 'balanced', buff: [] },
+					{ name: '周玥', id: 'ybsl_010zhouyue', level: 25, tupolevel: 4, rank: 'epic', template: 'balanced', buff: [] },
+					{ name: '李玉珊', id: 'ybsl_009liyushan', level: 25, tupolevel: 4, rank: 'epic', template: 'defense', buff: [] },
+					{ name: '学生会干事', id: 'ybsl_053qiuer', level: 25, tupolevel: 4, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '冰晶傀儡', id: 'ybsl_054yueer', level: 25, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '试炼傀儡', id: 'ybsl_122wangbingyu', level: 25, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
 		}
 	},
 
-	// ========== 第四章：记忆风暴 ==========
+	// ========== 第四章：堕魂深渊 ==========
 	chapter4: {
-		name: '第四章：记忆风暴',
+		name: '第四章：堕魂深渊',
 		difficulty: 'normal',
 		procedure: [
 			'c4-1', 'c4-2', 'c4-3', 'c4-4', 'c4-5',
 			'c4-6', 'c4-7', 'c4-8', 'c4-9', 'c4-10'
 		],
 		eventPack: {
-			// 关卡1：六敌 - 陈爱琳 + 张玉洁 + 王若冰 + 满城柒 + 涂山小红 + 贾雨桐
+			// --- 第1小节：深渊前哨（6杂兵，Lv.25） ---
 			'c4-1': {
-				name: '风暴前夕',
+				name: '深渊前哨',
 				id: 'c4-1',
 				type: 'battle',
-				text: '记忆的风暴即将来临...',
+				text: '堕魂深渊的入口处，无数被吞噬的怨灵在黑暗中蠢蠢欲动，前哨的爪牙已列阵相候。',
 				prev: null,
 				enemy: [
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
-					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
-					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
-					{ name: '满城柒', id: 'ybsl_016manchengqi', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
-					{ name: '涂山小红', id: 'ybsl_017xiaohong', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
-					{ name: '贾雨桐', id: 'ybsl_020jiayutong', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 25, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '深渊爪牙', id: 'ybsl_024yuetong', level: 25, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '怨灵祭司', id: 'ybsl_045gaocong', level: 25, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '镇魂卫', id: 'ybsl_053qiuer', level: 25, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '噬魂者', id: 'ybsl_054yueer', level: 25, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '引魂人', id: 'ybsl_055zhengyan', level: 25, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
-			// 关卡2：六敌 - 李玉珊 + 周玥 + 高宇航 + 郑佳怡 + 尹超跃 + 吴格格
+			// --- 第2小节：深渊回响（6杂兵，Lv.27） ---
 			'c4-2': {
-				name: '记忆洪流',
+				name: '深渊回响',
 				id: 'c4-2',
 				type: 'battle',
-				text: '记忆的洪流汹涌而来...',
+				text: '越往深处，怨念越浓。回廊两侧的噬魂之物循声涌来。',
 				prev: 'c4-1',
 				enemy: [
-					{ name: '李玉珊', id: 'ybsl_009liyushan', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
-					{ name: '周玥', id: 'ybsl_010zhouyue', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '高宇航', id: 'ybsl_011gaoyuhang', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
-					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
-					{ name: '尹超跃', id: 'ybsl_013yinji', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '吴格格', id: 'ybsl_007wugege', hp: 840, atk: 187, def: 40, spe: 150, buff: [] },
+					{ name: '深渊游魂', id: 'ybsl_037diamondqueen', level: 27, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '裂魂傀儡', id: 'ybsl_121tujing', level: 27, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '寒霜怨灵', id: 'ybsl_122wangbingyu', level: 27, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 27, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '噬魂者', id: 'ybsl_054yueer', level: 27, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '引魂人', id: 'ybsl_055zhengyan', level: 27, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
-			// 关卡3：六敌 - 闫爽 + 张晴 + 岳瞳 + 王贺 + 史庆宇 + 蘋姉
+			// --- 第3小节：小BOSS·尹超跃（Lv.29） ---
 			'c4-3': {
-				name: '交织的命运',
+				name: '小BOSS·尹超跃',
 				id: 'c4-3',
-				type: 'battle',
-				text: '命运的丝线将她们交织...',
+				type: 'boss',
+				text: '深渊守将尹超跃横身拦路：「想靠近深渊之心？先闯过我这关。」',
 				prev: 'c4-2',
 				enemy: [
-					{ name: '闫爽', id: 'ybsl_003yanshuang', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '张晴', id: 'ybsl_018zhangqing', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
-					{ name: '岳瞳', id: 'ybsl_024yuetong', hp: 840, atk: 187, def: 40, spe: 150, buff: [] },
-					{ name: '王贺', id: 'ybsl_025wanghe', hp: 1312, atk: 120, def: 62, spe: 150, buff: [] },
-					{ name: '史庆宇', id: 'ybsl_025shiqingyu', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
-					{ name: '蘋姉', id: 'ybsl_042pingzi', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
+					{ name: '尹超跃', id: 'ybsl_013yinji', level: 29, tupolevel: 6, rank: 'epic', template: 'damger', buff: [] },
+					{ name: '深渊爪牙', id: 'ybsl_024yuetong', level: 29, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '镇魂卫', id: 'ybsl_053qiuer', level: 29, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '怨灵祭司', id: 'ybsl_045gaocong', level: 29, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '裂魂傀儡', id: 'ybsl_121tujing', level: 29, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '寒霜怨灵', id: 'ybsl_122wangbingyu', level: 29, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
-			// 关卡4：六敌 - 盛妍 + 王婉儿 + 悦儿 + 郑琰 + 房佳谕 + 高聪
+			// --- 第4小节：深渊迷雾（6杂兵，Lv.31） ---
 			'c4-4': {
-				name: '记忆回响',
+				name: '深渊迷雾',
 				id: 'c4-4',
 				type: 'battle',
-				text: '记忆在脑海中回响...',
+				text: '浓雾中杀机四伏，迷失者尽数化作深渊的养分。',
 				prev: 'c4-3',
 				enemy: [
-					{ name: '盛妍', id: 'ybsl_019shengyan', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '王婉儿', id: 'ybsl_049waner', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
-					{ name: '悦儿', id: 'ybsl_054yueer', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
-					{ name: '郑琰', id: 'ybsl_055zhengyan', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '房佳谕', id: 'ybsl_043fangjiayu', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
-					{ name: '高聪', id: 'ybsl_045gaocong', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
+					{ name: '深渊游魂', id: 'ybsl_037diamondqueen', level: 31, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 31, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '噬魂者', id: 'ybsl_054yueer', level: 31, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '引魂人', id: 'ybsl_055zhengyan', level: 31, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '镇魂卫', id: 'ybsl_053qiuer', level: 31, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '裂魂傀儡', id: 'ybsl_121tujing', level: 31, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
-			// 关卡5：六敌 - 闫爽 + 秋儿 + 鞠熒 + 宋橤 + 周靈 + 李曉
+			// --- 第5小节：魂潮奔涌（6杂兵，Lv.33） ---
 			'c4-5': {
-				name: '星辰之怒',
+				name: '魂潮奔涌',
 				id: 'c4-5',
 				type: 'battle',
-				text: '星辰们愤怒了...',
+				text: '深渊之心传来搏动，魂潮如洪流般向你卷来。',
 				prev: 'c4-4',
 				enemy: [
-					{ name: '闫爽', id: 'ybsl_003yanshuang', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '秋儿', id: 'ybsl_053qiuer', hp: 1312, atk: 120, def: 62, spe: 150, buff: [] },
-					{ name: '鞠熒', id: 'ybsl_059starsFall1', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
-					{ name: '宋橤', id: 'ybsl_059starsFall2', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
-					{ name: '周靈', id: 'ybsl_059starsFall3', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
-					{ name: '李曉', id: 'ybsl_059starsFall4', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
+					{ name: '深渊爪牙', id: 'ybsl_024yuetong', level: 33, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '寒霜怨灵', id: 'ybsl_122wangbingyu', level: 33, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '怨灵祭司', id: 'ybsl_045gaocong', level: 33, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '镇魂卫', id: 'ybsl_053qiuer', level: 33, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '引魂人', id: 'ybsl_055zhengyan', level: 33, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '深渊游魂', id: 'ybsl_037diamondqueen', level: 33, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] }
 				],
 			},
-			// 关卡6：六敌 - 清月姑娘 + 吕艳秋 + 小慧 + 蛇妃 + 幻晴 + 江雪舞
+			// --- 第6小节：小BOSS·孙丽松（Lv.36） ---
 			'c4-6': {
-				name: '记忆迷宫',
+				name: '小BOSS·孙丽松',
 				id: 'c4-6',
-				type: 'battle',
-				text: '记忆的迷宫错综复杂...',
+				type: 'boss',
+				text: '孙丽松自魂雾中现身，指尖凝起幽蓝火焰：「这一程，由我送你下坠。」',
 				prev: 'c4-5',
 				enemy: [
-					{ name: '清月姑娘', id: 'ybsl_068qingyue', hp: 840, atk: 187, def: 40, spe: 150, buff: [] },
-					{ name: '吕艳秋', id: 'ybsl_070lvyanqiu', hp: 1312, atk: 120, def: 62, spe: 150, buff: [] },
-					{ name: '小慧', id: 'ybsl_033xiaohui', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '蛇妃', id: 'db_ybsl_067snake', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '幻晴', id: 'ybsl_018huanqing', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
-					{ name: '江雪舞', id: 'ybsl_046jiangxuewu', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
+					{ name: '孙丽松', id: 'ybsl_001sunlisong', level: 36, tupolevel: 6, rank: 'epic', template: 'damger', buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 36, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '噬魂者', id: 'ybsl_054yueer', level: 36, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '镇魂卫', id: 'ybsl_053qiuer', level: 36, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '裂魂傀儡', id: 'ybsl_121tujing', level: 36, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '寒霜怨灵', id: 'ybsl_122wangbingyu', level: 36, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
-			// 关卡7：六敌 - 蚕 + 雨 + 彡 + 玉蝶心 + 黎 + 熙
+			// --- 第7小节：残魂炼狱（6杂兵，Lv.38） ---
 			'c4-7': {
-				name: '元素风暴',
+				name: '残魂炼狱',
 				id: 'c4-7',
 				type: 'battle',
-				text: '元素之力在咆哮...',
+				text: '炼狱般的深渊底层，残魂被炼作厮杀的兵器。',
 				prev: 'c4-6',
 				enemy: [
-					{ name: '蚕', id: 'ybsl_026can', hp: 840, atk: 187, def: 40, spe: 150, buff: [] },
-					{ name: '雨', id: 'ybsl_027rain', hp: 1312, atk: 120, def: 62, spe: 150, buff: [] },
-					{ name: '彡', id: 'ybsl_047shan', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '玉蝶心', id: 'ybsl_092handan', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '黎', id: 'ybsl_029dawn', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
-					{ name: '熙', id: 'ybsl_036bright', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
+					{ name: '深渊游魂', id: 'ybsl_037diamondqueen', level: 38, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '深渊爪牙', id: 'ybsl_024yuetong', level: 38, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '怨灵祭司', id: 'ybsl_045gaocong', level: 38, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '引魂人', id: 'ybsl_055zhengyan', level: 38, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '镇魂卫', id: 'ybsl_053qiuer', level: 38, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '裂魂傀儡', id: 'ybsl_121tujing', level: 38, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
-			// 关卡8：六敌 - 方块公主 + 卞秋雯 + 胡瑞航 + 张汨 + 吴爽 + 王冰雨
+			// --- 第8小节：深渊之喉（6杂兵，Lv.40） ---
 			'c4-8': {
-				name: '梦境深渊',
+				name: '深渊之喉',
 				id: 'c4-8',
 				type: 'battle',
-				text: '深渊中的敌人蠢蠢欲动...',
+				text: '逼近深渊之喉，守卫的嘶吼震得魂屑簌簌而落。',
 				prev: 'c4-7',
 				enemy: [
-					{ name: '方块公主', id: 'ybsl_037diamondqueen', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
-					{ name: '卞秋雯', id: 'ybsl_038bianqiuwen', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '胡瑞航', id: 'ybsl_044huruihang', hp: 840, atk: 187, def: 40, spe: 150, buff: [] },
-					{ name: '张汨', id: 'ybsl_047zhangmi', hp: 1312, atk: 120, def: 62, spe: 150, buff: [] },
-					{ name: '吴爽', id: 'ybsl_048wushuang', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '王冰雨', id: 'ybsl_122wangbingyu', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 40, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '噬魂者', id: 'ybsl_054yueer', level: 40, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '寒霜怨灵', id: 'ybsl_122wangbingyu', level: 40, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '镇魂卫', id: 'ybsl_053qiuer', level: 40, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '引魂人', id: 'ybsl_055zhengyan', level: 40, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '深渊游魂', id: 'ybsl_037diamondqueen', level: 40, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] }
 				],
 			},
-			// 关卡9：六敌 - 涂静 + 雪琅 + 香紫姑娘 + 朱焌 + 涂山水璃 + 王海茹
+			// --- 第9小节：小BOSS·王汉桢（Lv.43） ---
 			'c4-9': {
-				name: '记忆核心',
+				name: '小BOSS·王汉桢',
 				id: 'c4-9',
-				type: 'battle',
-				text: '记忆的核心就在眼前...',
+				type: 'boss',
+				text: '王汉桢立于深渊之喉尽头，剑光如霜：「再往前，便是主人的领域。」',
 				prev: 'c4-8',
 				enemy: [
-					{ name: '涂静', id: 'ybsl_121tujing', hp: 1312, atk: 120, def: 62, spe: 150, buff: [] },
-					{ name: '雪琅', id: 'ybsl_123xuelang', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '香紫姑娘', id: 'ybsl_069xiangzi', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
-					{ name: '朱焌', id: 'ybsl_076zhujun', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
-					{ name: '涂山水璃', id: 'ybsl_107tushanshuili', hp: 840, atk: 187, def: 40, spe: 150, buff: [] },
-					{ name: '王海茹', id: 'ybsl_015wanghairu', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
+					{ name: '王汉桢', id: 'ybsl_006wanghanzhen', level: 43, tupolevel: 6, rank: 'epic', template: 'balanced', buff: [] },
+					{ name: '深渊爪牙', id: 'ybsl_024yuetong', level: 43, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '怨灵祭司', id: 'ybsl_045gaocong', level: 43, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
+					{ name: '镇魂卫', id: 'ybsl_053qiuer', level: 43, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '裂魂傀儡', id: 'ybsl_121tujing', level: 43, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] },
+					{ name: '寒霜怨灵', id: 'ybsl_122wangbingyu', level: 43, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] }
 				],
 			},
-			// 关卡10：BOSS - 吴雨欣 + 王汉桢 + 孙丽松
+			// --- 第10小节：大BOSS·堕魂之主陈爱琳（Lv.46） ---
 			'c4-10': {
-				name: '第四章BOSS',
+				name: '大BOSS·堕魂之主陈爱琳',
 				id: 'c4-10',
 				type: 'boss',
-				text: '第四章最终BOSS战！',
+				text: '深渊尽头，堕魂之主陈爱琳自王座起身，尹超跃、孙丽松、王汉桢分立其身侧：「归来的魂魄啊，这一次，由我亲自收下。」',
 				prev: 'c4-9',
 				enemy: [
-					{ name: '吴雨欣', id: 'ybsl_008wuyuxin', hp: 1312, atk: 120, def: 62, spe: 150, buff: [] },
-					{ name: '王汉桢', id: 'ybsl_006wanghanzhen', hp: 1050, atk: 150, def: 50, spe: 150, buff: [] },
-					{ name: '孙丽松', id: 'ybsl_001sunlisong', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
-					{}, {}, {}
+					{ name: '陈爱琳', id: 'ybsl_002chenailin', level: 46, tupolevel: 6, rank: 'legend', template: 'balanced', buff: [] },
+					{ name: '孙丽松', id: 'ybsl_001sunlisong', level: 46, tupolevel: 6, rank: 'epic', template: 'damger', buff: [] },
+					{ name: '王汉桢', id: 'ybsl_006wanghanzhen', level: 46, tupolevel: 6, rank: 'epic', template: 'balanced', buff: [] },
+					{ name: '尹超跃', id: 'ybsl_013yinji', level: 46, tupolevel: 6, rank: 'epic', template: 'damger', buff: [] },
+					{ name: '镇魂卫', id: 'ybsl_053qiuer', level: 46, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
+					{ name: '裂魂傀儡', id: 'ybsl_121tujing', level: 46, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] }
 				],
 			},
 		}
@@ -1131,7 +1161,7 @@ const eventList = {//事件列表
 				text: '深渊的入口已经打开...',
 				prev: null,
 				enemy: [
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 26, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
 					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
 					{ name: '满城柒', id: 'ybsl_016manchengqi', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
@@ -1301,7 +1331,7 @@ const eventList = {//事件列表
 				text: '通往彼岸的门已经开启...',
 				prev: null,
 				enemy: [
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 26, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
 					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
 					{ name: '满城柒', id: 'ybsl_016manchengqi', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
@@ -1471,7 +1501,7 @@ const eventList = {//事件列表
 				text: '黄昏的序曲正在奏响...',
 				prev: null,
 				enemy: [
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 26, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
 					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
 					{ name: '满城柒', id: 'ybsl_016manchengqi', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
@@ -1641,7 +1671,7 @@ const eventList = {//事件列表
 				text: '永恒的序章就此展开...',
 				prev: null,
 				enemy: [
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 26, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
 					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
 					{ name: '满城柒', id: 'ybsl_016manchengqi', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
@@ -1811,7 +1841,7 @@ const eventList = {//事件列表
 				text: '终焉的序曲已经响起...',
 				prev: null,
 				enemy: [
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 26, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
 					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
 					{ name: '满城柒', id: 'ybsl_016manchengqi', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
@@ -1981,7 +2011,7 @@ const eventList = {//事件列表
 				text: '新生的黎明即将到来...',
 				prev: null,
 				enemy: [
-					{ name: '陈爱琳', id: 'ybsl_002chenailin', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
+					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 26, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '张玉洁', id: 'ybsl_004zhangyujie', hp: 896, atk: 200, def: 42, spe: 160, buff: [] },
 					{ name: '王若冰', id: 'ybsl_005wangruobing', hp: 1400, atk: 128, def: 66, spe: 160, buff: [] },
 					{ name: '满城柒', id: 'ybsl_016manchengqi', hp: 1120, atk: 160, def: 53, spe: 160, buff: [] },
