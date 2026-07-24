@@ -1555,6 +1555,41 @@ body {
 	line-height: 1.6;
 }
 
+/* 旧版战斗结算 - 奖励与战利品 */
+.battle-result-reward {
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.battle-result-loot {
+	margin-top: 10px;
+	text-align: left;
+}
+
+.battle-result-section-title {
+	font-size: 12px;
+	color: #9ad;
+	border-bottom: 1px solid #444;
+	padding-bottom: 3px;
+	margin-bottom: 6px;
+}
+
+.battle-result-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 5px;
+	justify-content: center;
+}
+
+.battle-result-chip {
+	background: #333;
+	border: 1px solid #555;
+	border-radius: 12px;
+	padding: 3px 9px;
+	font-size: 12px;
+	color: #eee;
+}
+
 /* 通关奖励展示面板 */
 .reward-overlay {
 	position: fixed;

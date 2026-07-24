@@ -2082,13 +2082,41 @@ Battle.showBattleResult = function showBattleResult(winner) {
 	dialog.appendChild(stats);
 
 	if (winner === 'player') {
-		const goldReward = bs.expectedGold || 0;
+		// 奖励计划：优先用开战时预生成的（金币算准、战利品名字确定），否则退回旧 expectedGold
+		const plan = bs.rewardPlan || null;
+		const goldReward = (plan && plan.gold) || bs.expectedGold || 0;
 		const rewardDiv = document.createElement('div');
-		rewardDiv.className = 'battle-result-stats';
+		rewardDiv.className = 'battle-result-stats battle-result-reward';
 		rewardDiv.style.color = '#ffd700';
 		rewardDiv.style.marginTop = '8px';
 		rewardDiv.innerHTML = `💰 金币奖励: +${goldReward}`;
 		dialog.appendChild(rewardDiv);
+
+		// 战利品展示（武将 / 宝物 / 道具）
+		if (plan) {
+			const lootSection = (title, list) => {
+				if (!list || !list.length) return;
+				const wrap = document.createElement('div');
+				wrap.className = 'battle-result-loot';
+				const t = document.createElement('div');
+				t.className = 'battle-result-section-title';
+				t.textContent = `${title}（${list.length}）`;
+				wrap.appendChild(t);
+				const row = document.createElement('div');
+				row.className = 'battle-result-chips';
+				list.forEach(x => {
+					const chip = document.createElement('span');
+					chip.className = 'battle-result-chip';
+					chip.textContent = x.count > 1 ? `${x.name} ×${x.count}` : x.name;
+					row.appendChild(chip);
+				});
+				wrap.appendChild(row);
+				dialog.appendChild(wrap);
+			};
+			lootSection('获得武将', plan.chars);
+			lootSection('获得宝物', plan.treasures);
+			lootSection('获得道具', plan.items);
+		}
 	}
 
 	const btn = document.createElement('button');
@@ -2681,6 +2709,7 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 		log: [],
 		battleStarted: false,
 		expectedGold: options.goldReward || 0,
+		rewardPlan: options.rewardPlan || null,
 	};
 
 	renderBattleView();

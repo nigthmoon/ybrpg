@@ -6333,6 +6333,8 @@ function renderChapterEventList(container, chapterKey) {
 					// 【新增】传递事件配置的金币奖励
 					goldReward: event.gold || 0,
 					goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
+					// 预生成奖励计划，供旧版战斗结算面板展示（仅固定配置事件）
+					rewardPlan: event.reward ? buildRewardPlan(event, currentDifficulty, index) : null,
 					onWin: function () {
 						if (!window.playerProgress) window.playerProgress = {};
 						if (!window.playerProgress[checkEventId]) {
@@ -6586,6 +6588,8 @@ function renderChapterEventList(container, chapterKey) {
 						// 【新增】传递事件配置的金币奖励
 						goldReward: event.gold || 0,
 						goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
+						// 预生成奖励计划，供旧版战斗结算面板展示（仅固定配置事件）
+						rewardPlan: event.reward ? buildRewardPlan(event, currentDifficulty, index) : null,
 						onWin: () => {
 							if (!window.playerProgress) window.playerProgress = {};
 							if (!window.playerProgress[checkEventId]) {
@@ -6626,15 +6630,16 @@ function renderChapterEventList(container, chapterKey) {
 							}
 							// 事件完成后自动存档
 							SaveManager.autoSave();
-						// 弹出奖励展示面板（金币 + 掉落武将/宝物/道具）
-						showRewardPanel({
-							title: '通关成功',
-							sub: `${DIFFICULTY_SCALE[diffKey]?.name || '普通'}难度 · ${event.name}`,
-							gold: goldReward,
-							chars: dropStat.chars,
-							treasures: dropStat.treasures,
-							items: dropStat.items,
-						});
+						// 【已停用】新版奖励面板暂不调用，函数保留备用
+						// 奖励展示改由旧版战斗结算面板（showBattleResult）呈现，数据来自 battleState.rewardPlan
+						// showRewardPanel({
+						// 	title: '通关成功',
+						// 	sub: `${DIFFICULTY_SCALE[diffKey]?.name || '普通'}难度 · ${event.name}`,
+						// 	gold: goldReward,
+						// 	chars: dropStat.chars,
+						// 	treasures: dropStat.treasures,
+						// 	items: dropStat.items,
+						// });
 							// 重新渲染副本视图
 							const dungeonView = document.getElementById('dungeon-view');
 							if (dungeonView) {
@@ -7439,7 +7444,59 @@ function grantFixedReward(reward, mult, stat) {
 }
 
 /**
- * 通关奖励展示面板
+ * 开战时预生成「奖励计划」，供旧版战斗结算面板展示。
+ * 主线 100 关均为 event.reward 固定配置（确定性，可提前算准）；
+ * 无配置事件走随机兜底路径，仅展示数量/品质，不展示具体名字。
+ * @returns {{gold:number, chars:Array<{name:string,count:number}>, treasures:Array, items:Array}|null}
+ */
+function buildRewardPlan(event, diffKey, index) {
+	if (!event) return null;
+	const dropMult = DROP_MULT[diffKey] || 1;
+	const goldScale = DIFFICULTY_SCALE[diffKey]?.gold || 1.0;
+	const rewardCfg = event.reward || null;
+	const baseGold = (rewardCfg && rewardCfg.gold != null) ? rewardCfg.gold
+		: (event.gold != null) ? event.gold
+		: defaultLevelGold(event.id);
+	const gold = Math.floor(baseGold * goldScale);
+
+	const agg = (arr) => {
+		const m = {};
+		(arr || []).forEach(n => { if (n) m[n] = (m[n] || 0) + 1; });
+		return Object.keys(m).map(name => ({ name, count: m[name] }));
+	};
+
+	let chars = [], treasures = [], items = [];
+	if (rewardCfg) {
+		// 固定配置：确定性，名字可提前解析
+		chars = agg((rewardCfg.characters || [])
+			.filter(id => !DROP_EXCLUDE_IDS[id])
+			.map(id => (characterList[id] && characterList[id].name) || id)
+			.flatMap(n => Array(dropMult).fill(n)));
+		treasures = agg((rewardCfg.treasures || [])
+			.map(id => (TREASURE_DEFS[id] && TREASURE_DEFS[id].name) || id)
+			.flatMap(n => Array(dropMult).fill(n)));
+		items = agg((rewardCfg.items || [])
+			.map(id => (ITEM_DEFS[id] && ITEM_DEFS[id].name) || id)
+			.flatMap(n => Array(dropMult).fill(n)));
+	} else {
+		// 随机兜底：仅展示数量与品质（主线不会走到这里）
+		const rankCounts = { '随机稀有武将': dropMult };
+		const isMiniBoss = (event.type === 'boss' && index !== 9);
+		const isBigBoss = (index === 9);
+		if (isMiniBoss) {
+			rankCounts['随机伪史诗武将'] = (rankCounts['随机伪史诗武将'] || 0) + dropMult;
+			rankCounts['随机史诗武将'] = (rankCounts['随机史诗武将'] || 0) + dropMult;
+		}
+		if (isBigBoss) {
+			rankCounts['随机传说武将'] = (rankCounts['随机传说武将'] || 0) + dropMult;
+		}
+		chars = Object.keys(rankCounts).map(name => ({ name, count: rankCounts[name] }));
+	}
+	return { gold, chars, treasures, items };
+}
+
+/**
+ * 通关奖励展示面板（新版，当前停用，保留备用）
  * @param {Object} opt
  * @param {string} opt.title   主标题
  * @param {string} opt.sub     副标题（如 难度·关卡名）
