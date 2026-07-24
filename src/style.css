@@ -1723,6 +1723,19 @@ body {
 	margin-top: 0;
 }
 
+/* 秘境首通奖励提示（主角升阶 / 品质） */
+.preview-secret-note {
+	margin: 10px 0;
+	padding: 8px 12px;
+	border-radius: 8px;
+	background: rgba(255,215,0,0.12);
+	border: 1px solid rgba(255,215,0,0.5);
+	color: #ffd700;
+	font-size: 13px;
+	font-weight: bold;
+	text-align: center;
+}
+
 .reward-title {
 	font-size: 20px;
 	font-weight: bold;

@@ -32,7 +32,7 @@ class GameData {
 
 		// ========== 玩家偏好设置 ==========
 		playerPreferences: {
-			showFormulaDetail: true,
+			showFormulaDetail: false,
 			bagTab: 'char'
 		},
 			

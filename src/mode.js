@@ -7749,6 +7749,24 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 	};
 
 	const diffName = DIFFICULTY_SCALE[diffKey]?.name || diffKey;
+
+	// 秘境首通奖励文案（与战斗结算 onWin 逻辑保持一致）
+	let secretText = '';
+	if (isSP) {
+		if (chapterKey === 'spEvent1') {
+			const m = String(eventId).match(/sp1-(\d+)/);
+			const lv = m ? parseInt(m[1]) : 1;
+			secretText = `首次通过可令主角突破至 ${lv} 阶`;
+		} else if (chapterKey === 'spEvent2') {
+			const rankMap = {
+				'sp2-1': 'common', 'sp2-2': 'rare', 'sp2-3': 'epicfake',
+				'sp2-4': 'epic', 'sp2-5': 'legend', 'sp2-6': 'kami',
+			};
+			const r = rankMap[eventId];
+			if (r) secretText = `首次通过可令主角提升至「${getRankLabel(r)}」品质`;
+		}
+	}
+
 	const overlay = document.createElement('div');
 	overlay.className = 'preview-overlay';
 	const panel = document.createElement('div');
@@ -7757,6 +7775,7 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 		`<div class="reward-title">📦 产出预览</div>` +
 		`<div class="reward-sub">${diffName}难度 · ${event.name || eventId}</div>` +
 		`<div class="reward-gold">💰 ${plan.gold || 0} <small>金币</small></div>` +
+		(isSP && secretText ? `<div class="preview-secret-note">★ ${secretText}</div>` : '') +
 		section('获得武将', plan.chars) +
 		section('获得宝物', plan.treasures) +
 		section('获得道具', plan.items) +
@@ -8165,7 +8184,7 @@ function initNewGame() {
 	window.treasureEquipData = {}; // 宝物装备数据
 	window.treasureBagData = {}; // 宝物背包数据
 	window.autoBattle = false;
-	window.showFormulaDetail = true; // 属性面板显示公式，默认开启
+	window.showFormulaDetail = false; // 属性面板显示公式，默认关闭
 
 	// 初始化宝物背包
 	Game.Bag.ensureInv();
