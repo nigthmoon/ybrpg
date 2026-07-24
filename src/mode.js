@@ -6254,27 +6254,41 @@ function renderChapterEventList(container, chapterKey) {
 			levelBtn.className = 'ybrpg-btn';
 			levelBtn.style.width = '95%';
 			levelBtn.style.marginBottom = '5px';
+			levelBtn.style.position = 'relative';
+			levelBtn.style.paddingRight = '48px';
+			levelBtn.style.textAlign = 'left';
 
-			// 构建显示文本
-			let btnText = `▶ ${eventData.name}`;
-			if (isNew) {
-				btnText += ' <span style="color:#ff4444;font-weight:bold;font-size:12px;">(新)</span>';
-			}
-
-			// 样式区分：锁定状态
+			// 关卡名（仅展示）
+			const nameSpan = document.createElement('span');
 			if (isLocked) {
 				levelBtn.style.opacity = '0.6';
 				levelBtn.style.cursor = 'not-allowed';
-				// 锁定状态下不显示"新"，或者你可以选择显示"🔒 ... (需前置)"
-				levelBtn.innerHTML = `🔒 ${eventData.name} <span style="font-size:12px;color:#aaa;">(${lockReason})</span>`;
+				nameSpan.textContent = `🔒 ${eventData.name} (${lockReason})`;
 			} else {
-				levelBtn.innerHTML = btnText; // 使用 innerHTML 以支持标签样式
-				// 可选：如果是Boss关或特殊关，加高亮
+				nameSpan.textContent = `▶ ${eventData.name}`;
+				if (isNew) {
+					const tag = document.createElement('span');
+					tag.style.cssText = 'color:#ff4444;font-weight:bold;font-size:12px;';
+					tag.textContent = ' (新)';
+					nameSpan.appendChild(tag);
+				}
+				// 如果是Boss关或特殊关，加高亮
 				if (eventData.type === 'boss') {
 					levelBtn.style.borderColor = '#ff4444';
-					levelBtn.style.color = '#ff4444';
+					nameSpan.style.color = '#ff4444';
 				}
 			}
+			levelBtn.appendChild(nameSpan);
+
+			// 右侧「查看」热区：点击仅弹产出预览，不进入关卡
+			const viewZone = document.createElement('span');
+			viewZone.className = 'lv-view-zone';
+			viewZone.textContent = '查看';
+			viewZone.onclick = (e) => {
+				e.stopPropagation();
+				showOutputPreview(eventData, currentDifficulty, index, eventId);
+			};
+			levelBtn.appendChild(viewZone);
 
 			// 3. 点击事件
 			levelBtn.onclick = () => {
@@ -6523,21 +6537,34 @@ function renderChapterEventList(container, chapterKey) {
 			if (isBigBoss) levelBtn.classList.add('boss-big');
 			levelBtn.style.width = '90%';
 			levelBtn.style.fontSize = '14px';
-			levelBtn.style.padding = '8px';
+			levelBtn.style.padding = '8px 48px 8px 10px';
+			levelBtn.style.position = 'relative';
+			levelBtn.style.textAlign = 'left';
 
+			// 关卡名（仅展示，含小/大BOSS配色）
 			const nameSpan = document.createElement('span');
 			nameSpan.textContent = event.name;
 			if (isSmallBoss) nameSpan.className = 'lv-boss-small';
 			else if (isBigBoss) nameSpan.className = 'lv-boss-big';
 			levelBtn.appendChild(nameSpan);
 
+			// 右侧「查看」热区：点击仅弹产出预览，不进入关卡
+			const viewZone = document.createElement('span');
+			viewZone.className = 'lv-view-zone';
+			viewZone.textContent = '查看';
+			viewZone.onclick = (e) => {
+				e.stopPropagation();
+				showOutputPreview(event, currentDifficulty, index, checkEventId);
+			};
+			levelBtn.appendChild(viewZone);
+
 			if (!isUnlocked) {
-				levelBtn.disabled = true;
 				levelBtn.style.opacity = '0.5';
 				levelBtn.style.cursor = 'not-allowed';
 				levelBtn.appendChild(document.createTextNode(' [未解锁]'));
-			} else {
-				levelBtn.onclick = () => {
+			}
+
+			const enterLevel = () => {
 					console.log(`进入副本: ${event.name}, ID: ${checkEventId}, 难度: ${currentDifficulty}`);
 
 					// 确保宝物装备数据已同步
@@ -6670,7 +6697,14 @@ function renderChapterEventList(container, chapterKey) {
 						}
 					});
 				};
-			}
+
+			levelBtn.onclick = () => {
+				if (!isUnlocked) {
+					Game.toast('该关卡尚未解锁', 'warning');
+					return;
+				}
+				enterLevel();
+			};
 			listContainer.appendChild(levelBtn);
 
 			// 更新 prevEventCompleted 供下一次循环使用
@@ -7520,6 +7554,53 @@ function buildRewardPlan(event, diffKey, index) {
 		chars = Object.keys(rankCounts).map(name => ({ name, count: rankCounts[name], icon: null }));
 	}
 	return { gold, chars, treasures, items };
+}
+
+/**
+ * 展示关卡产出预览（复用奖励面板样式，仅预览不发放）
+ */
+function showOutputPreview(event, diffKey, index, eventId) {
+	if (!event) return;
+	const plan = buildRewardPlan(event, diffKey, index) || { gold: 0, chars: [], treasures: [], items: [] };
+
+	const chip = (o) => {
+		const cnt = o.count > 1 ? `<span class="reward-cnt"> ×${o.count}</span>` : '';
+		const icon = o.icon ? `<img src="${o.icon}" class="reward-chip-icon" alt="">` : '';
+		const style = o.rank ? ` style="border-color:${getRankColor(o.rank)}"` : '';
+		return `<span class="reward-chip"${style}>${icon}${o.name}${cnt}</span>`;
+	};
+	const section = (title, list) => {
+		let h = `<div class="reward-section-title">${title}（${list.length}）</div>`;
+		if (list.length) {
+			h += '<div class="reward-list">' + list.map(chip).join('') + '</div>';
+		} else {
+			h += '<div class="reward-empty">无（按品质随机掉落）</div>';
+		}
+		return h;
+	};
+
+	const diffName = DIFFICULTY_SCALE[diffKey]?.name || diffKey;
+	const overlay = document.createElement('div');
+	overlay.className = 'reward-overlay';
+	const panel = document.createElement('div');
+	panel.className = 'reward-panel';
+	panel.innerHTML =
+		`<div class="reward-title">📦 产出预览</div>` +
+		`<div class="reward-sub">${diffName}难度 · ${event.name || eventId}</div>` +
+		`<div class="reward-gold">💰 ${plan.gold || 0} <small>金币</small></div>` +
+		section('获得武将', plan.chars) +
+		section('获得宝物', plan.treasures) +
+		section('获得道具', plan.items);
+
+	const okBtn = document.createElement('button');
+	okBtn.className = 'reward-ok-btn';
+	okBtn.textContent = '确定';
+	const close = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	okBtn.onclick = close;
+	overlay.onclick = (e) => { if (e.target === overlay) close(); };
+	panel.appendChild(okBtn);
+	overlay.appendChild(panel);
+	document.body.appendChild(overlay);
 }
 
 /**
