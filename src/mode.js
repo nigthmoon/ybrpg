@@ -6252,11 +6252,11 @@ function renderChapterEventList(container, chapterKey) {
 			// 2. 创建按钮
 			const levelBtn = document.createElement('button');
 			levelBtn.className = 'ybrpg-btn';
-			levelBtn.style.width = '95%';
-			levelBtn.style.marginBottom = '5px';
-			levelBtn.style.position = 'relative';
-			levelBtn.style.paddingRight = '48px';
-			levelBtn.style.textAlign = 'left';
+		levelBtn.style.width = '95%';
+		levelBtn.style.marginBottom = '5px';
+		levelBtn.style.position = 'relative';
+		levelBtn.style.paddingRight = '48px';
+		levelBtn.style.textAlign = 'center';
 
 			// 关卡名（仅展示）
 			const nameSpan = document.createElement('span');
@@ -6539,11 +6539,11 @@ function renderChapterEventList(container, chapterKey) {
 			levelBtn.className = 'ybrpg-btn';
 			if (isSmallBoss) levelBtn.classList.add('boss-small');
 			if (isBigBoss) levelBtn.classList.add('boss-big');
-			levelBtn.style.width = '90%';
-			levelBtn.style.fontSize = '14px';
-			levelBtn.style.padding = '8px 48px 8px 10px';
-			levelBtn.style.position = 'relative';
-			levelBtn.style.textAlign = 'left';
+		levelBtn.style.width = '90%';
+		levelBtn.style.fontSize = '14px';
+		levelBtn.style.padding = '8px 48px 8px 10px';
+		levelBtn.style.position = 'relative';
+		levelBtn.style.textAlign = 'center';
 
 			// 关卡名（仅展示，含小/大BOSS配色）
 			const nameSpan = document.createElement('span');
