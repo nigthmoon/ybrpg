@@ -1683,7 +1683,7 @@ body {
 }
 
 /* 通关奖励展示面板 */
-.reward-overlay {
+.reward-overlay, .preview-overlay {
 	position: fixed;
 	top: 0; left: 0; right: 0; bottom: 0;
 	background: rgba(0,0,0,0.78);
@@ -1694,7 +1694,7 @@ body {
 	animation: fadeIn 0.2s ease;
 }
 
-.reward-panel {
+.reward-panel, .preview-panel {
 	background: linear-gradient(160deg, #2a2233, #1a1a22);
 	border: 2px solid #ffd700;
 	border-radius: 14px;
@@ -1704,6 +1704,23 @@ body {
 	overflow-y: auto;
 	box-shadow: 0 0 30px rgba(255,215,0,0.25);
 	color: #eee;
+}
+
+/* 关卡查看框（产出预览）独立配色：青绿色，区别于金色结算框/蓝色扫荡框 */
+.preview-panel {
+	background: linear-gradient(160deg, #20302a, #16201c);
+	border: 2px solid #5fd6b0;
+	box-shadow: 0 0 30px rgba(95,214,176,0.22);
+}
+
+.preview-btn-row {
+	display: flex;
+	gap: 10px;
+	margin-top: 18px;
+}
+
+.preview-btn-row .reward-ok-btn {
+	margin-top: 0;
 }
 
 .reward-title {
@@ -1765,6 +1782,7 @@ body {
 	height: 22px;
 	border-radius: 50%;
 	object-fit: cover;
+	object-position: top;
 	flex-shrink: 0;
 }
 
@@ -1795,6 +1813,141 @@ body {
 
 .reward-ok-btn:active {
 	transform: scale(0.98);
+}
+
+/* 扫荡结算框（独立于 reward-* 结算框，蓝色系） */
+.sweep-overlay {
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: rgba(0,0,0,0.78);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 30500;
+	animation: fadeIn 0.2s ease;
+}
+
+.sweep-panel {
+	background: linear-gradient(160deg, #1f2a3a, #16202e);
+	border: 2px solid #5aa8ff;
+	border-radius: 14px;
+	padding: 22px 24px;
+	width: min(75vw, 380px);
+	max-height: 82vh;
+	overflow-y: auto;
+	box-shadow: 0 0 30px rgba(90,168,255,0.25);
+	color: #eee;
+}
+
+.sweep-title {
+	font-size: 20px;
+	font-weight: bold;
+	text-align: center;
+	color: #8fd0ff;
+	margin-bottom: 4px;
+}
+
+.sweep-sub {
+	text-align: center;
+	color: #bbb;
+	font-size: 12px;
+	margin-bottom: 14px;
+}
+
+.sweep-gold {
+	text-align: center;
+	font-size: 30px;
+	font-weight: bold;
+	color: #ffd700;
+	margin: 10px 0 16px;
+}
+
+.sweep-gold small {
+	font-size: 14px;
+	color: #caa86a;
+	font-weight: normal;
+}
+
+.sweep-section-title {
+	font-size: 13px;
+	color: #9ad;
+	border-bottom: 1px solid #3a4a5e;
+	padding-bottom: 4px;
+	margin: 14px 0 8px;
+}
+
+.sweep-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.sweep-chip {
+	background: #263548;
+	border: 1px solid #40597a;
+	border-radius: 14px;
+	padding: 4px 10px;
+	font-size: 12px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.sweep-chip-icon {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	object-fit: cover;
+	object-position: top;
+	flex-shrink: 0;
+}
+
+.sweep-cnt {
+	color: #ffd700;
+	font-weight: bold;
+}
+
+.sweep-empty {
+	color: #777;
+	font-size: 12px;
+	font-style: italic;
+}
+
+.sweep-ok-btn {
+	display: block;
+	width: 100%;
+	margin-top: 18px;
+	padding: 10px;
+	background: linear-gradient(160deg, #5aa8ff, #3d6dff);
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	font-size: 15px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.sweep-ok-btn:active {
+	transform: scale(0.98);
+}
+
+/* 产出预览面板：挑战 / 扫荡 双按钮 */
+.preview-btn-row {
+	display: flex;
+	gap: 10px;
+	margin-top: 18px;
+}
+.preview-btn-row .reward-ok-btn {
+	margin-top: 0;
+	flex: 1;
+}
+.preview-btn-challenge {
+	background: linear-gradient(160deg, #ff9a4d, #ff6a3d);
+	color: #fff;
+}
+.preview-btn-sweep {
+	background: linear-gradient(160deg, #5aa8ff, #3d6dff);
+	color: #fff;
 }
 
 /* 设置视图风格 */

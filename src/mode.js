@@ -6286,7 +6286,11 @@ function renderChapterEventList(container, chapterKey) {
 			viewZone.textContent = '查看';
 			viewZone.onclick = (e) => {
 				e.stopPropagation();
-				showOutputPreview(eventData, currentDifficulty, index, eventId);
+				showOutputPreview(eventData, currentDifficulty, index, eventId, chapterKey, {
+					canChallenge: !isLocked,
+					canSweep: passed.includes(eventId),
+					onChallenge: () => levelBtn.click(),
+				});
 			};
 			levelBtn.appendChild(viewZone);
 
@@ -6554,7 +6558,11 @@ function renderChapterEventList(container, chapterKey) {
 			viewZone.textContent = '查看';
 			viewZone.onclick = (e) => {
 				e.stopPropagation();
-				showOutputPreview(event, currentDifficulty, index, checkEventId);
+				showOutputPreview(event, currentDifficulty, index, checkEventId, chapterKey, {
+					canChallenge: isUnlocked,
+					canSweep: currentEventCompleted,
+					onChallenge: () => enterLevel(),
+				});
 			};
 			levelBtn.appendChild(viewZone);
 
@@ -7557,11 +7565,172 @@ function buildRewardPlan(event, diffKey, index) {
 }
 
 /**
- * 展示关卡产出预览（复用奖励面板样式，仅预览不发放）
+ * 计算关卡金币产出（与真实战斗胜利一致）
+ * 主线：reward.gold > event.gold > 章节公式，再乘难度金币倍率
+ * 秘境：仅按自身 event.gold（无难度缩放）
  */
-function showOutputPreview(event, diffKey, index, eventId) {
+function computeLevelGold(event, diffKey, chapterKey) {
+	if (/^sp/i.test(chapterKey || '')) {
+		return event.gold || 300;
+	}
+	const rewardCfg = event.reward || null;
+	const goldScale = DIFFICULTY_SCALE[diffKey]?.gold || 1.0;
+	const baseGold = (rewardCfg && rewardCfg.gold != null) ? rewardCfg.gold
+		: (event.gold != null) ? event.gold
+		: defaultLevelGold(event.id);
+	return Math.floor(baseGold * goldScale);
+}
+
+/**
+ * 扫荡：直接按通关规则发放产出，并用新版结算框展示
+ * 仅对已完成关卡调用
+ */
+function doSweep(event, diffKey, index, eventId, chapterKey, onClose) {
 	if (!event) return;
-	const plan = buildRewardPlan(event, diffKey, index) || { gold: 0, chars: [], treasures: [], items: [] };
+	const isSP = /^sp/i.test(chapterKey || '');
+	const goldReward = computeLevelGold(event, diffKey, chapterKey);
+	window.gameGold = (window.gameGold || 0) + goldReward;
+
+	const dropStat = { chars: [], treasures: [], items: [] };
+	if (!isSP) {
+		const dropMult = DROP_MULT[diffKey] || 1;
+		const rewardCfg = event.reward || null;
+		if (rewardCfg) {
+			grantFixedReward(rewardCfg, dropMult, dropStat);
+		} else {
+			const isMiniBoss = (event.type === 'boss' && index !== 9);
+			const isBigBoss = (index === 9);
+			grantCharactersByRank('rare', dropMult, dropStat.chars);
+			if (isMiniBoss) {
+				grantCharactersByRank('epicfake', dropMult, dropStat.chars);
+				grantCharactersByRank('epic', dropMult, dropStat.chars);
+			}
+			if (isBigBoss) {
+				grantCharactersByRank('legend', dropMult, dropStat.chars);
+			}
+		}
+	}
+
+	// 刷新背包视图（若处于开启状态）
+	if (window.renderBagView) {
+		const bagView = document.getElementById('bag-view');
+		if (bagView) window.renderBagView(bagView);
+	}
+	SaveManager.autoSave();
+
+	const diffName = DIFFICULTY_SCALE[diffKey]?.name || diffKey;
+	showSweepResultPanel({
+		title: '扫荡成功',
+		sub: `${diffName}难度 · ${event.name || eventId}`,
+		gold: goldReward,
+		chars: dropStat.chars,
+		treasures: dropStat.treasures,
+		items: dropStat.items,
+		onClose: (typeof onClose === 'function') ? onClose : null,
+	});
+}
+
+/**
+ * 扫荡结算框（独立于新版结算框 showRewardPanel，使用 sweep-* 专属选择器）
+ * 仅关闭自身，不做任何视图切换
+ */
+function showSweepResultPanel(opt) {
+	opt = opt || {};
+	// 武将名称 -> id 反查（用于头像 / 品质边框配色）
+	const charNameToId = {};
+	Object.keys(characterList || {}).forEach(id => {
+		const n = characterList[id] && characterList[id].name;
+		if (n) charNameToId[n] = id;
+	});
+
+	// 聚合武将（按名称），附带头像与品质
+	const aggChars = (arr) => {
+		const m = {};
+		(arr || []).forEach(name => {
+			if (!name) return;
+			if (!m[name]) {
+				const cid = charNameToId[name];
+				const c = cid ? characterList[cid] : null;
+				m[name] = { name, count: 0, icon: cid ? `/image/character/${cid}.jpg` : null, rank: c ? c.rank : null };
+			}
+			m[name].count++;
+		});
+		return Object.keys(m).map(k => m[k]);
+	};
+	// 聚合宝物 / 道具（按 id），附带图标
+	const aggDefs = (arr, defs) => {
+		const m = {};
+		(arr || []).forEach(id => {
+			if (!id) return;
+			if (!m[id]) {
+				const d = defs[id];
+				m[id] = { name: (d && d.name) || id, count: 0, icon: (d && d.icon) || null, rank: null };
+			}
+			m[id].count++;
+		});
+		return Object.keys(m).map(k => m[k]);
+	};
+
+	const charList = aggChars(opt.chars);
+	const treaList = aggDefs(opt.treasures, TREASURE_DEFS);
+	const itemList = aggDefs(opt.items, ITEM_DEFS);
+
+	const chip = (o) => {
+		const cnt = o.count > 1 ? `<span class="sweep-cnt"> ×${o.count}</span>` : '';
+		const icon = o.icon
+			? `<img src="${o.icon}" class="sweep-chip-icon" alt="" onerror="this.style.display='none'">`
+			: '';
+		const style = o.rank ? ` style="border-color:${getRankColor(o.rank)}"` : '';
+		return `<span class="sweep-chip"${style}>${icon}${o.name}${cnt}</span>`;
+	};
+	const section = (title, list) => {
+		let h = `<div class="sweep-section-title">${title}（${list.length}）</div>`;
+		if (list.length) {
+			h += '<div class="sweep-list">' + list.map(chip).join('') + '</div>';
+		} else {
+			h += '<div class="sweep-empty">无</div>';
+		}
+		return h;
+	};
+
+	const overlay = document.createElement('div');
+	overlay.className = 'sweep-overlay';
+	const panel = document.createElement('div');
+	panel.className = 'sweep-panel';
+	panel.innerHTML =
+		`<div class="sweep-title">⚡ ${opt.title || '扫荡成功'}</div>` +
+		(opt.sub ? `<div class="sweep-sub">${opt.sub}</div>` : '') +
+		`<div class="sweep-gold">💰 ${opt.gold || 0} <small>金币</small></div>` +
+		section('获得武将', charList) +
+		section('获得宝物', treaList) +
+		section('获得道具', itemList);
+
+	const okBtn = document.createElement('button');
+	okBtn.className = 'sweep-ok-btn';
+	okBtn.textContent = '确定';
+	const close = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	okBtn.onclick = (e) => { e.stopPropagation(); close(); if (typeof opt.onClose === 'function') opt.onClose(); };
+	overlay.onclick = (e) => { e.stopPropagation(); if (e.target === overlay) close(); };
+	panel.appendChild(okBtn);
+	overlay.appendChild(panel);
+	document.body.appendChild(overlay);
+}
+
+/**
+ * 展示关卡产出预览（复用奖励面板样式，仅预览不发放）
+ * opts: { canChallenge, canSweep, onChallenge }
+ */
+function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
+	opts = opts || {};
+	if (!event) return;
+	const isSP = /^sp/i.test(chapterKey || '');
+	// 预览数据
+	let plan = buildRewardPlan(event, diffKey, index) || { gold: 0, chars: [], treasures: [], items: [] };
+	plan = Object.assign({}, plan, { gold: computeLevelGold(event, diffKey, chapterKey) });
+	if (isSP) {
+		// 秘境实际仅产出金币
+		plan.chars = []; plan.treasures = []; plan.items = [];
+	}
 
 	const chip = (o) => {
 		const cnt = o.count > 1 ? `<span class="reward-cnt"> ×${o.count}</span>` : '';
@@ -7581,24 +7750,62 @@ function showOutputPreview(event, diffKey, index, eventId) {
 
 	const diffName = DIFFICULTY_SCALE[diffKey]?.name || diffKey;
 	const overlay = document.createElement('div');
-	overlay.className = 'reward-overlay';
+	overlay.className = 'preview-overlay';
 	const panel = document.createElement('div');
-	panel.className = 'reward-panel';
+	panel.className = 'preview-panel';
 	panel.innerHTML =
 		`<div class="reward-title">📦 产出预览</div>` +
 		`<div class="reward-sub">${diffName}难度 · ${event.name || eventId}</div>` +
 		`<div class="reward-gold">💰 ${plan.gold || 0} <small>金币</small></div>` +
 		section('获得武将', plan.chars) +
 		section('获得宝物', plan.treasures) +
-		section('获得道具', plan.items);
+		section('获得道具', plan.items) +
+		(isSP ? `<div class="reward-empty" style="margin-top:10px;">（秘境仅产出金币）</div>` : '');
 
-	const okBtn = document.createElement('button');
-	okBtn.className = 'reward-ok-btn';
-	okBtn.textContent = '确定';
 	const close = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
-	okBtn.onclick = close;
 	overlay.onclick = (e) => { if (e.target === overlay) close(); };
-	panel.appendChild(okBtn);
+
+	// 按钮区：挑战 / 扫荡
+	const btnRow = document.createElement('div');
+	btnRow.className = 'preview-btn-row';
+
+	const challengeBtn = document.createElement('button');
+	challengeBtn.className = 'reward-ok-btn preview-btn-challenge';
+	challengeBtn.textContent = '挑战';
+	if (!opts.canChallenge) {
+		challengeBtn.disabled = true;
+		challengeBtn.style.opacity = '0.5';
+		challengeBtn.style.cursor = 'not-allowed';
+		challengeBtn.title = '关卡未解锁';
+	} else {
+		challengeBtn.onclick = (e) => {
+			e.stopPropagation();
+			close();
+			if (typeof opts.onChallenge === 'function') opts.onChallenge();
+		};
+	}
+
+	const sweepBtn = document.createElement('button');
+	sweepBtn.className = 'reward-ok-btn preview-btn-sweep';
+	sweepBtn.textContent = '扫荡';
+	if (!opts.canSweep) {
+		sweepBtn.disabled = true;
+		sweepBtn.style.opacity = '0.5';
+		sweepBtn.style.cursor = 'not-allowed';
+		sweepBtn.title = '仅已通关关卡可扫荡';
+	} else {
+		sweepBtn.onclick = (e) => {
+			e.stopPropagation();
+			close();
+			doSweep(event, diffKey, index, eventId, chapterKey, () => {
+				showOutputPreview(event, diffKey, index, eventId, chapterKey, opts);
+			});
+		};
+	}
+
+	btnRow.appendChild(challengeBtn);
+	btnRow.appendChild(sweepBtn);
+	panel.appendChild(btnRow);
 	overlay.appendChild(panel);
 	document.body.appendChild(overlay);
 }
@@ -7615,21 +7822,57 @@ function showOutputPreview(event, diffKey, index, eventId) {
  */
 function showRewardPanel(opt) {
 	opt = opt || {};
-	const agg = (arr) => {
-		const m = {};
-		(arr || []).forEach(n => { if (n) m[n] = (m[n] || 0) + 1; });
-		return Object.keys(m).map(name => ({ name, count: m[name] }));
-	};
-	const charList = agg(opt.chars);
-	const treaList = agg((opt.treasures || []).map(id => (TREASURE_DEFS[id] && TREASURE_DEFS[id].name) || id));
-	const itemList = agg((opt.items || []).map(id => (ITEM_DEFS[id] && ITEM_DEFS[id].name) || id));
+	// 武将名称 -> id 反查（用于头像 / 品质边框配色）
+	const charNameToId = {};
+	Object.keys(characterList || {}).forEach(id => {
+		const n = characterList[id] && characterList[id].name;
+		if (n) charNameToId[n] = id;
+	});
 
-	const chip = (name, count) =>
-		`<span class="reward-chip">${name}${count > 1 ? `<span class="reward-cnt"> ×${count}</span>` : ''}</span>`;
+	// 聚合武将（按名称），附带头像与品质
+	const aggChars = (arr) => {
+		const m = {};
+		(arr || []).forEach(name => {
+			if (!name) return;
+			if (!m[name]) {
+				const cid = charNameToId[name];
+				const c = cid ? characterList[cid] : null;
+				m[name] = { name, count: 0, icon: cid ? `/image/character/${cid}.jpg` : null, rank: c ? c.rank : null };
+			}
+			m[name].count++;
+		});
+		return Object.keys(m).map(k => m[k]);
+	};
+	// 聚合宝物 / 道具（按 id），附带图标
+	const aggDefs = (arr, defs) => {
+		const m = {};
+		(arr || []).forEach(id => {
+			if (!id) return;
+			if (!m[id]) {
+				const d = defs[id];
+				m[id] = { name: (d && d.name) || id, count: 0, icon: (d && d.icon) || null, rank: null };
+			}
+			m[id].count++;
+		});
+		return Object.keys(m).map(k => m[k]);
+	};
+
+	const charList = aggChars(opt.chars);
+	const treaList = aggDefs(opt.treasures, TREASURE_DEFS);
+	const itemList = aggDefs(opt.items, ITEM_DEFS);
+
+	const chip = (o) => {
+		const cnt = o.count > 1 ? `<span class="reward-cnt"> ×${o.count}</span>` : '';
+		const icon = o.icon
+			? `<img src="${o.icon}" class="reward-chip-icon" alt="" onerror="this.style.display='none'">`
+			: '';
+		const style = o.rank ? ` style="border-color:${getRankColor(o.rank)}"` : '';
+		return `<span class="reward-chip"${style}>${icon}${o.name}${cnt}</span>`;
+	};
 	const section = (title, list) => {
 		let h = `<div class="reward-section-title">${title}（${list.length}）</div>`;
 		if (list.length) {
-			h += '<div class="reward-list">' + list.map(x => chip(x.name, x.count)).join('') + '</div>';
+			h += '<div class="reward-list">' + list.map(chip).join('') + '</div>';
 		} else {
 			h += '<div class="reward-empty">无</div>';
 		}
