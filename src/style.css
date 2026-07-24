@@ -1555,6 +1555,113 @@ body {
 	line-height: 1.6;
 }
 
+/* 通关奖励展示面板 */
+.reward-overlay {
+	position: fixed;
+	top: 0; left: 0; right: 0; bottom: 0;
+	background: rgba(0,0,0,0.78);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 30000;
+	animation: fadeIn 0.2s ease;
+}
+
+.reward-panel {
+	background: linear-gradient(160deg, #2a2233, #1a1a22);
+	border: 2px solid #ffd700;
+	border-radius: 14px;
+	padding: 22px 24px;
+	width: min(90vw, 380px);
+	max-height: 82vh;
+	overflow-y: auto;
+	box-shadow: 0 0 30px rgba(255,215,0,0.25);
+	color: #eee;
+}
+
+.reward-title {
+	font-size: 20px;
+	font-weight: bold;
+	text-align: center;
+	color: #ffd700;
+	margin-bottom: 4px;
+}
+
+.reward-sub {
+	text-align: center;
+	color: #bbb;
+	font-size: 12px;
+	margin-bottom: 14px;
+}
+
+.reward-gold {
+	text-align: center;
+	font-size: 30px;
+	font-weight: bold;
+	color: #ffd700;
+	margin: 10px 0 16px;
+}
+
+.reward-gold small {
+	font-size: 14px;
+	color: #caa86a;
+	font-weight: normal;
+}
+
+.reward-section-title {
+	font-size: 13px;
+	color: #9ad;
+	border-bottom: 1px solid #444;
+	padding-bottom: 4px;
+	margin: 14px 0 8px;
+}
+
+.reward-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.reward-chip {
+	background: #333;
+	border: 1px solid #555;
+	border-radius: 14px;
+	padding: 4px 10px;
+	font-size: 12px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.reward-cnt {
+	color: #ffd700;
+	font-weight: bold;
+}
+
+.reward-empty {
+	color: #777;
+	font-size: 12px;
+	font-style: italic;
+}
+
+.reward-ok-btn {
+	display: block;
+	width: 100%;
+	margin-top: 18px;
+	padding: 10px;
+	background: #ffd700;
+	color: #222;
+	border: none;
+	border-radius: 8px;
+	font-size: 15px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.reward-ok-btn:active {
+	transform: scale(0.98);
+}
+
 /* 设置视图风格 */
 #settings-view {
 	width: 100%;

@@ -5984,6 +5984,21 @@ const DIFFICULTY_SCALE = {
 	nightmare: { hp: 1.5, atk: 1.3, def: 1.3, gold: 1.5, name: '噩梦', buffs: [], treasures: [], addTupo: 8, addStat: 3000 },
 	hell: { hp: 2.0, atk: 1.6, def: 1.6, gold: 2.0, name: '地狱', buffs: [], treasures: [], addTupo: 16, addStat: 6000 }
 };
+
+// 难度掉落倍率：每次胜利发放的武将数量倍率（普通1 / 噩梦2 / 地狱3）
+const DROP_MULT = { normal: 1, nightmare: 2, hell: 3, secret: 1 };
+
+// 关卡默认金币（凸曲线：全局进度 p = 章节 + (小节-1)/10，gold = 150·p^1.6）
+// 幂次 1.6 使后期增幅明显大于前期；可在 eventList 每关用 reward.gold / event.gold 覆盖
+function defaultLevelGold(eventId) {
+	const m = /c(\d+)-(\d+)/.exec(eventId || '');
+	if (!m) return 150;
+	const ch = parseInt(m[1], 10) || 1;
+	const lv = parseInt(m[2], 10) || 1;
+	const p = ch + (lv - 1) / 10;
+	const raw = 150 * Math.pow(p, 1.6);
+	return Math.round(raw / 10) * 10; // 取整到 10
+}
 // 根据难度获取事件数据（支持噩梦和地狱难度）
 function getEventForDifficulty(chapterKey, eventId, difficulty) {
 	if (difficulty === 'normal') {
@@ -6577,16 +6592,49 @@ function renderChapterEventList(container, chapterKey) {
 								window.playerProgress[checkEventId] = true;
 								levelUpMainCharacter();
 							}
-							// 战斗胜利金币奖励
-							const enemyCount = (event.enemy || []).filter(e => e && e.id).length;
-							const isBoss = event.type === 'boss';
-							const baseGold = event.gold || 50 + enemyCount * 30;
-							const goldScale = DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0;
-							const goldReward = Math.floor((isBoss ? baseGold * 2 : baseGold) * goldScale);
-							window.gameGold = (window.gameGold || 0) + goldReward;
+							// ===== 战斗胜利奖励：金币 + 掉落物（每次胜利都发放）=====
+							const diffKey = currentDifficulty;
+							const dropMult = DROP_MULT[diffKey] || 1;
+						const goldScale = DIFFICULTY_SCALE[diffKey]?.gold || 1.0;
+						const rewardCfg = event.reward || null;
+						// 金币：reward.gold > event.gold > 章节公式
+						const baseGold = (rewardCfg && rewardCfg.gold != null) ? rewardCfg.gold
+							: (event.gold != null) ? event.gold
+							: defaultLevelGold(event.id);
+						const goldReward = Math.floor(baseGold * goldScale);
+						window.gameGold = (window.gameGold || 0) + goldReward;
+						// 掉落物：优先用事件固定配置 event.reward；未配置则按档位自动规则兜底
+						const dropStat = { chars: [], treasures: [], items: [] };
+						if (rewardCfg) {
+							grantFixedReward(rewardCfg, dropMult, dropStat);
+						} else {
+							const isMiniBoss = (event.type === 'boss' && index !== 9); // 小boss：boss关且非末关
+							const isBigBoss = (index === 9);                           // 大boss：末关
+							grantCharactersByRank('rare', dropMult, dropStat.chars);
+							if (isMiniBoss) {
+								grantCharactersByRank('epicfake', dropMult, dropStat.chars);
+								grantCharactersByRank('epic', dropMult, dropStat.chars);
+							}
+							if (isBigBoss) {
+								grantCharactersByRank('legend', dropMult, dropStat.chars);
+							}
+						}
+							// 刷新背包视图（若处于开启状态）
+							if (window.renderBagView) {
+								const bagView = document.getElementById('bag-view');
+								if (bagView) window.renderBagView(bagView);
+							}
 							// 事件完成后自动存档
 							SaveManager.autoSave();
-							Game.toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
+						// 弹出奖励展示面板（金币 + 掉落武将/宝物/道具）
+						showRewardPanel({
+							title: '通关成功',
+							sub: `${DIFFICULTY_SCALE[diffKey]?.name || '普通'}难度 · ${event.name}`,
+							gold: goldReward,
+							chars: dropStat.chars,
+							treasures: dropStat.treasures,
+							items: dropStat.items,
+						});
 							// 重新渲染副本视图
 							const dungeonView = document.getElementById('dungeon-view');
 							if (dungeonView) {
@@ -7312,7 +7360,139 @@ function grantCharacter(charId) {
 	}
 	return instanceId;
 }
+
+// 掉落黑名单：明确禁止作为战利品发放的占位角色（突破专属全部为空，见记忆约定）
+const DROP_EXCLUDE_IDS = { ybsl_043fangjiayu: true, ybsl_044huruihang: true };
+
+// 判断突破列表是否含「有效」突破项（排除 null 与空对象 {} 占位）
+function hasRealBreakthrough(tupoList) {
+	if (!Array.isArray(tupoList)) return false;
+	return tupoList.some(x => {
+		if (!x) return false;
+		if (typeof x === 'string') return true;
+		if (typeof x === 'object') return Object.keys(x).length > 0;
+		return false;
+	});
+}
+
+/**
+ * 按品质从角色库随机抽取武将并发放（每次胜利调用，可重复）
+ * - 排除固定角色（主角等 isFixed）
+ * - 排除黑名单角色（房佳谕/胡瑞航等占位皮套）
+ * - 排除突破列表无效的占位角色（避免发放残缺武将）
+ * @param {string} rank 品质：rare / epicfake / epic / legend ...
+ * @param {number} count 发放数量（已含难度倍率）
+ * @param {string[]} droppedNames 收集发放到的武将名（用于提示）
+ */
+function grantCharactersByRank(rank, count, droppedNames) {
+	if (!count || count <= 0) return;
+	if (!window.charBagData) window.charBagData = {};
+	const pool = Object.keys(characterList || {}).filter(id => {
+		const c = characterList[id];
+		if (!c || c.isFixed) return false;
+		if (DROP_EXCLUDE_IDS[id]) return false;
+		if (c.rank !== rank) return false;
+		// 跳过突破列表无效/为空的占位角色（发放后无突破能力）
+		if (!hasRealBreakthrough(c.tupoList)) return false;
+		return true;
+	});
+	if (pool.length === 0) return;
+	for (let i = 0; i < count; i++) {
+		const pick = pool[Math.floor(Math.random() * pool.length)];
+		const instId = grantCharacter(pick);
+		if (instId && droppedNames && characterList[pick]) {
+			droppedNames.push(characterList[pick].name);
+		}
+	}
+}
 // 占位函数，防止报错
+
+/**
+ * 按事件固定配置发放掉落（event.reward）
+ * reward 形如 { gold, characters:[charId], treasures:[treasureId], items:[itemId] }
+ * 每个配置项按难度倍率 mult 重复发放（普通1 / 噩梦2 / 地狱3）
+ */
+function grantFixedReward(reward, mult, stat) {
+	if (!reward || typeof reward !== 'object') return;
+	// 武将：直接发放指定角色（作者已手动挑选，跳过黑名单占位角色）
+	(reward.characters || []).forEach(id => {
+		for (let i = 0; i < mult; i++) {
+			if (DROP_EXCLUDE_IDS[id]) { console.warn('[掉落] 黑名单角色，跳过:', id); continue; }
+			const inst = grantCharacter(id);
+			if (inst && characterList[id]) stat.chars.push(characterList[id].name);
+		}
+	});
+	// 宝物
+	(reward.treasures || []).forEach(id => {
+		for (let i = 0; i < mult; i++) {
+			if (Game.Data && typeof Game.Data.addTreasure === 'function') Game.Data.addTreasure(id, 1);
+			stat.treasures.push(id);
+		}
+	});
+	// 道具（武将包等）
+	(reward.items || []).forEach(id => {
+		for (let i = 0; i < mult; i++) {
+			if (Game.Data && typeof Game.Data.addItem === 'function') Game.Data.addItem(id, 1);
+			stat.items.push(id);
+		}
+	});
+}
+
+/**
+ * 通关奖励展示面板
+ * @param {Object} opt
+ * @param {string} opt.title   主标题
+ * @param {string} opt.sub     副标题（如 难度·关卡名）
+ * @param {number} opt.gold    获得的金币
+ * @param {string[]} opt.chars     武将名称数组（可含重复，按难度倍率）
+ * @param {string[]} opt.treasures 宝物基础ID数组
+ * @param {string[]} opt.items     道具ID数组
+ */
+function showRewardPanel(opt) {
+	opt = opt || {};
+	const agg = (arr) => {
+		const m = {};
+		(arr || []).forEach(n => { if (n) m[n] = (m[n] || 0) + 1; });
+		return Object.keys(m).map(name => ({ name, count: m[name] }));
+	};
+	const charList = agg(opt.chars);
+	const treaList = agg((opt.treasures || []).map(id => (TREASURE_DEFS[id] && TREASURE_DEFS[id].name) || id));
+	const itemList = agg((opt.items || []).map(id => (ITEM_DEFS[id] && ITEM_DEFS[id].name) || id));
+
+	const chip = (name, count) =>
+		`<span class="reward-chip">${name}${count > 1 ? `<span class="reward-cnt"> ×${count}</span>` : ''}</span>`;
+	const section = (title, list) => {
+		let h = `<div class="reward-section-title">${title}（${list.length}）</div>`;
+		if (list.length) {
+			h += '<div class="reward-list">' + list.map(x => chip(x.name, x.count)).join('') + '</div>';
+		} else {
+			h += '<div class="reward-empty">无</div>';
+		}
+		return h;
+	};
+
+	const overlay = document.createElement('div');
+	overlay.className = 'reward-overlay';
+	const panel = document.createElement('div');
+	panel.className = 'reward-panel';
+	panel.innerHTML =
+		`<div class="reward-title">🎉 ${opt.title || '通关成功'}</div>` +
+		(opt.sub ? `<div class="reward-sub">${opt.sub}</div>` : '') +
+		`<div class="reward-gold">💰 ${opt.gold || 0} <small>金币</small></div>` +
+		section('获得武将', charList) +
+		section('获得宝物', treaList) +
+		section('获得道具', itemList);
+
+	const okBtn = document.createElement('button');
+	okBtn.className = 'reward-ok-btn';
+	okBtn.textContent = '确定';
+	const close = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	okBtn.onclick = close;
+	overlay.onclick = (e) => { if (e.target === overlay) close(); };
+	panel.appendChild(okBtn);
+	overlay.appendChild(panel);
+	document.body.appendChild(overlay);
+}
 
 // 新增: 封装隐藏其他视图的函数
 // 修改hideOtherViews函数，加入save-view
