@@ -1577,17 +1577,66 @@ body {
 .battle-result-chips {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 5px;
+	gap: 10px 8px;
 	justify-content: center;
 }
 
-.battle-result-chip {
-	background: #333;
+/* 单个战利品：图标在上，名字在下 */
+.battle-result-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 58px;
+}
+
+.battle-result-item-icon {
+	position: relative;
+	width: 48px;
+	height: 48px;
+	border-radius: 6px;
 	border: 1px solid #555;
-	border-radius: 12px;
-	padding: 3px 9px;
-	font-size: 12px;
-	color: #eee;
+	overflow: hidden;
+	background: #222;
+}
+
+.battle-result-item-icon img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: top center;
+	display: block;
+}
+
+.battle-result-item-ph {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 20px;
+	color: #888;
+	background: #2a2a2a;
+}
+
+.battle-result-item-count {
+	position: absolute;
+	right: 1px;
+	bottom: 1px;
+	background: rgba(0,0,0,0.7);
+	color: #ffd700;
+	font-size: 10px;
+	padding: 0 3px;
+	border-radius: 6px;
+}
+
+.battle-result-item-name {
+	font-size: 11px;
+	color: #ddd;
+	margin-top: 3px;
+	text-align: center;
+	line-height: 1.2;
+	max-width: 64px;
+	word-break: break-all;
 }
 
 /* 通关奖励展示面板 */

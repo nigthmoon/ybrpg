@@ -2092,8 +2092,9 @@ Battle.showBattleResult = function showBattleResult(winner) {
 		rewardDiv.innerHTML = `💰 金币奖励: +${goldReward}`;
 		dialog.appendChild(rewardDiv);
 
-		// 战利品展示（武将 / 宝物 / 道具）
+		// 战利品展示（武将 / 宝物 / 道具）：图标在上，名字在下
 		if (plan) {
+			const LOOT_RANK_COLORS = { kami: '#ffff00', legend: '#ff4444', epic: '#ff8d8d', epicfake: '#ff8800', rare: '#a335ee', common: '#44aaff', junk: '#88cc88' };
 			const lootSection = (title, list) => {
 				if (!list || !list.length) return;
 				const wrap = document.createElement('div');
@@ -2105,10 +2106,39 @@ Battle.showBattleResult = function showBattleResult(winner) {
 				const row = document.createElement('div');
 				row.className = 'battle-result-chips';
 				list.forEach(x => {
-					const chip = document.createElement('span');
-					chip.className = 'battle-result-chip';
-					chip.textContent = x.count > 1 ? `${x.name} ×${x.count}` : x.name;
-					row.appendChild(chip);
+					const cell = document.createElement('div');
+					cell.className = 'battle-result-item';
+					const iconBox = document.createElement('div');
+					iconBox.className = 'battle-result-item-icon';
+					if (x.rank) iconBox.style.borderColor = LOOT_RANK_COLORS[x.rank] || '#555';
+					if (x.icon) {
+						const img = document.createElement('img');
+						img.src = x.icon;
+						img.alt = x.name;
+						img.onerror = function () {
+							if (this.src.endsWith('.jpg')) this.src = this.src.replace('.jpg', '.webp');
+							else if (this.src.endsWith('.webp')) this.src = '/image/character/default.jpg';
+							else this.style.display = 'none';
+						};
+						iconBox.appendChild(img);
+					} else {
+						const ph = document.createElement('div');
+						ph.className = 'battle-result-item-ph';
+						ph.textContent = (x.name || '?').charAt(0);
+						iconBox.appendChild(ph);
+					}
+					if (x.count > 1) {
+						const cnt = document.createElement('span');
+						cnt.className = 'battle-result-item-count';
+						cnt.textContent = '×' + x.count;
+						iconBox.appendChild(cnt);
+					}
+					cell.appendChild(iconBox);
+					const nm = document.createElement('div');
+					nm.className = 'battle-result-item-name';
+					nm.textContent = x.name;
+					cell.appendChild(nm);
+					row.appendChild(cell);
 				});
 				wrap.appendChild(row);
 				dialog.appendChild(wrap);

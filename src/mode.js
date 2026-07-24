@@ -7459,25 +7459,41 @@ function buildRewardPlan(event, diffKey, index) {
 		: defaultLevelGold(event.id);
 	const gold = Math.floor(baseGold * goldScale);
 
-	const agg = (arr) => {
+	// 按 id 聚合（保留 icon / rank 等元信息），同名/同 id 计数
+	const groupById = (arr) => {
 		const m = {};
-		(arr || []).forEach(n => { if (n) m[n] = (m[n] || 0) + 1; });
-		return Object.keys(m).map(name => ({ name, count: m[name] }));
+		arr.forEach(o => {
+			if (!o || !o.id) return;
+			if (!m[o.id]) m[o.id] = Object.assign({}, o, { count: 0 });
+			m[o.id].count++;
+		});
+		return Object.keys(m).map(k => m[k]);
 	};
 
 	let chars = [], treasures = [], items = [];
 	if (rewardCfg) {
-		// 固定配置：确定性，名字可提前解析
-		chars = agg((rewardCfg.characters || [])
-			.filter(id => !DROP_EXCLUDE_IDS[id])
-			.map(id => (characterList[id] && characterList[id].name) || id)
-			.flatMap(n => Array(dropMult).fill(n)));
-		treasures = agg((rewardCfg.treasures || [])
-			.map(id => (TREASURE_DEFS[id] && TREASURE_DEFS[id].name) || id)
-			.flatMap(n => Array(dropMult).fill(n)));
-		items = agg((rewardCfg.items || [])
-			.map(id => (ITEM_DEFS[id] && ITEM_DEFS[id].name) || id)
-			.flatMap(n => Array(dropMult).fill(n)));
+		// 固定配置：确定性，解析名字 + 图标（角色另有 rank 用于边框配色）
+		chars = groupById((rewardCfg.characters || [])
+			.filter(id => !DROP_EXCLUDE_IDS[id] && characterList[id])
+			.map(id => ({
+				id,
+				name: characterList[id].name,
+				rank: characterList[id].rank,
+				icon: `/image/character/${id}.jpg`,
+			}))
+			.flatMap(o => Array(dropMult).fill(o)));
+		treasures = groupById((rewardCfg.treasures || [])
+			.map(id => {
+				const d = TREASURE_DEFS[id];
+				return { id, name: (d && d.name) || id, icon: (d && d.icon) || null };
+			})
+			.flatMap(o => Array(dropMult).fill(o)));
+		items = groupById((rewardCfg.items || [])
+			.map(id => {
+				const d = ITEM_DEFS[id];
+				return { id, name: (d && d.name) || id, icon: (d && d.icon) || null };
+			})
+			.flatMap(o => Array(dropMult).fill(o)));
 	} else {
 		// 随机兜底：仅展示数量与品质（主线不会走到这里）
 		const rankCounts = { '随机稀有武将': dropMult };
@@ -7490,7 +7506,7 @@ function buildRewardPlan(event, diffKey, index) {
 		if (isBigBoss) {
 			rankCounts['随机传说武将'] = (rankCounts['随机传说武将'] || 0) + dropMult;
 		}
-		chars = Object.keys(rankCounts).map(name => ({ name, count: rankCounts[name] }));
+		chars = Object.keys(rankCounts).map(name => ({ name, count: rankCounts[name], icon: null }));
 	}
 	return { gold, chars, treasures, items };
 }
