@@ -6513,18 +6513,29 @@ function renderChapterEventList(container, chapterKey) {
 			}
 			const currentEventCompleted = !!playerProgress[checkEventId];
 
+			// 小BOSS：boss关且非章节末关；大BOSS：章节末关（cN-10）
+			const isBigBoss = (index === eventIds.length - 1);
+			const isSmallBoss = (event.type === 'boss' && !isBigBoss);
+
 			const levelBtn = document.createElement('button');
 			levelBtn.className = 'ybrpg-btn';
+			if (isSmallBoss) levelBtn.classList.add('boss-small');
+			if (isBigBoss) levelBtn.classList.add('boss-big');
 			levelBtn.style.width = '90%';
 			levelBtn.style.fontSize = '14px';
 			levelBtn.style.padding = '8px';
-			levelBtn.textContent = `${event.name}`;
+
+			const nameSpan = document.createElement('span');
+			nameSpan.textContent = event.name;
+			if (isSmallBoss) nameSpan.className = 'lv-boss-small';
+			else if (isBigBoss) nameSpan.className = 'lv-boss-big';
+			levelBtn.appendChild(nameSpan);
 
 			if (!isUnlocked) {
 				levelBtn.disabled = true;
 				levelBtn.style.opacity = '0.5';
 				levelBtn.style.cursor = 'not-allowed';
-				levelBtn.textContent += ' [未解锁]';
+				levelBtn.appendChild(document.createTextNode(' [未解锁]'));
 			} else {
 				levelBtn.onclick = () => {
 					console.log(`进入副本: ${event.name}, ID: ${checkEventId}, 难度: ${currentDifficulty}`);

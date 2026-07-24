@@ -154,6 +154,28 @@ body {
 	transform: scale(1.05); 
 }
 
+/* 关卡名 - 小BOSS / 大BOSS 递进配色 */
+/* 小BOSS：橙金，微辉光 */
+.lv-boss-small {
+	color: #ffb347;
+	font-weight: bold;
+	text-shadow: 0 0 5px rgba(255, 179, 71, 0.55);
+}
+.ybrpg-btn.boss-small {
+	border-color: #ffb347;
+}
+/* 大BOSS：赤红，强辉光，递进感更强 */
+.lv-boss-big {
+	color: #ff4d5e;
+	font-weight: bold;
+	letter-spacing: 0.5px;
+	text-shadow: 0 0 8px rgba(255, 77, 94, 0.85);
+}
+.ybrpg-btn.boss-big {
+	border-color: #ff4d5e;
+	box-shadow: 0 0 8px rgba(255, 77, 94, 0.5);
+}
+
 .ybrpg-back-btn {
 	padding: 8px 16px; 
 	cursor: pointer; 

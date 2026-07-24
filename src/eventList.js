@@ -479,7 +479,7 @@ const eventList = {//事件列表
 				name: '雪夜的不速之客',
 				id: 'c1-1',
 				type: 'battle',
-				text: '风雪中，一名白衣少女拦住了你的去路。她自称来自「教会」...',
+				text: '风雪中，白衣少女雪琅拦住去路，称你是「教会等待之人」。击败她后，她冷笑消失：「真正的考验在礼拜堂。」',
 				prev: null,
 				reward: { gold: 150, characters: ['ybsl_019shengyan'] },
 				enemy: [
@@ -492,7 +492,7 @@ const eventList = {//事件列表
 				name: '教会的耳目',
 				id: 'c1-2',
 				type: 'battle',
-				text: '雪琅退走后，教会的眼线很快盯上了你...',
+				text: '雪琅退走后，教会的眼线很快盯上你——信徒、修女、持烛者组成小队阻截。你意识到：这个教会，不想让任何人离开。',
 				prev: 'c1-1',
 				reward: { gold: 170, characters: ['ybsl_019shengyan'] },
 				enemy: [
@@ -508,7 +508,7 @@ const eventList = {//事件列表
 				name: '深巷堵截',
 				id: 'c1-3',
 				type: 'battle',
-				text: '狭窄的巷子两头被堵死了，只能杀出一条路...',
+				text: '退路被切断，只能杀出重围。从一名狂信者口中得知：「教会用圣言控制信徒，违抗者将被投入地下。」',
 				prev: 'c1-2',
 				reward: { gold: 200, characters: ['ybsl_045gaocong'] },
 				enemy: [
@@ -524,7 +524,7 @@ const eventList = {//事件列表
 				name: '礼拜堂外围',
 				id: 'c1-4',
 				type: 'battle',
-				text: '教会礼拜堂近在眼前，守卫却比想象中森严...',
+				text: '礼拜堂近在咫尺，外围守卫森严。苦修士与圣殿侍卫组成最后一道防线。',
 				prev: 'c1-3',
 				reward: { gold: 230, characters: ['ybsl_024yuetong'] },
 				enemy: [
@@ -539,10 +539,10 @@ const eventList = {//事件列表
 
 			// --- 第5小节 BOSS：张玉洁（5号位，索引4） ---
 			'c1-5': {
-				name: '礼拜堂的审判',
+				name: '裁决席前',
 				id: 'c1-5',
 				type: 'boss',
-				text: '礼拜堂深处，执刑者张玉洁缓缓起身：「不请自来者，接受裁决吧。」',
+				text: '执刑者张玉洁坐镇礼拜堂。她承认教会利用圣言奴役信众，却坚信这是「救赎」。战败后她沉默退去：「你若能走到尽头，或许……能见到真相。」',
 				prev: 'c1-4',
 				reward: { gold: 260, characters: ['ybsl_004zhangyujie'] },
 				enemy: [
@@ -558,7 +558,7 @@ const eventList = {//事件列表
 				name: '地下回廊',
 				id: 'c1-6',
 				type: 'battle',
-				text: '击败张玉洁后，你循着密道深入教会地下...',
+				text: '击败张玉洁后，你从密道进入地下。忏悔者与香炉侍者拦路——他们的眼神空洞，仿佛被抽走了灵魂。',
 				prev: 'c1-5',
 				reward: { gold: 290, characters: ['ybsl_053qiuer'] },
 				enemy: [
@@ -576,7 +576,7 @@ const eventList = {//事件列表
 				name: '回廊伏击',
 				id: 'c1-7',
 				type: 'battle',
-				text: '幽暗的回廊里杀机四伏，教会的死士早已在此设伏...',
+				text: '教会的死士早已设伏。你忽然明白：教会高层在害怕什么——或者说，在怕你。',
 				prev: 'c1-6',
 				reward: { gold: 320, characters: ['ybsl_054yueer'] },
 				enemy: [
@@ -592,7 +592,7 @@ const eventList = {//事件列表
 				name: '圣堂守卫',
 				id: 'c1-8',
 				type: 'battle',
-				text: '逼近圣堂核心，守卫的实力又上了一层台阶...',
+				text: '逼近圣堂核心，守卫越来越强。远处传来低沉的吟唱声——那是吴爽的声音。',
 				prev: 'c1-7',
 				reward: { gold: 350, characters: ['ybsl_055zhengyan'] },
 				enemy: [
@@ -608,7 +608,7 @@ const eventList = {//事件列表
 				name: '审判前夜',
 				id: 'c1-9',
 				type: 'battle',
-				text: '审判将至，最后的阻挡者倾巢而出，只为拖延你的脚步...',
+				text: '最后一道防线倾巢而出。一名黑纱修女临死前低语：「圣堂之上……她不是人。」',
 				prev: 'c1-8',
 				reward: { gold: 380, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
@@ -623,10 +623,10 @@ const eventList = {//事件列表
 
 			// --- 第10小节 BOSS：雪琅(1号位)、张玉洁(3号位)、吴爽(5号位/BOSS，索引 0/2/4) ---
 			'c1-10': {
-				name: '圣堂三方审判',
+				name: '三方问罪',
 				id: 'c1-10',
 				type: 'boss',
-				text: '圣堂之巅，雪琅、张玉洁与传说中的吴爽同时现身：「踏入此地者，当受三方审判。」',
+				text: '圣堂之巅，雪琅、张玉洁与传说中的吴爽同时现身。吴爽站在最高处，目光悲悯：「教会是一场骗局——但骗局也有它的意义。你准备好承受真相了吗？」战后她透露：「去雪国学院吧。那里有人能告诉你，你到底是谁。」',
 				prev: 'c1-9',
 				reward: { gold: 420, characters: ['ybsl_048wushuang'] },
 				enemy: [
@@ -662,7 +662,7 @@ const eventList = {//事件列表
 				name: '入学测验',
 				id: 'c2-1',
 				type: 'battle',
-				text: '踏进雪国学院的第一道门槛，便是这群拦路的学员...',
+				text: '踏入雪国学院，迎面便是学员阻截。高宇航张扬、闫爽沉稳、郑佳怡冷静——三人组成第一道门槛。',
 				prev: null,
 				reward: { gold: 450, characters: ['ybsl_037diamondqueen'] },
 				enemy: [
@@ -675,10 +675,10 @@ const eventList = {//事件列表
 				],
 			},
 			'c2-2': {
-			name: '阶前之拦',
+			name: '阶前止步',
 			id: 'c2-2',
 				type: 'boss',
-				text: '学生会长周玥挡在阶前：「想通过？先胜过我。」',
+				text: '学生会长周玥亲自出手：「从教会一路杀来的人？有意思。不过学院的规矩——实力说话。」战后她露出赏识之色：「有资格参与学院祭。」',
 				prev: 'c2-1',
 				reward: { gold: 490, characters: ['ybsl_121tujing', 'ybsl_025shiqingyu', 'ybsl_015wanghairu'] },
 				enemy: [
@@ -694,7 +694,7 @@ const eventList = {//事件列表
 				name: '学院后山',
 				id: 'c2-3',
 				type: 'battle',
-				text: '后山的试炼场里，守卫倾巢而出...',
+				text: '后山试炼场，李玉珊的部下在此历练。你察觉学院内部暗流涌动——有人在追查「教会」与「堕魂深渊」的关系。',
 				prev: 'c2-2',
 				reward: { gold: 530, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
@@ -710,7 +710,7 @@ const eventList = {//事件列表
 				name: '风纪巡查',
 				id: 'c2-4',
 				type: 'battle',
-				text: '风纪队循着踪迹追来，态度强硬...',
+				text: '风纪队高宇航带队围堵，对教会出身的你格外警惕：「学院不是避难所。」',
 				prev: 'c2-3',
 				reward: { gold: 570, characters: ['ybsl_123xuelang'] },
 				enemy: [
@@ -723,10 +723,10 @@ const eventList = {//事件列表
 				],
 			},
 			'c2-5': {
-			name: '横剑之路',
+			name: '剑横前路',
 			id: 'c2-5',
 				type: 'boss',
-				text: '剑道导师李玉珊横剑而立：「此路，唯胜者可行。」',
+				text: '剑道导师李玉珊横剑拦路，剑术精湛。战后她露出温柔神色：「你剑中有迷茫——迷茫不是坏事，说明你在寻找。」她送你一枚剑穗：「去找吴雨欣吧。」',
 				prev: 'c2-4',
 				reward: { gold: 610, characters: ['ybsl_019shengyan', 'ybsl_020jiayutong', 'ybsl_016manchengqi'] },
 				enemy: [
@@ -742,7 +742,7 @@ const eventList = {//事件列表
 				name: '图书馆骚动',
 				id: 'c2-6',
 				type: 'battle',
-				text: '图书馆深处传来异响，埋伏者一拥而上...',
+				text: '图书馆深处传来异响，有人试图销毁关于「堕魂深渊」的文献。郑佳怡在场，神色紧张。',
 				prev: 'c2-5',
 				reward: { gold: 650, characters: ['ybsl_045gaocong'] },
 				enemy: [
@@ -758,7 +758,7 @@ const eventList = {//事件列表
 				name: '冰封回廊',
 				id: 'c2-7',
 				type: 'battle',
-				text: '回廊结满寒霜，冰系学员封锁了去路...',
+				text: '王若冰与吴格格联手封锁回廊。冰系学员的力量与学院的「雪国结界」有关——这结界，似乎在压制着什么。',
 				prev: 'c2-6',
 				reward: { gold: 690, characters: ['ybsl_024yuetong'] },
 				enemy: [
@@ -774,7 +774,7 @@ const eventList = {//事件列表
 				name: '社团冲突',
 				id: 'c2-8',
 				type: 'battle',
-				text: '两大学生社团爆发冲突，你被卷了进来...',
+				text: '两大学生社团爆发冲突，你被卷入。混乱中得知：学院祭当晚，「封印之门」会短暂打开。',
 				prev: 'c2-7',
 				reward: { gold: 730, characters: ['ybsl_053qiuer'] },
 				enemy: [
@@ -790,7 +790,7 @@ const eventList = {//事件列表
 				name: '学院祭前夜',
 				id: 'c2-9',
 				type: 'battle',
-				text: '学院祭前夜，群聚的学员将你团团围住...',
+				text: '群聚的学员将你围住，有人散播谣言说你是「教会派来的间谍」。你必须用实力证明自己。',
 				prev: 'c2-8',
 				reward: { gold: 780, characters: ['ybsl_054yueer'] },
 				enemy: [
@@ -805,10 +805,10 @@ const eventList = {//事件列表
 
 			// --- 第10小节 大BOSS：吴雨欣（legend） ---
 			'c2-10': {
-				name: '高台认可',
+				name: '高台之上',
 				id: 'c2-10',
 				type: 'boss',
-				text: '学院首席吴雨欣立于高台：「能通过此战，方算真正的雪国学院之人。」',
+				text: '学院首席吴雨欣立于高台：「能通过此战，方算真正的雪国学院之人。」战后她低声对你说：「学院之下封印着通往堕魂深渊的通道。教会也好，学院也罢——都是在看守那扇门。」',
 				prev: 'c2-9',
 				reward: { gold: 820, characters: ['ybsl_055zhengyan', 'ybsl_017xiaohong'] },
 				enemy: [
@@ -841,7 +841,7 @@ const eventList = {//事件列表
 				name: '深冬返校',
 				id: 'c3-1',
 				type: 'battle',
-				text: '雪国学院的下篇拉开帷幕，归校的学员已非吴下阿蒙...',
+				text: '学院下篇开启，所有人实力飞跃——因为学院祭临近，「封印」的力量减弱，学员们反而变得更强。',
 				prev: null,
 				reward: { gold: 870, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
@@ -854,10 +854,10 @@ const eventList = {//事件列表
 				],
 			},
 			'c3-2': {
-			name: '再会于阶前',
+			name: '阶前再会',
 			id: 'c3-2',
 				type: 'boss',
-				text: '再度相遇，周玥的气势已截然不同：「这次，可没那么好对付了。」',
+				text: '再战周玥。她不再留手：「上次只是试探，这次才是真正的学生会长。」战后她坦言：封印松动，有人在搞鬼。',
 				prev: 'c3-1',
 				reward: { gold: 920, characters: ['ybsl_037diamondqueen', 'ybsl_025wanghe', 'ybsl_018zhangqing'] },
 				enemy: [
@@ -873,7 +873,7 @@ const eventList = {//事件列表
 				name: '学院后山·夜',
 				id: 'c3-3',
 				type: 'battle',
-				text: '夜幕下的后山试炼场，守卫的实力水涨船高...',
+				text: '夜幕降临，学院后山杀机暗藏。夜间出没的敌人，身上带着深渊的气息。',
 				prev: 'c3-2',
 				reward: { gold: 960, characters: ['ybsl_121tujing'] },
 				enemy: [
@@ -889,7 +889,7 @@ const eventList = {//事件列表
 				name: '风纪巡查·夜',
 				id: 'c3-4',
 				type: 'battle',
-				text: '夜间巡查的风纪队战力再升，配合默契...',
+				text: '夜间风纪队战力再升，配合愈发默契，对你这个教会来客毫不留情。',
 				prev: 'c3-3',
 				reward: { gold: 1010, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
@@ -902,10 +902,10 @@ const eventList = {//事件列表
 				],
 			},
 			'c3-5': {
-			name: '剑送君行',
+			name: '一剑相送',
 			id: 'c3-5',
 				type: 'boss',
-				text: '李玉珊剑势更盛：「学院的下篇，由我亲自送你过关。」',
+				text: '李玉珊剑势全开，似在做最后的告别：「你要去深渊了吧？这一剑——送你一程。」战罢她将一枚冰晶交给你：「见到陈爱琳时，替我问声好。」',
 				prev: 'c3-4',
 				reward: { gold: 1060, characters: ['ybsl_123xuelang', 'ybsl_042pingzi', 'ybsl_059starsFall3'] },
 				enemy: [
@@ -921,7 +921,7 @@ const eventList = {//事件列表
 				name: '图书馆骚动·夜',
 				id: 'c3-6',
 				type: 'battle',
-				text: '深夜的图书馆，伏击者比白日更凶悍...',
+				text: '深夜的图书馆，伏击者比白日更凶悍。关于深渊的文献，正被人急于抹去。',
 				prev: 'c3-5',
 				reward: { gold: 1110, characters: ['ybsl_019shengyan'] },
 				enemy: [
@@ -937,7 +937,7 @@ const eventList = {//事件列表
 				name: '冰封回廊·极',
 				id: 'c3-7',
 				type: 'battle',
-				text: '极寒回廊中，冰系精锐结阵以待...',
+				text: '极寒回廊中，冰系精锐结阵以待。雪国结界的寒意，几乎冻结呼吸。',
 				prev: 'c3-6',
 				reward: { gold: 1160, characters: ['ybsl_045gaocong'] },
 				enemy: [
@@ -953,7 +953,7 @@ const eventList = {//事件列表
 				name: '社团冲突·总决',
 				id: 'c3-8',
 				type: 'battle',
-				text: '社团总决战，双方精锐悉数上阵...',
+				text: '社团总决战打响，双方精锐悉数上阵。学院内部的裂痕，在战火中无所遁形。',
 				prev: 'c3-7',
 				reward: { gold: 1220, characters: ['ybsl_024yuetong'] },
 				enemy: [
@@ -969,7 +969,7 @@ const eventList = {//事件列表
 				name: '学院祭前夜·终',
 				id: 'c3-9',
 				type: 'battle',
-				text: '学院祭前夜的最后围堵，学员倾尽所学...',
+				text: '学院祭前夜的最后围堵，学员们倾尽所学。封印，已在崩裂的边缘。',
 				prev: 'c3-8',
 				reward: { gold: 1270, characters: ['ybsl_053qiuer'] },
 				enemy: [
@@ -984,10 +984,10 @@ const eventList = {//事件列表
 
 			// --- 第10小节 大BOSS：吴雨欣（legend） ---
 			'c3-10': {
-				name: '下篇终局',
+				name: '终局之前',
 				id: 'c3-10',
 				type: 'boss',
-				text: '学院首席吴雨欣全力出手：「雪国学院的下篇，到此为止——若你接得住。」',
+				text: '吴雨欣全力出手，学院全员精英尽出。战后她将一枚钥匙交给你：「这是通往深渊的门钥。记住——陈爱琳曾是这所学院的学生会长。」封印彻底崩溃，深渊裂隙在学院中央裂开。你握着钥匙，跳了进去。',
 				prev: 'c3-9',
 				reward: { gold: 1320, characters: ['ybsl_054yueer', 'ybsl_059starsFall1'] },
 				enemy: [
@@ -1016,7 +1016,7 @@ const eventList = {//事件列表
 				name: '深渊前哨',
 				id: 'c4-1',
 				type: 'battle',
-				text: '堕魂深渊的入口处，无数被吞噬的怨灵在黑暗中蠢蠢欲动，前哨的爪牙已列阵相候。',
+				text: '深渊入口，怨灵在黑暗中涌动——这些都是被教会和学院「牺牲」的灵魂。',
 				prev: null,
 				reward: { gold: 1380, characters: ['ybsl_055zhengyan'] },
 				enemy: [
@@ -1033,7 +1033,7 @@ const eventList = {//事件列表
 				name: '深渊回响',
 				id: 'c4-2',
 				type: 'battle',
-				text: '越往深处，怨念越浓。回廊两侧的噬魂之物循声涌来。',
+				text: '越往深处，你听到回响——那是陈爱琳的喃喃自语：「为什么……为什么要献祭我们……」',
 				prev: 'c4-1',
 				reward: { gold: 1430, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
@@ -1047,10 +1047,10 @@ const eventList = {//事件列表
 			},
 			// --- 第3小节：小BOSS·尹超跃（Lv.29） ---
 			'c4-3': {
-				name: '裂渊哨岗',
+				name: '裂渊之哨',
 				id: 'c4-3',
 				type: 'boss',
-				text: '深渊守将尹超跃横身拦路：「想靠近深渊之心？先闯过我这关。」',
+				text: '深渊守将尹超跃拦路：「她叫陈爱琳，曾是学院最优秀的学生会长。然后……她被献祭了。」',
 				prev: 'c4-2',
 				reward: { gold: 1490, characters: ['ybsl_037diamondqueen', 'ybsl_046jiangxuewu', 'ybsl_059starsFall4'] },
 				enemy: [
@@ -1067,7 +1067,7 @@ const eventList = {//事件列表
 				name: '深渊迷雾',
 				id: 'c4-4',
 				type: 'battle',
-				text: '浓雾中杀机四伏，迷失者尽数化作深渊的养分。',
+				text: '浓雾中杀机四伏。你逐渐拼凑出真相：教会与学院联手，将「异端」投入深渊献祭，以维持雪国结界。',
 				prev: 'c4-3',
 				reward: { gold: 1550, characters: ['ybsl_121tujing'] },
 				enemy: [
@@ -1084,7 +1084,7 @@ const eventList = {//事件列表
 				name: '魂潮奔涌',
 				id: 'c4-5',
 				type: 'battle',
-				text: '深渊之心传来搏动，魂潮如洪流般向你卷来。',
+				text: '深渊之心传来搏动，魂潮如洪流卷来，裹挟着无数未竟的悲鸣。',
 				prev: 'c4-4',
 				reward: { gold: 1610, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
@@ -1098,10 +1098,10 @@ const eventList = {//事件列表
 			},
 			// --- 第6小节：小BOSS·孙丽松（Lv.36） ---
 			'c4-6': {
-				name: '蓝焰炼狱',
+				name: '蓝焰深处',
 				id: 'c4-6',
 				type: 'boss',
-				text: '孙丽松自魂雾中现身，指尖凝起幽蓝火焰：「这一程，由我送你下坠。」',
+				text: '孙丽松现身，指尖蓝焰幽冷：「陈爱琳是我的老师。你们这些活人，永远不会理解被抛弃的滋味。」',
 				prev: 'c4-5',
 				reward: { gold: 1660, characters: ['ybsl_123xuelang', 'ybsl_059starsFall2', 'ybsl_068qingyue'] },
 				enemy: [
@@ -1118,7 +1118,7 @@ const eventList = {//事件列表
 				name: '残魂炼狱',
 				id: 'c4-7',
 				type: 'battle',
-				text: '炼狱般的深渊底层，残魂被炼作厮杀的兵器。',
+				text: '残魂被炼作兵器，无数学院制服在魂火中燃烧。这片深渊，吞没了多少青春。',
 				prev: 'c4-6',
 				reward: { gold: 1720, characters: ['ybsl_019shengyan'] },
 				enemy: [
@@ -1135,7 +1135,7 @@ const eventList = {//事件列表
 				name: '深渊之喉',
 				id: 'c4-8',
 				type: 'battle',
-				text: '逼近深渊之喉，守卫的嘶吼震得魂屑簌簌而落。',
+				text: '逼近深渊核心，守卫的嘶吼震得魂屑簌簌而落。尽头，王座已隐约可见。',
 				prev: 'c4-7',
 				reward: { gold: 1780, characters: ['ybsl_045gaocong'] },
 				enemy: [
@@ -1149,10 +1149,10 @@ const eventList = {//事件列表
 			},
 			// --- 第9小节：小BOSS·王汉桢（Lv.43） ---
 			'c4-9': {
-				name: '霜喉终垒',
+				name: '霜喉之壁',
 				id: 'c4-9',
 				type: 'boss',
-				text: '王汉桢立于深渊之喉尽头，剑光如霜：「再往前，便是主人的领域。」',
+				text: '王汉桢剑光如霜：「陈爱琳没有堕落——她只是选择了复仇。而我们，选择了追随她。」',
 				prev: 'c4-8',
 				reward: { gold: 1850, characters: ['ybsl_024yuetong', 'ybsl_060liutianhang', 'ybsl_070lvyanqiu'] },
 				enemy: [
@@ -1166,10 +1166,10 @@ const eventList = {//事件列表
 			},
 			// --- 第10小节：大BOSS·堕魂之主陈爱琳（Lv.46） ---
 			'c4-10': {
-				name: '堕魂终焉',
+				name: '王座之下',
 				id: 'c4-10',
 				type: 'boss',
-				text: '深渊尽头，堕魂之主陈爱琳自王座起身，尹超跃、孙丽松、王汉桢分立其身侧：「归来的魂魄啊，这一次，由我亲自收下。」',
+				text: '深渊尽头，陈爱琳自王座起身，异常平静：「你来了。我等你很久了——从你踏入教会的那一刻起，我就知道了。」她伸出手：「加入我，或者……消灭我。选择吧。」战后她露出解脱的笑容：「替我告诉学院……我不恨了。」她化作星尘消散，深渊随之崩塌。',
 				prev: 'c4-9',
 				reward: { gold: 1910, characters: ['ybsl_053qiuer', 'ybsl_047shan'] },
 				enemy: [
@@ -1198,7 +1198,7 @@ const eventList = {//事件列表
 				name: '笔墨序曲',
 				id: 'c5-1',
 				type: 'battle',
-				text: '书道峰会拉开帷幕，笔墨纸砚已备好，初赛的执笔者们正整装待发。',
+				text: '从深渊归来，你收到一封邀请函——书道峰会请柬，落款是涂山小红。你意识到，这不止是一场书法比赛。',
 				prev: null,
 				reward: { gold: 1970, characters: ['ybsl_054yueer'] },
 				enemy: [
@@ -1212,10 +1212,10 @@ const eventList = {//事件列表
 			},
 			// 关卡2：六敌 - 李玉珊 + 周玥 + 高宇航 + 郑佳怡 + 尹超跃 + 吴格格
 			'c5-2': {
-				name: '临池试笔',
+				name: '试笔临池',
 				id: 'c5-2',
 				type: 'boss',
-				text: '张晴坐镇临帖台，笑意盈盈：「来，先与我比一比这横平竖直。」',
+				text: '张晴坐镇临帖台：「听说你去了深渊？有意思。来，先与我比一比这横平竖直。」',
 				prev: 'c5-1',
 				reward: { gold: 2030, characters: ['ybsl_055zhengyan', 'ybsl_079xiaoxin', 'ybsl_033xiaohui'] },
 				enemy: [
@@ -1232,7 +1232,7 @@ const eventList = {//事件列表
 				name: '砚池清风',
 				id: 'c5-3',
 				type: 'battle',
-				text: '砚池旁微风轻拂，几位学子正琢磨着笔锋的转折。',
+				text: '峰会氛围渐浓，参会者中竟有许多熟悉面孔——教会的、学院的、深渊的……各方势力以笔为剑，暗中交锋。',
 				prev: 'c5-2',
 				reward: { gold: 2100, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
@@ -1249,7 +1249,7 @@ const eventList = {//事件列表
 				name: '纸上行云',
 				id: 'c5-4',
 				type: 'battle',
-				text: '宣纸之上云气流转，参赛者们在行云流水中寻找手感。',
+				text: '宣纸之上云气流转，参赛者们在行云流水中寻找手感，笔锋暗藏机锋。',
 				prev: 'c5-3',
 				reward: { gold: 2160, characters: ['ybsl_037diamondqueen'] },
 				enemy: [
@@ -1263,10 +1263,10 @@ const eventList = {//事件列表
 			},
 			// 关卡5：六敌 - 闫爽 + 秋儿 + 鞠熒 + 宋橤 + 周靈 + 李曉
 			'c5-5': {
-				name: '染墨小筑',
+				name: '染墨留白',
 				id: 'c5-5',
 				type: 'boss',
-				text: '小慧挽袖研墨，俏皮道：「看我的笔，可不比谁慢哦。」',
+				text: '小慧挽袖研墨：「书道峰会表面是雅集，实际上是各方势力争夺星月之笔的战场。那支笔，能改写现实。」',
 				prev: 'c5-4',
 				reward: { gold: 2230, characters: ['ybsl_121tujing', 'ybsl_003yanshuang', 'ybsl_038bianqiuwen'] },
 				enemy: [
@@ -1283,7 +1283,7 @@ const eventList = {//事件列表
 				name: '笔走龙蛇',
 				id: 'c5-6',
 				type: 'battle',
-				text: '赛场上笔走龙蛇，满堂喝彩声此起彼伏。',
+				text: '赛场上笔走龙蛇，满堂喝彩。优雅的较量之下，是看不见的刀光。',
 				prev: 'c5-5',
 				reward: { gold: 2290, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
@@ -1300,7 +1300,7 @@ const eventList = {//事件列表
 				name: '墨香盈袖',
 				id: 'c5-7',
 				type: 'battle',
-				text: '墨香盈袖，大家在交流中渐入佳境。',
+				text: '墨香盈袖，大家在交流中渐入佳境。星月之笔的传说，也悄然流传。',
 				prev: 'c5-6',
 				reward: { gold: 2360, characters: ['ybsl_123xuelang'] },
 				enemy: [
@@ -1317,7 +1317,7 @@ const eventList = {//事件列表
 				name: '飞白流韵',
 				id: 'c5-8',
 				type: 'battle',
-				text: '飞白的枯笔韵味十足，围观者连连称妙。',
+				text: '飞白的枯笔韵味十足，围观者连连称妙。笔意之间，似有星河倒影。',
 				prev: 'c5-7',
 				reward: { gold: 2430, characters: ['ybsl_019shengyan'] },
 				enemy: [
@@ -1334,7 +1334,7 @@ const eventList = {//事件列表
 				name: '宣纸铺陈',
 				id: 'c5-9',
 				type: 'battle',
-				text: '宣纸铺陈，决赛前的最后热身已然开始。',
+				text: '决赛前的最后热身。你隐约感到，真正的高手尚未登场。',
 				prev: 'c5-8',
 				reward: { gold: 2500, characters: ['ybsl_045gaocong'] },
 				enemy: [
@@ -1348,10 +1348,10 @@ const eventList = {//事件列表
 			},
 			// 关卡10：BOSS - 吴雨欣 + 王汉桢 + 孙丽松
 			'c5-10': {
-				name: '双毫竞秀',
+				name: '双毫争锋',
 				id: 'c5-10',
 				type: 'boss',
-				text: '秋儿与悦儿并肩立于终审台前，异口同声：「这一局，可要好好请教啦。」',
+				text: '秋儿与悦儿并肩立于终审台前，异口同声：「这一局，可要好好请教啦。」她们是星月之笔的守护者。',
 				prev: 'c5-9',
 				reward: { gold: 2570, characters: ['ybsl_024yuetong', 'ybsl_041mmuqin'] },
 				enemy: [
@@ -1380,7 +1380,7 @@ const eventList = {//事件列表
 				name: '盛会初临',
 				id: 'c6-1',
 				type: 'battle',
-				text: '峰会进入盛会阶段，四方书友齐聚，气氛愈发热闹。',
+				text: '峰会进入高潮，四方书友齐聚，气氛由文雅转为炽烈——所有人都知道，星月之笔即将现世。',
 				prev: null,
 				reward: { gold: 2640, characters: ['ybsl_053qiuer'] },
 				enemy: [
@@ -1394,10 +1394,10 @@ const eventList = {//事件列表
 			},
 			// 关卡2：六敌 - 李玉珊 + 周玥 + 高宇航 + 郑佳怡 + 尹超跃 + 吴格格
 			'c6-2': {
-				name: '题笺飞雪',
+				name: '飞雪题笺',
 				id: 'c6-2',
 				type: 'boss',
-				text: '江雪舞执笔而立，霜雪般的字迹飘然落下：「试试这落笔的轻重？」',
+				text: '江雪舞执笔而立，霜雪字迹飘落：「深渊的事我听说了。你选择了宽恕——但接下来的路，宽恕可能不够。」',
 				prev: 'c6-1',
 				reward: { gold: 2710, characters: ['ybsl_054yueer', 'ybsl_004zhangyujie', 'db_ybsl_067snake'] },
 				enemy: [
@@ -1414,7 +1414,7 @@ const eventList = {//事件列表
 				name: '梅香入墨',
 				id: 'c6-3',
 				type: 'battle',
-				text: '梅香入墨，有人在红梅图上题下小诗，引得众人围观。',
+				text: '梅香入墨，有人在红梅图上题下小诗。墨香里，藏着各自的执念。',
 				prev: 'c6-2',
 				reward: { gold: 2780, characters: ['ybsl_055zhengyan'] },
 				enemy: [
@@ -1431,7 +1431,7 @@ const eventList = {//事件列表
 				name: '红袖临风',
 				id: 'c6-4',
 				type: 'battle',
-				text: '红袖临风，参赛者们的衣袂随挥毫的节奏轻轻扬起。',
+				text: '参赛者衣袂随挥毫的节奏轻轻扬起，笔锋如风，写意淋漓。',
 				prev: 'c6-3',
 				reward: { gold: 2850, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
@@ -1445,10 +1445,10 @@ const eventList = {//事件列表
 			},
 			// 关卡5：六敌 - 闫爽 + 秋儿 + 鞠熒 + 宋橤 + 周靈 + 李曉
 			'c6-5': {
-				name: '丹染春山',
+				name: '丹朱点山',
 				id: 'c6-5',
 				type: 'boss',
-				text: '涂山小红笑盈盈举起朱笔：「看我这红，比你那墨如何？」',
+				text: '涂山小红笑举朱笔，她是峰会的真正发起者：「深渊只是序章。星月之笔能改写一切——包括你的过去。你不想知道自己是谁吗？」',
 				prev: 'c6-4',
 				reward: { gold: 2920, characters: ['ybsl_037diamondqueen', 'ybsl_005wangruobing', 'ybsl_069xiangzi'] },
 				enemy: [
@@ -1465,7 +1465,7 @@ const eventList = {//事件列表
 				name: '抚卷听雨',
 				id: 'c6-6',
 				type: 'battle',
-				text: '抚卷听雨，雨声与笔声相和，别有一番雅趣。',
+				text: '雨声与笔声相和，别有一番雅趣。梦里星河的传说，在雨幕中若隐若现。',
 				prev: 'c6-5',
 				reward: { gold: 3000, characters: ['ybsl_121tujing'] },
 				enemy: [
@@ -1482,7 +1482,7 @@ const eventList = {//事件列表
 				name: '汉韵晋风',
 				id: 'c6-7',
 				type: 'battle',
-				text: '汉韵晋风，大家在古帖的临摹中各抒己见。',
+				text: '汉韵晋风，大家在古帖临摹中各抒己见。星月之笔的源头，指向更古老的领域。',
 				prev: 'c6-6',
 				reward: { gold: 3070, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
@@ -1499,7 +1499,7 @@ const eventList = {//事件列表
 				name: '满纸烟岚',
 				id: 'c6-8',
 				type: 'battle',
-				text: '满纸烟岚，山水意境在笔端缓缓晕开。',
+				text: '山水意境在笔端缓缓晕开。云上之城、往昔回廊、星月神话的使者，陆续现身。',
 				prev: 'c6-7',
 				reward: { gold: 3150, characters: ['ybsl_123xuelang'] },
 				enemy: [
@@ -1516,7 +1516,7 @@ const eventList = {//事件列表
 				name: '墨宝琳琅',
 				id: 'c6-9',
 				type: 'battle',
-				text: '墨宝琳琅，佳作纷呈，盛会渐入高潮。',
+				text: '佳作纷呈，盛会渐入高潮。所有人都为那支笔而来。',
 				prev: 'c6-8',
 				reward: { gold: 3220, characters: ['ybsl_019shengyan'] },
 				enemy: [
@@ -1530,10 +1530,10 @@ const eventList = {//事件列表
 			},
 			// 关卡10：BOSS - 吴雨欣 + 王汉桢 + 孙丽松
 			'c6-10': {
-				name: '墨海同晖',
+				name: '墨海共晖',
 				id: 'c6-10',
 				type: 'boss',
-				text: '王海茹与满城柒同展长卷，含笑相邀：「这最后一笔，便与你共题。」',
+				text: '王海茹与满城柒同展长卷：「最后一笔，与你共题。」战罢，她们将星月之笔交到你手中：「去梦里星河吧。那里有你想要的答案。」',
 				prev: 'c6-9',
 				reward: { gold: 3300, characters: ['ybsl_045gaocong', 'ybsl_049waner'] },
 				enemy: [
@@ -1565,7 +1565,7 @@ const eventList = {//事件列表
 				name: '回廊初醒',
 				id: 'c7-1',
 				type: 'battle',
-				text: '往昔回廊的迷雾中，一道熟悉的身影率先拦住了去路——蘋姉似笑非笑：「这么多年，你还是改不了乱闯的毛病。」',
+				text: '手持星月之笔，你踏入「往昔回廊」——一个由记忆构成的空间。蘋姉第一个出现：「欢迎回来——回到你最不愿面对的记忆里。」',
 				prev: null,
 				reward: { gold: 3370, characters: ['ybsl_024yuetong'] },
 				enemy: [
@@ -1582,7 +1582,7 @@ const eventList = {//事件列表
 				name: '旧友相逢',
 				id: 'c7-2',
 				type: 'battle',
-				text: '回廊深处，高聪与史庆宇并肩而立：「来的可是贵客，正好拿你试试手。」',
+				text: '高聪与史庆宇并肩：「这里的一切都是你记忆的投影。打败我们——或者被记忆吞噬。」',
 				prev: 'c7-1',
 				reward: { gold: 3450, characters: ['ybsl_053qiuer'] },
 				enemy: [
@@ -1599,7 +1599,7 @@ const eventList = {//事件列表
 				name: '回廊堵截',
 				id: 'c7-3',
 				type: 'battle',
-				text: '狭窄的廊道两头被王贺与贾雨桐封死，退路尽断。',
+				text: '王贺与贾雨桐封死退路。回廊中浮现的，是你最愧疚的场景——那些没来得及救的人。',
 				prev: 'c7-2',
 				reward: { gold: 3530, characters: ['ybsl_054yueer'] },
 				enemy: [
@@ -1616,7 +1616,7 @@ const eventList = {//事件列表
 				name: '蛇影初缠',
 				id: 'c7-4',
 				type: 'battle',
-				text: '幽香袭来，蛇妃自廊柱后探出身子，笑意里藏着危险的盘算。',
+				text: '蛇妃从廊柱后探身，代表你内心的恐惧：「你在害怕什么？深渊？真相？还是……你自己？」',
 				prev: 'c7-3',
 				reward: { gold: 3610, characters: ['ybsl_055zhengyan'] },
 				enemy: [
@@ -1633,7 +1633,7 @@ const eventList = {//事件列表
 				name: '残忆交叠',
 				id: 'c7-5',
 				type: 'battle',
-				text: '蘋姉与高聪再度拦路，往昔的记忆如潮水般涌来。',
+				text: '蘋姉与高聪再度拦路，往昔的记忆如潮水涌来，层层堆叠成墙。',
 				prev: 'c7-4',
 				reward: { gold: 3690, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
@@ -1650,7 +1650,7 @@ const eventList = {//事件列表
 				name: '双壁合击',
 				id: 'c7-6',
 				type: 'battle',
-				text: '史庆宇与王贺的配合越发默契，攻守之间滴水不漏。',
+				text: '史庆宇与王贺的配合愈发默契，攻守之间滴水不漏，似要将你永远留在此处。',
 				prev: 'c7-5',
 				reward: { gold: 3770, characters: ['ybsl_037diamondqueen'] },
 				enemy: [
@@ -1667,7 +1667,7 @@ const eventList = {//事件列表
 				name: '蛇与雨',
 				id: 'c7-7',
 				type: 'battle',
-				text: '贾雨桐撑起屏障，蛇妃于其后吐信而笑，攻守一体。',
+				text: '贾雨桐撑起屏障，蛇妃于其后吐信而笑。恐惧与愧疚，交织成网。',
 				prev: 'c7-6',
 				reward: { gold: 3850, characters: ['ybsl_121tujing'] },
 				enemy: [
@@ -1684,7 +1684,7 @@ const eventList = {//事件列表
 				name: '锋锐相争',
 				id: 'c7-8',
 				type: 'battle',
-				text: '蘋姉与王贺同时出剑，快慢交织的攻势令人难以招架。',
+				text: '蘋姉与王贺同时出剑，快慢交织。每一剑，都戳在你未愈的心结上。',
 				prev: 'c7-7',
 				reward: { gold: 3930, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
@@ -1701,7 +1701,7 @@ const eventList = {//事件列表
 				name: '回廊合流',
 				id: 'c7-9',
 				type: 'battle',
-				text: '高聪、贾雨桐、史庆宇三人集结于此，似在等待某人号令。',
+				text: '高聪、贾雨桐、史庆宇三人集结，似在等待某人号令。回廊深处，王座渐近。',
 				prev: 'c7-8',
 				reward: { gold: 4010, characters: ['ybsl_123xuelang'] },
 				enemy: [
@@ -1715,10 +1715,10 @@ const eventList = {//事件列表
 			},
 			// 关卡10 BOSS：房佳谕（主boss）+ 蛇妃 + 蘋姉（次boss）+ 杂兵
 			'c7-10': {
-				name: '回廊尽头',
+				name: '记忆尽头',
 				id: 'c7-10',
 				type: 'boss',
-				text: '回廊尽头，房佳谕自王座起身，蛇妃与蘋姉分立其左右：「踏过这条回廊的人，都得留下点什么。」',
+				text: '房佳谕自王座起身——她是主角最深的记忆之一，一个曾经承诺保护却最终失去的人：「终于来了。你准备好面对最后的真相了吗？」战后她消散前轻声道：「去云上之城吧。那里有通往星月神话的路。」',
 				prev: 'c7-9',
 				reward: { gold: 4100, characters: ['ybsl_019shengyan', 'ybsl_048wushuang'] },
 				enemy: [
@@ -1750,7 +1750,7 @@ const eventList = {//事件列表
 				name: '云城初临',
 				id: 'c8-1',
 				type: 'battle',
-				text: '云上之城的大门在脚下铺展，刘天杭与慕琴并肩而立：「这座城，可没那么好进。」',
+				text: '云上之城的大门在脚下铺展。刘天杭与慕琴并肩：「这座城，是通往星月神话的最后一站。」',
 				prev: null,
 				reward: { gold: 4180, characters: ['ybsl_045gaocong'] },
 				enemy: [
@@ -1767,7 +1767,7 @@ const eventList = {//事件列表
 				name: '云阶对峙',
 				id: 'c8-2',
 				type: 'battle',
-				text: '拾级而上，宋橤撑起护盾，周靈在侧蓄势：「再往上，可就没这么温柔了。」',
+				text: '宋橤撑起护盾，周靈在侧蓄势：「再往上，可就没这么温柔了。」',
 				prev: 'c8-1',
 				reward: { gold: 4260, characters: ['ybsl_024yuetong'] },
 				enemy: [
@@ -1784,7 +1784,7 @@ const eventList = {//事件列表
 				name: '云海交锋',
 				id: 'c8-3',
 				type: 'battle',
-				text: '云海翻涌，李曉剑光如星，刘天杭回身再战：「又见面了，这次可不会留手。」',
+				text: '李曉剑光如星，刘天杭回身再战：「又见面了，这次可不会留手。」',
 				prev: 'c8-2',
 				reward: { gold: 4350, characters: ['ybsl_053qiuer'] },
 				enemy: [
@@ -1801,7 +1801,7 @@ const eventList = {//事件列表
 				name: '云台合奏',
 				id: 'c8-4',
 				type: 'battle',
-				text: '云台之上，慕琴与宋橤的配合行云流水，攻守相生。',
+				text: '慕琴与宋橤的配合行云流水，攻守如一，云阶之上难分难解。',
 				prev: 'c8-3',
 				reward: { gold: 4430, characters: ['ybsl_054yueer'] },
 				enemy: [
@@ -1818,7 +1818,7 @@ const eventList = {//事件列表
 				name: '星落云巅',
 				id: 'c8-5',
 				type: 'battle',
-				text: '周靈与李曉双星辉映，云巅之上星光如雨倾泻。',
+				text: '周靈与李曉双星辉映，星光如雨倾泻，照亮整座云城。',
 				prev: 'c8-4',
 				reward: { gold: 4520, characters: ['ybsl_055zhengyan'] },
 				enemy: [
@@ -1835,7 +1835,7 @@ const eventList = {//事件列表
 				name: '云城双壁',
 				id: 'c8-6',
 				type: 'battle',
-				text: '刘天杭与慕琴再度联手，云城双壁的攻势愈发凌厉。',
+				text: '刘天杭与慕琴再度联手，攻势愈发凌厉。云城的力量，源于比深渊更古老的星轨。',
 				prev: 'c8-5',
 				reward: { gold: 4600, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
@@ -1852,7 +1852,7 @@ const eventList = {//事件列表
 				name: '云影轮转',
 				id: 'c8-7',
 				type: 'battle',
-				text: '宋橤与周靈轮转攻防，云影在脚下不断变幻。',
+				text: '宋橤与周靈轮转攻防，云影在脚下不断变幻，令人难辨虚实。',
 				prev: 'c8-6',
 				reward: { gold: 4690, characters: ['ybsl_037diamondqueen'] },
 				enemy: [
@@ -1869,7 +1869,7 @@ const eventList = {//事件列表
 				name: '星剑破云',
 				id: 'c8-8',
 				type: 'battle',
-				text: '李曉星剑破云，刘天杭乘势突进，云层被生生撕裂。',
+				text: '李曉星剑破云，刘天杭乘势突进。云城守卫，一个接一个倒下。',
 				prev: 'c8-7',
 				reward: { gold: 4780, characters: ['ybsl_121tujing'] },
 				enemy: [
@@ -1900,10 +1900,10 @@ const eventList = {//事件列表
 			},
 			// 关卡10 BOSS：鞠熒（主boss）+ 刘天杭 + 慕琴（次boss）+ 杂兵
 			'c8-10': {
-				name: '云城之巅',
+				name: '云巅之上',
 				id: 'c8-10',
 				type: 'boss',
-				text: '云城之巅，鞠熒于星轨环绕中现身，刘天杭与慕琴分立其左右：「能走到这里，你确实不简单。」',
+				text: '云城之巅，鞠熒于星轨环绕中现身：「能走到这里，你确实不简单。但星月神话不是你该涉足的领域。」战败后她让开道路：「去吧。彡在等你。」',
 				prev: 'c8-9',
 				reward: { gold: 4960, characters: ['ybsl_123xuelang', 'ybsl_076zhujun'] },
 				enemy: [
@@ -1935,7 +1935,7 @@ const eventList = {//事件列表
 				name: '星月初升',
 				id: 'c9-1',
 				type: 'battle',
-				text: '星月交辉的夜空下，岳瞳与盛妍率先现身：「这片星空，容不得外人踏足。」',
+				text: '星月交辉的夜空下，岳瞳与盛妍拦路：「这片星空，容不得外人踏足。」',
 				prev: null,
 				reward: { gold: 5050, characters: ['ybsl_019shengyan'] },
 				enemy: [
@@ -1986,7 +1986,7 @@ const eventList = {//事件列表
 				name: '神话回响',
 				id: 'c9-4',
 				type: 'battle',
-				text: '盛妍与卞秋雯的攻势交织，神话的余音在夜空回荡。',
+				text: '盛妍与卞秋雯的攻势交织，神话的余音在夜空回荡，仿佛亘古的钟鸣。',
 				prev: 'c9-3',
 				reward: { gold: 5320, characters: ['ybsl_053qiuer'] },
 				enemy: [
@@ -2003,7 +2003,7 @@ const eventList = {//事件列表
 				name: '星河轻语',
 				id: 'c9-5',
 				type: 'battle',
-				text: '小新与王婉儿相视一笑，星河仿佛也轻声呢喃起来。',
+				text: '小新与王婉儿相视一笑，星河仿佛也轻声呢喃。她们在「修正」你的存在。',
 				prev: 'c9-4',
 				reward: { gold: 5410, characters: ['ybsl_054yueer'] },
 				enemy: [
@@ -2020,7 +2020,7 @@ const eventList = {//事件列表
 				name: '双星并耀',
 				id: 'c9-6',
 				type: 'battle',
-				text: '岳瞳与盛妍双星并耀，星月光华几乎令人无法直视。',
+				text: '岳瞳与盛妍双星并耀，星月光华令人无法直视。神话的秩序，冷而坚定。',
 				prev: 'c9-5',
 				reward: { gold: 5500, characters: ['ybsl_055zhengyan'] },
 				enemy: [
@@ -2037,7 +2037,7 @@ const eventList = {//事件列表
 				name: '月影流光',
 				id: 'c9-7',
 				type: 'battle',
-				text: '卞秋雯与小新再度拦路，月影流光间暗藏杀机。',
+				text: '卞秋雯与小新再度拦路，月影流光间暗藏杀机。修正之力，愈发凌厉。',
 				prev: 'c9-6',
 				reward: { gold: 5590, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
@@ -2054,7 +2054,7 @@ const eventList = {//事件列表
 				name: '神话交汇',
 				id: 'c9-8',
 				type: 'battle',
-				text: '王婉儿与岳瞳的力量交汇，星与月的光轨在脚下缠绕。',
+				text: '王婉儿与岳瞳的力量交汇，星与月的光轨在脚下缠绕，织成牢不可破的网。',
 				prev: 'c9-7',
 				reward: { gold: 5690, characters: ['ybsl_037diamondqueen'] },
 				enemy: [
@@ -2071,7 +2071,7 @@ const eventList = {//事件列表
 				name: '星月合流',
 				id: 'c9-9',
 				type: 'battle',
-				text: '盛妍、卞秋雯、小新三人汇聚，星月的彼端似有巨影苏醒。',
+				text: '盛妍、卞秋雯、小新三人汇聚，星月彼端似有巨影苏醒。神话，已全数降临。',
 				prev: 'c9-8',
 				reward: { gold: 5780, characters: ['ybsl_121tujing'] },
 				enemy: [
@@ -2085,10 +2085,10 @@ const eventList = {//事件列表
 			},
 			// 关卡10 BOSS：彡（主boss）+ 岳瞳 + 王婉儿（次boss）+ 杂兵
 			'c9-10': {
-				name: '神话尽头',
+				name: '神话之畔',
 				id: 'c9-10',
 				type: 'boss',
-				text: '星月交缠的核心，彡踏光而来，岳瞳与王婉儿分立其左右：「神话的尽头，由我来书写。」',
+				text: '彡踏光而来，她是星月神话的化身：「这场神话已经延续了千年。你的到来，既在预料之中，也在预料之外。」战后她微笑：「果然……你能走到这里，是因为你本就不属于任何一段历史。你真正的归宿，在梦里星河。」',
 				prev: 'c9-9',
 				reward: { gold: 5880, characters: ['ybsl_122wangbingyu', 'ybsl_107tushanshuili'] },
 				enemy: [
@@ -2117,10 +2117,10 @@ const eventList = {//事件列表
 		eventPack: {
 			// 关卡1：主蚕 + 次雨/黎 + 杂兵
 			'c10-1': {
-				name: '星河初梦',
+				name: '初梦未醒',
 				id: 'c10-1',
 				type: 'boss',
-				text: '梦里星河荡漾，蚕自茧中探身：「这里的梦，由不得你醒。」',
+				text: '梦里星河荡漾，蚕自茧中探身：「这里的梦，由不得你醒。」——这是梦境的最外层。',
 				prev: null,
 				reward: { gold: 5970, characters: ['ybsl_123xuelang', 'ybsl_007wugege', 'ybsl_001sunlisong'] },
 				enemy: [
@@ -2134,10 +2134,10 @@ const eventList = {//事件列表
 			},
 			// 关卡2：主张汨 + 次清月/香紫 + 杂兵
 			'c10-2': {
-				name: '梦泊双姝',
+				name: '双姝泊梦',
 				id: 'c10-2',
 				type: 'boss',
-				text: '张汨与清月、香紫临水而立，梦泊之上波光潋滟。',
+				text: '张汨与清月、香紫临水而立。她们负责筛选「清醒者」与「沉溺者」。',
 				prev: 'c10-1',
 				reward: { gold: 6070, characters: ['ybsl_019shengyan', 'ybsl_011gaoyuhang', 'ybsl_006wanghanzhen'] },
 				enemy: [
@@ -2151,10 +2151,10 @@ const eventList = {//事件列表
 			},
 			// 关卡3：全体真名boss - 涂山水璃 + 朱焌 + 熙 + 蚕 + 雨 + 黎
 			'c10-3': {
-				name: '真名·星河之主',
+				name: '真名初现',
 				id: 'c10-3',
 				type: 'boss',
-				text: '星河核心，涂山水璃与朱焌并肩，身侧熙、蚕、雨、黎环伺——此战，全员真名。',
+				text: '星河核心，涂山水璃与朱焌并肩：「你终于来了——我们等你，等了许多个纪元。」全员以真名登场。',
 				prev: 'c10-2',
 				reward: { gold: 6160, characters: ['ybsl_045gaocong', 'ybsl_047zhangmi', 'ybsl_009liyushan'] },
 				enemy: [
@@ -2168,10 +2168,10 @@ const eventList = {//事件列表
 			},
 			// 关卡4：主熙 + 次张汨/清月 + 杂兵
 			'c10-4': {
-				name: '梦刃流光',
+				name: '流光一梦',
 				id: 'c10-4',
 				type: 'boss',
-				text: '熙剑光夺目，张汨与清月一左一右封锁去路。',
+				text: '熙剑光夺目，张汨与清月封锁去路。梦境的考验，正式开始。',
 				prev: 'c10-3',
 				reward: { gold: 6260, characters: ['ybsl_024yuetong', 'ybsl_026can', 'ybsl_010zhouyue'] },
 				enemy: [
@@ -2185,10 +2185,10 @@ const eventList = {//事件列表
 			},
 			// 关卡5：主香紫 + 次黎/雨 + 杂兵
 			'c10-5': {
-				name: '梦紫低语',
+				name: '紫色低语',
 				id: 'c10-5',
 				type: 'boss',
-				text: '香紫低语缠绕，黎与雨织成梦的牢笼。',
+				text: '香紫低语缠绕，黎与雨织成梦的牢笼。她们不是敌人，而是梦境对你的叩问。',
 				prev: 'c10-4',
 				reward: { gold: 6360, characters: ['ybsl_053qiuer', 'ybsl_027rain', 'ybsl_013yinji'] },
 				enemy: [
@@ -2202,10 +2202,10 @@ const eventList = {//事件列表
 			},
 			// 关卡6：全体真名boss - 朱焌 + 涂山水璃 + 清月 + 张汨 + 香紫 + 黎
 			'c10-6': {
-				name: '真名·星河守望',
+				name: '真名再临',
 				id: 'c10-6',
 				type: 'boss',
-				text: '朱焌撑起梦之壁垒，涂山水璃、清月、张汨、香紫、黎齐至——全员真名，再无杂兵。',
+				text: '朱焌撑起梦之壁垒，六位真名齐至，再无杂音。梦的洪流，向你涌来。',
 				prev: 'c10-5',
 				reward: { gold: 6460, characters: ['ybsl_054yueer', 'ybsl_029dawn', 'ybsl_018huanqing'] },
 				enemy: [
@@ -2219,10 +2219,10 @@ const eventList = {//事件列表
 			},
 			// 关卡7：主蚕 + 次张汨/香紫 + 杂兵
 			'c10-7': {
-				name: '梦茧缠丝',
+				name: '茧中缠丝',
 				id: 'c10-7',
 				type: 'boss',
-				text: '蚕吐梦丝成网，张汨与香紫于网中伏击。',
+				text: '蚕吐梦丝成网，张汨与香紫于网中伏击。每一根丝，都系着一段往事。',
 				prev: 'c10-6',
 				reward: { gold: 6560, characters: ['ybsl_055zhengyan', 'ybsl_025shiqingyu', 'ybsl_036bright'] },
 				enemy: [
@@ -2236,10 +2236,10 @@ const eventList = {//事件列表
 			},
 			// 关卡8：主雨 + 次熙/清月 + 杂兵
 			'c10-8': {
-				name: '梦雨倾盆',
+				name: '雨落梦倾',
 				id: 'c10-8',
 				type: 'boss',
-				text: '雨幕倾盆而下，熙与清月藏于雨中突袭。',
+				text: '雨幕倾盆，熙与清月藏于雨中突袭。梦中的雨，淋湿了记忆。',
 				prev: 'c10-7',
 				reward: { gold: 6650, characters: ['ybsl_012zhengjiayi', 'ybsl_020jiayutong', 'ybsl_092handan'] },
 				enemy: [
@@ -2253,10 +2253,10 @@ const eventList = {//事件列表
 			},
 			// 关卡9：全体真名boss（乱入）- 涂山水璃 + 朱焌 + 彡 + 房佳谕 + 鞠熒 + 岳瞳
 			'c10-9': {
-				name: '真名·万念交汇',
+				name: '万念归真',
 				id: 'c10-9',
 				type: 'boss',
-				text: '星河尽头万念交汇，涂山水璃、朱焌、彡率房佳谕、鞠熒、岳瞳跨界而来——全员真名，故人齐聚。',
+				text: '涂山水璃、朱焌、彡率往昔篇章的BOSS们齐聚——教会、学院、深渊、峰会、回廊、云城、星月……万念交汇于星河。',
 				prev: 'c10-8',
 				reward: { gold: 6750, characters: ['ybsl_037diamondqueen', 'ybsl_025wanghe', 'ybsl_083xiaozhu'] },
 				enemy: [
@@ -2270,10 +2270,10 @@ const eventList = {//事件列表
 			},
 			// 关卡10：最终全体真名boss - 涂山水璃 + 朱焌 + 彡 + 熙 + 清月 + 香紫
 			'c10-10': {
-				name: '真名·梦里星河终结',
+				name: '星河终章',
 				id: 'c10-10',
 				type: 'boss',
-				text: '星河尽头，涂山水璃、朱焌、彡立于梦的彼岸，熙、清月、香紫随行。这场梦，由你亲手终结。',
+				text: '星河尽头，涂山水璃、朱焌、彡立于梦的彼岸。涂山水璃道出最终真相：「梦里星河——是你的内心世界。你一直在寻找的答案，就在这里。你曾是不属于任何历史的存在——一个纯粹的观察者。但你在旅途中选择了介入、选择了连接、选择了宽恕。所以现在的你——已经真实地活着了。」',
 				prev: 'c10-9',
 				reward: { gold: 6850, characters: ['ybsl_121tujing', 'ybsl_008wuyuxin'] },
 				enemy: [
