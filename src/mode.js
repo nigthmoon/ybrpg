@@ -535,6 +535,34 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 			// 突破按钮
 			// 突破按钮
 			if (!breakInfo.maxed && !needPromotion) {
+				// ===== 【新增】突破等级门槛：突破到 currentTupoForAction+1 阶需先达到指定等级 =====
+				const reqLevel = getBreakthroughRequiredLevel(currentTupoForAction + 1);
+				const curLevel = instData.level || 1;
+				const levelOk = curLevel >= reqLevel;
+
+				// 用垂直包裹层，让警告（如有）显示在突破键上方，按钮保持原样
+				const breakWrap = document.createElement('div');
+				breakWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:8px;';
+
+				// ===== 【新增】等级不足时，在突破键上方用红字醒目提示 =====
+				if (!levelOk) {
+					const levelWarn = document.createElement('div');
+					levelWarn.style.cssText = `
+						width: 100%;
+						padding: 6px 8px;
+						text-align: center;
+						color: #ff4d4f;
+						font-size: 13px;
+						font-weight: bold;
+						background: rgba(255, 77, 79, 0.12);
+						border: 1px solid #ff4d4f;
+						border-radius: 6px;
+						box-sizing: border-box;
+					`;
+					levelWarn.textContent = `⚠ 等级不足！突破到 ${currentTupoForAction + 1} 阶需先达到 Lv.${reqLevel}（当前 Lv.${curLevel}）`;
+					breakWrap.appendChild(levelWarn);
+				}
+
 				const doBreakBtn = document.createElement('button');
 				doBreakBtn.style.cssText = `
 					flex: 1;
@@ -547,10 +575,15 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 					border-radius: 6px;
 					transition: all 0.2s;
 				`;
-				// ===== 【修改】显示当前可用/需要 =====
+				// 按钮文字保持：突破（可用/需要），不受等级影响
 				doBreakBtn.textContent = `突破（${availableCount}/${breakInfo.cost}）`;
-				// 如果材料不足，按钮置灰
-				if (availableCount < breakInfo.cost) {
+				// 如果材料不足或等级不足，按钮置灰
+				if (!levelOk) {
+					doBreakBtn.style.background = '#555';
+					doBreakBtn.style.cursor = 'not-allowed';
+					doBreakBtn.style.opacity = '0.6';
+					doBreakBtn.disabled = true;
+				} else if (availableCount < breakInfo.cost) {
 					doBreakBtn.style.background = '#555';
 					doBreakBtn.style.cursor = 'not-allowed';
 					doBreakBtn.style.opacity = '0.6';
@@ -614,7 +647,8 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 						}
 					);
 				};
-				actionBtnRow.appendChild(doBreakBtn);
+				breakWrap.appendChild(doBreakBtn);
+				actionBtnRow.appendChild(breakWrap);
 			}
 
 			// 升阶按钮
@@ -1318,6 +1352,34 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 
 	// 突破按钮
 	if (!breakInfo.maxed && !needPromotion) {
+		// 突破等级门槛：突破到 currentTupoLevel+1 阶需先达到指定等级
+		const reqLevel = getBreakthroughRequiredLevel(currentTupoLevel + 1);
+		const curLevel = instData.level || 1;
+		const levelOk = curLevel >= reqLevel;
+
+		// 用垂直包裹层，让警告（如有）显示在突破键上方，按钮保持原样
+		const breakWrap = document.createElement('div');
+		breakWrap.style.cssText = 'flex:1;display:flex;flex-direction:column;gap:8px;';
+
+		// ===== 【新增】等级不足时，在突破键上方用红字醒目提示 =====
+		if (!levelOk) {
+			const levelWarn = document.createElement('div');
+			levelWarn.style.cssText = `
+				width: 100%;
+				padding: 6px 8px;
+				text-align: center;
+				color: #ff4d4f;
+				font-size: 13px;
+				font-weight: bold;
+				background: rgba(255, 77, 79, 0.12);
+				border: 1px solid #ff4d4f;
+				border-radius: 6px;
+				box-sizing: border-box;
+			`;
+			levelWarn.textContent = `⚠ 等级不足！突破到 ${currentTupoLevel + 1} 阶需先达到 Lv.${reqLevel}（当前 Lv.${curLevel}）`;
+			breakWrap.appendChild(levelWarn);
+		}
+
 		const doBreakBtn = document.createElement('button');
 		doBreakBtn.style.cssText = `
 			flex: 1;
@@ -1330,9 +1392,16 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 			border-radius: 6px;
 			transition: all 0.2s;
 		`;
+		// 按钮文字保持：突破（可用/需要），不受等级影响
 		doBreakBtn.textContent = `突破（${availableCount}/${breakInfo.cost}）`;
 
-		if (availableCount < breakInfo.cost) {
+		if (!levelOk) {
+			// 等级不足：直接锁定按钮（不可点击）
+			doBreakBtn.style.background = '#555';
+			doBreakBtn.style.cursor = 'not-allowed';
+			doBreakBtn.style.opacity = '0.6';
+			doBreakBtn.disabled = true;
+		} else if (availableCount < breakInfo.cost) {
 			doBreakBtn.style.background = '#555';
 			doBreakBtn.style.cursor = 'not-allowed';
 			doBreakBtn.style.opacity = '0.6';
@@ -1382,7 +1451,8 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 				);
 			};
 		}
-		container.appendChild(doBreakBtn);
+		breakWrap.appendChild(doBreakBtn);
+		container.appendChild(breakWrap);
 	}
 
 	// 升阶按钮
@@ -6343,6 +6413,11 @@ function renderChapterEventList(container, chapterKey) {
 					// }
 					//////敌人的公式化加强
 				}
+				// 体力预扣（上云接口）
+				if (!trySpendStamina(getStaminaCost(event))) {
+					Game.toast('体力不足，无法挑战', 'error');
+					return;
+				}
 				Game.Battle.start(playerTeam, enemyTeam, {
 					difficulty: currentDifficulty,
 					eventId: checkEventId,
@@ -6363,14 +6438,19 @@ function renderChapterEventList(container, chapterKey) {
 								// 主角升阶秘境 - 根据关卡ID提取突破等级
 								// sp1-1 到 sp1-20，提取数字部分作为目标突破等级
 								const match = eventId.match(/sp1-(\d+)/);
-								if (match) {
-									const targetTupoLevel = parseInt(match[1]);
-									breakthroughMainCharacter(targetTupoLevel);
+							if (match) {
+								const targetTupoLevel = parseInt(match[1]);
+								const ok = breakthroughMainCharacter(targetTupoLevel);
+								if (ok) {
 									Game.toast(`主角突破至 ${targetTupoLevel} 阶！`, 'success');
 								} else {
-									// 默认突破1次
-									breakthroughMainCharacter();
+									const reqLevel = getBreakthroughRequiredLevel(targetTupoLevel);
+									Game.toast(`主角等级不足，突破至 ${targetTupoLevel} 阶需先达到 Lv.${reqLevel}`, 'warning');
 								}
+							} else {
+								// 默认突破1次
+								breakthroughMainCharacter();
+							}
 							} else if (chapterKey === 'spEvent2') {
 								// 主角蜕变秘境 - 根据关卡ID确定目标品质
 								const rankMap = {
@@ -6626,6 +6706,11 @@ function renderChapterEventList(container, chapterKey) {
 					}
 
 					// 启动战斗
+					// 体力预扣（上云接口）
+					if (!trySpendStamina(getStaminaCost(event))) {
+						Game.toast('体力不足，无法挑战', 'error');
+						return;
+					}
 					Game.Battle.start(playerTeam, enemyTeam, {
 						difficulty: currentDifficulty,
 						eventId: checkEventId,
@@ -6653,22 +6738,22 @@ function renderChapterEventList(container, chapterKey) {
 							: defaultLevelGold(event.id);
 						const goldReward = Math.floor(baseGold * goldScale);
 						window.gameGold = (window.gameGold || 0) + goldReward;
-						// 掉落物：优先用事件固定配置 event.reward；未配置则按档位自动规则兜底
-						const dropStat = { chars: [], treasures: [], items: [] };
-						if (rewardCfg) {
-							grantFixedReward(rewardCfg, dropMult, dropStat);
-						} else {
-							const isMiniBoss = (event.type === 'boss' && index !== 9); // 小boss：boss关且非末关
-							const isBigBoss = (index === 9);                           // 大boss：末关
-							grantCharactersByRank('rare', dropMult, dropStat.chars);
-							if (isMiniBoss) {
-								grantCharactersByRank('epicfake', dropMult, dropStat.chars);
-								grantCharactersByRank('epic', dropMult, dropStat.chars);
-							}
-							if (isBigBoss) {
-								grantCharactersByRank('legend', dropMult, dropStat.chars);
-							}
+					// 掉落物：优先用事件固定配置 event.reward；未配置则按档位自动规则兜底
+					const dropStat = { chars: [], treasures: [], items: [] };
+					if (rewardCfg) {
+						grantFixedReward(rewardCfg, dropMult, dropStat);
+					} else {
+						const isMiniBoss = (event.type === 'boss' && index !== 9); // 小boss：boss关且非末关
+						const isBigBoss = (index === 9);                           // 大boss：末关
+						grantCharactersByRank('rare', dropMult, dropStat.chars);
+						if (isMiniBoss) {
+							grantCharactersByRank('epicfake', dropMult, dropStat.chars);
+							grantCharactersByRank('epic', dropMult, dropStat.chars);
 						}
+						if (isBigBoss) {
+							grantCharactersByRank('legend', dropMult, dropStat.chars);
+						}
+					}
 							// 刷新背包视图（若处于开启状态）
 							if (window.renderBagView) {
 								const bagView = document.getElementById('bag-view');
@@ -7021,10 +7106,12 @@ function renderShopView(container) {
 	// 清空容器以防重复渲染
 	container.innerHTML = '';
 
-	// 金币显示
+	// 资源显示（钻石为商店消费货币）
 	const goldBar = document.createElement('div');
 	goldBar.className = 'shop-gold-bar';
-	goldBar.innerHTML = `<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${window.gameGold || 0}</span> 金币`;
+	goldBar.innerHTML =
+		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${(window.gameGold || 0).toLocaleString()}</span> 金币` +
+		`&nbsp;&nbsp;<span class="shop-diamond-icon">💎 ${(window.diamond || 0).toLocaleString()} 钻石</span>`;
 	container.appendChild(goldBar);
 
 	// 新增: 创建子按钮容器 (普通商店, 高级商店)
@@ -7160,10 +7247,11 @@ function renderShopView(container) {
 
 		infoDiv.appendChild(headerDiv);
 
-		// 购买按钮逻辑
-		const buyBtn = document.createElement('button');
+		// 购买按钮逻辑（自建 div 按键，避免原生 button 长数字换行）
+		const buyBtn = document.createElement('div');
 		buyBtn.className = 'shop-item-buy-btn';
-		buyBtn.textContent = item ? (item.price + '金') : '—';
+		buyBtn.textContent = item ? (item.price + '💎') : '—';
+		buyBtn.style.whiteSpace = 'nowrap';
 
 		// 【关键修复】防止重复点击或逻辑混乱
 		buyBtn.onclick = (e) => {
@@ -7178,9 +7266,9 @@ function renderShopView(container) {
 				return;
 			}
 
-			// 2. 检查金币
-			if ((window.gameGold || 0) < item.price) {
-				Game.toast('金币不足！', 'error');
+			// 2. 检查钻石
+			if ((window.diamond || 0) < item.price) {
+				Game.toast('钻石不足！', 'error');
 				return;
 			}
 
@@ -7245,16 +7333,16 @@ function renderShopView(container) {
 		allBuyBtn.style.cursor = 'not-allowed';
 	} else {
 		// 有可购买的商品
-		allBuyBtn.textContent = `一键购买\n（${num}金）`;
+		allBuyBtn.textContent = `一键购买\n（${num}💎）`;
 		allBuyBtn.disabled = false;
 		allBuyBtn.style.opacity = '1';
 		allBuyBtn.style.cursor = 'pointer';
 
 		// 5. 绑定点击事件
 		allBuyBtn.onclick = () => {
-			// 再次检查金币（防止并发或数据变动）
-			if ((window.gameGold || 0) < num) {
-				Game.toast('金币不足，无法购买！', 'error');
+			// 再次检查钻石（防止并发或数据变动）
+			if ((window.diamond || 0) < num) {
+				Game.toast('钻石不足，无法购买！', 'error');
 				return;
 			}
 
@@ -7287,14 +7375,17 @@ function renderShopView(container) {
 	refreshBtn.className = 'shop-refresh-btn';
 	var beilv = (window.shopMode === 'advanced') ? 4 : 1;
 	const cost = (window.shopData.refreshCost || 50) * beilv;
-	refreshBtn.textContent = `刷新商品\n（${cost}金）`;
+	refreshBtn.textContent = `刷新商品\n（${cost}💎）`;
 	refreshBtn.style.whiteSpace = 'pre-wrap';
 	refreshBtn.onclick = () => {
-		if ((window.gameGold || 0) < cost) {
-			Game.toast('金币不足，无法刷新！', 'error');
+		if ((window.diamond || 0) < cost) {
+			Game.toast('钻石不足，无法刷新！', 'error');
 			return;
 		}
-		window.gameGold = (window.gameGold || 0) - cost;
+		window.diamond = (window.diamond || 0) - cost;
+		const diaDisplay = document.getElementById('shop-diamond-display');
+		if (diaDisplay) diaDisplay.textContent = `💎 ${(window.diamond || 0).toLocaleString()} 钻石`;
+		updateResourceHUD(); // 同步刷新顶部常驻资源条（钻石数字）
 		refreshShopItems(window.shopMode);
 		renderShopView(container);
 		Game.toast('商店已刷新', 'info');
@@ -7373,16 +7464,22 @@ function buyevent(item) {
 		}
 	}
 
-	// 4. 扣除金币 (只扣一次)
-	window.gameGold -= item.price;
+	// 4. 扣除钻石 (只扣一次)
+	window.diamond -= item.price;
 
 	// 5. 标记为已售出
 	item.sold = true;
 
 	const goldDisplay = document.getElementById('shop-gold-display');
 	if (goldDisplay) {
-		goldDisplay.textContent = window.gameGold;
+		goldDisplay.textContent = (window.gameGold || 0).toLocaleString();
 	}
+	const diaDisplay = document.getElementById('shop-diamond-display');
+	if (diaDisplay) {
+		diaDisplay.textContent = `💎 ${(window.diamond || 0).toLocaleString()} 钻石`;
+	}
+	// 同步刷新顶部常驻资源条（钻石数字）
+	updateResourceHUD();
 }
 
 /**
@@ -7587,6 +7684,11 @@ function computeLevelGold(event, diffKey, chapterKey) {
  */
 function doSweep(event, diffKey, index, eventId, chapterKey, onClose) {
 	if (!event) return;
+	// 体力预扣（上云接口）
+	if (!trySpendStamina(getStaminaCost(event))) {
+		Game.toast('体力不足，无法扫荡', 'error');
+		return;
+	}
 	const isSP = /^sp/i.test(chapterKey || '');
 	const goldReward = computeLevelGold(event, diffKey, chapterKey);
 	window.gameGold = (window.gameGold || 0) + goldReward;
@@ -7716,6 +7818,127 @@ function showSweepResultPanel(opt) {
 	document.body.appendChild(overlay);
 }
 
+// ============================================================
+// 经济 / 限制系统（可上云预留接口）
+// 当前均为本地实现；未来迁移到服务器时，将带 [上云预留接口] 注释的
+// 函数体替换为对云端的异步校验 / 记账调用即可，调用方无需改动。
+// ============================================================
+
+const STAMINA_MAX = 400;          // 体力上限
+const STAMINA_REGEN_PER_MIN = 1;  // 每分钟恢复体力
+const STAMINA_COST_DEFAULT = 5;   // 关卡默认体力消耗（可在 event.staminaCost 覆盖）
+const DIAMOND_TO_GOLD = 10000;    // 钻石兑金币比例（单向，金币不可回兑）
+
+// ---------- 体力 ----------
+
+// 按时间戳自然恢复体力（每分钟 1 点，离线也累计）
+function regenStamina() {
+  if (!window.staminaTs) window.staminaTs = Date.now();
+  const now = Date.now();
+  const elapsedMin = Math.floor((now - window.staminaTs) / 60000);
+  if (elapsedMin > 0) {
+    const max = window.maxStamina || STAMINA_MAX;
+    window.stamina = Math.min(max, (window.stamina || 0) + elapsedMin);
+    window.staminaTs = now - ((now - window.staminaTs) % 60000);
+  }
+}
+
+// 读取关卡体力消耗（写入关卡数据 event.staminaCost；缺省 5，特殊/未来关卡可单独设值）
+function getStaminaCost(event) {
+  return (event && event.staminaCost != null) ? Number(event.staminaCost) : STAMINA_COST_DEFAULT;
+}
+
+// [上云预留接口] 挑战前体力校验 + 扣减；成功返回 true，不足返回 false
+function trySpendStamina(cost) {
+  regenStamina();
+  cost = Number(cost) || STAMINA_COST_DEFAULT;
+  if ((window.stamina || 0) < cost) return false;
+  window.stamina -= cost;
+  updateResourceHUD();
+  return true;
+}
+
+// ---------- 每日首通武将限制（按关卡·每天）----------
+
+// ---------- 钻石 ----------
+
+// [上云预留接口] 钻石单向兑换金币（1💎 = 10000💰，金币不可回兑）
+function exchangeDiamondToGold(amount) {
+  amount = Math.floor(Number(amount));
+  if (!amount || amount <= 0) { Game.toast('请输入有效的钻石数量', 'error'); return; }
+  if ((window.diamond || 0) < amount) { Game.toast('钻石不足！', 'error'); return; }
+  window.diamond -= amount;
+  const gain = amount * DIAMOND_TO_GOLD;
+  window.gameGold = (window.gameGold || 0) + gain;
+  Game.toast(`兑换成功：${amount} 💎 → ${gain.toLocaleString()} 💰`, 'success');
+  updateResourceHUD();
+  if (window.SaveManager) SaveManager.autoSave();
+}
+
+// ---------- 常驻资源条（金币 / 体力 / 钻石）----------
+// 钻石仍常驻显示，但不提供"兑换"入口（兑换逻辑保留，后续可另置入口）。
+
+function ensureResourceHUD() {
+  if (document.getElementById('ybrpg-res-hud')) { updateResourceHUD(); return; }
+  const bar = document.createElement('div');
+  bar.id = 'ybrpg-res-hud';
+  bar.className = 'ybrpg-res-hud';
+  bar.innerHTML =
+    `<span class="res-item">💰 <span id="ybrpg-res-gold">0</span> 金币</span>` +
+    `<span class="res-item">⚡ <span id="ybrpg-res-stamina">0/0</span> 体力</span>` +
+    `<span class="res-item">💎 <span id="ybrpg-res-diamond">0</span> 钻石</span>`;
+  document.body.appendChild(bar);
+  if (!window._staminaTimerStarted) {
+    window._staminaTimerStarted = true;
+    setInterval(() => { regenStamina(); updateResourceHUD(); }, 30000);
+  }
+  updateResourceHUD();
+}
+
+function updateResourceHUD() {
+  regenStamina();
+  const goldEl = document.getElementById('ybrpg-res-gold');
+  const stamEl = document.getElementById('ybrpg-res-stamina');
+  const diaEl = document.getElementById('ybrpg-res-diamond');
+  if (goldEl) goldEl.textContent = (window.gameGold || 0).toLocaleString();
+  if (stamEl) stamEl.textContent = `${window.stamina || 0}/${window.maxStamina || STAMINA_MAX}`;
+  if (diaEl) diaEl.textContent = (window.diamond || 0).toLocaleString();
+}
+
+// 钻石兑换弹窗
+function openDiamondExchange() {
+  const overlay = document.createElement('div');
+  overlay.className = 'preview-overlay';
+  const panel = document.createElement('div');
+  panel.className = 'preview-panel';
+  panel.innerHTML =
+    `<div class="reward-title">💎 钻石兑换金币</div>` +
+    `<div class="reward-sub">1 💎 = ${DIAMOND_TO_GOLD.toLocaleString()} 💰（单向兑换，金币不可回兑）</div>` +
+    `<div class="reward-sub">当前持有：${(window.diamond || 0).toLocaleString()} 💎</div>` +
+    `<input id="ybrpg-diamond-input" class="ybrpg-input" type="number" min="1" placeholder="输入兑换钻石数量" />`;
+  const row = document.createElement('div');
+  row.className = 'preview-btn-row';
+  const ok = document.createElement('button');
+  ok.className = 'reward-ok-btn';
+  ok.textContent = '确认兑换';
+  ok.onclick = (e) => {
+    e.stopPropagation();
+    const v = document.getElementById('ybrpg-diamond-input').value;
+    exchangeDiamondToGold(v);
+    overlay.remove();
+  };
+  const cancel = document.createElement('button');
+  cancel.className = 'reward-ok-btn';
+  cancel.textContent = '取消';
+  cancel.onclick = (e) => { e.stopPropagation(); overlay.remove(); };
+  row.appendChild(ok);
+  row.appendChild(cancel);
+  panel.appendChild(row);
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+}
+
 /**
  * 展示关卡产出预览（复用奖励面板样式，仅预览不发放）
  * opts: { canChallenge, canSweep, onChallenge }
@@ -7750,6 +7973,9 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 
 	const diffName = DIFFICULTY_SCALE[diffKey]?.name || diffKey;
 
+	const cost = getStaminaCost(event);
+	const staminaOk = (window.stamina || 0) >= cost;
+
 	// 秘境首通奖励文案（与战斗结算 onWin 逻辑保持一致）
 	let secretText = '';
 	if (isSP) {
@@ -7775,6 +8001,7 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 		`<div class="reward-title">📦 产出预览</div>` +
 		`<div class="reward-sub">${diffName}难度 · ${event.name || eventId}</div>` +
 		`<div class="reward-gold">💰 ${plan.gold || 0} <small>金币</small></div>` +
+		`<div class="reward-stamina${staminaOk ? '' : ' insufficient'}">⚡ 消耗 ${cost} 体力（当前 ${window.stamina || 0}/${window.maxStamina || STAMINA_MAX}）</div>` +
 		(isSP && secretText ? `<div class="preview-secret-note">★ ${secretText}</div>` : '') +
 		section('获得武将', plan.chars) +
 		section('获得宝物', plan.treasures) +
@@ -7791,11 +8018,11 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 	const challengeBtn = document.createElement('button');
 	challengeBtn.className = 'reward-ok-btn preview-btn-challenge';
 	challengeBtn.textContent = '挑战';
-	if (!opts.canChallenge) {
+	if (!opts.canChallenge || !staminaOk) {
 		challengeBtn.disabled = true;
 		challengeBtn.style.opacity = '0.5';
 		challengeBtn.style.cursor = 'not-allowed';
-		challengeBtn.title = '关卡未解锁';
+		challengeBtn.title = !opts.canChallenge ? '关卡未解锁' : '体力不足';
 	} else {
 		challengeBtn.onclick = (e) => {
 			e.stopPropagation();
@@ -7807,11 +8034,11 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 	const sweepBtn = document.createElement('button');
 	sweepBtn.className = 'reward-ok-btn preview-btn-sweep';
 	sweepBtn.textContent = '扫荡';
-	if (!opts.canSweep) {
+	if (!opts.canSweep || !staminaOk) {
 		sweepBtn.disabled = true;
 		sweepBtn.style.opacity = '0.5';
 		sweepBtn.style.cursor = 'not-allowed';
-		sweepBtn.title = '仅已通关关卡可扫荡';
+		sweepBtn.title = !opts.canSweep ? '仅已通关关卡可扫荡' : '体力不足';
 	} else {
 		sweepBtn.onclick = (e) => {
 			e.stopPropagation();
@@ -8186,6 +8413,13 @@ function initNewGame() {
 	window.autoBattle = false;
 	window.showFormulaDetail = false; // 属性面板显示公式，默认关闭
 
+	// ===== 经济 / 限制系统初始状态 =====
+	window.stamina = STAMINA_MAX;
+	window.maxStamina = STAMINA_MAX;
+	window.staminaTs = Date.now();
+	window.diamond = 0;
+	ensureResourceHUD();
+
 	// 初始化宝物背包
 	Game.Bag.ensureInv();
 	// 在 initNewGame 函数中，初始化队伍数据后：
@@ -8404,8 +8638,12 @@ const SaveManager = {
 			treasureBagData: window.treasureBagData || {},
 			autoBattle: window.autoBattle || false,
 			saveTime: new Date().toLocaleString(),
-			saveName: `存档${slot}`,
-			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
+		saveName: `存档${slot}`,
+		_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
+		stamina: window.stamina,
+		maxStamina: window.maxStamina,
+		staminaTs: window.staminaTs,
+		diamond: window.diamond,
 			playerPreferences: {  // 【新增】
 				bagTab: window.bagTab || 'char',
 				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true
@@ -8495,6 +8733,12 @@ const SaveManager = {
 			window.treasureBagData = parsed.treasureBagData || {};
 			window.autoBattle = parsed.autoBattle || false;
 
+			// ===== 经济 / 限制系统 =====
+			window.stamina = parsed.stamina != null ? parsed.stamina : STAMINA_MAX;
+			window.maxStamina = parsed.maxStamina != null ? parsed.maxStamina : STAMINA_MAX;
+			window.staminaTs = parsed.staminaTs || Date.now();
+			window.diamond = parsed.diamond || 0;
+
 			// 同步 window 变量回 Game.Data 内存
 			Game.Data.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData));
 			Game.Data.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData));
@@ -8536,6 +8780,11 @@ const SaveManager = {
 			window.charBagData = data._charBag || {};
 			window.treasureEquipData = data._treasures || {};
 			window.treasureBagData = data._treasureBag || {};
+			// ===== 经济 / 限制系统 =====
+			window.stamina = data.stamina != null ? data.stamina : STAMINA_MAX;
+			window.maxStamina = data.maxStamina != null ? data.maxStamina : STAMINA_MAX;
+			window.staminaTs = data.staminaTs || Date.now();
+			window.diamond = data.diamond || 0;
 			// 【新增】恢复偏好设置
 			const prefs = data.playerPreferences || data._playerPreferences || {};
 			window.bagTab = prefs.bagTab || 'char';
@@ -8550,6 +8799,8 @@ const SaveManager = {
 
 		// ========== 新增：同步宝物数据到 window ==========
 		syncTreasureEquipData();
+		regenStamina();
+		ensureResourceHUD();
 
 		console.log(`已读取槽位${slot}的存档`);
 		return data || JSON.parse(compatData || 'null');
@@ -8626,8 +8877,12 @@ const SaveManager = {
 			autoBattle: window.autoBattle || false,
 			showFormulaDetail: window.showFormulaDetail || false,
 			saveTime: new Date().toLocaleString(),
-			saveName: '自动存档',
-			_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
+		saveName: '自动存档',
+		_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
+		stamina: window.stamina,
+		maxStamina: window.maxStamina,
+		staminaTs: window.staminaTs,
+		diamond: window.diamond,
 			charTreasureSlots: window.charTreasureSlots || {},
 			playerPreferences: {
 				bagTab: window.bagTab || 'char',
@@ -8721,8 +8976,13 @@ const SaveManager = {
 				window.charBagData = charBag;
 				window.treasureEquipData = parsed.treasureEquipData || {};
 				window.treasureBagData = parsed.treasureBagData || {};
-				window.autoBattle = parsed.autoBattle || false;
-				// ========== 在解析完所有数据后，添加这一段 ==========
+			window.autoBattle = parsed.autoBattle || false;
+			// ===== 经济 / 限制系统 =====
+			window.stamina = parsed.stamina != null ? parsed.stamina : STAMINA_MAX;
+			window.maxStamina = parsed.maxStamina != null ? parsed.maxStamina : STAMINA_MAX;
+			window.staminaTs = parsed.staminaTs || Date.now();
+			window.diamond = parsed.diamond || 0;
+			// ========== 在解析完所有数据后，添加这一段 ==========
 				// 恢复宝物实例化数据
 				if (parsed._treasureInventory) {
 					window.treasureInventory = JSON.parse(JSON.stringify(parsed._treasureInventory));
@@ -8767,6 +9027,11 @@ const SaveManager = {
 				window.treasureEquipData = data._treasures || {};
 				window.treasureBagData = data._treasureBag || {};
 				window.autoBattle = parsed.autoBattle || false;  // ✅ 使用 window.autoBattle 保持原值
+			// ===== 经济 / 限制系统 =====
+			window.stamina = parsed.stamina != null ? parsed.stamina : STAMINA_MAX;
+			window.maxStamina = parsed.maxStamina != null ? parsed.maxStamina : STAMINA_MAX;
+			window.staminaTs = parsed.staminaTs || Date.now();
+			window.diamond = parsed.diamond || 0;
 
 				// 【新增】恢复偏好设置
 				const prefs2 = data.playerPreferences || data._playerPreferences || {};
@@ -8780,6 +9045,8 @@ const SaveManager = {
 
 			// ========== 新增：同步宝物数据 ==========
 			syncTreasureEquipData();
+			regenStamina();
+			ensureResourceHUD();
 
 			console.log('[自动存档] 已读取');
 			return data;
@@ -9901,6 +10168,13 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 		const totalLevel = selected.reduce((s, c) => s + c.level, 0);
 		const newLevel = currentLevel + totalLevel;
 
+		// 点击时判断金币：升级到每一级都需支付该级费用（前期低、后期高）
+		const totalGoldCost = calcUpgradeGoldCost(currentLevel, newLevel);
+		if ((window.gameGold || 0) < totalGoldCost) {
+			Game.toast(`金币不足！升至 Lv.${newLevel} 需 ${totalGoldCost} 金币（当前 ${window.gameGold || 0}）`, 'error');
+			return;
+		}
+
 		// 消耗选中的角色
 		selected.forEach(c => {
 			delete window.charBagData[c.instanceId];
@@ -9911,6 +10185,10 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 				}
 			}
 		});
+
+		// 扣除金币
+		window.gameGold = (window.gameGold || 0) - totalGoldCost;
+		updateResourceHUD();
 
 		// 升级目标角色
 		const targetData = window.charBagData[targetInstId];
@@ -9929,7 +10207,7 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 		}
 
 		overlay.remove();
-		Game.toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！`, 'success');
+		Game.toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！（消耗 ${totalGoldCost} 金币）`, 'success');
 
 		// 【修改】统一使用 refreshAllViews
 		Game.UI.refresh({
@@ -10008,13 +10286,31 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 		});
 	}
 
+	// 计算从 currentLevel 升到 newLevel 所需的总金币
+	function calcUpgradeGoldCost(fromLevel, toLevel) {
+		let cost = 0;
+		for (let lv = fromLevel + 1; lv <= toLevel; lv++) {
+			cost += getLevelUpGoldCost(lv);
+		}
+		return cost;
+	}
+
 	function updateInfoBar() {
 		const selected = consumables.filter(c => c.selected);
 		const totalLevel = selected.reduce((s, c) => s + c.level, 0);
 		const countLabel = document.getElementById('upgrade-count-label');
 		const confirmBtn = document.getElementById('upgrade-confirm-btn');
 		const newLevel = currentLevel + totalLevel;
-		if (countLabel) countLabel.textContent = `已选: ${totalLevel} 将升至 ${newLevel}级`;
+		if (countLabel) {
+			if (totalLevel > 0) {
+				const goldCost = calcUpgradeGoldCost(currentLevel, newLevel);
+				const enough = (window.gameGold || 0) >= goldCost;
+				countLabel.textContent = `已选: ${totalLevel} 将升至 ${newLevel}级 · 金币: ${goldCost}` +
+					(enough ? '' : `（不足，差 ${goldCost - (window.gameGold || 0)}）`);
+			} else {
+				countLabel.textContent = '已选: 0 将升至' + currentLevel + '级';
+			}
+		}
 		if (confirmBtn) {
 			confirmBtn.disabled = !totalLevel;
 			confirmBtn.style.opacity = !totalLevel ? '0.5' : '1';
@@ -10093,6 +10389,51 @@ function getBreakthroughInfo(character, currentBreakthrough) {
 		cost: character.charId === 'zhujue' ? 0 : cost,
 		maxed: false
 	};
+}
+
+/**
+ * 突破等级门槛：突破到目标阶数（1..20）必须先达到的等级
+ * 索引即目标突破阶（1-based）：突破到 1 阶需 0 级，2 阶需 10 级……20 阶需 100 级
+ */
+const BREAKTHROUGH_LEVEL_REQ = [
+	0,   // 1 阶
+	10,  // 2 阶
+	20,  // 3 阶
+	30,  // 4 阶
+	35,  // 5 阶
+	40,  // 6 阶
+	45,  // 7 阶
+	50,  // 8 阶
+	55,  // 9 阶
+	60,  // 10 阶
+	65,  // 11 阶
+	69,  // 12 阶
+	73,  // 13 阶
+	77,  // 14 阶
+	81,  // 15 阶
+	84,  // 16 阶
+	87,  // 17 阶
+	90,  // 18 阶
+	95,  // 19 阶
+	100  // 20 阶
+];
+
+// 获取"突破到目标阶"所需的最低等级（目标阶从 1 开始）
+function getBreakthroughRequiredLevel(targetTupoLevel) {
+	const idx = targetTupoLevel - 1;
+	if (idx < 0 || idx >= BREAKTHROUGH_LEVEL_REQ.length) return 100;
+	return BREAKTHROUGH_LEVEL_REQ[idx];
+}
+
+/**
+ * 升级金币消耗（升级到 level 这一级所需的金币）
+ * 设计：前期低、后期高。以二次曲线为主，叠加线性项，保证单调递增。
+ *   花费 = floor(10 * level + 0.6 * level^2)
+ *   Lv.1→ 约 11，Lv.10 → 160，Lv.50 → 2050，Lv.100 → 6100（单级）
+ */
+function getLevelUpGoldCost(level) {
+	const lv = Math.max(1, Math.floor(level));
+	return Math.floor(10 * lv + 0.6 * lv * lv);
 }
 
 
@@ -10226,8 +10567,21 @@ function levelUpMainCharacter() {
 	if (!baseChar || !instData) return;
 
 	// 2. 提升等级
+	// 主角（zhujue）通过首通副本等方式升级属于奖励性质，不消耗金币；
+	// 其余角色走培养（showUpgradePanel 等）才消耗金币。
 	const oldLevel = instData.level || 1;
-	instData.level = oldLevel + 1;
+	const newLevel = oldLevel + 1;
+	const isMainChar = (instData.charId || 'zhujue') === 'zhujue';
+	if (!isMainChar) {
+		const goldCost = getLevelUpGoldCost(newLevel);
+		if ((window.gameGold || 0) < goldCost) {
+			Game.toast(`升级到 Lv.${newLevel} 需要 ${goldCost} 金币（当前 ${window.gameGold || 0}）`, 'error');
+			return;
+		}
+		window.gameGold -= goldCost;
+		updateResourceHUD();
+	}
+	instData.level = newLevel;
 
 	// 3. 重新计算属性
 	// 优先使用 updateCharacterSP (如果它存在且能处理 level)
@@ -10291,18 +10645,32 @@ function upgradeCharacterInstance(instanceId, levelsToAdd = 1) {
 		return false;
 	}
 
-	// 2. 提升等级
+	// 2. 提升等级（逐级消耗金币，升级到每一级都需支付该级费用）
 	const oldLevel = instData.level || 1;
-	const newLevel = oldLevel + levelsToAdd;
-
-	// 可选：设置等级上限，例如 100 级
 	const MAX_LEVEL = 100;
-	if (newLevel > MAX_LEVEL) {
-		Game.toast(`角色已达到最高等级 ${MAX_LEVEL}`, 'warning');
+	let actualNewLevel = oldLevel;
+	let totalGoldCost = 0;
+	for (let i = 1; i <= levelsToAdd; i++) {
+		const targetLv = oldLevel + i;
+		if (targetLv > MAX_LEVEL) {
+			Game.toast(`角色已达到最高等级 ${MAX_LEVEL}`, 'warning');
+			break;
+		}
+		const stepCost = getLevelUpGoldCost(targetLv);
+		if ((window.gameGold || 0) < totalGoldCost + stepCost) {
+			Game.toast(`金币不足，无法升至 Lv.${targetLv}（需 ${stepCost} 金币/级）`, 'error');
+			break;
+		}
+		totalGoldCost += stepCost;
+		actualNewLevel = targetLv;
+	}
+	if (actualNewLevel === oldLevel) {
+		// 一级都没升（金币不足或已满级）
 		return false;
 	}
-
-	instData.level = newLevel;
+	window.gameGold = (window.gameGold || 0) - totalGoldCost;
+	updateResourceHUD();
+	instData.level = actualNewLevel;
 
 	// 3. 重新计算属性
 	// updateCharacterSP 会根据 instData 中的 level, rank, template 等字段重新计算 hp, atk, def, spe
@@ -10373,6 +10741,16 @@ function breakthroughCharacterInstance(targetInstId) {
 	// 检查是否已满级
 	if (currentTupoLevel >= 20) {
 		return { success: false, message: '角色已达到最大突破阶数（20阶）' };
+	}
+
+	// 突破等级门槛：突破到 currentTupoLevel+1 阶需先达到指定等级
+	const reqLevel = getBreakthroughRequiredLevel(currentTupoLevel + 1);
+	const curLevel = targetInst.level || 1;
+	if (curLevel < reqLevel) {
+		return {
+			success: false,
+			message: `突破到 ${currentTupoLevel + 1} 阶需要角色先达到 Lv.${reqLevel}（当前 Lv.${curLevel}）`
+		};
 	}
 
 	// 计算突破消耗（只消耗同名角色，不涉及升阶）
