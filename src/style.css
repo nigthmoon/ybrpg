@@ -1736,6 +1736,57 @@ body {
 	text-align: center;
 }
 
+/* 顶部资源条（金币 / 体力） */
+.ybrpg-res-hud {
+	position: fixed;
+	top: 8px;
+	right: 12px;
+	z-index: 9999;
+	display: flex;
+	gap: 14px;
+	align-items: center;
+	padding: 6px 12px;
+	background: rgba(20, 24, 33, 0.85);
+	border: 1px solid rgba(255, 255, 255, 0.15);
+	border-radius: 10px;
+	color: #fff;
+	font-size: 13px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.ybrpg-res-hud .res-item { white-space: nowrap; }
+.ybrpg-res-hud .res-diamond {
+	cursor: pointer;
+	color: #7fe3ff;
+	text-decoration: underline dotted;
+}
+.ybrpg-res-hud .res-diamond:hover { color: #b3f0ff; }
+
+/* 商店顶部钻石（纯显示，无兑换入口） */
+.shop-diamond-icon {
+	color: #7fe3ff;
+}
+
+/* 预览框体力行 */
+.reward-stamina {
+	margin: 6px 0 4px;
+	font-size: 13px;
+	color: #ffd700;
+}
+.reward-stamina.insufficient { color: #ff6b6b; }
+
+/* 钻石兑换输入框 */
+.ybrpg-input {
+	width: 100%;
+	box-sizing: border-box;
+	margin: 10px 0;
+	padding: 8px 10px;
+	border-radius: 8px;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	background: rgba(0, 0, 0, 0.3);
+	color: #fff;
+	font-size: 14px;
+}
+
 .reward-title {
 	font-size: 20px;
 	font-weight: bold;
@@ -2173,6 +2224,36 @@ body {
 .shop-buy-btn:hover {
 	background: #444;
 	border-color: #ffd700;
+}
+
+/* 商品购买按键：自建 div 按键（避免原生 button 长数字换行） */
+.shop-item-buy-btn {
+	width: 100%;
+	box-sizing: border-box;
+	margin-top: 6px;
+	padding: 6px 8px;
+	font-size: 13px;
+	line-height: normal;        /* 用字体自然行高，避免行高过小导致字形下沉被裁 */
+	display: flex;              /* flex 居中，彻底解决垂直偏移 */
+	align-items: center;
+	justify-content: center;
+	white-space: nowrap;        /* 价格过长不换行 */
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+	user-select: none;
+	background: linear-gradient(180deg, #3a3f4b, #2a2e38);
+	color: #ffd700;             /* 价格颜色突出 */
+	border: 1px solid #555;
+	border-radius: 6px;
+	transition: background 0.15s, border-color 0.15s, transform 0.05s;
+}
+.shop-item-buy-btn:hover {
+	background: linear-gradient(180deg, #454b59, #323743);
+	border-color: #ffd700;
+}
+.shop-item-buy-btn:active {
+	transform: scale(0.97);
 }
 
 .shop-refresh-btn {
