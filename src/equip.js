@@ -1138,7 +1138,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_12025.png',
 		iconbig: '/image/equip-big/bw_12025.png',
 		rank:5,
-		price: { gold: 100000, diamond: 100 },
+		price: { diamond: 100 },
 		hp:9000,
 		gedang:500,
 		// 格挡反击：格挡成功时，对来源发起一次特殊普攻（100%攻击系数）
@@ -1164,7 +1164,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_12026.png',
 		iconbig: '/image/equip-big/bw_12026.png',
 		rank:5,
-		price: { gold: 100000, diamond: 100 },
+		price: { diamond: 100 },
 		hp:9000,
 		shanbi:500,
 		// 触发闪避时，增加自身1能量
@@ -1189,7 +1189,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_12027.png',
 		iconbig: '/image/equip-big/bw_12027.png',
 		rank:5,
-		price: { gold: 100000, diamond: 100 },
+		price: { diamond: 100 },
 		hp:9000,
 		kangbao:500,
 		// 受到非真实伤害时，反伤50%真实伤害（onHitSelf 仅在非真实伤害路径触发，自动满足"非真实"条件）
@@ -1221,7 +1221,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_22025.png',
 		iconbig: '/image/equip-big/bw_22025.png',
 		rank:5,
-		price: { gold: 100000, diamond: 100 },
+		price: { diamond: 100 },
 		atk:1500,
 		baoji:500,
 		// 暴击时，增加1能量（普攻/技能命中且本次为暴击时触发，攻击方 _lastHitIsCrit 已记录）
@@ -1239,7 +1239,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_22026.png',
 		iconbig: '/image/equip-big/bw_22026.png',
 		rank:5,
-		price: { gold: 100000, diamond: 100 },
+		price: { diamond: 100 },
 		atk:1500,
 		mingzhong:500,
 		// 无视60%防御：战斗开始（首轮）时把 ignore_def_all_60 写入 unit.buff，供 getIgnoreDefPercent 读取
@@ -1263,7 +1263,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_22027.png',
 		iconbig: '/image/equip-big/bw_22027.png',
 		rank:5,
-		price: { gold: 100000, diamond: 100 },
+		price: { diamond: 100 },
 		atk:1500,
 		poji:500,
 		// 战斗开始时，对全体敌人造成攻击力55%的真实伤害（roundStart round===1 在战斗开始触发）
@@ -1297,7 +1297,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_13028.png',
 		iconbig: '/image/equip-big/bw_13028.png',
 		rank:6,
-		price: { gold: 200000, diamond: 200 },
+		price: { diamond: 200 },
 		hp:12000,
 		gedang:3000,
 		desc: function(star){
@@ -1310,7 +1310,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_13029.png',
 		iconbig: '/image/equip-big/bw_13029.png',
 		rank:6,
-		price: { gold: 200000, diamond: 200 },
+		price: { diamond: 200 },
 		hp:12000,
 		shanbi:3000,
 		desc: function(star){
@@ -1323,7 +1323,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_13030.png',
 		iconbig: '/image/equip-big/bw_13030.png',
 		rank:6,
-		price: { gold: 200000, diamond: 200 },
+		price: { diamond: 200 },
 		hp:12000,
 		kangbao:3000,
 		desc: function(star){
@@ -1336,7 +1336,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_23028.png',
 		iconbig: '/image/equip-big/bw_23028.png',
 		rank:6,
-		price: { gold: 200000, diamond: 200 },
+		price: { diamond: 200 },
 		atk:2000,
 		baoji:3000,
 		desc: function(star){
@@ -1349,7 +1349,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_23029.png',
 		iconbig: '/image/equip-big/bw_23029.png',
 		rank:6,
-		price: { gold: 200000, diamond: 200 },
+		price: { diamond: 200 },
 		atk:2000,
 		mingzhong:3000,
 		desc: function(star){
@@ -1362,7 +1362,7 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_23030.png',
 		iconbig: '/image/equip-big/bw_23030.png',
 		rank:6,
-		price: { gold: 200000, diamond: 200 },
+		price: { diamond: 200 },
 		atk:2000,
 		poji:3000,
 		desc: function(star){

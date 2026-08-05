@@ -3961,8 +3961,10 @@ function renderBagView(container) {
 				return;
 			}
 
-			// 计算出售价格（按金币价值的一半，出售固定获得金币）
-			const sellPrice = Math.floor(getPriceAmount(tDef.price || { gold: 100 }, 'gold') * 0.5);
+			// 计算出售价格（按等效金币价值的一半，出售固定获得金币）
+			const _pObj = normalizePrice(tDef.price || { gold: 100 });
+			const _equivalentGold = _pObj.gold || (_pObj.diamond || 0) * 1000;
+			const sellPrice = Math.floor(_equivalentGold * 0.5);
 
 			// 确认对话框
 			Game.confirmDialog(`确定要出售【${tDef.name}】吗？\n获得 ${sellPrice} 金币`, () => {
@@ -5483,7 +5485,8 @@ const TREASURE_TYPE_LABELS = {
  * 宝物品质颜色映射（按价格区间）
  */
 function getTreasureRankInfo(price) {
-	const goldVal = getPriceAmount(price, 'gold');
+	const p = normalizePrice(price);
+	const goldVal = p.gold || (p.diamond || 0) * 1000;
 	if (goldVal >= 350) return { label: '珍稀', color: '#ff8d8d' };
 	if (goldVal >= 250) return { label: '上品', color: '#44aaff' };
 	if (goldVal >= 180) return { label: '良品', color: '#88cc88' };
@@ -6837,7 +6840,7 @@ function getEventName(id) {
 
 // ===== 货币体系：price 统一为对象结构，如 {gold:500} 或 {gold:2000, diamond:2} =====
 // 货币类型 -> 显示符号
-const CURRENCY_SYMBOL = { gold: '🪙', diamond: '💎' };
+const CURRENCY_SYMBOL = { gold: '💰', diamond: '💎' };
 
 // 货币元数据：对应全局余额变量名、不足提示
 const CURRENCY_META = {
@@ -6855,7 +6858,8 @@ const CURRENCY_META = {
 function pickPurchaseCurrency(priceObj, supportedCurrencies) {
 	const p = normalizePrice(priceObj);
 	const supported = (supportedCurrencies && supportedCurrencies.length)
-		? supportedCurrencies.filter(c => typeof p[c] === 'number');
+		? supportedCurrencies.filter(c => typeof p[c] === 'number')
+		: [];
 	const pool = supported.length ? supported : Object.keys(p).filter(c => typeof p[c] === 'number');
 	if (pool.length === 0) return 'gold';
 	return pool[Math.floor(Math.random() * pool.length)];
@@ -6900,7 +6904,7 @@ function getPriceAmount(priceObj, currency) {
 }
 
 /**
- * 格式化价格为可读字符串，如 "🪙 500" 或 "💎 2（🪙 2000）"。
+ * 格式化价格为可读字符串，如 "💰 500" 或 "💎 2（💰 2000）"。
  * 金币≤1000 只显示金币；>1000 显示钻石为主，金币作参考。
  */
 function formatPrice(priceObj) {
