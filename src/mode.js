@@ -3961,8 +3961,8 @@ function renderBagView(container) {
 				return;
 			}
 
-			// 计算出售价格
-			const sellPrice = Math.floor((tDef.price || 100) * 0.5);
+			// 计算出售价格（按金币价值的一半，出售固定获得金币）
+			const sellPrice = Math.floor(getPriceAmount(tDef.price || { gold: 100 }, 'gold') * 0.5);
 
 			// 确认对话框
 			Game.confirmDialog(`确定要出售【${tDef.name}】吗？\n获得 ${sellPrice} 金币`, () => {
@@ -4689,7 +4689,7 @@ function showBagTreasureDetail(tid, instanceId) {
 	const infoRows = [
 		// { label: '持有', value: bagItem.count },
 		// { label: '可用', value: remaining },
-		{ label: '价值', value: (tDef.price || 0) + ' 金' },
+		{ label: '价值', value: formatPrice(tDef.price || { gold: 0 }) },
 	];
 	infoRows.forEach(a => {
 		const row = document.createElement('div');
@@ -5483,9 +5483,10 @@ const TREASURE_TYPE_LABELS = {
  * 宝物品质颜色映射（按价格区间）
  */
 function getTreasureRankInfo(price) {
-	if (price >= 350) return { label: '珍稀', color: '#ff8d8d' };
-	if (price >= 250) return { label: '上品', color: '#44aaff' };
-	if (price >= 180) return { label: '良品', color: '#88cc88' };
+	const goldVal = getPriceAmount(price, 'gold');
+	if (goldVal >= 350) return { label: '珍稀', color: '#ff8d8d' };
+	if (goldVal >= 250) return { label: '上品', color: '#44aaff' };
+	if (goldVal >= 180) return { label: '良品', color: '#88cc88' };
 	return { label: '精品', color: '#888' };
 }
 
@@ -5570,7 +5571,7 @@ function renderTreasureGalleryView(container) {
 
 		for (const t of grouped[rankKey]) {
 			const isOwned = ownedTreasureBaseIds.has(t.id);
-			const rankInfo = getTreasureRankInfo(t.price || 0);
+			const rankInfo = getTreasureRankInfo(t.price || { gold: 0 });
 
 			const card = document.createElement('div');
 			card.className = 'gallery-char-card';
@@ -5697,7 +5698,7 @@ function showTreasureGalleryDetail(tDef, isOwned, rankInfo) {
 		// 价格
 		const priceRow = document.createElement('div');
 		priceRow.className = 'gallery-detail-attr-row';
-		priceRow.innerHTML = `<span class="attr-label">售价</span><span class="attr-value" style="color:#ffcc00">${tDef.price || 0} 金</span>`;
+		priceRow.innerHTML = `<span class="attr-label">售价</span><span class="attr-value" style="color:#ffcc00">${formatPrice(tDef.price || { gold: 0 })}</span>`;
 		attrDiv.appendChild(priceRow);
 
 		// 持有数量 - 从实例化系统获取
@@ -6834,11 +6835,101 @@ function getEventName(id) {
 // 商店数据：存储在 window.shopData 中
 // { items: [{type:'treasure'|'character', id, price, sold}], refreshCost: 50 }
 
+// ===== 货币体系：price 统一为对象结构，如 {gold:500} 或 {gold:2000, diamond:2} =====
+// 货币类型 -> 显示符号
+const CURRENCY_SYMBOL = { gold: '🪙', diamond: '💎' };
+
+// 货币元数据：对应全局余额变量名、不足提示
+const CURRENCY_META = {
+	gold: { varKey: 'gameGold', label: '金币', insufficient: '金币不足！' },
+	diamond: { varKey: 'diamond', label: '钻石', insufficient: '钻石不足！' },
+};
+
 /**
- * 获取角色品质对应价格
+ * 从商品支持的价格中，按商店支持的货币列表随机选取一个作为购买货币。
+ * 若商品无任何受支持的货币，则退回到商品本身支持的货币中随机。
+ * @param {object} priceObj 归一化后的价格对象
+ * @param {string[]} supportedCurrencies 商店支持的货币列表
+ * @returns {string} 货币类型，如 'gold' / 'diamond'
+ */
+function pickPurchaseCurrency(priceObj, supportedCurrencies) {
+	const p = normalizePrice(priceObj);
+	const supported = (supportedCurrencies && supportedCurrencies.length)
+		? supportedCurrencies.filter(c => typeof p[c] === 'number');
+	const pool = supported.length ? supported : Object.keys(p).filter(c => typeof p[c] === 'number');
+	if (pool.length === 0) return 'gold';
+	return pool[Math.floor(Math.random() * pool.length)];
+}
+
+/**
+ * 将任意价格定义归一化为 {gold, diamond?} 形式。
+ * 兼容旧的纯数字写法（视为 gold）。
+ * 若 gold > 1000 且未显式给出 diamond，则自动补 diamond = ceil(gold/1000)。
+ * @param {number|{gold?:number,diamond?:number,[k:string]:number}} p
+ * @returns {{gold:number, diamond?:number}}
+ */
+function normalizePrice(p) {
+	if (typeof p === 'number') {
+		return p > 1000 ? { gold: p, diamond: Math.ceil(p / 1000) } : { gold: p };
+	}
+	if (p && typeof p === 'object') {
+		const gold = p.gold || 0;
+		const out = { gold };
+		if (typeof p.diamond === 'number') out.diamond = p.diamond;
+		else if (gold > 1000) out.diamond = Math.ceil(gold / 1000);
+		// 未来可在此扩展其他货币
+		return out;
+	}
+	return { gold: 0 };
+}
+
+/**
+ * 返回价格的主购买货币：>1000 金币用 diamond，否则用 gold。
+ * @returns {'gold'|'diamond'}
+ */
+function getPrimaryCurrency(priceObj) {
+	const p = normalizePrice(priceObj);
+	return (p.diamond && p.gold > 1000) ? 'diamond' : 'gold';
+}
+
+/**
+ * 获取价格在某货币下的数值。
+ */
+function getPriceAmount(priceObj, currency) {
+	return normalizePrice(priceObj)[currency] || 0;
+}
+
+/**
+ * 格式化价格为可读字符串，如 "🪙 500" 或 "💎 2（🪙 2000）"。
+ * 金币≤1000 只显示金币；>1000 显示钻石为主，金币作参考。
+ */
+function formatPrice(priceObj) {
+	const p = normalizePrice(priceObj);
+	if (p.gold > 1000 && p.diamond) {
+		return `${CURRENCY_SYMBOL.diamond} ${p.diamond}（${CURRENCY_SYMBOL.gold} ${p.gold}）`;
+	}
+	return `${CURRENCY_SYMBOL.gold} ${p.gold}`;
+}
+
+/**
+ * 获取角色品质对应价格（对象结构）
  */
 function getCharPrice(rank) {
-	return { legend: 500, epic: 300 }[rank] || 200;
+	return { legend: { gold: 500 }, epic: { gold: 300 } }[rank] || { gold: 200 };
+}
+
+/**
+ * 按倍率缩放价格（用于 sp 商店）。对每种货币数值乘以倍率，再归一化补 diamond。
+ * @param {number|object} p
+ * @param {number} beilv
+ */
+function scalePrice(p, beilv) {
+	const base = normalizePrice(p);
+	const scaled = {};
+	for (const cur of Object.keys(base)) {
+		scaled[cur] = base[cur] * beilv;
+	}
+	return normalizePrice(scaled);
 }
 
 /**
@@ -6858,8 +6949,9 @@ function getRankName(rank) {
 /**
  * 刷新商店物品
  */
-function refreshShopItems(type = 'normal') {
+function refreshShopItems(type = 'normal', supportedCurrencies = ['gold', 'diamond']) {
 	if (!window.shopData) window.shopData = { items: [], spitems: [], refreshCost: 50 };
+	window.shopData.supportedCurrencies = supportedCurrencies;
 	const items = [];
 	const spitems = [];
 	// 3宝物（只售卖有 rank 的宝物）
@@ -6887,12 +6979,16 @@ function refreshShopItems(type = 'normal') {
 		if (id in characterList) {
 			const cData = characterList[id];
 			if (cData) {
+				const price = scalePrice(getCharPrice(cData.rank), beilv);
+				const payCurrency = pickPurchaseCurrency(price, supportedCurrencies);
 				target.push({
 					type: 'character',
 					id: id,
 					name: cData.name,
 					desc: `${getRankName(cData.rank)} | HP:${cData.hp} ATK:${cData.atk} DEF:${cData.def}`,
-					price: getCharPrice(cData.rank) * beilv,
+					price: price,
+					payCurrency: payCurrency,
+					payAmount: price[payCurrency],
 					sold: false,
 					number: beilv,
 					rank: cData.rank,
@@ -6903,12 +6999,16 @@ function refreshShopItems(type = 'normal') {
 		else if (id in ITEM_DEFS) {
 			const def = ITEM_DEFS[id];
 			if (def) {
+				const price = scalePrice(def.price || { gold: 200 }, beilv);
+				const payCurrency = pickPurchaseCurrency(price, supportedCurrencies);
 				target.push({
 					type: 'item',
 					id: id,
 					name: def.name,
 					desc: def.desc,
-					price: (def.price || 200) * beilv,
+					price: price,
+					payCurrency: payCurrency,
+					payAmount: price[payCurrency],
 					sold: false,
 					number: beilv,
 					emoji: def.emoji || '📦',
@@ -6919,12 +7019,16 @@ function refreshShopItems(type = 'normal') {
 		else if (id in Game.Data.getTreasureList()) {
 			const tData = Game.Data.getTreasureList()[id];
 			if (tData) {
+				const price = scalePrice(tData.price || { gold: 200 }, beilv);
+				const payCurrency = pickPurchaseCurrency(price, supportedCurrencies);
 				target.push({
 					type: 'treasure',
 					id: id,
 					name: tData.name,
 					desc: tData.desc,
-					price: (tData.price || 200) * beilv,
+					price: price,
+					payCurrency: payCurrency,
+					payAmount: price[payCurrency],
 					sold: false,
 					number: beilv,
 					icon: tData.icon || `/image/skill/${id}.png`,
@@ -7146,12 +7250,21 @@ function renderShopView(container) {
 	//	 refreshShopItems(window.shopMode);
 	// }
 	if ((!window.shopData || (window.shopMode === 'normal' && !window.shopData.items) || (window.shopMode === 'advanced' && !window.shopData.items))) {
-		refreshShopItems(window.shopMode);
+		refreshShopItems(window.shopMode, ['gold', 'diamond']);
 	}
 
 	// 普通商店显示宝物，高级商店显示角色
 	const items = window.shopData[window.shopMode == 'normal' ? 'items' : 'spitems']
 	console.log('items', items)
+
+	// 兼容旧存档：补全购买货币
+	const supportedCur = window.shopData.supportedCurrencies || ['gold', 'diamond'];
+	items.forEach(it => {
+		if (it && it.price && !it.payCurrency) {
+			it.payCurrency = pickPurchaseCurrency(it.price, supportedCur);
+			it.payAmount = it.price[it.payCurrency];
+		}
+	});
 
 	//创建网格容器
 	const gridDiv = document.createElement('div');
@@ -7250,7 +7363,7 @@ function renderShopView(container) {
 		// 购买按钮逻辑（自建 div 按键，避免原生 button 长数字换行）
 		const buyBtn = document.createElement('div');
 		buyBtn.className = 'shop-item-buy-btn';
-		buyBtn.textContent = item ? (item.price + '💎') : '—';
+		buyBtn.textContent = item ? (CURRENCY_SYMBOL[item.payCurrency] + ' ' + item.payAmount) : '—';
 		buyBtn.style.whiteSpace = 'nowrap';
 
 		// 【关键修复】防止重复点击或逻辑混乱
@@ -7266,9 +7379,12 @@ function renderShopView(container) {
 				return;
 			}
 
-			// 2. 检查钻石
-			if ((window.diamond || 0) < item.price) {
-				Game.toast('钻石不足！', 'error');
+			// 2. 检查所选购买货币余额
+			const payCur = item.payCurrency || 'diamond';
+			const payMeta = CURRENCY_META[payCur] || CURRENCY_META.diamond;
+			const balance = window[payMeta.varKey] || 0;
+			if (balance < item.payAmount) {
+				Game.toast(payMeta.insufficient, 'error');
 				return;
 			}
 
@@ -7316,11 +7432,16 @@ function renderShopView(container) {
 	// 2. 筛选出未售罄的商品
 	const availableItems = currentItems.filter(item => !item.sold);
 
-	// 3. 计算总价
-	let num = 0;
+	// 3. 按货币分别汇总应付金额
+	const needByCurrency = {};
 	availableItems.forEach(item => {
-		num += (item.price || 0);
+		const cur = item.payCurrency || 'diamond';
+		needByCurrency[cur] = (needByCurrency[cur] || 0) + (item.payAmount || 0);
 	});
+	const needParts = Object.keys(needByCurrency)
+		.filter(c => needByCurrency[c] > 0)
+		.map(c => `${CURRENCY_SYMBOL[c]} ${needByCurrency[c]}`);
+	const needText = needParts.length ? needParts.join(' ') : '免费';
 
 	// 4. 设置按钮文本和状态
 	allBuyBtn.style.whiteSpace = 'pre-wrap';
@@ -7333,17 +7454,20 @@ function renderShopView(container) {
 		allBuyBtn.style.cursor = 'not-allowed';
 	} else {
 		// 有可购买的商品
-		allBuyBtn.textContent = `一键购买\n（${num}💎）`;
+		allBuyBtn.textContent = `一键购买\n（${needText}）`;
 		allBuyBtn.disabled = false;
 		allBuyBtn.style.opacity = '1';
 		allBuyBtn.style.cursor = 'pointer';
 
 		// 5. 绑定点击事件
 		allBuyBtn.onclick = () => {
-			// 再次检查钻石（防止并发或数据变动）
-			if ((window.diamond || 0) < num) {
-				Game.toast('钻石不足，无法购买！', 'error');
-				return;
+			// 检查每种购买货币的余额
+			for (const cur of Object.keys(needByCurrency)) {
+				const meta = CURRENCY_META[cur] || CURRENCY_META.diamond;
+				if ((window[meta.varKey] || 0) < needByCurrency[cur]) {
+					Game.toast(meta.insufficient + '，无法购买！', 'error');
+					return;
+				}
 			}
 
 			// 6. 执行购买逻辑 (只购买未售罄的)
@@ -7464,8 +7588,10 @@ function buyevent(item) {
 		}
 	}
 
-	// 4. 扣除钻石 (只扣一次)
-	window.diamond -= item.price;
+	// 4. 按所选购买货币扣费 (只扣一次)
+	const payCur = item.payCurrency || 'diamond';
+	const payMeta = CURRENCY_META[payCur] || CURRENCY_META.diamond;
+	window[payMeta.varKey] = (window[payMeta.varKey] || 0) - (item.payAmount || 0);
 
 	// 5. 标记为已售出
 	item.sold = true;
@@ -7478,7 +7604,7 @@ function buyevent(item) {
 	if (diaDisplay) {
 		diaDisplay.textContent = `💎 ${(window.diamond || 0).toLocaleString()} 钻石`;
 	}
-	// 同步刷新顶部常驻资源条（钻石数字）
+	// 同步刷新顶部常驻资源条
 	updateResourceHUD();
 }
 

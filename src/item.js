@@ -36,7 +36,7 @@ export const ITEM_DEFS = {
 		rank: 'legend',
 		selectable: true,
 		icon: '',
-		price: 500,
+		price: { gold: 500 },
 	},
 	pack_epic: {
 		id: 'pack_epic',
@@ -46,7 +46,7 @@ export const ITEM_DEFS = {
 		rank: 'epic',
 		selectable: true,
 		icon: '',
-		price: 300,
+		price: { gold: 300 },
 	},
 	pack_epicfake: {
 		id: 'pack_epicfake',
@@ -56,7 +56,7 @@ export const ITEM_DEFS = {
 		rank: 'epicfake',
 		selectable: true,
 		icon: '',
-		price: 250,
+		price: { gold: 250 },
 	},
 	pack_rare: {
 		id: 'pack_rare',
@@ -66,7 +66,7 @@ export const ITEM_DEFS = {
 		rank: 'rare',
 		selectable: true,
 		icon: '',
-		price: 200,
+		price: { gold: 200 },
 	},
 	pack_all: {
 		id: 'pack_all',
@@ -76,7 +76,7 @@ export const ITEM_DEFS = {
 		rank: null,
 		selectable: true,
 		icon: '',
-		price: 600,
+		price: { gold: 600 },
 	},
 };
 
