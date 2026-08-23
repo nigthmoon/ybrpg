@@ -4913,13 +4913,14 @@ function getTodayStr() {
 
 // 每日任务定义（hook 用于游戏内行为累加进度）
 const DAILY_TASK_DEFS = [
-	{ id: 'login', name: '每日登录', target: 1, reward: 10, hook: 'login' },
-	{ id: 'clear', name: '通关任意关卡 1 次', target: 1, reward: 20, hook: 'clear' },
-	{ id: 'buy', name: '在商店购买 1 次', target: 1, reward: 15, hook: 'buy' },
+	{ id: 'login', name: '每日登录', target: 1, reward: 100, hook: 'login' },
+	{ id: 'clear', name: '通关任意关卡 1 次', target: 1, reward: 200, hook: 'clear' },
+	{ id: 'buy', name: '在商店购买 1 次', target: 1, reward: 150, hook: 'buy' },
+	{ id: 'refresh', name: '刷新商店 1 次', target: 1, reward: 100, hook: 'refresh' },
 ];
 
 // 7 天签到奖励表（第 7 天为大奖）
-const DAILY_SIGN_REWARDS = [10, 10, 15, 15, 20, 20, 50];
+const DAILY_SIGN_REWARDS = [100, 100, 150, 150, 200, 200, 500];
 
 // 确保每日数据已按"今天"初始化/刷新
 function ensureDailyData() {
@@ -4934,6 +4935,16 @@ function ensureDailyData() {
 		};
 		// 登录任务直接进入即完成
 		addDailyTaskProgress('login', 1);
+	} else {
+		// 同一天但任务定义有变动（如奖励×10、新增任务）：按 id 同步，保留进度与领取状态
+		window.dailyTasks.tasks = DAILY_TASK_DEFS.map(d => {
+			const old = window.dailyTasks.tasks.find(x => x.id === d.id);
+			return {
+				id: d.id, name: d.name, target: d.target, reward: d.reward,
+				progress: old ? old.progress : 0,
+				claimed: old ? old.claimed : false,
+			};
+		});
 	}
 	if (!window.dailySign) {
 		window.dailySign = { lastSignDate: '', streak: 0 };
@@ -4956,10 +4967,13 @@ function addDailyTaskProgress(hook, n = 1) {
 function claimDailyTask(taskId) {
 	const t = window.dailyTasks.tasks.find(x => x.id === taskId);
 	if (!t || t.claimed || t.progress < t.target) return false;
+	const goldReward = t.reward * 10;
 	window.diamond = (window.diamond || 0) + t.reward;
+	window.gameGold = (window.gameGold || 0) + goldReward;
 	t.claimed = true;
 	updateResourceHUD();
 	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
+	Game.toast(`任务完成！获得 ${t.reward} 💎 + ${goldReward} 💰`, 'success');
 	return true;
 }
 
@@ -4981,11 +4995,13 @@ function doDailySign() {
 	window.dailySign.streak = (window.dailySign.streak || 0) + 1;
 	const idx = (window.dailySign.streak - 1) % DAILY_SIGN_REWARDS.length;
 	const reward = DAILY_SIGN_REWARDS[idx];
+	const goldReward = reward * 10;
 	window.diamond = (window.diamond || 0) + reward;
+	window.gameGold = (window.gameGold || 0) + goldReward;
 	window.dailySign.lastSignDate = today;
 	updateResourceHUD();
 	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
-	Game.toast(`签到成功！获得 ${reward} 💎`, 'success');
+	Game.toast(`签到成功！获得 ${reward} 💎 + ${goldReward} 💰`, 'success');
 	return true;
 }
 
@@ -5019,7 +5035,8 @@ function renderDailySignView(container) {
 		`;
 		cell.innerHTML = `<div style="color:#aaa;font-size:12px;">第${day}天</div>
 			<div style="font-size:18px;margin:6px 0;">💎</div>
-			<div style="color:#ffd700;font-weight:bold;">${rw}</div>`;
+			<div style="color:#ffd700;font-weight:bold;">${rw}</div>
+			<div style="color:#ffcf66;font-size:12px;margin-top:2px;">+${rw * 10}💰</div>`;
 		grid.appendChild(cell);
 	});
 	container.appendChild(grid);
@@ -5065,7 +5082,7 @@ function renderDailyTaskView(container) {
 		const info = document.createElement('div');
 		info.style.cssText = 'flex:1;';
 		info.innerHTML = `<div style="font-size:14px;color:#eee;">${t.name}</div>
-			<div style="font-size:12px;color:#aaa;">进度 ${Math.min(t.progress, t.target)}/${t.target}　奖励 💎 ${t.reward}</div>`;
+			<div style="font-size:12px;color:#aaa;">进度 ${Math.min(t.progress, t.target)}/${t.target}　奖励 💎 ${t.reward} + 💰${t.reward * 10}</div>`;
 		row.appendChild(info);
 
 		const btn = document.createElement('button');
@@ -7728,20 +7745,22 @@ function renderShopView(container) {
 	refreshBtn.className = 'shop-refresh-btn';
 	var beilv = (window.shopMode === 'advanced') ? 4 : 1;
 	const cost = (window.shopData.refreshCost || 50) * beilv;
-	refreshBtn.textContent = `刷新商品\n（${cost}💎）`;
+	refreshBtn.textContent = `刷新商品\n（${cost}💰）`;
 	refreshBtn.style.whiteSpace = 'pre-wrap';
 	refreshBtn.onclick = () => {
-		if ((window.diamond || 0) < cost) {
-			Game.toast('钻石不足，无法刷新！', 'error');
+		if ((window.gameGold || 0) < cost) {
+			Game.toast('金币不足，无法刷新！', 'error');
 			return;
 		}
-		window.diamond = (window.diamond || 0) - cost;
-		const diaDisplay = document.getElementById('shop-diamond-display');
-		if (diaDisplay) diaDisplay.textContent = `💎 ${(window.diamond || 0).toLocaleString()} 钻石`;
-		updateResourceHUD(); // 同步刷新顶部常驻资源条（钻石数字）
+		window.gameGold = (window.gameGold || 0) - cost;
+		const goldDisplay = document.getElementById('shop-gold-display');
+		if (goldDisplay) goldDisplay.textContent = (window.gameGold || 0).toLocaleString();
+		updateResourceHUD(); // 同步刷新顶部常驻资源条（金币数字）
 		refreshShopItems(window.shopMode);
 		renderShopView(container);
 		Game.toast('商店已刷新', 'info');
+		// 每日任务：刷新商店
+		if (typeof addDailyTaskProgress === 'function') addDailyTaskProgress('refresh', 1);
 		SaveManager.autoSave();
 	};
 	downBtns.appendChild(refreshBtn);
@@ -10536,7 +10555,17 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 	confirmBtn.onclick = () => {
 		const selected = consumables.filter(c => c.selected);
 		const totalLevel = selected.reduce((s, c) => s + c.level, 0);
-		const newLevel = currentLevel + totalLevel;
+		let newLevel = currentLevel + totalLevel;
+
+		// 非主角角色：等级不得超过主角
+		if (targetCharId !== 'zhujue') {
+			const mainInst = getMainCharacterInstance();
+			const mainLevel = mainInst ? (mainInst.level || 1) : 1;
+			if (newLevel > mainLevel) {
+				newLevel = mainLevel;
+				Game.toast(`非主角角色等级不能超过主角（Lv.${mainLevel}），已限制为 Lv.${mainLevel}`, 'warning');
+			}
+		}
 
 		// 点击时判断金币：升级到每一级都需支付该级费用（前期低、后期高）
 		const totalGoldCost = calcUpgradeGoldCost(currentLevel, newLevel);
@@ -10647,6 +10676,16 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 			row.appendChild(checkMark);
 
 			row.onclick = () => {
+				// 非主角角色：拦截会导致超过主角等级的素材选择
+				if (!c.selected && targetCharId !== 'zhujue') {
+					const _mainInst = getMainCharacterInstance();
+					const _mainLevel = _mainInst ? (_mainInst.level || 1) : 1;
+					const _curTotal = consumables.filter(x => x.selected).reduce((s, x) => s + x.level, 0);
+					if (currentLevel + _curTotal + c.level > _mainLevel) {
+						Game.toast(`该素材会使等级超过主角（Lv.${_mainLevel}），无法选择`, 'warning');
+						return;
+					}
+				}
 				c.selected = !c.selected;
 				renderConsumableList();
 				updateInfoBar();
@@ -10671,14 +10710,27 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 		const countLabel = document.getElementById('upgrade-count-label');
 		const confirmBtn = document.getElementById('upgrade-confirm-btn');
 		const newLevel = currentLevel + totalLevel;
+		// 非主角角色：提示不得超过主角等级
+		let overHint = '';
+		let overColor = '';
+		if (targetCharId !== 'zhujue') {
+			const _mainInst = getMainCharacterInstance();
+			const _mainLevel = _mainInst ? (_mainInst.level || 1) : 1;
+			if (newLevel > _mainLevel) {
+				overHint = `（不可超过主角 Lv.${_mainLevel}，将限至 Lv.${_mainLevel}）`;
+				overColor = '#ff6b6b';
+			}
+		}
 		if (countLabel) {
 			if (totalLevel > 0) {
 				const goldCost = calcUpgradeGoldCost(currentLevel, newLevel);
 				const enough = (window.gameGold || 0) >= goldCost;
 				countLabel.textContent = `已选: ${totalLevel} 将升至 ${newLevel}级 · 金币: ${goldCost}` +
-					(enough ? '' : `（不足，差 ${goldCost - (window.gameGold || 0)}）`);
+					(enough ? '' : `（不足，差 ${goldCost - (window.gameGold || 0)}）`) + overHint;
+				countLabel.style.color = overColor || (enough ? '' : '#ff6b6b');
 			} else {
-				countLabel.textContent = '已选: 0 将升至' + currentLevel + '级';
+				countLabel.textContent = '已选: 0 将升至' + currentLevel + '级' + overHint;
+				countLabel.style.color = overColor;
 			}
 		}
 		if (confirmBtn) {
