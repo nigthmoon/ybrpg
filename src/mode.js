@@ -4117,6 +4117,18 @@ function renderBagEquipContent(container) {
 		iconDiv.className = 'gallery-char-icon equipbag-icon';
 		iconDiv.style.position = 'relative'; // 用于绝对定位标签
 
+		// 装备边框颜色：与角色品质色系一致（按宝物数值 rank 1~6 映射）
+		const EQUIP_RANK_BORDER_COLORS = {
+			1: '#88cc88', // 平凡/绿
+			2: '#44aaff', // 精品/蓝
+			3: '#a335ee', // 稀有/紫
+			4: '#ff8800', // 伪史诗/橙
+			5: '#ff8d8d', // 史诗/红粉
+			6: '#ffff00'  // 传说/金
+		};
+		const equipRank = item.rank || (TREASURE_DEFS[item.baseId] && TREASURE_DEFS[item.baseId].rank) || 1;
+		iconDiv.style.borderColor = EQUIP_RANK_BORDER_COLORS[equipRank] || '#888';
+
 		if (item.icon) {
 			const img = document.createElement('img');
 			img.className = 'gallery-char-img equipbag-icon-img';
@@ -4793,6 +4805,22 @@ function renderSettingsView(container) {
 	treasureBtn.onclick = () => renderTreasureGalleryView(container);
 	galleryRow.appendChild(treasureBtn);
 
+	// 每日任务按钮
+	const taskBtn = document.createElement('button');
+	taskBtn.className = 'ybrpg-settings-btn';
+	taskBtn.id = 'btn-setting-daily-task';
+	taskBtn.textContent = '每日任务';
+	taskBtn.onclick = () => renderDailyTaskView(container);
+	galleryRow.appendChild(taskBtn);
+
+	// 每日签到按钮
+	const signBtn = document.createElement('button');
+	signBtn.className = 'ybrpg-settings-btn';
+	signBtn.id = 'btn-setting-daily-sign';
+	signBtn.textContent = '每日签到';
+	signBtn.onclick = () => renderDailySignView(container);
+	galleryRow.appendChild(signBtn);
+
 	groupDiv.appendChild(galleryRow);
 
 	// ... 之前的图鉴行 ...
@@ -4872,6 +4900,195 @@ function renderSettingsView(container) {
 	versionInfo.style.cssText = 'color:#888;font-size:12px;margin-top:20px;text-align:center;';
 	versionInfo.textContent = `版本: ${window.GAME_VERSION || 'v1.0'}`;
 	container.appendChild(versionInfo);
+}
+
+// ===================== 每日签到 & 每日任务 =====================
+
+// 本地日期字符串 YYYY-MM-DD（用于每日刷新判断）
+function getTodayStr() {
+	const d = new Date();
+	const p = (n) => String(n).padStart(2, '0');
+	return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+// 每日任务定义（hook 用于游戏内行为累加进度）
+const DAILY_TASK_DEFS = [
+	{ id: 'login', name: '每日登录', target: 1, reward: 10, hook: 'login' },
+	{ id: 'clear', name: '通关任意关卡 1 次', target: 1, reward: 20, hook: 'clear' },
+	{ id: 'buy', name: '在商店购买 1 次', target: 1, reward: 15, hook: 'buy' },
+];
+
+// 7 天签到奖励表（第 7 天为大奖）
+const DAILY_SIGN_REWARDS = [10, 10, 15, 15, 20, 20, 50];
+
+// 确保每日数据已按"今天"初始化/刷新
+function ensureDailyData() {
+	const today = getTodayStr();
+	if (!window.dailyTasks || window.dailyTasks.date !== today) {
+		window.dailyTasks = {
+			date: today,
+			tasks: DAILY_TASK_DEFS.map(d => ({
+				id: d.id, name: d.name, target: d.target, reward: d.reward,
+				progress: 0, claimed: false,
+			})),
+		};
+		// 登录任务直接进入即完成
+		addDailyTaskProgress('login', 1);
+	}
+	if (!window.dailySign) {
+		window.dailySign = { lastSignDate: '', streak: 0 };
+	}
+}
+
+// 任务进度累加（游戏行为钩子）
+function addDailyTaskProgress(hook, n = 1) {
+	ensureDailyData();
+	const t = window.dailyTasks.tasks.find(x => {
+		const def = DAILY_TASK_DEFS.find(d => d.id === x.id);
+		return def && def.hook === hook;
+	});
+	if (t && !t.claimed) {
+		t.progress = Math.min(t.target, t.progress + n);
+	}
+}
+
+// 领取任务奖励
+function claimDailyTask(taskId) {
+	const t = window.dailyTasks.tasks.find(x => x.id === taskId);
+	if (!t || t.claimed || t.progress < t.target) return false;
+	window.diamond = (window.diamond || 0) + t.reward;
+	t.claimed = true;
+	updateResourceHUD();
+	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
+	return true;
+}
+
+// 执行签到
+function doDailySign() {
+	ensureDailyData();
+	const today = getTodayStr();
+	if (window.dailySign.lastSignDate === today) {
+		Game.toast('今天已经签到过了', 'warning');
+		return false;
+	}
+	// 连续签到判断：昨天签过则 +1，否则重新从 1 开始
+	const yesterday = new Date(Date.now() - 86400000);
+	const yp = (nn) => String(nn).padStart(2, '0');
+	const yStr = `${yesterday.getFullYear()}-${yp(yesterday.getMonth() + 1)}-${yp(yesterday.getDate())}`;
+	if (window.dailySign.lastSignDate !== yStr) {
+		window.dailySign.streak = 0;
+	}
+	window.dailySign.streak = (window.dailySign.streak || 0) + 1;
+	const idx = (window.dailySign.streak - 1) % DAILY_SIGN_REWARDS.length;
+	const reward = DAILY_SIGN_REWARDS[idx];
+	window.diamond = (window.diamond || 0) + reward;
+	window.dailySign.lastSignDate = today;
+	updateResourceHUD();
+	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
+	Game.toast(`签到成功！获得 ${reward} 💎`, 'success');
+	return true;
+}
+
+// 渲染：每日签到
+function renderDailySignView(container) {
+	ensureDailyData();
+	container.innerHTML = '';
+
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-back-btn';
+	backBtn.textContent = '← 返回';
+	backBtn.onclick = () => renderSettingsView(container);
+	container.appendChild(backBtn);
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:20px;font-weight:bold;text-align:center;margin:15px 0;color:#ffd700;';
+	title.textContent = '📅 每日签到';
+	container.appendChild(title);
+
+	const today = getTodayStr();
+	const signed = window.dailySign.lastSignDate === today;
+
+	const grid = document.createElement('div');
+	grid.style.cssText = 'display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:10px;';
+	DAILY_SIGN_REWARDS.forEach((rw, i) => {
+		const day = i + 1;
+		const cell = document.createElement('div');
+		cell.style.cssText = `
+			border:1px solid #555;border-radius:8px;padding:12px 6px;text-align:center;
+			background:${signed && ((window.dailySign.streak - 1) % DAILY_SIGN_REWARDS.length) === i ? 'rgba(255,215,0,0.2)' : '#222'};
+		`;
+		cell.innerHTML = `<div style="color:#aaa;font-size:12px;">第${day}天</div>
+			<div style="font-size:18px;margin:6px 0;">💎</div>
+			<div style="color:#ffd700;font-weight:bold;">${rw}</div>`;
+		grid.appendChild(cell);
+	});
+	container.appendChild(grid);
+
+	const signBtn = document.createElement('button');
+	signBtn.className = 'ybrpg-settings-btn';
+	signBtn.style.cssText = 'display:block;margin:20px auto 0;width:80%;';
+	signBtn.textContent = signed ? '今日已签到 ✓' : '签到领钻';
+	signBtn.disabled = signed;
+	if (signed) { signBtn.style.opacity = '0.5'; signBtn.style.cursor = 'not-allowed'; }
+	signBtn.onclick = () => {
+		if (doDailySign()) renderDailySignView(container);
+	};
+	container.appendChild(signBtn);
+
+	const tip = document.createElement('div');
+	tip.style.cssText = 'color:#888;font-size:12px;text-align:center;margin-top:12px;';
+	tip.textContent = `当前连续签到：${window.dailySign.streak || 0} 天`;
+	container.appendChild(tip);
+}
+
+// 渲染：每日任务
+function renderDailyTaskView(container) {
+	ensureDailyData();
+	container.innerHTML = '';
+
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-back-btn';
+	backBtn.textContent = '← 返回';
+	backBtn.onclick = () => renderSettingsView(container);
+	container.appendChild(backBtn);
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:20px;font-weight:bold;text-align:center;margin:15px 0;color:#44aaff;';
+	title.textContent = '📋 每日任务';
+	container.appendChild(title);
+
+	window.dailyTasks.tasks.forEach(t => {
+		const done = t.progress >= t.target;
+		const row = document.createElement('div');
+		row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px;margin:8px 0;border:1px solid #444;border-radius:8px;background:#222;';
+
+		const info = document.createElement('div');
+		info.style.cssText = 'flex:1;';
+		info.innerHTML = `<div style="font-size:14px;color:#eee;">${t.name}</div>
+			<div style="font-size:12px;color:#aaa;">进度 ${Math.min(t.progress, t.target)}/${t.target}　奖励 💎 ${t.reward}</div>`;
+		row.appendChild(info);
+
+		const btn = document.createElement('button');
+		btn.className = 'ybrpg-settings-btn';
+		btn.style.cssText = 'min-width:72px;';
+		if (t.claimed) {
+			btn.textContent = '已领取';
+			btn.disabled = true;
+			btn.style.opacity = '0.5';
+		} else if (done) {
+			btn.textContent = '领取';
+			btn.onclick = () => {
+				if (claimDailyTask(t.id)) renderDailyTaskView(container);
+			};
+		} else {
+			btn.textContent = '未完成';
+			btn.disabled = true;
+			btn.style.opacity = '0.5';
+			btn.style.cursor = 'not-allowed';
+		}
+		row.appendChild(btn);
+		container.appendChild(row);
+	});
 }
 
 // 新增: 渲染角色图鉴视图
@@ -5575,6 +5792,12 @@ function renderTreasureGalleryView(container) {
 		for (const t of grouped[rankKey]) {
 			const isOwned = ownedTreasureBaseIds.has(t.id);
 			const rankInfo = getTreasureRankInfo(t.price || { gold: 0 });
+			const EQUIP_RANK_BORDER_COLORS = {
+				1: '#88cc88', 2: '#44aaff', 3: '#a335ee',
+				4: '#ff8800', 5: '#ff8d8d', 6: '#ffff00'
+			};
+			const galleryEquipRank = t.rank || 1;
+			const galleryBorderColor = EQUIP_RANK_BORDER_COLORS[galleryEquipRank] || '#888';
 
 			const card = document.createElement('div');
 			card.className = 'gallery-char-card';
@@ -5583,7 +5806,7 @@ function renderTreasureGalleryView(container) {
 			// 宝物图标
 			const iconDiv = document.createElement('div');
 			iconDiv.className = 'gallery-char-icon';
-			iconDiv.style.borderColor = isOwned ? rankInfo.color : '#555';
+			iconDiv.style.borderColor = isOwned ? galleryBorderColor : '#555';
 
 			if (isOwned && t.icon) {
 				const img = document.createElement('img');
@@ -5616,7 +5839,7 @@ function renderTreasureGalleryView(container) {
 			const nameDiv = document.createElement('div');
 			nameDiv.className = 'gallery-char-name';
 			nameDiv.textContent = isOwned ? t.name : '???';
-			if (isOwned) nameDiv.style.color = rankInfo.color;
+			if (isOwned) nameDiv.style.color = galleryBorderColor;
 			card.appendChild(nameDiv);
 
 			// 点击查看详情
@@ -6484,6 +6707,7 @@ function renderChapterEventList(container, chapterKey) {
 						const goldScale = baseGold;
 						const goldReward = Math.floor(goldScale);
 						window.gameGold = (window.gameGold || 0) + goldReward;
+						addDailyTaskProgress('clear', 1);
 						// 事件完成后自动存档
 						SaveManager.autoSave();
 						Game.toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
@@ -6742,6 +6966,7 @@ function renderChapterEventList(container, chapterKey) {
 							: defaultLevelGold(event.id);
 						const goldReward = Math.floor(baseGold * goldScale);
 						window.gameGold = (window.gameGold || 0) + goldReward;
+						addDailyTaskProgress('clear', 1);
 					// 掉落物：优先用事件固定配置 event.reward；未配置则按档位自动规则兜底
 					const dropStat = { chars: [], treasures: [], items: [] };
 					if (rewardCfg) {
@@ -7596,6 +7821,7 @@ function buyevent(item) {
 	const payCur = item.payCurrency || 'diamond';
 	const payMeta = CURRENCY_META[payCur] || CURRENCY_META.diamond;
 	window[payMeta.varKey] = (window[payMeta.varKey] || 0) - (item.payAmount || 0);
+	addDailyTaskProgress('buy', 1);
 
 	// 5. 标记为已售出
 	item.sold = true;
@@ -8774,6 +9000,8 @@ const SaveManager = {
 		maxStamina: window.maxStamina,
 		staminaTs: window.staminaTs,
 		diamond: window.diamond,
+		dailySign: window.dailySign || { lastSignDate: '', streak: 0 },
+		dailyTasks: window.dailyTasks || null,
 			playerPreferences: {  // 【新增】
 				bagTab: window.bagTab || 'char',
 				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true
@@ -8868,6 +9096,8 @@ const SaveManager = {
 			window.maxStamina = parsed.maxStamina != null ? parsed.maxStamina : STAMINA_MAX;
 			window.staminaTs = parsed.staminaTs || Date.now();
 			window.diamond = parsed.diamond || 0;
+			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
+			window.dailyTasks = parsed.dailyTasks || null;
 
 			// 同步 window 变量回 Game.Data 内存
 			Game.Data.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData));
@@ -8915,6 +9145,8 @@ const SaveManager = {
 			window.maxStamina = data.maxStamina != null ? data.maxStamina : STAMINA_MAX;
 			window.staminaTs = data.staminaTs || Date.now();
 			window.diamond = data.diamond || 0;
+			window.dailySign = data.dailySign || { lastSignDate: '', streak: 0 };
+			window.dailyTasks = data.dailyTasks || null;
 			// 【新增】恢复偏好设置
 			const prefs = data.playerPreferences || data._playerPreferences || {};
 			window.bagTab = prefs.bagTab || 'char';
@@ -8986,6 +9218,8 @@ const SaveManager = {
 		Game.Data.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData || {}));
 		Game.Data.data._treasureBag = JSON.parse(JSON.stringify(window.treasureBagData || {}));
 		Game.Data.data._charTreasureSlots = JSON.parse(JSON.stringify(window.charTreasureSlots || {}));  // 【新增】
+		Game.Data.data.dailySign = JSON.parse(JSON.stringify(window.dailySign || { lastSignDate: '', streak: 0 }));
+		Game.Data.data.dailyTasks = JSON.parse(JSON.stringify(window.dailyTasks || null));
 		Game.Data.data.baseInfo.saveName = '自动存档';
 		Game.Data.data.baseInfo.saveTime = new Date().toISOString();
 
@@ -9014,6 +9248,8 @@ const SaveManager = {
 		staminaTs: window.staminaTs,
 		diamond: window.diamond,
 			charTreasureSlots: window.charTreasureSlots || {},
+			dailySign: window.dailySign || { lastSignDate: '', streak: 0 },
+			dailyTasks: window.dailyTasks || null,
 			playerPreferences: {
 				bagTab: window.bagTab || 'char',
 				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true
@@ -9112,6 +9348,8 @@ const SaveManager = {
 			window.maxStamina = parsed.maxStamina != null ? parsed.maxStamina : STAMINA_MAX;
 			window.staminaTs = parsed.staminaTs || Date.now();
 			window.diamond = parsed.diamond || 0;
+			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
+			window.dailyTasks = parsed.dailyTasks || null;
 			// ========== 在解析完所有数据后，添加这一段 ==========
 				// 恢复宝物实例化数据
 				if (parsed._treasureInventory) {
@@ -9162,6 +9400,8 @@ const SaveManager = {
 			window.maxStamina = parsed.maxStamina != null ? parsed.maxStamina : STAMINA_MAX;
 			window.staminaTs = parsed.staminaTs || Date.now();
 			window.diamond = parsed.diamond || 0;
+			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
+			window.dailyTasks = parsed.dailyTasks || null;
 
 				// 【新增】恢复偏好设置
 				const prefs2 = data.playerPreferences || data._playerPreferences || {};
