@@ -1760,6 +1760,12 @@ body {
 	text-decoration: underline dotted;
 }
 .ybrpg-res-hud .res-diamond:hover { color: #b3f0ff; }
+/* 开发者徽标：神品同款金色 */
+.ybrpg-res-hud .ybrpg-dev-badge {
+	color: #ffff00;
+	font-weight: bold;
+	text-shadow: 0 0 6px rgba(255, 255, 0, 0.45);
+}
 
 /* 商店顶部钻石（纯显示，无兑换入口） */
 .shop-diamond-icon {

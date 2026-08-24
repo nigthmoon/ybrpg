@@ -5027,8 +5027,8 @@ function doRedeem(input, statusEl, listBox) {
 	if (!window.redeemedCodes) window.redeemedCodes = [];
 	if (window.redeemedCodes.includes(code)) { statusEl.textContent = '该兑换码已兑换过'; statusEl.style.color = '#ffaa44'; return; }
 
-	applyRedeemRewards(def.rewards);
 	window.redeemedCodes.push(code);
+	applyRedeemRewards(def.rewards);
 	statusEl.textContent = `兑换成功！获得：${redeemRewardNames(def.rewards)}`;
 	statusEl.style.color = '#66ff66';
 	input.value = '';
@@ -7707,8 +7707,8 @@ function renderShopLegacyView(container) {
 	const goldBar = document.createElement('div');
 	goldBar.className = 'shop-gold-bar';
 	goldBar.innerHTML =
-		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${(window.gameGold || 0).toLocaleString()}</span> 金币` +
-		`&nbsp;&nbsp;<span class="shop-diamond-icon">💎 ${(window.diamond || 0).toLocaleString()} 钻石</span>`;
+		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${fmtGroup4(window.gameGold || 0)}</span> 金币` +
+		`&nbsp;&nbsp;<span class="shop-diamond-icon" id="shop-diamond-display">💎 ${fmtGroup4(window.diamond || 0)} 钻石</span>`;
 	container.appendChild(goldBar);
 
 	// 返回商城首页按钮
@@ -8011,7 +8011,7 @@ function renderShopLegacyView(container) {
 		}
 		window.gameGold = (window.gameGold || 0) - cost;
 		const goldDisplay = document.getElementById('shop-gold-display');
-		if (goldDisplay) goldDisplay.textContent = (window.gameGold || 0).toLocaleString();
+		if (goldDisplay) goldDisplay.textContent = fmtGroup4(window.gameGold || 0);
 		updateResourceHUD(); // 同步刷新顶部常驻资源条（金币数字）
 		refreshShopItems(window.shopMode);
 		renderShopLegacyView(container);
@@ -8032,8 +8032,8 @@ function renderShopHomeView(container) {
 	const goldBar = document.createElement('div');
 	goldBar.className = 'shop-gold-bar';
 	goldBar.innerHTML =
-		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${(window.gameGold || 0).toLocaleString()}</span> 金币` +
-		`&nbsp;&nbsp;<span class="shop-diamond-icon">💎 ${(window.diamond || 0).toLocaleString()} 钻石</span>`;
+		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${fmtGroup4(window.gameGold || 0)}</span> 金币` +
+		`&nbsp;&nbsp;<span class="shop-diamond-icon" id="shop-diamond-display">💎 ${fmtGroup4(window.diamond || 0)} 钻石</span>`;
 	container.appendChild(goldBar);
 
 	const title = document.createElement('div');
@@ -8088,8 +8088,8 @@ function renderTreasureShopView(container) {
 	const goldBar = document.createElement('div');
 	goldBar.className = 'shop-gold-bar';
 	goldBar.innerHTML =
-		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${(window.gameGold || 0).toLocaleString()}</span> 金币` +
-		`&nbsp;&nbsp;<span class="shop-diamond-icon">💎 ${(window.diamond || 0).toLocaleString()} 钻石</span>`;
+		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${fmtGroup4(window.gameGold || 0)}</span> 金币` +
+		`&nbsp;&nbsp;<span class="shop-diamond-icon" id="shop-diamond-display">💎 ${fmtGroup4(window.diamond || 0)} 钻石</span>`;
 	container.appendChild(goldBar);
 
 	// 返回 + 标题
@@ -8155,7 +8155,7 @@ function renderTreasureShopView(container) {
 			}
 			addDailyTaskProgress('buy', 1);
 			updateResourceHUD();
-			const gd = document.getElementById('shop-gold-display'); if (gd) gd.textContent = (window.gameGold || 0).toLocaleString();
+			const gd = document.getElementById('shop-gold-display'); if (gd) gd.textContent = fmtGroup4(window.gameGold || 0);
 			SaveManager.autoSave();
 		};
 		info.appendChild(buy);
@@ -8296,8 +8296,8 @@ function renderRecruitView(container) {
 	const goldBar = document.createElement('div');
 	goldBar.className = 'shop-gold-bar';
 	goldBar.innerHTML =
-		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${(window.gameGold || 0).toLocaleString()}</span> 金币` +
-		`&nbsp;&nbsp;<span class="shop-diamond-icon">💎 ${(window.diamond || 0).toLocaleString()} 钻石</span>`;
+		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${fmtGroup4(window.gameGold || 0)}</span> 金币` +
+		`&nbsp;&nbsp;<span class="shop-diamond-icon" id="shop-diamond-display">💎 ${fmtGroup4(window.diamond || 0)} 钻石</span>`;
 	container.appendChild(goldBar);
 
 	const head = document.createElement('div');
@@ -8371,6 +8371,7 @@ function doRecruit(count, container) {
 	if (balance < payAmt) { Game.toast(meta.insufficient + '，无法招募！', 'error'); return; }
 	window[meta.varKey] = balance - payAmt;
 	updateResourceHUD();
+	refreshShopCurrencyBar(); // 同步刷新商城内的金币/钻石展示
 	// 每日任务：招募 1 次（单抽或十连都触发，target=1 完成即止）
 	addDailyTaskProgress('recruit', 1);
 
@@ -8549,16 +8550,17 @@ function buyevent(item) {
 	// 5. 标记为已售出
 	item.sold = true;
 
-	const goldDisplay = document.getElementById('shop-gold-display');
-	if (goldDisplay) {
-		goldDisplay.textContent = (window.gameGold || 0).toLocaleString();
-	}
-	const diaDisplay = document.getElementById('shop-diamond-display');
-	if (diaDisplay) {
-		diaDisplay.textContent = `💎 ${(window.diamond || 0).toLocaleString()} 钻石`;
-	}
-	// 同步刷新顶部常驻资源条
+	// 同步刷新商城货币展示 + 顶部常驻资源条
+	refreshShopCurrencyBar();
 	updateResourceHUD();
+}
+
+// 刷新商城内的金币/钻石展示（各商城页面共用 shop-gold-display / shop-diamond-display）
+function refreshShopCurrencyBar() {
+	const goldDisplay = document.getElementById('shop-gold-display');
+	if (goldDisplay) goldDisplay.textContent = fmtGroup4(window.gameGold || 0);
+	const diaDisplay = document.getElementById('shop-diamond-display');
+	if (diaDisplay) diaDisplay.textContent = `💎 ${fmtGroup4(window.diamond || 0)} 钻石`;
 }
 
 /**
@@ -8964,12 +8966,18 @@ function exchangeDiamondToGold(amount) {
 // ---------- 常驻资源条（金币 / 体力 / 钻石）----------
 // 钻石仍常驻显示，但不提供"兑换"入口（兑换逻辑保留，后续可另置入口）。
 
+// 是否已领取开发者测试码（YBPRO）
+function isDeveloperRedeemed() {
+	return Array.isArray(window.redeemedCodes) && window.redeemedCodes.includes('YBPRO');
+}
+
 function ensureResourceHUD() {
   if (document.getElementById('ybrpg-res-hud')) { updateResourceHUD(); return; }
   const bar = document.createElement('div');
   bar.id = 'ybrpg-res-hud';
   bar.className = 'ybrpg-res-hud';
   bar.innerHTML =
+    (isDeveloperRedeemed() ? `<span class="res-item ybrpg-dev-badge">开发者</span>` : '') +
     `<span class="res-item">💰 <span id="ybrpg-res-gold">0</span> 金币</span>` +
     `<span class="res-item">⚡ <span id="ybrpg-res-stamina">0/0</span> 体力</span>` +
     `<span class="res-item">💎 <span id="ybrpg-res-diamond">0</span> 钻石</span>`;
@@ -8981,14 +8989,45 @@ function ensureResourceHUD() {
   updateResourceHUD();
 }
 
+// 四位一组数字格式化（符合中文阅读习惯）：123456789 -> 1,2345,6789
+function fmtGroup4(n) {
+	return String(Math.floor(n)).replace(/\B(?=(\d{4})+(?!\d))/g, ',');
+}
+
+// 大数缩写：>= 10 亿显示 x.x亿；>= 10 万显示 x.x万；其余显示完整数值
+function fmtBigNum(n) {
+  if (n >= 1000000000) {
+    return (n / 1000000000).toFixed(1).replace(/\.0$/, '') + '亿';
+  }
+  if (n >= 100000) {
+    return (n / 10000).toFixed(1).replace(/\.0$/, '') + '万';
+  }
+  return n.toLocaleString();
+}
+
 function updateResourceHUD() {
   regenStamina();
+  const hud = document.getElementById('ybrpg-res-hud');
   const goldEl = document.getElementById('ybrpg-res-gold');
   const stamEl = document.getElementById('ybrpg-res-stamina');
   const diaEl = document.getElementById('ybrpg-res-diamond');
-  if (goldEl) goldEl.textContent = (window.gameGold || 0).toLocaleString();
+  // 同步开发者徽标（兑换 YBPRO 后实时出现，未兑换则移除）
+  if (hud) {
+    let badge = document.getElementById('ybrpg-dev-badge');
+    const isDev = isDeveloperRedeemed();
+    if (isDev && !badge) {
+      badge = document.createElement('span');
+      badge.id = 'ybrpg-dev-badge';
+      badge.className = 'res-item ybrpg-dev-badge';
+      badge.textContent = '开发者';
+      hud.insertBefore(badge, hud.firstChild);
+    } else if (!isDev && badge) {
+      badge.remove();
+    }
+  }
+  if (goldEl) goldEl.textContent = fmtBigNum(window.gameGold || 0);
   if (stamEl) stamEl.textContent = `${window.stamina || 0}/${window.maxStamina || STAMINA_MAX}`;
-  if (diaEl) diaEl.textContent = (window.diamond || 0).toLocaleString();
+  if (diaEl) diaEl.textContent = fmtBigNum(window.diamond || 0);
 }
 
 // 钻石兑换弹窗
@@ -9245,6 +9284,18 @@ function hideOtherViews(currentViewId) {
 				view.style.display = 'none';
 			}
 		}
+	});
+	syncResourceHUDViewMode(currentViewId);
+}
+
+// 资源条视图模式：阵容界面（含总战力）只保留开发者徽标，隐藏金币/体力/钻石，避免遮挡
+function syncResourceHUDViewMode(currentViewId) {
+	const hud = document.getElementById('ybrpg-res-hud');
+	if (!hud) return;
+	const compact = currentViewId === 'team-view';
+	hud.querySelectorAll('.res-item').forEach(el => {
+		if (el.classList.contains('ybrpg-dev-badge')) return; // 开发者徽标始终显示
+		el.style.display = compact ? 'none' : '';
 	});
 }
 
