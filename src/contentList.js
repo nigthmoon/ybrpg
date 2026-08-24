@@ -1591,7 +1591,7 @@ const contentList = {
 			target: ["one", "first"],
 			coefficient: 3.25,
 			isRecover: false,
-			emoji: "🪨",
+			emoji: "⛰️",
 			contents: [
 				{
 					desc: "65%几率增加自身40格挡2回合",
@@ -1706,7 +1706,7 @@ const contentList = {
 			target: ["one", "first"],
 			coefficient: 3.25,
 			isRecover: false,
-			emoji: "🪨",
+			emoji: "⛰️",
 			contents: [
 				{
 					desc: "40%几率眩晕目标1回合",

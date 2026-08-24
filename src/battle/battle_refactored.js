@@ -3279,9 +3279,9 @@ Battle.getEmojiClass = function getEmojiClass(emoji) {
 		case '🍁':
 		case 'maple':
 			return { emoji: '🍁', effectClass: 'maple-effect' };
-		case '🪨':
+		case '⛰️':
 		case 'rock':
-			return { emoji: '🪨', effectClass: 'rock-effect' };
+			return { emoji: '⛰️', effectClass: 'rock-effect' };
 		default:
 			return { emoji: '🔥', effectClass: 'fire-effect' };
 	}

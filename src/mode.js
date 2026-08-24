@@ -4914,10 +4914,32 @@ function getTodayStr() {
 // 每日任务定义（hook 用于游戏内行为累加进度）
 const DAILY_TASK_DEFS = [
 	{ id: 'login', name: '每日登录', target: 1, reward: 100, hook: 'login' },
-	{ id: 'clear', name: '通关任意关卡 1 次', target: 1, reward: 200, hook: 'clear' },
 	{ id: 'buy', name: '在商店购买 1 次', target: 1, reward: 150, hook: 'buy' },
-	{ id: 'refresh', name: '刷新商店 1 次', target: 1, reward: 100, hook: 'refresh' },
+	{ id: 'recruit', name: '招募 1 次（单抽/十连皆可）', target: 1, reward: 150, hook: 'recruit' },
+	{ id: 'clear_normal_5', name: '主线普通打 5 次', target: 5, reward: 120, hook: 'clear_normal' },
+	{ id: 'clear_normal_30', name: '主线普通打 30 次', target: 30, reward: 400, hook: 'clear_normal' },
+	{ id: 'clear_nightmare_1', name: '主线噩梦打 1 次', target: 1, reward: 150, hook: 'clear_nightmare' },
+	{ id: 'clear_nightmare_5', name: '主线噩梦打 5 次', target: 5, reward: 400, hook: 'clear_nightmare' },
+	{ id: 'clear_nightmare_30', name: '主线噩梦打 30 次', target: 30, reward: 1200, hook: 'clear_nightmare' },
+	{ id: 'clear_hell_1', name: '主线地狱打 1 次', target: 1, reward: 300, hook: 'clear_hell' },
+	{ id: 'clear_hell_5', name: '主线地狱打 5 次', target: 5, reward: 800, hook: 'clear_hell' },
+	{ id: 'clear_hell_30', name: '主线地狱打 30 次', target: 30, reward: 2400, hook: 'clear_hell' },
+	{ id: 'clear_secret_1', name: '秘境打 1 次', target: 1, reward: 150, hook: 'clear_secret' },
+	{ id: 'clear_secret_3', name: '秘境打 3 次', target: 3, reward: 400, hook: 'clear_secret' },
 ];
+
+// 根据章节与难度，记录对应难度的主线/秘境通关进度
+function recordDailyClear(chapterKey, diffKey) {
+	// 秘境：chapterKey 以 sp 开头
+	if (/^sp/i.test(chapterKey || '')) {
+		addDailyTaskProgress('clear_secret', 1);
+		return;
+	}
+	// 主线：按当前难度区分普通/噩梦/地狱
+	const hookMap = { normal: 'clear_normal', nightmare: 'clear_nightmare', hell: 'clear_hell' };
+	const hook = hookMap[diffKey] || 'clear_normal';
+	addDailyTaskProgress(hook, 1);
+}
 
 // 7 天签到奖励表（第 7 天为大奖）
 const DAILY_SIGN_REWARDS = [100, 100, 150, 150, 200, 200, 500];
@@ -5063,21 +5085,57 @@ function renderDailyTaskView(container) {
 	ensureDailyData();
 	container.innerHTML = '';
 
+	// 使用内部包裹容器承载内容，避免污染共享的 #settings-view 布局（离开后仍居中）
+	const wrap = document.createElement('div');
+	wrap.style.cssText = 'display:flex;flex-direction:column;width:100%;height:100%;align-self:stretch;overflow:hidden;padding:10px 2px;box-sizing:border-box;';
+	container.appendChild(wrap);
+
 	const backBtn = document.createElement('button');
 	backBtn.className = 'ybrpg-back-btn';
 	backBtn.textContent = '← 返回';
 	backBtn.onclick = () => renderSettingsView(container);
-	container.appendChild(backBtn);
+	wrap.appendChild(backBtn);
 
 	const title = document.createElement('div');
 	title.style.cssText = 'font-size:20px;font-weight:bold;text-align:center;margin:15px 0;color:#44aaff;';
 	title.textContent = '📋 每日任务';
-	container.appendChild(title);
+	wrap.appendChild(title);
 
-	window.dailyTasks.tasks.forEach(t => {
+	// 任务列表放入可滚动容器，避免任务过多把顶部顶飞
+	const list = document.createElement('div');
+	list.style.cssText = 'flex:1;min-height:0;overflow-y:auto;padding-right:4px;';
+	wrap.appendChild(list);
+
+	// 按状态优先级排序：待领取(0) > 未完成(1) > 已领取(2)，每次渲染都重排
+	const statusRank = (t) => {
+		if (t.claimed) return 2;
+		if (t.progress >= t.target) return 0;
+		return 1;
+	};
+	const sortedTasks = window.dailyTasks.tasks.slice().sort((a, b) => statusRank(a) - statusRank(b));
+
+	sortedTasks.forEach(t => {
 		const done = t.progress >= t.target;
+		// 三种状态用明显不同的颜色区分
+		let rowBg, rowBorder, btnBg, btnColor, btnText, btnDisabled = false, btnOpacity = '1', btnCursor = 'pointer';
+		if (t.claimed) {
+			// 已领取：暗淡灰绿，表示结束
+			rowBg = '#1c2620'; rowBorder = '#3a5a48';
+			btnBg = '#4a5a52'; btnColor = '#cfe9d8'; btnText = '已领取';
+			btnDisabled = true; btnOpacity = '0.7';
+		} else if (done) {
+			// 已完成待领取：高亮绿色，醒目
+			rowBg = '#14331f'; rowBorder = '#2ecc71';
+			btnBg = '#2ecc71'; btnColor = '#06281a'; btnText = '领取';
+		} else {
+			// 未完成：中性灰蓝
+			rowBg = '#222'; rowBorder = '#555';
+			btnBg = '#3a3f47'; btnColor = '#9aa3ad'; btnText = '未完成';
+			btnDisabled = true; btnOpacity = '0.85'; btnCursor = 'not-allowed';
+		}
+
 		const row = document.createElement('div');
-		row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px;margin:8px 0;border:1px solid #444;border-radius:8px;background:#222;';
+		row.style.cssText = `display:flex;align-items:center;gap:10px;padding:12px;margin:8px 0;border:1px solid ${rowBorder};border-radius:8px;background:${rowBg};`;
 
 		const info = document.createElement('div');
 		info.style.cssText = 'flex:1;';
@@ -5087,24 +5145,16 @@ function renderDailyTaskView(container) {
 
 		const btn = document.createElement('button');
 		btn.className = 'ybrpg-settings-btn';
-		btn.style.cssText = 'min-width:72px;';
-		if (t.claimed) {
-			btn.textContent = '已领取';
-			btn.disabled = true;
-			btn.style.opacity = '0.5';
-		} else if (done) {
-			btn.textContent = '领取';
+		btn.style.cssText = `min-width:72px;background:${btnBg};color:${btnColor};opacity:${btnOpacity};cursor:${btnCursor};font-weight:bold;`;
+		btn.textContent = btnText;
+		btn.disabled = btnDisabled;
+		if (!btnDisabled && btnText === '领取') {
 			btn.onclick = () => {
 				if (claimDailyTask(t.id)) renderDailyTaskView(container);
 			};
-		} else {
-			btn.textContent = '未完成';
-			btn.disabled = true;
-			btn.style.opacity = '0.5';
-			btn.style.cursor = 'not-allowed';
 		}
 		row.appendChild(btn);
-		container.appendChild(row);
+		list.appendChild(row);
 	});
 }
 
@@ -6724,7 +6774,7 @@ function renderChapterEventList(container, chapterKey) {
 						const goldScale = baseGold;
 						const goldReward = Math.floor(goldScale);
 						window.gameGold = (window.gameGold || 0) + goldReward;
-						addDailyTaskProgress('clear', 1);
+						recordDailyClear(chapterKey, currentDifficulty);
 						// 事件完成后自动存档
 						SaveManager.autoSave();
 						Game.toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
@@ -6983,7 +7033,7 @@ function renderChapterEventList(container, chapterKey) {
 							: defaultLevelGold(event.id);
 						const goldReward = Math.floor(baseGold * goldScale);
 						window.gameGold = (window.gameGold || 0) + goldReward;
-						addDailyTaskProgress('clear', 1);
+						recordDailyClear(chapterKey, currentDifficulty);
 					// 掉落物：优先用事件固定配置 event.reward；未配置则按档位自动规则兜底
 					const dropStat = { chars: [], treasures: [], items: [] };
 					if (rewardCfg) {
@@ -7135,7 +7185,9 @@ function normalizePrice(p) {
  */
 function getPrimaryCurrency(priceObj) {
 	const p = normalizePrice(priceObj);
-	return (p.diamond && p.gold > 1000) ? 'diamond' : 'gold';
+	// 只要价格中定义了钻石（含金币>1000 自动折算的钻石），就优先以钻石为主货币；
+	// 否则回退到金币。修复纯钻石商品（如体力瓶、rank3 宝物箱）误判为金币且价格为 0 的问题。
+	return (typeof p.diamond === 'number') ? 'diamond' : 'gold';
 }
 
 /**
@@ -7453,6 +7505,14 @@ function getRankText(rank) {
 }
 
 function renderShopView(container) {
+	window.shopPage = window.shopPage || 'home';
+	if (window.shopPage === 'legacy') { renderShopLegacyView(container); return; }
+	if (window.shopPage === 'treasure') { renderTreasureShopView(container); return; }
+	if (window.shopPage === 'recruit') { renderRecruitView(container); return; }
+	renderShopHomeView(container);
+}
+
+function renderShopLegacyView(container) {
 	// 清空容器以防重复渲染
 	container.innerHTML = '';
 
@@ -7463,6 +7523,16 @@ function renderShopView(container) {
 		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${(window.gameGold || 0).toLocaleString()}</span> 金币` +
 		`&nbsp;&nbsp;<span class="shop-diamond-icon">💎 ${(window.diamond || 0).toLocaleString()} 钻石</span>`;
 	container.appendChild(goldBar);
+
+	// 返回商城首页按钮
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-back-btn';
+	backBtn.textContent = '← 返回商城';
+	backBtn.onclick = () => {
+		window.shopPage = 'home';
+		renderShopView(container);
+	};
+	container.appendChild(backBtn);
 
 	// 新增: 创建子按钮容器 (普通商店, 高级商店)
 	const tabsContainer = document.createElement('div');
@@ -7476,7 +7546,7 @@ function renderShopView(container) {
 	btnNormal.textContent = '普通商店';
 	btnNormal.onclick = () => {
 		window.shopMode = 'normal';
-		renderShopView(container);
+		renderShopLegacyView(container);
 	};
 
 	const btnAdvanced = document.createElement('button');
@@ -7484,7 +7554,7 @@ function renderShopView(container) {
 	btnAdvanced.textContent = '高级商店';
 	btnAdvanced.onclick = () => {
 		window.shopMode = 'advanced';
-		renderShopView(container);
+		renderShopLegacyView(container);
 	};
 
 	tabsContainer.appendChild(btnNormal);
@@ -7642,7 +7712,7 @@ function renderShopView(container) {
 			// 重新渲染整个商店视图，以反映 "sold" 状态
 			// 注意：这里直接调用 renderShopView，传入当前容器
 			// 假设 container 是 renderShopView 的参数
-			renderShopView(container);
+			renderShopLegacyView(container);
 
 			// 7. 自动存档
 			if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
@@ -7731,7 +7801,7 @@ function renderShopView(container) {
 			}
 
 			// 7. 刷新界面
-			renderShopView(container);
+			renderShopLegacyView(container);
 
 			// 8. 自动存档
 			if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
@@ -7757,15 +7827,463 @@ function renderShopView(container) {
 		if (goldDisplay) goldDisplay.textContent = (window.gameGold || 0).toLocaleString();
 		updateResourceHUD(); // 同步刷新顶部常驻资源条（金币数字）
 		refreshShopItems(window.shopMode);
-		renderShopView(container);
+		renderShopLegacyView(container);
 		Game.toast('商店已刷新', 'info');
-		// 每日任务：刷新商店
-		if (typeof addDailyTaskProgress === 'function') addDailyTaskProgress('refresh', 1);
 		SaveManager.autoSave();
 	};
 	downBtns.appendChild(refreshBtn);
 
 	container.appendChild(downBtns);
+}
+
+// ==================== 新商店：主页 ====================
+function renderShopHomeView(container) {
+	container.innerHTML = '';
+	window.shopPage = 'home';
+
+	// 资源条
+	const goldBar = document.createElement('div');
+	goldBar.className = 'shop-gold-bar';
+	goldBar.innerHTML =
+		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${(window.gameGold || 0).toLocaleString()}</span> 金币` +
+		`&nbsp;&nbsp;<span class="shop-diamond-icon">💎 ${(window.diamond || 0).toLocaleString()} 钻石</span>`;
+	container.appendChild(goldBar);
+
+	const title = document.createElement('div');
+	title.style.cssText = 'text-align:center;font-size:18px;font-weight:bold;color:#ffd700;margin:14px 0;';
+	title.textContent = '商 城';
+	container.appendChild(title);
+
+	// 入口卡片（横向排列）
+	const grid = document.createElement('div');
+	grid.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:780px;margin:18px auto 0;padding:0 12px;';
+
+	const entries = [
+		{ key: 'treasure', name: '珍宝商城', icon: '🛍️', desc: '定向购买武将包、体力瓶、宝物箱等物资' },
+		{ key: 'recruit', name: '招募', icon: '🎯', desc: '抽取武将（十连必出橙，百抽必出红，1% 神品）' },
+		{ key: 'legacy', name: '旧杂货铺', icon: '🏪', desc: '（旧版随机商店，保留备用）' },
+	];
+	entries.forEach(e => {
+		const card = document.createElement('div');
+		card.className = 'gallery-char-card';
+		card.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 10px;cursor:pointer;background:#1a1a2a;border:1px solid #333;border-radius:12px;text-align:center;transition:transform .12s,border-color .12s;';
+		card.onmouseenter = () => { card.style.borderColor = '#ffd700'; card.style.transform = 'translateY(-3px)'; };
+		card.onmouseleave = () => { card.style.borderColor = '#333'; card.style.transform = 'translateY(0)'; };
+		card.onclick = () => {
+			window.shopPage = e.key;
+			renderShopView(container);
+		};
+		const ic = document.createElement('div');
+		ic.style.cssText = 'font-size:40px;';
+		ic.textContent = e.icon;
+		const txt = document.createElement('div');
+		txt.innerHTML = `<div style="font-size:15px;font-weight:bold;color:#fff;">${e.name}</div><div style="font-size:12px;color:#aaa;margin-top:4px;line-height:1.4;">${e.desc}</div>`;
+		card.appendChild(ic); card.appendChild(txt);
+		grid.appendChild(card);
+	});
+	container.appendChild(grid);
+}
+
+// ==================== 新商店：珍宝商城 ====================
+// 上架清单：武将包(4) + 体力瓶 + 宝物箱(10)
+const TREASURE_SHOP_ITEMS = [
+	'pack_legend', 'pack_epic', 'pack_epicfake', 'pack_rare', // 武将包（原售价）
+	'item_stamina',                                            // 体力瓶
+	'box_r1_random', 'box_r1_pick', 'box_r2_random', 'box_r2_pick',
+	'box_r3_random', 'box_r3_pick', 'box_r4_random', 'box_r4_pick',
+	'box_r5_pick', 'box_r6_pick',                             // 宝物箱
+];
+
+function renderTreasureShopView(container) {
+	container.innerHTML = '';
+	window.shopPage = 'treasure';
+
+	const goldBar = document.createElement('div');
+	goldBar.className = 'shop-gold-bar';
+	goldBar.innerHTML =
+		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${(window.gameGold || 0).toLocaleString()}</span> 金币` +
+		`&nbsp;&nbsp;<span class="shop-diamond-icon">💎 ${(window.diamond || 0).toLocaleString()} 钻石</span>`;
+	container.appendChild(goldBar);
+
+	// 返回 + 标题
+	const head = document.createElement('div');
+	head.style.cssText = 'display:flex;align-items:center;gap:12px;margin:10px 0;';
+	const back = document.createElement('button');
+	back.className = 'shop-refresh-btn';
+	back.textContent = '← 返回';
+	back.style.cssText = 'font-size:13px;';
+	back.onclick = () => { window.shopPage = 'home'; renderShopView(container); };
+	const htitle = document.createElement('div');
+	htitle.style.cssText = 'font-size:17px;font-weight:bold;color:#ffd700;';
+	htitle.textContent = '珍宝商城';
+	head.appendChild(back); head.appendChild(htitle);
+	container.appendChild(head);
+
+	const grid = document.createElement('div');
+	grid.className = 'shop-grid';
+	grid.style.cssText = 'display:grid;grid-template-columns:repeat(2,1fr);gap:10px;';
+
+	TREASURE_SHOP_ITEMS.forEach(id => {
+		const def = ITEM_DEFS[id] || null;
+		if (!def) return;
+		const p = normalizePrice(def.price || {});
+		const payCur = getPrimaryCurrency(p) || 'gold';
+		const payAmt = p[payCur] || 0;
+
+		const card = document.createElement('div');
+		card.className = 'shop-item';
+		card.style.cssText = 'display:flex;gap:10px;align-items:center;background:#1a1a2a;border:1px solid #333;border-radius:8px;padding:8px;';
+
+		const icon = document.createElement('div');
+		icon.style.cssText = 'width:54px;height:54px;display:flex;align-items:center;justify-content:center;font-size:30px;background:#111;flex-shrink:0;cursor:pointer;';
+		icon.textContent = def.emoji || '📦';
+		// 点击图标弹出商品详情（含描述）
+		icon.onclick = () => {
+			if (typeof showItemDetail === 'function') {
+				showItemDetail({ id: def.id, name: def.name, desc: def.desc, emoji: def.emoji, price: def.price });
+			}
+		};
+		card.appendChild(icon);
+
+		const info = document.createElement('div');
+		info.style.cssText = 'flex:1;min-width:0;overflow:hidden;';
+		const nm = document.createElement('div');
+		nm.style.cssText = 'font-size:14px;color:#fff;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+		nm.textContent = def.name;
+		info.appendChild(nm);
+
+		const buy = document.createElement('button');
+		buy.className = 'shop-item-buy-btn';
+		buy.style.cssText = 'padding:4px 10px;font-size:13px;white-space:nowrap;';
+		buy.textContent = CURRENCY_SYMBOL[payCur] + ' ' + payAmt;
+		buy.onclick = (e) => {
+			e.stopPropagation();
+			const meta = CURRENCY_META[payCur] || CURRENCY_META.diamond;
+			const balance = window[meta.varKey] || 0;
+			if (balance < payAmt) { Game.toast(meta.insufficient, 'error'); return; }
+			window[meta.varKey] = balance - payAmt;
+			if (Game.Data && typeof Game.Data.addItem === 'function') {
+				Game.Data.addItem(def.id, 1);
+				Game.toast(`购买了【${def.name}】`, 'success');
+			}
+			addDailyTaskProgress('buy', 1);
+			updateResourceHUD();
+			const gd = document.getElementById('shop-gold-display'); if (gd) gd.textContent = (window.gameGold || 0).toLocaleString();
+			SaveManager.autoSave();
+		};
+		info.appendChild(buy);
+		card.appendChild(info);
+		grid.appendChild(card);
+	});
+	container.appendChild(grid);
+}
+
+// ==================== 新商店：招募 ====================
+// 出货率基础值：稀有(rare)80% / 伪史诗(epicfake)10% / 真史诗(epic)8% / 传说(legend)2%
+// 神品(kami)不参与出货判定：每次抽取后以独立 1% 概率将所得武将拔升为神品
+const RECRUIT_BASE_RATES = {
+	rare: 0.80,
+	epicfake: 0.10,
+	epic: 0.08,
+	legend: 0.0002,   // 0 幸运值时传说概率：0.02%（万分之二）
+};
+const RECRUIT_LUCK_MAX = 100;       // 幸运值上限：满值必出传说
+const RECRUIT_LUCK_STEP1 = 40;      // 幸运值40 → 2%
+const RECRUIT_LUCK_STEP1_RATE = 0.02;
+const RECRUIT_LUCK_STEP2 = 60;      // 幸运值60 → 5%
+const RECRUIT_LUCK_STEP2_RATE = 0.05;
+const RECRUIT_LUCK_STEP3 = 80;      // 幸运值80 → 10%
+const RECRUIT_LUCK_STEP3_RATE = 0.10;
+const RECRUIT_LUCK_STEP4 = 90;      // 幸运值90 → 50%
+const RECRUIT_LUCK_STEP4_RATE = 0.50;
+const RECRUIT_KAMI_UPGRADE_RATE = 0.01; // 每次抽取独立拔升为神品的概率
+const RECRUIT_SINGLE_COST = { gold: 500 };
+const RECRUIT_TEN_COST = { gold: 4500 };
+const DROP_EXCLUDE_IDS_RECRUIT = { ybsl_043fangjiayu: true, ybsl_044huruihang: true };
+
+// 当前幸运值下的传说概率（五段分段函数）：
+//   0~40：从 0.02% 线性增长至 2%
+//   40~60：从 2% 线性增长至 5%
+//   60~80：从 5% 线性增长至 10%
+//   80~90：从 10% 线性增长至 50%
+//   90~100：从 50% 线性增长至 100%（满值必出）
+function getRecruitLegendRate(luck) {
+	luck = luck || 0;
+	if (luck < RECRUIT_LUCK_STEP1) {
+		return RECRUIT_BASE_RATES.legend + (RECRUIT_LUCK_STEP1_RATE - RECRUIT_BASE_RATES.legend) * (luck / RECRUIT_LUCK_STEP1);
+	}
+	if (luck < RECRUIT_LUCK_STEP2) {
+		return RECRUIT_LUCK_STEP1_RATE + (RECRUIT_LUCK_STEP2_RATE - RECRUIT_LUCK_STEP1_RATE) * ((luck - RECRUIT_LUCK_STEP1) / (RECRUIT_LUCK_STEP2 - RECRUIT_LUCK_STEP1));
+	}
+	if (luck < RECRUIT_LUCK_STEP3) {
+		return RECRUIT_LUCK_STEP2_RATE + (RECRUIT_LUCK_STEP3_RATE - RECRUIT_LUCK_STEP2_RATE) * ((luck - RECRUIT_LUCK_STEP2) / (RECRUIT_LUCK_STEP3 - RECRUIT_LUCK_STEP2));
+	}
+	if (luck < RECRUIT_LUCK_STEP4) {
+		return RECRUIT_LUCK_STEP3_RATE + (RECRUIT_LUCK_STEP4_RATE - RECRUIT_LUCK_STEP3_RATE) * ((luck - RECRUIT_LUCK_STEP3) / (RECRUIT_LUCK_STEP4 - RECRUIT_LUCK_STEP3));
+	}
+	return RECRUIT_LUCK_STEP4_RATE + (1 - RECRUIT_LUCK_STEP4_RATE) * ((luck - RECRUIT_LUCK_STEP4) / (RECRUIT_LUCK_MAX - RECRUIT_LUCK_STEP4));
+}
+
+// [维护者调试用] 概率百分比格式化：低于 1% 显示两位小数，其余显示一位（如 0.02%、2.0%、50.0%）
+// UI 已隐藏实时概率，维护者可在控制台调用 getRecruitLegendRate(luck) / fmtRecruitRatePct() 查看曲线
+function fmtRecruitRatePct(rate) {
+	return (rate * 100 < 1 ? (rate * 100).toFixed(2) : (rate * 100).toFixed(1)) + '%';
+}
+
+// 根据幸运值计算各档实时出货率：其余档位按基础比例分摊剩余概率
+function getRecruitRates(luck) {
+	const legend = getRecruitLegendRate(luck);
+	const otherSum = 1 - legend;
+	const otherBase = RECRUIT_BASE_RATES.rare + RECRUIT_BASE_RATES.epicfake + RECRUIT_BASE_RATES.epic;
+	return [
+		{ rank: 'rare', rate: otherSum * (RECRUIT_BASE_RATES.rare / otherBase) },
+		{ rank: 'epicfake', rate: otherSum * (RECRUIT_BASE_RATES.epicfake / otherBase) },
+		{ rank: 'epic', rate: otherSum * (RECRUIT_BASE_RATES.epic / otherBase) },
+		{ rank: 'legend', rate: legend },
+	];
+}
+
+// 从指定 rank 池中随机取一个武将 id（含黑名单/突破过滤，池空回退 legend）
+function pickCharFromPool(rank) {
+	let pool = Object.keys(characterList || {}).filter(id => {
+		const c = characterList[id];
+		if (!c || c.isFixed) return false;
+		if (DROP_EXCLUDE_IDS_RECRUIT[id]) return false;
+		if (c.rank !== rank) return false;
+		if (!hasRealBreakthrough(c.tupoList)) return false;
+		return true;
+	});
+	// 若池为空（异常兜底），回退到 legend 池
+	if (pool.length === 0) {
+		pool = Object.keys(characterList || {}).filter(id => {
+			const c = characterList[id];
+			return c && !c.isFixed && c.rank === 'legend' && hasRealBreakthrough(c.tupoList);
+		});
+	}
+	return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+
+// 招募结果：{ charId, rank, isKami }，isKami 由调用方按独立 1% 概率判定
+function recruitRollOne(forceRank) {
+	let rank = forceRank;
+	if (!rank) {
+		const r = Math.random();
+		let acc = 0;
+		for (const item of getRecruitRates(window.recruitPity)) {
+			acc += item.rate;
+			if (r < acc) { rank = item.rank; break; }
+		}
+		if (!rank) rank = 'rare';
+	}
+	return { charId: pickCharFromPool(rank), rank, isKami: false };
+}
+
+// 发放单个招募武将（支持独立概率拔升为神品）
+function grantRecruitCharacter(charId, isKami) {
+	if (!charId) return null;
+	const instId = grantCharacter(charId);
+	if (!instId) return null;
+	if (isKami) {
+		const inst = window.charBagData[instId];
+		if (inst) {
+			inst.rank = 'kami';        // 拔升为神品（金色）
+			inst.zunpin = true;        // 免升品/突破瓶颈标记
+			// 重新以 kami 模板编译属性
+			const baseChar = characterList[charId];
+			const stats = compileCharacterStats(Object.assign({}, baseChar, { rank: 'kami' }));
+			inst.hp = stats.hp; inst.atk = stats.atk; inst.def = stats.def; inst.spe = stats.spe;
+			inst.maxHp = stats.hp; inst.currentHp = stats.hp;
+		}
+	}
+	return instId;
+}
+
+function renderRecruitView(container) {
+	container.innerHTML = '';
+	window.shopPage = 'recruit';
+
+	// 幸运值/UP 状态（带存档）
+	if (window.recruitPity === undefined) window.recruitPity = 0;       // 幸运值：距离上次出传说的抽取计数
+	if (window.recruitUpCharId === undefined) window.recruitUpCharId = null;
+
+	const goldBar = document.createElement('div');
+	goldBar.className = 'shop-gold-bar';
+	goldBar.innerHTML =
+		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${(window.gameGold || 0).toLocaleString()}</span> 金币` +
+		`&nbsp;&nbsp;<span class="shop-diamond-icon">💎 ${(window.diamond || 0).toLocaleString()} 钻石</span>`;
+	container.appendChild(goldBar);
+
+	const head = document.createElement('div');
+	head.style.cssText = 'display:flex;align-items:center;gap:12px;margin:10px 0;';
+	const back = document.createElement('button');
+	back.className = 'shop-refresh-btn';
+	back.textContent = '← 返回';
+	back.style.cssText = 'font-size:13px;';
+	back.onclick = () => { window.shopPage = 'home'; renderShopView(container); };
+	const htitle = document.createElement('div');
+	htitle.style.cssText = 'font-size:17px;font-weight:bold;color:#ffd700;';
+	htitle.textContent = '招募';
+	head.appendChild(back); head.appendChild(htitle);
+	container.appendChild(head);
+
+	const tip = document.createElement('div');
+	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;line-height:1.6;';
+	tip.innerHTML = '概率：稀有80% / 伪史诗10% / 真史诗8% / 传说0.02%起（幸运值越高概率越高）<br>十连必出≥橙；每次抽取有1%概率将所得武将拔升为神品（金色，免升品瓶颈）';
+	container.appendChild(tip);
+
+	const pityLine = document.createElement('div');
+	pityLine.style.cssText = 'font-size:13px;color:#ffd700;text-align:center;margin:6px 0;';
+	pityLine.id = 'recruit-pity-line';
+	pityLine.textContent = `幸运值：${Math.min(window.recruitPity, RECRUIT_LUCK_MAX)} / ${RECRUIT_LUCK_MAX}`;
+	container.appendChild(pityLine);
+
+	// UP 将选择
+	const upWrap = document.createElement('div');
+	upWrap.style.cssText = 'margin:8px auto;max-width:420px;';
+	const upLabel = document.createElement('div');
+	upLabel.style.cssText = 'font-size:12px;color:#eee;margin-bottom:4px;';
+	upLabel.textContent = '自选 UP 红将（命中红时优先出该将，留空则随机红）：';
+	upWrap.appendChild(upLabel);
+	const upSel = document.createElement('select');
+	upSel.style.cssText = 'width:100%;padding:4px;background:#222;color:#fff;border:1px solid #444;border-radius:4px;';
+	const optNull = document.createElement('option'); optNull.value = ''; optNull.textContent = '（随机红将）'; upSel.appendChild(optNull);
+	Object.keys(characterList || {}).filter(id => {
+		const c = characterList[id];
+		return c && !c.isFixed && c.rank === 'legend' && hasRealBreakthrough(c.tupoList);
+	}).forEach(id => {
+		const o = document.createElement('option'); o.value = id; o.textContent = characterList[id].name; upSel.appendChild(o);
+	});
+	upSel.value = window.recruitUpCharId || '';
+	upSel.onchange = () => { window.recruitUpCharId = upSel.value || null; SaveManager.autoSave(); };
+	upWrap.appendChild(upSel);
+	container.appendChild(upWrap);
+
+	// 抽卡按钮
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex;gap:12px;justify-content:center;margin:14px 0;';
+	const single = document.createElement('button');
+	single.className = 'shop-refresh-btn';
+	single.textContent = `单抽\n（💰 ${RECRUIT_SINGLE_COST.gold}）`;
+	single.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;';
+	single.onclick = () => doRecruit(1, container);
+	const ten = document.createElement('button');
+	ten.className = 'shop-refresh-btn';
+	ten.textContent = `十连抽\n（💰 ${RECRUIT_TEN_COST.gold}）`;
+	ten.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;background:#c0392b;';
+	ten.onclick = () => doRecruit(10, container);
+	btnRow.appendChild(single); btnRow.appendChild(ten);
+	container.appendChild(btnRow);
+}
+
+// 执行招募
+function doRecruit(count, container) {
+	const cost = count === 10 ? RECRUIT_TEN_COST : RECRUIT_SINGLE_COST;
+	const payCur = getPrimaryCurrency(cost) || 'diamond';
+	const payAmt = cost[payCur] || 0;
+	const meta = CURRENCY_META[payCur] || CURRENCY_META.diamond;
+	const balance = window[meta.varKey] || 0;
+	if (balance < payAmt) { Game.toast(meta.insufficient + '，无法招募！', 'error'); return; }
+	window[meta.varKey] = balance - payAmt;
+	updateResourceHUD();
+	// 每日任务：招募 1 次（单抽或十连都触发，target=1 完成即止）
+	addDailyTaskProgress('recruit', 1);
+
+	const results = [];
+	for (let i = 0; i < count; i++) {
+		window.recruitPity = (window.recruitPity || 0) + 1;
+		let forceRank = null;
+		// 幸运值满80必出传说
+		if (window.recruitPity >= RECRUIT_LUCK_MAX) forceRank = 'legend';
+
+		let res = recruitRollOne(forceRank);
+
+		// 十连第10抽保底≥橙：若自然结果低于橙（稀有），提升为伪史诗（不覆盖更高概率命中）
+		if (count === 10 && i === 9 && !forceRank && res.rank === 'rare') {
+			res = { charId: pickCharFromPool('epicfake'), rank: 'epicfake', isKami: false };
+		}
+
+		// 命中红且设置了 UP 将：优先替换为 UP 将
+		if (res.rank === 'legend' && window.recruitUpCharId && characterList[window.recruitUpCharId]) {
+			res = { charId: window.recruitUpCharId, rank: 'legend', isKami: false };
+		}
+		// 独立概率：在抽取判定后才单独判定 1% 拔升为神品（不占出货率、不影响保底）
+		if (!res.isKami && Math.random() < RECRUIT_KAMI_UPGRADE_RATE) {
+			res = { charId: res.charId, rank: res.rank, isKami: true };
+		}
+		// 出传说后幸运值清零
+		if (res.rank === 'legend' || forceRank === 'legend') window.recruitPity = 0;
+
+		grantRecruitCharacter(res.charId, res.isKami);
+		const c = res.charId ? characterList[res.charId] : null;
+		results.push({ charId: res.charId, name: c ? c.name : '？', rank: res.isKami ? 'kami' : res.rank, isKami: res.isKami });
+	}
+
+	SaveManager.autoSave();
+	// 抽取结束后立即刷新幸运值显示
+	const pityEl = document.getElementById('recruit-pity-line');
+	if (pityEl) pityEl.textContent = `幸运值：${Math.min(window.recruitPity, RECRUIT_LUCK_MAX)} / ${RECRUIT_LUCK_MAX}`;
+	showRecruitResult(results);
+}
+
+// 招募结果弹窗
+function showRecruitResult(results) {
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30000';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+	dialog.style.cssText = 'width:380px;max-height:82vh;overflow-y:auto;';
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;text-align:center;margin-bottom:8px;';
+	title.textContent = '招募结果';
+	dialog.appendChild(title);
+
+	const grid = document.createElement('div');
+	grid.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:6px;';
+	results.forEach(r => {
+		const cell = document.createElement('div');
+		cell.style.cssText = `padding:6px 2px;text-align:center;border-radius:6px;background:#111;border:1px solid ${getRankColor(r.rank)};`;
+		// 武将卡图
+		const imgWrap = document.createElement('div');
+		imgWrap.style.cssText = 'width:100%;aspect-ratio:3/4;overflow:hidden;border-radius:4px;background:#000;';
+		const img = document.createElement('img');
+		img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+		img.alt = r.name;
+		if (r.charId) {
+			img.src = `/image/character/${r.charId}.jpg`;
+			img.onerror = function () {
+				this.onerror = null;
+				this.src = `/image/character/${r.charId}.webp`;
+				this.onerror = function () { this.style.display = 'none'; };
+			};
+		} else {
+			img.style.display = 'none';
+		}
+		imgWrap.appendChild(img);
+		cell.appendChild(imgWrap);
+		// 品质 + 名字
+		const label = document.createElement('div');
+		label.style.cssText = `font-size:10px;color:${getRankColor(r.rank)};font-weight:bold;margin-top:3px;`;
+		label.textContent = r.isKami ? '神品' : getRankLabel(r.rank);
+		cell.appendChild(label);
+		const nm = document.createElement('div');
+		nm.style.cssText = 'font-size:10px;color:#fff;margin-top:1px;line-height:1.2;word-break:break-all;';
+		nm.textContent = r.name;
+		cell.appendChild(nm);
+		grid.appendChild(cell);
+	});
+	dialog.appendChild(grid);
+
+	const ok = document.createElement('button');
+	ok.className = 'ybrpg-confirm-btn';
+	ok.textContent = '确定';
+	ok.style.cssText = 'background:#d32f2f;margin-top:12px;';
+	ok.onclick = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	dialog.appendChild(ok);
+
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
 }
 
 function canBuy(item) {
@@ -8207,14 +8725,21 @@ const DIAMOND_TO_GOLD = 10000;    // 钻石兑金币比例（单向，金币不�
 // ---------- 体力 ----------
 
 // 按时间戳自然恢复体力（每分钟 1 点，离线也累计）
+// 注意：体力允许超出上限（如使用体力瓶），超出部分不参与自然恢复，仅保留存量；
+// 仅当体力低于上限时才自然补充，且不超过上限。
 function regenStamina() {
   if (!window.staminaTs) window.staminaTs = Date.now();
   const now = Date.now();
   const elapsedMin = Math.floor((now - window.staminaTs) / 60000);
   if (elapsedMin > 0) {
     const max = window.maxStamina || STAMINA_MAX;
-    window.stamina = Math.min(max, (window.stamina || 0) + elapsedMin);
-    window.staminaTs = now - ((now - window.staminaTs) % 60000);
+    if ((window.stamina || 0) >= max) {
+      // 已满或超出上限：不自然恢复，仅推进时间戳，保留超出存量
+      window.staminaTs = now - ((now - window.staminaTs) % 60000);
+    } else {
+      window.stamina = Math.min(max, (window.stamina || 0) + elapsedMin);
+      window.staminaTs = now - ((now - window.staminaTs) % 60000);
+    }
   }
 }
 
@@ -8848,6 +9373,9 @@ function initNewGame() {
 
 	// 初始化商店数据
 	window.shopData = { items: [], spitems: [], refreshCost: 50 };
+	window.shopPage = 'home';
+	window.recruitPity = 0;
+	window.recruitUpCharId = null;
 
 	// 初始化队伍视图
 	const teamView = document.getElementById('team-view');
@@ -9021,6 +9549,9 @@ const SaveManager = {
 		diamond: window.diamond,
 		dailySign: window.dailySign || { lastSignDate: '', streak: 0 },
 		dailyTasks: window.dailyTasks || null,
+			recruitPity: window.recruitPity || 0,
+			recruitUpCharId: window.recruitUpCharId || null,
+			shopPage: window.shopPage || 'home',
 			playerPreferences: {  // 【新增】
 				bagTab: window.bagTab || 'char',
 				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true
@@ -9117,6 +9648,9 @@ const SaveManager = {
 			window.diamond = parsed.diamond || 0;
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
+			window.recruitPity = parsed.recruitPity || 0;
+			window.recruitUpCharId = parsed.recruitUpCharId || null;
+			window.shopPage = parsed.shopPage || 'home';
 
 			// 同步 window 变量回 Game.Data 内存
 			Game.Data.data._treasures = JSON.parse(JSON.stringify(window.treasureEquipData));
@@ -9269,6 +9803,9 @@ const SaveManager = {
 			charTreasureSlots: window.charTreasureSlots || {},
 			dailySign: window.dailySign || { lastSignDate: '', streak: 0 },
 			dailyTasks: window.dailyTasks || null,
+			recruitPity: window.recruitPity || 0,
+			recruitUpCharId: window.recruitUpCharId || null,
+			shopPage: window.shopPage || 'home',
 			playerPreferences: {
 				bagTab: window.bagTab || 'char',
 				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true
@@ -9369,6 +9906,9 @@ const SaveManager = {
 			window.diamond = parsed.diamond || 0;
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
+			window.recruitPity = parsed.recruitPity || 0;
+			window.recruitUpCharId = parsed.recruitUpCharId || null;
+			window.shopPage = parsed.shopPage || 'home';
 			// ========== 在解析完所有数据后，添加这一段 ==========
 				// 恢复宝物实例化数据
 				if (parsed._treasureInventory) {
@@ -9421,6 +9961,9 @@ const SaveManager = {
 			window.diamond = parsed.diamond || 0;
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
+			window.recruitPity = parsed.recruitPity || 0;
+			window.recruitUpCharId = parsed.recruitUpCharId || null;
+			window.shopPage = parsed.shopPage || 'home';
 
 				// 【新增】恢复偏好设置
 				const prefs2 = data.playerPreferences || data._playerPreferences || {};
@@ -11744,4 +12287,6 @@ shared.refreshBreakthroughPopupContent = refreshBreakthroughPopupContent;
 // 暴露给 item.js 等模块使用的全局函数
 window.grantCharacter = grantCharacter;
 window.renderBagView = renderBagView;
+window.ensureResourceHUD = ensureResourceHUD;
+window.updateResourceHUD = updateResourceHUD;
 Game.SaveManager = SaveManager;

@@ -78,6 +78,161 @@ export const ITEM_DEFS = {
 		icon: '',
 		price: { gold: 600 },
 	},
+
+	// ===================== 体力瓶 =====================
+	item_stamina: {
+		id: 'item_stamina',
+		name: '体力瓶',
+		price: { diamond: 25 },
+		emoji: '🧪',
+		kind: 'stamina',
+		selectable: false,
+		desc: '使用后恢复 25 点体力（可一次使用多个）',
+	},
+
+	// ===================== 宝物箱（按品质分类，硬编码可选宝物） =====================
+	// rank1
+	box_r1_random: {
+		id: 'box_r1_random',
+		name: '平凡宝物箱(随机)',
+		price: { gold: 200 },
+		emoji: '📦',
+		kind: 'treasurebox',
+		mode: 'random',
+		rank: 1,
+		selectable: false,
+		contents: ['bw_10501', 'bw_10502', 'bw_20501', 'bw_20502'],
+		desc: '随机开出 1 件 rank1 宝物',
+	},
+	box_r1_pick: {
+		id: 'box_r1_pick',
+		name: '平凡宝物箱(定向)',
+		price: { gold: 240 },
+		emoji: '📦',
+		kind: 'treasurebox',
+		mode: 'pick',
+		rank: 1,
+		selectable: false,
+		contents: ['bw_10501', 'bw_10502', 'bw_20501', 'bw_20502'],
+		desc: '自选 1 件 rank1 宝物（×1.2 价）',
+	},
+	// rank2
+	box_r2_random: {
+		id: 'box_r2_random',
+		name: '精品宝物箱(随机)',
+		price: { gold: 800 },
+		emoji: '📦',
+		kind: 'treasurebox',
+		mode: 'random',
+		rank: 2,
+		selectable: false,
+		contents: ['bw_10606', 'bw_10607', 'bw_10608', 'bw_20605', 'bw_20606', 'bw_20607'],
+		desc: '随机开出 1 件 rank2 宝物',
+	},
+	box_r2_pick: {
+		id: 'box_r2_pick',
+		name: '精品宝物箱(定向)',
+		price: { gold: 960 },
+		emoji: '📦',
+		kind: 'treasurebox',
+		mode: 'pick',
+		rank: 2,
+		selectable: false,
+		contents: ['bw_10606', 'bw_10607', 'bw_10608', 'bw_20605', 'bw_20606', 'bw_20607'],
+		desc: '自选 1 件 rank2 宝物（×1.2 价）',
+	},
+	// rank3
+	box_r3_random: {
+		id: 'box_r3_random',
+		name: '稀有宝物箱(随机)',
+		price: { diamond: 5 },
+		emoji: '📦',
+		kind: 'treasurebox',
+		mode: 'random',
+		rank: 3,
+		selectable: false,
+		contents: [
+			'bw_11012', 'bw_11013', 'bw_11014', 'bw_11109', 'bw_11110', 'bw_11111',
+			'bw_21012', 'bw_21013', 'bw_21014', 'bw_21109', 'bw_21110', 'bw_21111'
+		],
+		desc: '随机开出 1 件 rank3 宝物',
+	},
+	box_r3_pick: {
+		id: 'box_r3_pick',
+		name: '稀有宝物箱(定向)',
+		price: { diamond: 6 },
+		emoji: '📦',
+		kind: 'treasurebox',
+		mode: 'pick',
+		rank: 3,
+		selectable: false,
+		contents: [
+			'bw_11012', 'bw_11013', 'bw_11014', 'bw_11109', 'bw_11110', 'bw_11111',
+			'bw_21012', 'bw_21013', 'bw_21014', 'bw_21109', 'bw_21110', 'bw_21111'
+		],
+		desc: '自选 1 件 rank3 宝物（×1.2 价）',
+	},
+	// rank4
+	box_r4_random: {
+		id: 'box_r4_random',
+		name: '史诗宝物箱(随机)',
+		price: { diamond: 40 },
+		emoji: '📦',
+		kind: 'treasurebox',
+		mode: 'random',
+		rank: 4,
+		selectable: false,
+		contents: [
+			'bw_11615', 'bw_11616', 'bw_11617', 'bw_11618', 'bw_11619', 'bw_11620',
+			'bw_11621', 'bw_11622', 'bw_11623', 'bw_11624',
+			'bw_21615', 'bw_21616', 'bw_21617', 'bw_21618', 'bw_21619', 'bw_21620',
+			'bw_21621', 'bw_21622', 'bw_21623', 'bw_21624'
+		],
+		desc: '随机开出 1 件 rank4 宝物',
+	},
+	box_r4_pick: {
+		id: 'box_r4_pick',
+		name: '史诗宝物箱(定向)',
+		price: { diamond: 48 },
+		emoji: '📦',
+		kind: 'treasurebox',
+		mode: 'pick',
+		rank: 4,
+		selectable: false,
+		contents: [
+			'bw_11615', 'bw_11616', 'bw_11617', 'bw_11618', 'bw_11619', 'bw_11620',
+			'bw_11621', 'bw_11622', 'bw_11623', 'bw_11624',
+			'bw_21615', 'bw_21616', 'bw_21617', 'bw_21618', 'bw_21619', 'bw_21620',
+			'bw_21621', 'bw_21622', 'bw_21623', 'bw_21624'
+		],
+		desc: '自选 1 件 rank4 宝物（×1.2 价）',
+	},
+	// rank5（仅定向）
+	box_r5_pick: {
+		id: 'box_r5_pick',
+		name: '传说宝物箱(定向)',
+		price: { diamond: 100 },
+		emoji: '📦',
+		kind: 'treasurebox',
+		mode: 'pick',
+		rank: 5,
+		selectable: false,
+		contents: ['bw_12025', 'bw_12026', 'bw_12027', 'bw_22025', 'bw_22026', 'bw_22027'],
+		desc: '自选 1 件 rank5 宝物',
+	},
+	// rank6（仅定向）
+	box_r6_pick: {
+		id: 'box_r6_pick',
+		name: '尊品宝物箱(定向)',
+		price: { diamond: 200 },
+		emoji: '📦',
+		kind: 'treasurebox',
+		mode: 'pick',
+		rank: 6,
+		selectable: false,
+		contents: ['bw_13028', 'bw_13029', 'bw_13030', 'bw_23028', 'bw_23029', 'bw_23030'],
+		desc: '自选 1 件 rank6 宝物',
+	},
 };
 
 export function getItemDef(itemId) {
@@ -102,6 +257,8 @@ function getCandidateChars(itemDef) {
 
 // ==================== 背包「道具」标签内容渲染 ====================
 export function renderBagItemContent(container) {
+	window._lastBagContainer = container;
+	container.innerHTML = ''; // 先清空，避免刷新时把新列表追加到旧列表之后造成视觉残留
 	const inventory = (Game.Data && Game.Data.getInventory()) || {};
 	const itemIds = Object.keys(inventory).filter(id => inventory[id] > 0 && ITEM_DEFS[id]);
 
@@ -198,6 +355,23 @@ export function useItem(itemId) {
 		return;
 	}
 
+	// 按道具类型分派开启逻辑
+	if (def.kind === 'stamina') {
+		buildStaminaDialog(def, owned);
+		return;
+	}
+	if (def.kind === 'treasurebox') {
+		if (def.mode === 'random') {
+			buildRandomBoxDialog(def, owned);
+		} else if (def.mode === 'pick') {
+			buildPickBoxDialog(def, owned);
+		} else {
+			Game.toast('宝物箱类型异常', 'error');
+		}
+		return;
+	}
+
+	// 默认：武将包（原逻辑）
 	const candidates = getCandidateChars(def);
 	if (candidates.length === 0) {
 		Game.toast('暂无可获得的武将', 'warning');
@@ -205,6 +379,250 @@ export function useItem(itemId) {
 	}
 
 	buildOpenDialog(def, owned, candidates);
+}
+
+// ===================== 体力瓶：数量选择后恢复体力 =====================
+function buildStaminaDialog(def, owned) {
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30000';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#7fffd4;margin-bottom:8px;text-align:center;';
+	title.textContent = `使用【${def.name}】`;
+	dialog.appendChild(title);
+
+	let quantity = 1;
+	const qtyWrap = document.createElement('div');
+	qtyWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;';
+	const minusBtn = document.createElement('button'); minusBtn.className = 'ybrpg-confirm-btn'; minusBtn.textContent = '−';
+	const qtyLabel = document.createElement('span'); qtyLabel.style.cssText = 'min-width:90px;text-align:center;font-size:15px;';
+	qtyLabel.textContent = `数量：${quantity}`;
+	const plusBtn = document.createElement('button'); plusBtn.className = 'ybrpg-confirm-btn'; plusBtn.textContent = '＋';
+	function refreshQty() { qtyLabel.textContent = `数量：${quantity}`; }
+	minusBtn.onclick = () => { if (quantity > 1) { quantity--; refreshQty(); } };
+	plusBtn.onclick = () => { if (quantity < owned) { quantity++; refreshQty(); } };
+	qtyWrap.appendChild(minusBtn); qtyWrap.appendChild(qtyLabel); qtyWrap.appendChild(plusBtn);
+	if (owned > 1) {
+		const maxBtn = document.createElement('button'); maxBtn.className = 'ybrpg-confirm-btn'; maxBtn.textContent = '最大';
+		maxBtn.onclick = () => { quantity = owned; refreshQty(); };
+		qtyWrap.appendChild(maxBtn);
+	}
+	dialog.appendChild(qtyWrap);
+
+	const tip = document.createElement('div');
+	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;';
+	tip.textContent = `每个恢复 25 点体力（本次 +${quantity * 25}）`;
+	dialog.appendChild(tip);
+
+	const confirmBtn = document.createElement('button');
+	confirmBtn.className = 'ybrpg-confirm-btn';
+	confirmBtn.textContent = '确定';
+	confirmBtn.style.cssText = 'background:#d32f2f;';
+	confirmBtn.onclick = () => {
+		if (quantity > owned) { Game.toast('数量超过拥有数', 'warning'); return; }
+		// 允许超出体力上限（超出部分不自然恢复，regenStamina 会保留存量）
+		window.stamina = (window.stamina || 0) + quantity * 25;
+		// 重置体力恢复时间轴，避免与本次手动补充叠加导致显示异常
+		window.staminaTs = Date.now();
+		if (Game.Data && Game.Data.removeItem) Game.Data.removeItem(def.id, quantity);
+		if (typeof ensureResourceHUD === 'function') ensureResourceHUD();
+		if (typeof updateResourceHUD === 'function') updateResourceHUD();
+		if (Game.SaveManager && Game.SaveManager.autoSave) Game.SaveManager.autoSave();
+		Game.toast(`使用 ${quantity} 个体力瓶，恢复 ${quantity * 25} 点体力`, 'success');
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		// 刷新背包页
+		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
+			renderBagItemContent(window._lastBagContainer);
+		}
+	};
+	const cancelBtn = document.createElement('button');
+	cancelBtn.className = 'ybrpg-confirm-btn';
+	cancelBtn.textContent = '取消';
+	cancelBtn.onclick = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:10px;';
+	btnRow.appendChild(confirmBtn); btnRow.appendChild(cancelBtn);
+	dialog.appendChild(btnRow);
+
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
+}
+
+// ===================== 宝物箱（随机）：数量选择后多次随机 =====================
+function buildRandomBoxDialog(def, owned) {
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30000';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:8px;text-align:center;';
+	title.textContent = `开启【${def.name}】`;
+	dialog.appendChild(title);
+
+	let quantity = 1;
+	const qtyWrap = document.createElement('div');
+	qtyWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;';
+	const minusBtn = document.createElement('button'); minusBtn.className = 'ybrpg-confirm-btn'; minusBtn.textContent = '−';
+	const qtyLabel = document.createElement('span'); qtyLabel.style.cssText = 'min-width:90px;text-align:center;font-size:15px;';
+	qtyLabel.textContent = `数量：${quantity}`;
+	const plusBtn = document.createElement('button'); plusBtn.className = 'ybrpg-confirm-btn'; plusBtn.textContent = '＋';
+	function refreshQty() { qtyLabel.textContent = `数量：${quantity}`; }
+	minusBtn.onclick = () => { if (quantity > 1) { quantity--; refreshQty(); } };
+	plusBtn.onclick = () => { if (quantity < owned) { quantity++; refreshQty(); } };
+	qtyWrap.appendChild(minusBtn); qtyWrap.appendChild(qtyLabel); qtyWrap.appendChild(plusBtn);
+	if (owned > 1) {
+		const maxBtn = document.createElement('button'); maxBtn.className = 'ybrpg-confirm-btn'; maxBtn.textContent = '最大';
+		maxBtn.onclick = () => { quantity = owned; refreshQty(); };
+		qtyWrap.appendChild(maxBtn);
+	}
+	dialog.appendChild(qtyWrap);
+
+	const tip = document.createElement('div');
+	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;';
+	tip.textContent = '随机开出，每个箱子随机获得 1 件宝物';
+	dialog.appendChild(tip);
+
+	const confirmBtn = document.createElement('button');
+	confirmBtn.className = 'ybrpg-confirm-btn';
+	confirmBtn.textContent = '确定';
+	confirmBtn.style.cssText = 'background:#d32f2f;';
+	confirmBtn.onclick = () => {
+		if (quantity > owned) { Game.toast('数量超过拥有数', 'warning'); return; }
+		const got = [];
+		for (let i = 0; i < quantity; i++) {
+			const id = def.contents[Math.floor(Math.random() * def.contents.length)];
+			if (id && Game.Data && typeof Game.Data.addTreasure === 'function') Game.Data.addTreasure(id, 1);
+			got.push(id);
+		}
+		if (Game.Data && Game.Data.removeItem) Game.Data.removeItem(def.id, quantity);
+		if (Game.SaveManager && Game.SaveManager.autoSave) Game.SaveManager.autoSave();
+		const names = got.map(id => (Game.Bag.defs()[id] && Game.Bag.defs()[id].name) || id).join('、');
+		Game.toast(`开启 ${quantity} 个，获得：${names}`, 'success');
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
+			renderBagItemContent(window._lastBagContainer);
+		}
+	};
+	const cancelBtn = document.createElement('button');
+	cancelBtn.className = 'ybrpg-confirm-btn';
+	cancelBtn.textContent = '取消';
+	cancelBtn.onclick = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:10px;';
+	btnRow.appendChild(confirmBtn); btnRow.appendChild(cancelBtn);
+	dialog.appendChild(btnRow);
+
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
+}
+
+// ===================== 宝物箱（定向）：选宝物 + 选数量，直接开出该宝物 =====================
+function buildPickBoxDialog(def, owned, candidates) {
+	const cand = candidates || (def.contents || []);
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30000';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+	dialog.style.cssText = 'width:360px;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;';
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:8px;text-align:center;';
+	title.textContent = `开启【${def.name}】`;
+	dialog.appendChild(title);
+
+	// 数量选择
+	let quantity = 1;
+	const qtyWrap = document.createElement('div');
+	qtyWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;';
+	const minusBtn = document.createElement('button'); minusBtn.className = 'ybrpg-confirm-btn'; minusBtn.textContent = '−';
+	const qtyLabel = document.createElement('span'); qtyLabel.style.cssText = 'min-width:90px;text-align:center;font-size:15px;';
+	qtyLabel.textContent = `数量：${quantity}`;
+	const plusBtn = document.createElement('button'); plusBtn.className = 'ybrpg-confirm-btn'; plusBtn.textContent = '＋';
+	function refreshQty() { qtyLabel.textContent = `数量：${quantity}`; }
+	minusBtn.onclick = () => { if (quantity > 1) { quantity--; refreshQty(); } };
+	plusBtn.onclick = () => { if (quantity < owned) { quantity++; refreshQty(); } };
+	qtyWrap.appendChild(minusBtn); qtyWrap.appendChild(qtyLabel); qtyWrap.appendChild(plusBtn);
+	if (owned > 1) {
+		const maxBtn = document.createElement('button'); maxBtn.className = 'ybrpg-confirm-btn'; maxBtn.textContent = '最大';
+		maxBtn.onclick = () => { quantity = owned; refreshQty(); };
+		qtyWrap.appendChild(maxBtn);
+	}
+	dialog.appendChild(qtyWrap);
+
+	const selTip = document.createElement('div');
+	selTip.style.cssText = 'font-size:13px;color:#ddd;margin:6px 0 4px;';
+	selTip.textContent = '请选择要获得的宝物：';
+	dialog.appendChild(selTip);
+
+	const selectedInfo = document.createElement('div');
+	selectedInfo.style.cssText = 'font-size:13px;color:#ffd700;font-weight:bold;text-align:center;margin-bottom:6px;min-height:18px;';
+	dialog.appendChild(selectedInfo);
+
+	const grid = document.createElement('div');
+	grid.className = 'gallery-grid';
+	grid.style.cssText = 'grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;flex:1;min-height:0;overflow-y:auto;padding-right:4px;';
+	const defs = Game.Bag.defs();
+	let selectedTreasureId = cand[0];
+	function updateSelectedInfo() {
+		const t = defs[selectedTreasureId];
+		selectedInfo.textContent = t ? t.name : selectedTreasureId;
+	}
+	cand.forEach(id => {
+		const t = defs[id];
+		const card = document.createElement('div');
+		card.className = 'gallery-char-card';
+		card.style.cursor = 'pointer';
+		const iconDiv = document.createElement('div');
+		iconDiv.className = 'gallery-char-icon';
+		iconDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:12px;background:#1a1a2a;';
+		iconDiv.textContent = (t && t.name) || id;
+		card.appendChild(iconDiv);
+		card.onclick = () => {
+			selectedTreasureId = id;
+			updateSelectedInfo();
+			document.querySelectorAll('.gallery-char-card.selected').forEach(c => c.classList.remove('selected'));
+			card.classList.add('selected');
+		};
+		grid.appendChild(card);
+	});
+	dialog.appendChild(grid);
+	updateSelectedInfo();
+
+	const confirmBtn = document.createElement('button');
+	confirmBtn.className = 'ybrpg-confirm-btn';
+	confirmBtn.textContent = '确定';
+	confirmBtn.style.cssText = 'background:#d32f2f;';
+	confirmBtn.onclick = () => {
+		if (quantity > owned) { Game.toast('数量超过拥有数', 'warning'); return; }
+		if (selectedTreasureId && Game.Data && typeof Game.Data.addTreasure === 'function') {
+			Game.Data.addTreasure(selectedTreasureId, quantity);
+		}
+		if (Game.Data && Game.Data.removeItem) Game.Data.removeItem(def.id, quantity);
+		if (Game.SaveManager && Game.SaveManager.autoSave) Game.SaveManager.autoSave();
+		const t = defs[selectedTreasureId];
+		Game.toast(`开启 ${quantity} 个，获得【${(t && t.name) || selectedTreasureId}】×${quantity}`, 'success');
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
+			renderBagItemContent(window._lastBagContainer);
+		}
+	};
+	const cancelBtn = document.createElement('button');
+	cancelBtn.className = 'ybrpg-confirm-btn';
+	cancelBtn.textContent = '取消';
+	cancelBtn.onclick = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:10px;';
+	btnRow.appendChild(confirmBtn); btnRow.appendChild(cancelBtn);
+	dialog.appendChild(btnRow);
+
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
 }
 
 // 构建开启弹窗（数量选择 + 武将选择）
