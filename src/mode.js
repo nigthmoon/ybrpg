@@ -4787,7 +4787,7 @@ function renderSettingsView(container) {
 
 	// 图鉴行：角色图鉴 + 宝物图鉴
 	const galleryRow = document.createElement('div');
-	galleryRow.style.cssText = 'display:flex;gap:20px;justify-content:center;';
+	galleryRow.style.cssText = 'display:flex;gap:20px;justify-content:center;flex-wrap:wrap;';
 
 	// 角色图鉴按钮
 	const galleryBtn = document.createElement('button');
@@ -4820,6 +4820,14 @@ function renderSettingsView(container) {
 	signBtn.textContent = '每日签到';
 	signBtn.onclick = () => renderDailySignView(container);
 	galleryRow.appendChild(signBtn);
+
+	// 兑换码按钮
+	const redeemBtn = document.createElement('button');
+	redeemBtn.className = 'ybrpg-settings-btn';
+	redeemBtn.id = 'btn-setting-redeem';
+	redeemBtn.textContent = '兑换码';
+	redeemBtn.onclick = () => renderRedeemView(container);
+	galleryRow.appendChild(redeemBtn);
 
 	groupDiv.appendChild(galleryRow);
 
@@ -4900,6 +4908,185 @@ function renderSettingsView(container) {
 	versionInfo.style.cssText = 'color:#888;font-size:12px;margin-top:20px;text-align:center;';
 	versionInfo.textContent = `版本: ${window.GAME_VERSION || 'v1.0'}`;
 	container.appendChild(versionInfo);
+}
+
+// ===================== 兑换码系统 =====================
+
+// 兑换码表：key 统一大写（输入不区分大小写、自动去空格）
+// rewards.type 支持：gold 金币 / diamond 钻石 / stamina 体力 / item 道具 / treasure 宝物
+// 维护者在此增删兑换码即可，界面自动生效
+const REDEEM_CODES = {
+	'YBRPG666': {
+		desc: '新手见面礼',
+		rewards: [
+			{ type: 'gold', amount: 5000 },
+			{ type: 'diamond', amount: 50 },
+			{ type: 'item', id: 'item_stamina', count: 2 },
+		],
+	},
+	'YBRPG888': {
+		desc: '体力补给包',
+		rewards: [
+			{ type: 'stamina', amount: 100 },
+			{ type: 'item', id: 'item_stamina', count: 3 },
+		],
+	},
+	'YBWELCOME': {
+		desc: '开荒助力包',
+		rewards: [
+			{ type: 'gold', amount: 10000 },
+			{ type: 'treasure', id: 'bw_10501', count: 1 },
+		],
+	},
+	'YBPRO': {
+		desc: '开发者测试码',
+		rewards: [
+			{ type: 'diamond', amount: 2000000 },
+			{ type: 'gold', amount: 200000000 },
+		],
+	},
+};
+
+// 发放兑换码奖励（支持：gold / diamond / stamina / item / treasure）
+function applyRedeemRewards(rewards) {
+	rewards.forEach(r => {
+		switch (r.type) {
+			case 'gold':
+				window.gameGold = (window.gameGold || 0) + (r.amount || 0);
+				break;
+			case 'diamond':
+				window.diamond = (window.diamond || 0) + (r.amount || 0);
+				break;
+			case 'stamina': {
+				const max = window.maxStamina || STAMINA_MAX;
+				window.stamina = Math.min((window.stamina || 0) + (r.amount || 0), max);
+				break;
+			}
+			case 'item':
+				if (Game.Data && typeof Game.Data.addItem === 'function') Game.Data.addItem(r.id, r.count || 1);
+				break;
+			case 'treasure':
+				if (Game.Data && typeof Game.Data.addTreasure === 'function') Game.Data.addTreasure(r.id, r.count || 1);
+				break;
+		}
+	});
+	updateResourceHUD();
+	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
+}
+
+// 兑换码奖励文案（用于成功提示）
+function redeemRewardNames(rewards) {
+	return rewards.map(r => {
+		switch (r.type) {
+			case 'gold': return `💰 ${(r.amount || 0).toLocaleString()} 金币`;
+			case 'diamond': return `💎 ${r.amount || 0} 钻石`;
+			case 'stamina': return `⚡ ${r.amount || 0} 体力`;
+			case 'item': {
+				const d = Game.Bag && Game.Bag.defs && Game.Bag.defs()[r.id];
+				return `${(d && d.name) || r.id}×${r.count || 1}`;
+			}
+			case 'treasure': {
+				const d = Game.Bag && Game.Bag.defs && Game.Bag.defs()[r.id];
+				return `【${(d && d.name) || r.id}】×${r.count || 1}`;
+			}
+			default: return r.type;
+		}
+	}).join('、');
+}
+
+// 渲染：已兑换记录
+function renderRedeemHistory(listBox) {
+	listBox.innerHTML = '';
+	const codes = window.redeemedCodes || [];
+	if (codes.length === 0) {
+		const empty = document.createElement('div');
+		empty.style.cssText = 'font-size:13px;color:#666;text-align:center;padding:16px;';
+		empty.textContent = '暂无已兑换记录';
+		listBox.appendChild(empty);
+		return;
+	}
+	const hd = document.createElement('div');
+	hd.style.cssText = 'font-size:13px;color:#ffd700;text-align:center;margin-bottom:4px;';
+	hd.textContent = '已兑换记录';
+	listBox.appendChild(hd);
+	codes.forEach(code => {
+		const def = REDEEM_CODES[code];
+		const row = document.createElement('div');
+		row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;background:#222;border:1px solid #444;border-radius:5px;padding:6px 10px;font-size:13px;';
+		row.innerHTML = `<span style="color:#ffd700;">${code}</span><span style="color:#aaa;">${(def && def.desc) || '已兑换'}</span>`;
+		listBox.appendChild(row);
+	});
+}
+
+// 执行兑换校验与发放
+function doRedeem(input, statusEl, listBox) {
+	const code = (input.value || '').trim().replace(/\s+/g, '').toUpperCase();
+	if (!code) { statusEl.textContent = '请输入兑换码'; statusEl.style.color = '#ffaa44'; return; }
+	const def = REDEEM_CODES[code];
+	if (!def) { statusEl.textContent = '兑换码无效'; statusEl.style.color = '#ff6666'; return; }
+	if (!window.redeemedCodes) window.redeemedCodes = [];
+	if (window.redeemedCodes.includes(code)) { statusEl.textContent = '该兑换码已兑换过'; statusEl.style.color = '#ffaa44'; return; }
+
+	applyRedeemRewards(def.rewards);
+	window.redeemedCodes.push(code);
+	statusEl.textContent = `兑换成功！获得：${redeemRewardNames(def.rewards)}`;
+	statusEl.style.color = '#66ff66';
+	input.value = '';
+	renderRedeemHistory(listBox);
+	Game.toast(`兑换码【${code}】兑换成功`, 'success');
+}
+
+// 渲染：兑换码
+function renderRedeemView(container) {
+	container.innerHTML = '';
+
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-back-btn';
+	backBtn.textContent = '← 返回';
+	backBtn.onclick = () => renderSettingsView(container);
+	container.appendChild(backBtn);
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:20px;font-weight:bold;text-align:center;margin:15px 0;color:#ffd700;';
+	title.textContent = '🎁 兑换码';
+	container.appendChild(title);
+
+	// 输入行
+	const inputRow = document.createElement('div');
+	inputRow.style.cssText = 'display:flex;gap:10px;justify-content:center;align-items:center;margin:10px auto;max-width:420px;';
+
+	const input = document.createElement('input');
+	input.type = 'text';
+	input.placeholder = '请输入兑换码';
+	input.style.cssText = 'flex:1;padding:8px 12px;font-size:14px;background:#222;color:#fff;border:1px solid #555;border-radius:5px;outline:none;';
+	input.onkeydown = (e) => { if (e.key === 'Enter') doRedeem(input, statusEl, listBox); };
+	inputRow.appendChild(input);
+
+	const redeemBtn = document.createElement('button');
+	redeemBtn.className = 'ybrpg-settings-btn';
+	redeemBtn.textContent = '兑换';
+	redeemBtn.style.cssText = 'width:auto;height:auto;padding:8px 24px;font-size:14px;background:#d32f2f;color:#fff;border-radius:5px;';
+	redeemBtn.onclick = () => doRedeem(input, statusEl, listBox);
+	inputRow.appendChild(redeemBtn);
+
+	container.appendChild(inputRow);
+
+	// 状态行
+	const statusEl = document.createElement('div');
+	statusEl.style.cssText = 'font-size:13px;color:#888;text-align:center;min-height:18px;margin:4px 0;';
+	container.appendChild(statusEl);
+
+	// 已兑换记录
+	const listBox = document.createElement('div');
+	listBox.style.cssText = 'width:100%;max-width:420px;margin:10px auto;display:flex;flex-direction:column;gap:6px;';
+	renderRedeemHistory(listBox);
+	container.appendChild(listBox);
+
+	// 说明
+	const tip = document.createElement('div');
+	tip.style.cssText = 'font-size:12px;color:#666;text-align:center;margin-top:12px;line-height:1.8;';
+	tip.innerHTML = '兑换码不区分大小写，每个码仅可兑换一次。<br>维护者可查看代码内 REDEEM_CODES 常量增删兑换码。';
+	container.appendChild(tip);
 }
 
 // ===================== 每日签到 & 每日任务 =====================
@@ -8175,12 +8362,11 @@ function renderRecruitView(container) {
 	container.appendChild(btnRow);
 }
 
-// 执行招募
+// 执行招募：固定以金币结算（与按钮展示的 💰 价格一致，不走 >1000 金币自动折算钻石的主货币逻辑）
 function doRecruit(count, container) {
 	const cost = count === 10 ? RECRUIT_TEN_COST : RECRUIT_SINGLE_COST;
-	const payCur = getPrimaryCurrency(cost) || 'diamond';
-	const payAmt = cost[payCur] || 0;
-	const meta = CURRENCY_META[payCur] || CURRENCY_META.diamond;
+	const meta = CURRENCY_META.gold;
+	const payAmt = cost.gold || 0;
 	const balance = window[meta.varKey] || 0;
 	if (balance < payAmt) { Game.toast(meta.insufficient + '，无法招募！', 'error'); return; }
 	window[meta.varKey] = balance - payAmt;
@@ -9549,6 +9735,7 @@ const SaveManager = {
 		diamond: window.diamond,
 		dailySign: window.dailySign || { lastSignDate: '', streak: 0 },
 		dailyTasks: window.dailyTasks || null,
+		redeemedCodes: window.redeemedCodes || [],
 			recruitPity: window.recruitPity || 0,
 			recruitUpCharId: window.recruitUpCharId || null,
 			shopPage: window.shopPage || 'home',
@@ -9648,6 +9835,7 @@ const SaveManager = {
 			window.diamond = parsed.diamond || 0;
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
+			window.redeemedCodes = parsed.redeemedCodes || [];
 			window.recruitPity = parsed.recruitPity || 0;
 			window.recruitUpCharId = parsed.recruitUpCharId || null;
 			window.shopPage = parsed.shopPage || 'home';
@@ -9803,6 +9991,7 @@ const SaveManager = {
 			charTreasureSlots: window.charTreasureSlots || {},
 			dailySign: window.dailySign || { lastSignDate: '', streak: 0 },
 			dailyTasks: window.dailyTasks || null,
+			redeemedCodes: window.redeemedCodes || [],
 			recruitPity: window.recruitPity || 0,
 			recruitUpCharId: window.recruitUpCharId || null,
 			shopPage: window.shopPage || 'home',
@@ -9906,6 +10095,7 @@ const SaveManager = {
 			window.diamond = parsed.diamond || 0;
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
+			window.redeemedCodes = parsed.redeemedCodes || [];
 			window.recruitPity = parsed.recruitPity || 0;
 			window.recruitUpCharId = parsed.recruitUpCharId || null;
 			window.shopPage = parsed.shopPage || 'home';
@@ -9961,6 +10151,7 @@ const SaveManager = {
 			window.diamond = parsed.diamond || 0;
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
+			window.redeemedCodes = parsed.redeemedCodes || [];
 			window.recruitPity = parsed.recruitPity || 0;
 			window.recruitUpCharId = parsed.recruitUpCharId || null;
 			window.shopPage = parsed.shopPage || 'home';
