@@ -2362,10 +2362,8 @@ Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
 		for (let i = 0; i < normalizedTupoList.length; i++) {
 			const buff = normalizedTupoList[i];
 			if (!buff) continue;
-			// 吸收的宝物槽：吸收即生效（不受突破等级门槛限制）；
-			// 其余真实突破效果需已解锁（i < tupolevel）才生效
-			const _isAbsorbed = buff.type === 'absorbed_treasure' && !!buff._absorbedTreasure;
-			if (!_isAbsorbed && i >= tupolevel) continue;
+			// 吸收的宝物槽与真实突破效果一致：只有达到该突破层数（i < tupolevel）才解锁生效
+			if (i >= tupolevel) continue;
 			const type = buff.type;
 
 			switch (type) {

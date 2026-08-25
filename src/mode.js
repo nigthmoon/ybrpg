@@ -869,6 +869,8 @@ function isNoEffectBreakthrough(buff) {
 // 当前 equip.js 的 TREASURE_DEFS 宝物为「属性型」（atk/baoji/def/... + desc(star) 函数），
 // 故主路径走 self_stat_flat 属性吸收；若宝物额外定义 type+effect / effects / effectSkills，
 // 也会一并编译成 skill_effect（与突破库同源，引擎已支持对应触发点）。
+// 重要：吸收宝物槽与真实突破效果一致——只有达到该突破层数（i < tupolevel）才解锁，
+// 未突破到该阶时其属性与技能一律不生效（结算端 system.js / battle_refactored.js 已按门槛过滤）。
 // ======================================================================
 
 // 宝物 type → 突破 trigger 映射（仅含引擎已触发/已补触发点的类型）
@@ -1020,7 +1022,16 @@ function absorbTreasureIntoSlot(instanceId, slotIndex, treasureInstanceId, popup
 	});
 	const descText = (compiledEntries[0] && compiledEntries[0].desc) || (TREASURE_DEFS[baseId] || {}).name || baseId;
 	// 写入突破槽（吸收核心逻辑）
-		const doAbsorb = () => {
+	const doAbsorb = () => {
+		// 兜底校验：只有达到该突破层数（slotIndex < tupolevel）才允许写入未吸收槽，
+		// 防止绕过 UI 在未解锁槽消耗宝物（与结算端门槛一致）
+		const _tl = (instData && typeof instData.tupolevel === 'number') ? instData.tupolevel : 0;
+		const _existing = instData.tupoList && instData.tupoList[slotIndex];
+		const _alreadyAbsorbed = !!(_existing && _existing._absorbedTreasure);
+		if (!_alreadyAbsorbed && slotIndex >= _tl) {
+			console.warn('[吸收宝物] 槽位未解锁，拒绝吸收', instanceId, slotIndex, _tl);
+			return;
+		}
 			// 记录被吸收宝物的实例ID与完整属性快照（含 level），
 			// 卸下时可原样返还背包、沿用原实例ID。
 			const _absorbedInv = inv ? Object.assign({}, inv) : { baseId: baseId, level: level };
@@ -1140,6 +1151,13 @@ function openTreasureAbsorbPicker(slotIndex, instanceId, popup) {
 	const _curSlot = _inst && Array.isArray(_inst.tupoList) ? _inst.tupoList[slotIndex] : null;
 	const slotAbsorbed = !!(_curSlot && _curSlot._absorbedTreasure);
 
+	// 只有达到该突破层数（slotIndex < tupolevel）才允许吸收，避免玩家在未解锁槽消耗宝物
+	const _tupolevel = (_inst && typeof _inst.tupolevel === 'number') ? _inst.tupolevel : 0;
+	if (!slotAbsorbed && slotIndex >= _tupolevel) {
+		alert('该突破槽尚未解锁，需先突破到对应层数后才能吸收宝物。');
+		return;
+	}
+
 	// 底部固定操作栏（不随列表滚动）
 	const footer = document.createElement('div');
 	footer.style.cssText = 'flex-shrink:0;margin-top:12px;padding-top:12px;border-top:1px solid #333;display:flex;flex-direction:column;gap:8px;';
@@ -1240,8 +1258,9 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel, instData,
 		const absorbedRec = (buff && buff._absorbedTreasure) ? buff._absorbedTreasure : null;
 		if (absorbedRec) {
 			// 已吸收：显示来源宝物（非突破1阶且已解锁时，点击可重新吸收替换同一槽）
-			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#7CFC00;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;`;
-			descDiv.textContent = `🧪 已吸收：${absorbedRec.sourceName}（Lv.${absorbedRec.level}）`;
+			const _effHint = isUnlocked ? '' : '（🔒 该突破槽未解锁，宝物能力暂未生效，需突破到该阶）';
+			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#7CFC00' : '#c9a86a'};border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;`;
+			descDiv.textContent = `🧪 已吸收：${absorbedRec.sourceName}（Lv.${absorbedRec.level}）${_effHint}`;
 			item.style.border = '1px solid #44ff88';
 			// 另起一行显示宝物描述
 			const tDef = TREASURE_DEFS[absorbedRec.baseId] || {};
@@ -1257,8 +1276,8 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel, instData,
 				item.onmouseover = () => { item.style.background = '#33334a'; };
 				item.onmouseout = () => { item.style.background = '#1a1a1a'; };
 			}
-			// 卸下按钮（非突破1阶）：把已吸收宝物从槽位卸下，恢复为空白槽
-			if (index !== 0) {
+			// 卸下按钮（非突破1阶且已解锁）：把已吸收宝物从槽位卸下，恢复为空白槽
+			if (index !== 0 && isUnlocked) {
 				const unequipBtn = document.createElement('button');
 				unequipBtn.textContent = '🗑️ 卸下';
 				unequipBtn.style.cssText = 'padding:2px 8px;font-size:11px;background:#3a2a2a;border:1px solid #ff5555;color:#ff8888;border-radius:4px;cursor:pointer;';
@@ -6925,8 +6944,7 @@ function renderChapterEventList(container, chapterKey) {
 								if (ok) {
 									Game.toast(`主角突破至 ${targetTupoLevel} 阶！`, 'success');
 								} else {
-									const reqLevel = getBreakthroughRequiredLevel(targetTupoLevel);
-									Game.toast(`主角等级不足，突破至 ${targetTupoLevel} 阶需先达到 Lv.${reqLevel}`, 'warning');
+									Game.toast(`主角突破至 ${targetTupoLevel} 阶失败（已达最大突破阶数或目标超限）`, 'warning');
 								}
 							} else {
 								// 默认突破1次
@@ -9133,54 +9151,73 @@ function computeLevelGold(event, diffKey, chapterKey) {
  * 扫荡：直接按通关规则发放产出，并用新版结算框展示
  * 仅对已完成关卡调用
  */
-function doSweep(event, diffKey, index, eventId, chapterKey, onClose) {
+function doSweep(event, diffKey, index, eventId, chapterKey, onClose, count) {
 	if (!event) return;
-	// 体力预扣（上云接口）
-	if (!trySpendStamina(getStaminaCost(event))) {
-		Game.toast('体力不足，无法扫荡', 'error');
-		return;
-	}
+	count = (typeof count === 'number' && count > 1) ? count : 1;
 	const isSP = /^sp/i.test(chapterKey || '');
-	const goldReward = computeLevelGold(event, diffKey, chapterKey);
-	window.gameGold = (window.gameGold || 0) + goldReward;
+	const diffName = DIFFICULTY_SCALE[diffKey]?.name || diffKey;
 
-	const dropStat = { chars: [], treasures: [], items: [] };
-	if (!isSP) {
-		const dropMult = DROP_MULT[diffKey] || 1;
-		const rewardCfg = event.reward || null;
-		if (rewardCfg) {
-			grantFixedReward(rewardCfg, dropMult, dropStat);
-		} else {
-			const isMiniBoss = (event.type === 'boss' && index !== 9);
-			const isBigBoss = (index === 9);
-			grantCharactersByRank('rare', dropMult, dropStat.chars);
-			if (isMiniBoss) {
-				grantCharactersByRank('epicfake', dropMult, dropStat.chars);
-				grantCharactersByRank('epic', dropMult, dropStat.chars);
-			}
-			if (isBigBoss) {
-				grantCharactersByRank('legend', dropMult, dropStat.chars);
+	let totalGold = 0;
+	const totalDrop = { chars: [], treasures: [], items: [] };
+	let done = 0;
+	let interrupted = false;
+
+	const finalize = () => {
+		showSweepResultPanel({
+			title: count > 1 ? `扫荡成功（${count}次${interrupted ? '，体力不足中断' : ''}）` : '扫荡成功',
+			sub: `${diffName}难度 · ${event.name || eventId}`,
+			gold: totalGold,
+			chars: totalDrop.chars,
+			treasures: totalDrop.treasures,
+			items: totalDrop.items,
+			onClose: (typeof onClose === 'function') ? onClose : null,
+		});
+	};
+
+	const runOnce = () => {
+		if (done >= count) { finalize(); return; }
+		// 体力预扣（上云接口）
+		if (!trySpendStamina(getStaminaCost(event))) {
+			Game.toast('体力不足，扫荡中断', 'error');
+			interrupted = true;
+			finalize();
+			return;
+		}
+		const goldReward = computeLevelGold(event, diffKey, chapterKey);
+		window.gameGold = (window.gameGold || 0) + goldReward;
+		totalGold += goldReward;
+
+		if (!isSP) {
+			const dropMult = DROP_MULT[diffKey] || 1;
+			const rewardCfg = event.reward || null;
+			if (rewardCfg) {
+				grantFixedReward(rewardCfg, dropMult, totalDrop);
+			} else {
+				const isMiniBoss = (event.type === 'boss' && index !== 9);
+				const isBigBoss = (index === 9);
+				grantCharactersByRank('rare', dropMult, totalDrop.chars);
+				if (isMiniBoss) {
+					grantCharactersByRank('epicfake', dropMult, totalDrop.chars);
+					grantCharactersByRank('epic', dropMult, totalDrop.chars);
+				}
+				if (isBigBoss) {
+					grantCharactersByRank('legend', dropMult, totalDrop.chars);
+				}
 			}
 		}
-	}
 
-	// 刷新背包视图（若处于开启状态）
-	if (window.renderBagView) {
-		const bagView = document.getElementById('bag-view');
-		if (bagView) window.renderBagView(bagView);
-	}
-	SaveManager.autoSave();
+		// 刷新背包视图（若处于开启状态）
+		if (window.renderBagView) {
+			const bagView = document.getElementById('bag-view');
+			if (bagView) window.renderBagView(bagView);
+		}
+		SaveManager.autoSave();
 
-	const diffName = DIFFICULTY_SCALE[diffKey]?.name || diffKey;
-	showSweepResultPanel({
-		title: '扫荡成功',
-		sub: `${diffName}难度 · ${event.name || eventId}`,
-		gold: goldReward,
-		chars: dropStat.chars,
-		treasures: dropStat.treasures,
-		items: dropStat.items,
-		onClose: (typeof onClose === 'function') ? onClose : null,
-	});
+		done++;
+		runOnce();
+	};
+
+	runOnce();
 }
 
 /**
@@ -9544,8 +9581,27 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 		};
 	}
 
+	const sweep5Btn = document.createElement('button');
+	sweep5Btn.className = 'reward-ok-btn preview-btn-sweep';
+	sweep5Btn.textContent = '扫荡5次';
+	if (!opts.canSweep || !staminaOk) {
+		sweep5Btn.disabled = true;
+		sweep5Btn.style.opacity = '0.5';
+		sweep5Btn.style.cursor = 'not-allowed';
+		sweep5Btn.title = !opts.canSweep ? '仅已通关关卡可扫荡' : '体力不足';
+	} else {
+		sweep5Btn.onclick = (e) => {
+			e.stopPropagation();
+			close();
+			doSweep(event, diffKey, index, eventId, chapterKey, () => {
+				showOutputPreview(event, diffKey, index, eventId, chapterKey, opts);
+			}, 5);
+		};
+	}
+
 	btnRow.appendChild(challengeBtn);
 	btnRow.appendChild(sweepBtn);
+	btnRow.appendChild(sweep5Btn);
 	panel.appendChild(btnRow);
 	overlay.appendChild(panel);
 	document.body.appendChild(overlay);
@@ -12327,9 +12383,11 @@ function breakthroughCharacterInstance(targetInstId) {
 	}
 
 	// 突破等级门槛：突破到 currentTupoLevel+1 阶需先达到指定等级
+	// 主角（zhujue）通过副本首通获得突破属于奖励性质，豁免等级限制
+	const isMainChar = charId === 'zhujue';
 	const reqLevel = getBreakthroughRequiredLevel(currentTupoLevel + 1);
 	const curLevel = targetInst.level || 1;
-	if (curLevel < reqLevel) {
+	if (!isMainChar && curLevel < reqLevel) {
 		return {
 			success: false,
 			message: `突破到 ${currentTupoLevel + 1} 阶需要角色先达到 Lv.${reqLevel}（当前 Lv.${curLevel}）`
