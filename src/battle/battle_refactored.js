@@ -1543,6 +1543,11 @@ Battle.showBattleIntro = function showBattleIntro() {
 	triggerGlobalEffect('roundStart', 1);
 	// ==========================================
 
+	// 【修复】开局群体真实伤害（如魑魅天鸟）可能直接秒杀某一方，
+	// 此处立即判定胜负并结算，避免进入回合调度后卡死。
+	if (isSideDefeated('player')) { Battle.end('enemy'); return; }
+	if (isSideDefeated('enemy')) { Battle.end('player'); return; }
+
 	addBattleLog(`—— 第 1 轮 ——`);
 	addBattleLog(`${bs.firstSide === 'player' ? '我方' : '敌方'}先手`);
 
