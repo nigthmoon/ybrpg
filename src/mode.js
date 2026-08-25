@@ -8640,8 +8640,8 @@ const TR_LUCK_STEP1 = 40, TR_LUCK_STEP1_RATE = 0.02;
 const TR_LUCK_STEP2 = 60, TR_LUCK_STEP2_RATE = 0.05;
 const TR_LUCK_STEP3 = 80, TR_LUCK_STEP3_RATE = 0.10;
 const TR_LUCK_STEP4 = 90, TR_LUCK_STEP4_RATE = 0.50;
-const TREASURE_RECRUIT_SINGLE_COST = { gold: 300 };
-const TREASURE_RECRUIT_TEN_COST = { gold: 2700 };
+const TREASURE_RECRUIT_SINGLE_COST = { gold: 3000 };
+const TREASURE_RECRUIT_TEN_COST = { gold: 27000 };
 // 红+金共用档位概率：沿用武将招募的五段保底曲线，满值必出
 function getTreasureRecruitRedGoldRate(luck) {
 	luck = luck || 0;
@@ -8808,7 +8808,8 @@ function doTreasureRecruit(count, container) {
 		let emoji, name;
 		if (res.tier === 'red' || res.tier === 'gold') {
 			const iDef = ITEM_DEFS[res.tid];
-			emoji = (iDef && iDef.emoji) || '📦';
+			// 优先使用宝箱专属图标（红箱 dj_20023 / 金箱 dj_20024），无图标时回退 emoji
+			emoji = (iDef && (iDef.icon || iDef.emoji)) || '📦';
 			name = (iDef && iDef.name) || res.tid;
 		} else {
 			const tDef = res.tid ? Game.Data.getTreasureList()[res.tid] : null;
