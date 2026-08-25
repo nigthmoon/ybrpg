@@ -3987,7 +3987,7 @@ function renderBagView(container) {
 		btnsDiv.appendChild(sellBtn);
 		detailBar.appendChild(btnsDiv);
 	} else {
-		// 道具详情横框（原有逻辑）
+		// 道具详情横框（保留使用入口）
 		// 左侧：道具图标
 		const iconDiv = document.createElement('div');
 		iconDiv.className = 'bag-detail-icon';
@@ -4000,11 +4000,11 @@ function renderBagView(container) {
 		infoDiv.className = 'bag-detail-info';
 		const nameEl = document.createElement('div');
 		nameEl.className = 'bag-detail-name';
-		nameEl.textContent = '选择道具查看详情';
+		nameEl.textContent = '请选择物品';
 		infoDiv.appendChild(nameEl);
 		const descEl = document.createElement('div');
 		descEl.className = 'bag-detail-desc';
-		descEl.textContent = '点击背包中的道具查看信息';
+		descEl.textContent = '空空如也';
 		infoDiv.appendChild(descEl);
 		detailBar.appendChild(infoDiv);
 
@@ -7431,6 +7431,14 @@ function getRankName(rank) {
 	return { legend: '传说', epic: '史诗', epicfake: '伪史诗', rare: '稀有', common: '精品', junk: '平凡' }[rank] || '精品';
 }
 
+// 宝物招募品质配色/名称（与角色品质体系解耦）
+function getTreasureTierColor(tier) {
+	return { purple: '#a335ee', orange: '#ff8800', red: '#ff4444', gold: '#ffff00' }[tier] || '#888';
+}
+function getTreasureTierName(tier) {
+	return { purple: '紫', orange: '橙', red: '红', gold: '金' }[tier] || '宝物';
+}
+
 /**
  * 刷新商店物品
  */
@@ -7696,6 +7704,7 @@ function renderShopView(container) {
 	if (window.shopPage === 'legacy') { renderShopLegacyView(container); return; }
 	if (window.shopPage === 'treasure') { renderTreasureShopView(container); return; }
 	if (window.shopPage === 'recruit') { renderRecruitView(container); return; }
+	if (window.shopPage === 'treasurerecruit') { renderTreasureRecruitView(container); return; }
 	renderShopHomeView(container);
 }
 
@@ -8046,8 +8055,9 @@ function renderShopHomeView(container) {
 	grid.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:780px;margin:18px auto 0;padding:0 12px;';
 
 	const entries = [
-		{ key: 'treasure', name: '珍宝商城', icon: '🛍️', desc: '定向购买武将包、体力瓶、宝物箱等物资' },
+		{ key: 'treasure', name: '珍宝商城', icon: '🛍️', desc: '定向购买体力瓶等物资' },
 		{ key: 'recruit', name: '招募', icon: '🎯', desc: '抽取武将（十连必出橙，百抽必出红，1% 神品）' },
+		{ key: 'treasurerecruit', name: '宝物招募', icon: '💎', desc: '抽取宝物（十连必出≥稀有，幸运值满必出传说）' },
 		{ key: 'legacy', name: '旧杂货铺', icon: '🏪', desc: '（旧版随机商店，保留备用）' },
 	];
 	entries.forEach(e => {
@@ -8072,14 +8082,99 @@ function renderShopHomeView(container) {
 }
 
 // ==================== 新商店：珍宝商城 ====================
-// 上架清单：武将包(4) + 体力瓶 + 宝物箱(10)
+// 上架清单：仅保留体力瓶（宝物箱/武将包已移出，后续通过宝物招募等其他方式提供，物品定义不删）
 const TREASURE_SHOP_ITEMS = [
-	'pack_legend', 'pack_epic', 'pack_epicfake', 'pack_rare', // 武将包（原售价）
-	'item_stamina',                                            // 体力瓶
-	'box_r1_random', 'box_r1_pick', 'box_r2_random', 'box_r2_pick',
-	'box_r3_random', 'box_r3_pick', 'box_r4_random', 'box_r4_pick',
-	'box_r5_pick', 'box_r6_pick',                             // 宝物箱
+	'item_stamina', // 体力瓶
 ];
+
+// 珍宝商城购买弹窗：可选数量一次购买多个
+function openTreasureShopBuyDialog(def, payCur, unitPrice, refreshCb) {
+	const meta = CURRENCY_META[payCur] || CURRENCY_META.diamond;
+	const balance = window[meta.varKey] || 0;
+	// 按余额计算最大可购数量
+	const maxQty = unitPrice > 0 ? Math.floor(balance / unitPrice) : 99;
+	let qty = 1;
+
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30000';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+	dialog.style.cssText = 'width:240px;text-align:center;';
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:6px;';
+	title.textContent = `购买「${def.name}」`;
+	dialog.appendChild(title);
+
+	const unit = document.createElement('div');
+	unit.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:10px;';
+	unit.textContent = `单价：${CURRENCY_SYMBOL[payCur]} ${fmtGroup4(unitPrice)}`;
+	dialog.appendChild(unit);
+
+	// 数量步进器
+	const stepper = document.createElement('div');
+	stepper.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:3px;margin-bottom:10px;flex-wrap:nowrap;';
+	const mkBtn = (txt, step, css) => {
+		const b = document.createElement('button');
+		b.className = 'ybrpg-confirm-btn';
+		b.textContent = txt;
+		b.style.cssText = `padding:0 6px;height:26px;font-size:13px;border:1px solid #555;white-space:nowrap;${css || ''}`;
+		b.onclick = () => syncQty(qty + step);
+		return b;
+	};
+	const minus10 = mkBtn('−10', -10);
+	const minus = mkBtn('−1', -1);
+	const qtyEl = document.createElement('div');
+	qtyEl.style.cssText = 'font-size:20px;font-weight:bold;color:#fff;min-width:30px;text-align:center;';
+	qtyEl.textContent = '1';
+	const plus = mkBtn('+1', 1);
+	const plus10 = mkBtn('+10', 10);
+	const syncQty = (v) => {
+		qty = Math.max(1, Math.min(maxQty, v));
+		qtyEl.textContent = String(qty);
+		totalEl.textContent = `合计：${CURRENCY_SYMBOL[payCur]} ${fmtGroup4(unitPrice * qty)}`;
+	};
+	stepper.appendChild(minus10); stepper.appendChild(minus); stepper.appendChild(qtyEl); stepper.appendChild(plus); stepper.appendChild(plus10);
+	dialog.appendChild(stepper);
+
+	const totalEl = document.createElement('div');
+	totalEl.style.cssText = 'font-size:13px;color:#ffd700;margin-bottom:12px;';
+	totalEl.textContent = `合计：${CURRENCY_SYMBOL[payCur]} ${fmtGroup4(unitPrice)}`;
+	dialog.appendChild(totalEl);
+
+	const btns = document.createElement('div');
+	btns.style.cssText = 'display:flex;gap:10px;justify-content:center;';
+	const confirm = document.createElement('button');
+	confirm.className = 'ybrpg-confirm-btn';
+	confirm.textContent = '确认购买';
+	confirm.style.cssText = 'background:#d32f2f;';
+	confirm.onclick = () => {
+		const curBalance = window[meta.varKey] || 0;
+		const need = unitPrice * qty;
+		if (curBalance < need) { Game.toast(meta.insufficient, 'error'); return; }
+		window[meta.varKey] = curBalance - need;
+		if (Game.Data && typeof Game.Data.addItem === 'function') {
+			Game.Data.addItem(def.id, qty);
+			Game.toast(`购买了【${def.name}】×${qty}`, 'success');
+		}
+		addDailyTaskProgress('buy', 1);
+		updateResourceHUD();
+		refreshShopCurrencyBar();
+		SaveManager.autoSave();
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		if (typeof refreshCb === 'function') refreshCb();
+	};
+	const cancel = document.createElement('button');
+	cancel.className = 'ybrpg-confirm-btn';
+	cancel.textContent = '取消';
+	cancel.onclick = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	btns.appendChild(confirm); btns.appendChild(cancel);
+	dialog.appendChild(btns);
+
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
+}
 
 function renderTreasureShopView(container) {
 	container.innerHTML = '';
@@ -8123,11 +8218,20 @@ function renderTreasureShopView(container) {
 
 		const icon = document.createElement('div');
 		icon.style.cssText = 'width:54px;height:54px;display:flex;align-items:center;justify-content:center;font-size:30px;background:#111;flex-shrink:0;cursor:pointer;';
-		icon.textContent = def.emoji || '📦';
+		if (def.icon) {
+			const img = document.createElement('img');
+			img.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+			img.src = def.icon;
+			img.alt = def.name;
+			img.onerror = () => { icon.textContent = def.emoji || '📦'; };
+			icon.appendChild(img);
+		} else {
+			icon.textContent = def.emoji || '📦';
+		}
 		// 点击图标弹出商品详情（含描述）
 		icon.onclick = () => {
 			if (typeof showItemDetail === 'function') {
-				showItemDetail({ id: def.id, name: def.name, desc: def.desc, emoji: def.emoji, price: def.price });
+				showItemDetail({ id: def.id, name: def.name, desc: def.desc, emoji: def.emoji, icon: def.icon, price: def.price });
 			}
 		};
 		card.appendChild(icon);
@@ -8145,18 +8249,7 @@ function renderTreasureShopView(container) {
 		buy.textContent = CURRENCY_SYMBOL[payCur] + ' ' + payAmt;
 		buy.onclick = (e) => {
 			e.stopPropagation();
-			const meta = CURRENCY_META[payCur] || CURRENCY_META.diamond;
-			const balance = window[meta.varKey] || 0;
-			if (balance < payAmt) { Game.toast(meta.insufficient, 'error'); return; }
-			window[meta.varKey] = balance - payAmt;
-			if (Game.Data && typeof Game.Data.addItem === 'function') {
-				Game.Data.addItem(def.id, 1);
-				Game.toast(`购买了【${def.name}】`, 'success');
-			}
-			addDailyTaskProgress('buy', 1);
-			updateResourceHUD();
-			const gd = document.getElementById('shop-gold-display'); if (gd) gd.textContent = fmtGroup4(window.gameGold || 0);
-			SaveManager.autoSave();
+			openTreasureShopBuyDialog(def, payCur, payAmt, () => renderTreasureShopView(container));
 		};
 		info.appendChild(buy);
 		card.appendChild(info);
@@ -8474,6 +8567,262 @@ function showRecruitResult(results) {
 		const label = document.createElement('div');
 		label.style.cssText = `font-size:10px;color:${getRankColor(r.rank)};font-weight:bold;margin-top:3px;`;
 		label.textContent = r.isKami ? '神品' : getRankLabel(r.rank);
+		cell.appendChild(label);
+		const nm = document.createElement('div');
+		nm.style.cssText = 'font-size:10px;color:#fff;margin-top:1px;line-height:1.2;word-break:break-all;';
+		nm.textContent = r.name;
+		cell.appendChild(nm);
+		grid.appendChild(cell);
+	});
+	dialog.appendChild(grid);
+
+	const ok = document.createElement('button');
+	ok.className = 'ybrpg-confirm-btn';
+	ok.textContent = '确定';
+	ok.style.cssText = 'background:#d32f2f;margin-top:12px;';
+	ok.onclick = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	dialog.appendChild(ok);
+
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
+}
+
+// ==================== 宝物招募（抽取宝物，仿武将招募） ====================
+// 品质档位说明（颜色/标签由 getRankColor/getRankName 提供）：
+//   purple（紫，rank4 宝物）   orange（橙，rank5 宝物）
+//   red（红，直接发 传说宝物箱 box_r5_pick）  gold（金，直接发 尊品宝物箱 box_r6_pick）
+// 红/金共用一个幸运值档位：抽到该档位时，二选一随机发放红箱或金箱
+const TREASURE_BOX_RED = 'box_r5_pick';   // 传说宝物箱（红）
+const TREASURE_BOX_GOLD = 'box_r6_pick';  // 尊品宝物箱（金）
+
+const TREASURE_RECRUIT_BASE_RATES = {
+	purple: 0.80,   // 紫：80%
+	orange: 0.1992, // 橙：19.92%
+	redgold: 0.0008, // 红+金共用：0.08%（0 幸运值）
+};
+const TREASURE_RECRUIT_LUCK_MAX = 100;
+const TR_LUCK_STEP1 = 40, TR_LUCK_STEP1_RATE = 0.02;
+const TR_LUCK_STEP2 = 60, TR_LUCK_STEP2_RATE = 0.05;
+const TR_LUCK_STEP3 = 80, TR_LUCK_STEP3_RATE = 0.10;
+const TR_LUCK_STEP4 = 90, TR_LUCK_STEP4_RATE = 0.50;
+const TREASURE_RECRUIT_SINGLE_COST = { gold: 300 };
+const TREASURE_RECRUIT_TEN_COST = { gold: 2700 };
+// 红+金共用档位概率：沿用武将招募的五段保底曲线，满值必出
+function getTreasureRecruitRedGoldRate(luck) {
+	luck = luck || 0;
+	if (luck < TR_LUCK_STEP1) return TREASURE_RECRUIT_BASE_RATES.redgold + (TR_LUCK_STEP1_RATE - TREASURE_RECRUIT_BASE_RATES.redgold) * (luck / TR_LUCK_STEP1);
+	if (luck < TR_LUCK_STEP2) return TR_LUCK_STEP1_RATE + (TR_LUCK_STEP2_RATE - TR_LUCK_STEP1_RATE) * ((luck - TR_LUCK_STEP1) / (TR_LUCK_STEP2 - TR_LUCK_STEP1));
+	if (luck < TR_LUCK_STEP3) return TR_LUCK_STEP2_RATE + (TR_LUCK_STEP3_RATE - TR_LUCK_STEP2_RATE) * ((luck - TR_LUCK_STEP2) / (TR_LUCK_STEP3 - TR_LUCK_STEP2));
+	if (luck < TR_LUCK_STEP4) return TR_LUCK_STEP3_RATE + (TR_LUCK_STEP4_RATE - TR_LUCK_STEP3_RATE) * ((luck - TR_LUCK_STEP3) / (TR_LUCK_STEP4 - TR_LUCK_STEP3));
+	return TR_LUCK_STEP4_RATE + (1 - TR_LUCK_STEP4_RATE) * ((luck - TR_LUCK_STEP4) / (TREASURE_RECRUIT_LUCK_MAX - TR_LUCK_STEP4));
+}
+function getTreasureRecruitRates(luck) {
+	const redgold = getTreasureRecruitRedGoldRate(luck);
+	const otherSum = 1 - redgold;
+	const otherBase = TREASURE_RECRUIT_BASE_RATES.purple + TREASURE_RECRUIT_BASE_RATES.orange;
+	return [
+		{ tier: 'purple', rate: otherSum * (TREASURE_RECRUIT_BASE_RATES.purple / otherBase) },
+		{ tier: 'orange', rate: otherSum * (TREASURE_RECRUIT_BASE_RATES.orange / otherBase) },
+		{ tier: 'redgold', rate: redgold },
+	];
+}
+// 按 tier 取一个宝物 id（rank 匹配：purple=4，orange=5）
+function pickTreasureFromTier(tier) {
+	const rank = tier === 'orange' ? 5 : 4;
+	const tList = Game.Data.getTreasureList() || {};
+	let pool = Object.keys(tList).filter(id => tList[id] && tList[id].rank === rank);
+	if (pool.length === 0) pool = Object.keys(tList).filter(id => tList[id] && tList[id].rank);
+	return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+// 抽到红/金档位时：二选一随机发放红箱或金箱，返回物品 id
+function pickTreasureBox() {
+	return Math.random() < 0.5 ? TREASURE_BOX_RED : TREASURE_BOX_GOLD;
+}
+// 宝物抽取单发：返回 { tid, tier }
+function treasureRecruitRollOne(forceTier) {
+	let tier = forceTier;
+	if (!tier) {
+		const r = Math.random();
+		let acc = 0;
+		for (const item of getTreasureRecruitRates(window.treasurePity)) {
+			acc += item.rate;
+			if (r < acc) { tier = item.tier; break; }
+		}
+		if (!tier) tier = 'purple';
+	}
+	if (tier === 'redgold') {
+		const boxId = pickTreasureBox();
+		return { tid: boxId, tier: boxId === TREASURE_BOX_GOLD ? 'gold' : 'red' };
+	}
+	return { tid: pickTreasureFromTier(tier), tier };
+}
+// 发放结果：宝物走 addTreasure，箱子走 addItem
+function grantTreasureRecruit(tid, tier) {
+	if (!tid) return null;
+	if (tier === 'red' || tier === 'gold') {
+		if (Game.Data && typeof Game.Data.addItem === 'function') Game.Data.addItem(tid, 1);
+	} else {
+		if (Game.Data && typeof Game.Data.addTreasure === 'function') Game.Data.addTreasure(tid, 1);
+	}
+	return tid;
+}
+
+function renderTreasureRecruitView(container) {
+	container.innerHTML = '';
+	window.shopPage = 'treasurerecruit';
+
+	if (window.treasurePity === undefined) window.treasurePity = 0;
+
+	const goldBar = document.createElement('div');
+	goldBar.className = 'shop-gold-bar';
+	goldBar.innerHTML =
+		`<span class="shop-gold-icon">💰</span> <span id="shop-gold-display">${fmtGroup4(window.gameGold || 0)}</span> 金币` +
+		`&nbsp;&nbsp;<span class="shop-diamond-icon" id="shop-diamond-display">💎 ${fmtGroup4(window.diamond || 0)} 钻石</span>`;
+	container.appendChild(goldBar);
+
+	const head = document.createElement('div');
+	head.style.cssText = 'display:flex;align-items:center;gap:12px;margin:10px 0;';
+	const back = document.createElement('button');
+	back.className = 'shop-refresh-btn';
+	back.textContent = '← 返回';
+	back.style.cssText = 'font-size:13px;';
+	back.onclick = () => { window.shopPage = 'home'; renderShopView(container); };
+	const htitle = document.createElement('div');
+	htitle.style.cssText = 'font-size:17px;font-weight:bold;color:#ffd700;';
+	htitle.textContent = '宝物招募';
+	head.appendChild(back); head.appendChild(htitle);
+	container.appendChild(head);
+
+	const tip = document.createElement('div');
+	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;line-height:1.6;';
+	tip.innerHTML = '概率：紫(史诗宝物) 80% / 橙(传说宝物) 19.92% / 红+金(宝物箱) 0.08%起<br>幸运值越高红金概率越高，满值必出红或金箱；十连必出≥橙';
+	container.appendChild(tip);
+
+	// 幸运值横向进度条
+	const pityWrap = document.createElement('div');
+	pityWrap.className = 'recruit-pity-wrap';
+	const pityTrack = document.createElement('div');
+	pityTrack.className = 'recruit-pity-track';
+	const pityFill = document.createElement('div');
+	pityFill.className = 'recruit-pity-fill';
+	pityFill.id = 'treasure-recruit-pity-fill';
+	const pityText = document.createElement('span');
+	pityText.className = 'recruit-pity-text';
+	pityText.id = 'treasure-recruit-pity-line';
+	pityTrack.appendChild(pityFill); pityTrack.appendChild(pityText);
+	pityWrap.appendChild(pityTrack);
+	container.appendChild(pityWrap);
+	updateTreasureRecruitPityBar();
+
+	// 抽卡按钮
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex;gap:12px;justify-content:center;margin:14px 0;';
+	const single = document.createElement('button');
+	single.className = 'shop-refresh-btn';
+	single.textContent = `单抽\n（💰 ${TREASURE_RECRUIT_SINGLE_COST.gold}）`;
+	single.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;';
+	single.onclick = () => doTreasureRecruit(1, container);
+	const ten = document.createElement('button');
+	ten.className = 'shop-refresh-btn';
+	ten.textContent = `十连抽\n（💰 ${TREASURE_RECRUIT_TEN_COST.gold}）`;
+	ten.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;background:#c0392b;';
+	ten.onclick = () => doTreasureRecruit(10, container);
+	btnRow.appendChild(single); btnRow.appendChild(ten);
+	container.appendChild(btnRow);
+}
+
+function updateTreasureRecruitPityBar() {
+	const pity = Math.min(window.treasurePity || 0, TREASURE_RECRUIT_LUCK_MAX);
+	const fill = document.getElementById('treasure-recruit-pity-fill');
+	if (fill) {
+		fill.style.width = `${(pity / TREASURE_RECRUIT_LUCK_MAX) * 100}%`;
+		fill.classList.toggle('full', pity >= TREASURE_RECRUIT_LUCK_MAX);
+	}
+	const text = document.getElementById('treasure-recruit-pity-line');
+	if (text) text.textContent = `幸运值：${pity} / ${TREASURE_RECRUIT_LUCK_MAX}${pity >= TREASURE_RECRUIT_LUCK_MAX ? '（必出红/金箱！）' : ''}`;
+}
+
+function doTreasureRecruit(count, container) {
+	const cost = count === 10 ? TREASURE_RECRUIT_TEN_COST : TREASURE_RECRUIT_SINGLE_COST;
+	const meta = CURRENCY_META.gold;
+	const payAmt = cost.gold || 0;
+	const balance = window[meta.varKey] || 0;
+	if (balance < payAmt) { Game.toast(meta.insufficient + '，无法招募！', 'error'); return; }
+	window[meta.varKey] = balance - payAmt;
+	updateResourceHUD();
+	refreshShopCurrencyBar();
+	addDailyTaskProgress('recruit', 1);
+
+	const results = [];
+	for (let i = 0; i < count; i++) {
+		window.treasurePity = (window.treasurePity || 0) + 1;
+		let forceTier = null;
+		if (window.treasurePity >= TREASURE_RECRUIT_LUCK_MAX) forceTier = 'redgold';
+
+		let res = treasureRecruitRollOne(forceTier);
+
+		// 十连第10抽保底≥橙：若自然结果为紫（低于橙），提升为橙
+		if (count === 10 && i === 9 && !forceTier && res.tier === 'purple') {
+			res = { tid: pickTreasureFromTier('orange'), tier: 'orange' };
+		}
+
+		if (forceTier === 'redgold') window.treasurePity = 0;
+
+		grantTreasureRecruit(res.tid, res.tier);
+
+		let emoji, name;
+		if (res.tier === 'red' || res.tier === 'gold') {
+			const iDef = ITEM_DEFS[res.tid];
+			emoji = (iDef && iDef.emoji) || '📦';
+			name = (iDef && iDef.name) || res.tid;
+		} else {
+			const tDef = res.tid ? Game.Data.getTreasureList()[res.tid] : null;
+			emoji = tDef ? (tDef.icon || '💎') : '💎';
+			name = tDef ? tDef.name : '？';
+		}
+		results.push({ tid: res.tid, name, emoji, tier: res.tier });
+	}
+
+	SaveManager.autoSave();
+	updateTreasureRecruitPityBar();
+	showTreasureRecruitResult(results);
+}
+
+// 宝物抽取结果弹窗
+function showTreasureRecruitResult(results) {
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30000';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+	dialog.style.cssText = 'width:380px;max-height:82vh;overflow-y:auto;';
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;text-align:center;margin-bottom:8px;';
+	title.textContent = '宝物招募结果';
+	dialog.appendChild(title);
+
+	const grid = document.createElement('div');
+	grid.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:6px;';
+	results.forEach(r => {
+		const color = getTreasureTierColor(r.tier);
+		const cell = document.createElement('div');
+		cell.style.cssText = `padding:6px 2px;text-align:center;border-radius:6px;background:#111;border:1px solid ${color};`;
+		const iconWrap = document.createElement('div');
+		iconWrap.style.cssText = 'width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;background:#000;border-radius:4px;overflow:hidden;';
+		if (/^https?:\/\//.test(r.emoji) || r.emoji.indexOf('/image/') === 0) {
+			const img = document.createElement('img');
+			img.src = r.emoji;
+			img.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+			iconWrap.appendChild(img);
+		} else {
+			iconWrap.textContent = r.emoji;
+			iconWrap.style.fontSize = '28px';
+		}
+		cell.appendChild(iconWrap);
+		const label = document.createElement('div');
+		label.style.cssText = `font-size:10px;color:${color};font-weight:bold;margin-top:3px;`;
+		label.textContent = getTreasureTierName(r.tier);
 		cell.appendChild(label);
 		const nm = document.createElement('div');
 		nm.style.cssText = 'font-size:10px;color:#fff;margin-top:1px;line-height:1.2;word-break:break-all;';
@@ -9634,6 +9983,7 @@ function initNewGame() {
 	window.shopPage = 'home';
 	window.recruitPity = 0;
 	window.recruitUpCharId = null;
+	window.treasurePity = 0;
 
 	// 初始化队伍视图
 	const teamView = document.getElementById('team-view');
@@ -9810,6 +10160,7 @@ const SaveManager = {
 		redeemedCodes: window.redeemedCodes || [],
 			recruitPity: window.recruitPity || 0,
 			recruitUpCharId: window.recruitUpCharId || null,
+			treasurePity: window.treasurePity || 0,
 			shopPage: window.shopPage || 'home',
 			playerPreferences: {  // 【新增】
 				bagTab: window.bagTab || 'char',
@@ -9910,6 +10261,7 @@ const SaveManager = {
 			window.redeemedCodes = parsed.redeemedCodes || [];
 			window.recruitPity = parsed.recruitPity || 0;
 			window.recruitUpCharId = parsed.recruitUpCharId || null;
+			window.treasurePity = parsed.treasurePity || 0;
 			window.shopPage = parsed.shopPage || 'home';
 
 			// 同步 window 变量回 Game.Data 内存
@@ -10066,6 +10418,7 @@ const SaveManager = {
 			redeemedCodes: window.redeemedCodes || [],
 			recruitPity: window.recruitPity || 0,
 			recruitUpCharId: window.recruitUpCharId || null,
+			treasurePity: window.treasurePity || 0,
 			shopPage: window.shopPage || 'home',
 			playerPreferences: {
 				bagTab: window.bagTab || 'char',
@@ -10170,6 +10523,7 @@ const SaveManager = {
 			window.redeemedCodes = parsed.redeemedCodes || [];
 			window.recruitPity = parsed.recruitPity || 0;
 			window.recruitUpCharId = parsed.recruitUpCharId || null;
+			window.treasurePity = parsed.treasurePity || 0;
 			window.shopPage = parsed.shopPage || 'home';
 			// ========== 在解析完所有数据后，添加这一段 ==========
 				// 恢复宝物实例化数据
@@ -10226,6 +10580,7 @@ const SaveManager = {
 			window.redeemedCodes = parsed.redeemedCodes || [];
 			window.recruitPity = parsed.recruitPity || 0;
 			window.recruitUpCharId = parsed.recruitUpCharId || null;
+			window.treasurePity = parsed.treasurePity || 0;
 			window.shopPage = parsed.shopPage || 'home';
 
 				// 【新增】恢复偏好设置

@@ -35,7 +35,7 @@ export const ITEM_DEFS = {
 		desc: '开启后，可从【传说】品质武将中任选一名获得。拥有多个时可选择开启数量。',
 		rank: 'legend',
 		selectable: true,
-		icon: '',
+		icon: '/image/header/dj_60404.png',
 		price: { gold: 500 },
 	},
 	pack_epic: {
@@ -45,7 +45,7 @@ export const ITEM_DEFS = {
 		desc: '开启后，可从【史诗】品质武将中任选一名获得。拥有多个时可选择开启数量。',
 		rank: 'epic',
 		selectable: true,
-		icon: '',
+		icon: '/image/header/dj_60403.png',
 		price: { gold: 300 },
 	},
 	pack_epicfake: {
@@ -55,7 +55,7 @@ export const ITEM_DEFS = {
 		desc: '开启后，可从【伪史诗】品质武将中任选一名获得。拥有多个时可选择开启数量。',
 		rank: 'epicfake',
 		selectable: true,
-		icon: '',
+		icon: '/image/header/dj_60402.png',
 		price: { gold: 250 },
 	},
 	pack_rare: {
@@ -65,7 +65,7 @@ export const ITEM_DEFS = {
 		desc: '开启后，可从【稀有】品质武将中任选一名获得。拥有多个时可选择开启数量。',
 		rank: 'rare',
 		selectable: true,
-		icon: '',
+		icon: '/image/header/dj_60401.png',
 		price: { gold: 200 },
 	},
 	pack_all: {
@@ -75,7 +75,7 @@ export const ITEM_DEFS = {
 		desc: '开启后，可从全部已收录武将中任选一名获得。拥有多个时可选择开启数量。',
 		rank: null,
 		selectable: true,
-		icon: '',
+		icon: '/image/header/dj_60306.png',
 		price: { gold: 600 },
 	},
 
@@ -85,6 +85,7 @@ export const ITEM_DEFS = {
 		name: '体力瓶',
 		price: { diamond: 25 },
 		emoji: '🧪',
+		icon: '/image/header/dj_30006.png',
 		kind: 'stamina',
 		selectable: false,
 		desc: '使用后恢复 25 点体力（可一次使用多个）',
@@ -97,6 +98,7 @@ export const ITEM_DEFS = {
 		name: '平凡宝物箱(随机)',
 		price: { gold: 200 },
 		emoji: '📦',
+		icon: '/image/header/dj_20030.png',
 		kind: 'treasurebox',
 		mode: 'random',
 		rank: 1,
@@ -109,6 +111,7 @@ export const ITEM_DEFS = {
 		name: '平凡宝物箱(定向)',
 		price: { gold: 240 },
 		emoji: '📦',
+		icon: '/image/header/dj_20019.png',
 		kind: 'treasurebox',
 		mode: 'pick',
 		rank: 1,
@@ -122,6 +125,7 @@ export const ITEM_DEFS = {
 		name: '精品宝物箱(随机)',
 		price: { gold: 800 },
 		emoji: '📦',
+		icon: '/image/header/dj_20031.png',
 		kind: 'treasurebox',
 		mode: 'random',
 		rank: 2,
@@ -134,6 +138,7 @@ export const ITEM_DEFS = {
 		name: '精品宝物箱(定向)',
 		price: { gold: 960 },
 		emoji: '📦',
+		icon: '/image/header/dj_20020.png',
 		kind: 'treasurebox',
 		mode: 'pick',
 		rank: 2,
@@ -147,6 +152,7 @@ export const ITEM_DEFS = {
 		name: '稀有宝物箱(随机)',
 		price: { diamond: 5 },
 		emoji: '📦',
+		icon: '/image/header/dj_20032.png',
 		kind: 'treasurebox',
 		mode: 'random',
 		rank: 3,
@@ -162,6 +168,7 @@ export const ITEM_DEFS = {
 		name: '稀有宝物箱(定向)',
 		price: { diamond: 6 },
 		emoji: '📦',
+		icon: '/image/header/dj_20021.png',
 		kind: 'treasurebox',
 		mode: 'pick',
 		rank: 3,
@@ -178,6 +185,7 @@ export const ITEM_DEFS = {
 		name: '史诗宝物箱(随机)',
 		price: { diamond: 40 },
 		emoji: '📦',
+		icon: '/image/header/dj_20033.png',
 		kind: 'treasurebox',
 		mode: 'random',
 		rank: 4,
@@ -195,6 +203,7 @@ export const ITEM_DEFS = {
 		name: '史诗宝物箱(定向)',
 		price: { diamond: 48 },
 		emoji: '📦',
+		icon: '/image/header/dj_20022.png',
 		kind: 'treasurebox',
 		mode: 'pick',
 		rank: 4,
@@ -213,6 +222,7 @@ export const ITEM_DEFS = {
 		name: '传说宝物箱(定向)',
 		price: { diamond: 100 },
 		emoji: '📦',
+		icon: '/image/header/dj_20023.png',
 		kind: 'treasurebox',
 		mode: 'pick',
 		rank: 5,
@@ -226,6 +236,7 @@ export const ITEM_DEFS = {
 		name: '尊品宝物箱(定向)',
 		price: { diamond: 200 },
 		emoji: '📦',
+		icon: '/image/header/dj_20024.png',
 		kind: 'treasurebox',
 		mode: 'pick',
 		rank: 6,
@@ -237,6 +248,22 @@ export const ITEM_DEFS = {
 
 export function getItemDef(itemId) {
 	return ITEM_DEFS[itemId] || null;
+}
+
+// 渲染道具图标：优先使用图片 icon，否则回退 emoji
+function renderItemIcon(iconDiv, def) {
+	if (!iconDiv) return;
+	iconDiv.innerHTML = '';
+	if (def && def.icon) {
+		const img = document.createElement('img');
+		img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;';
+		img.src = def.icon;
+		img.alt = def.name || '';
+		img.onerror = () => { iconDiv.textContent = def.emoji || '📦'; };
+		iconDiv.appendChild(img);
+	} else {
+		iconDiv.textContent = (def && def.emoji) || '📦';
+	}
 }
 
 /**
@@ -285,14 +312,13 @@ export function renderBagItemContent(container) {
 
 			const iconDiv = document.createElement('div');
 			iconDiv.className = 'gallery-char-icon';
-			iconDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:32px;background:#1a1a2a;position:relative;';
-			iconDiv.textContent = def.emoji || '📦';
+			renderItemIcon(iconDiv, def);
 			card.appendChild(iconDiv);
 
 			// 数量角标
 			const countBadge = document.createElement('div');
 			countBadge.className = 'charbag-level-badge';
-			countBadge.style.cssText = 'position:absolute;top:2px;right:2px;background:#b8860b;color:#fff;border-radius:8px;padding:0 5px;font-size:11px;';
+			countBadge.style.cssText = 'position:absolute;top:2px;right:2px;bottom:auto;left:auto;background:rgba(0,0,0,0.7);color:#fff;border-radius:8px;padding:0 5px;font-size:11px;';
 			countBadge.textContent = '×' + count;
 			iconDiv.appendChild(countBadge);
 
@@ -325,17 +351,53 @@ export function updateBagItemDetailBar(itemDef, count) {
 
 	const iconDiv = detailBar.querySelector('.bag-detail-icon');
 	if (iconDiv) {
-		iconDiv.textContent = itemDef.emoji || '📦';
+		renderItemIcon(iconDiv, itemDef);
 	}
 	const nameEl = detailBar.querySelector('.bag-detail-name');
 	if (nameEl) {
-		nameEl.textContent = `${itemDef.name} ×${count}`;
-		nameEl.style.color = '#ffd700';
+		nameEl.innerHTML = '';
+		const nameSpan = document.createElement('span');
+		nameSpan.style.color = '#ffd700'; // 名称：金色
+		nameSpan.textContent = itemDef.name;
+		nameEl.appendChild(nameSpan);
+		const countSpan = document.createElement('span');
+		countSpan.style.color = '#fff'; // 数量：白色，不与名称同色
+		countSpan.textContent = ` ×${count}`;
+		nameEl.appendChild(countSpan);
 	}
 	const descEl = detailBar.querySelector('.bag-detail-desc');
 	if (descEl) {
 		descEl.textContent = itemDef.desc;
 	}
+}
+
+// 使用道具后刷新底部预览栏：数量为 0 则清空，否则重新渲染
+export function refreshBagItemDetailAfterUse(itemId) {
+	const detailBar = document.getElementById('bag-detail-bar');
+	if (!detailBar) return;
+	if (detailBar.dataset.itemId !== itemId) return; // 预览的不是该道具，不处理
+	const remain = (Game.Data && Game.Data.getItemCount) ? Game.Data.getItemCount(itemId) : 0;
+	if (remain <= 0) {
+		clearBagItemDetailBar();
+	} else {
+		const def = ITEM_DEFS[itemId];
+		if (def) updateBagItemDetailBar(def, remain);
+	}
+}
+
+// 清空底部道具预览栏（数量清零后调用）
+export function clearBagItemDetailBar() {
+	const detailBar = document.getElementById('bag-detail-bar');
+	if (!detailBar) return;
+	detailBar.dataset.itemId = '';
+	detailBar.dataset.charId = '';
+	detailBar.dataset.instanceId = '';
+	const iconDiv = detailBar.querySelector('.bag-detail-icon');
+	if (iconDiv) iconDiv.textContent = '?';
+	const nameEl = detailBar.querySelector('.bag-detail-name');
+	if (nameEl) { nameEl.textContent = '空空如也'; nameEl.style.color = ''; }
+	const descEl = detailBar.querySelector('.bag-detail-desc');
+	if (descEl) descEl.textContent = '';
 }
 
 // ==================== 使用道具（开启礼包） ====================
@@ -437,6 +499,8 @@ function buildStaminaDialog(def, owned) {
 		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
 			renderBagItemContent(window._lastBagContainer);
 		}
+		// 刷新底部预览栏（数量为 0 则清空）
+		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
 	};
 	const cancelBtn = document.createElement('button');
 	cancelBtn.className = 'ybrpg-confirm-btn';
@@ -507,6 +571,7 @@ function buildRandomBoxDialog(def, owned) {
 		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
 			renderBagItemContent(window._lastBagContainer);
 		}
+		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
 	};
 	const cancelBtn = document.createElement('button');
 	cancelBtn.className = 'ybrpg-confirm-btn';
@@ -611,6 +676,7 @@ function buildPickBoxDialog(def, owned, candidates) {
 		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
 			renderBagItemContent(window._lastBagContainer);
 		}
+		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
 	};
 	const cancelBtn = document.createElement('button');
 	cancelBtn.className = 'ybrpg-confirm-btn';
@@ -819,6 +885,8 @@ function doOpen(def, quantity, charId) {
 	if (bagView && window.renderBagView) {
 		window.renderBagView(bagView);
 	}
+	// 同步底部预览栏（数量为 0 自动清空）
+	if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
 }
 
 export { ITEM_DEFS as default };
