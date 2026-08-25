@@ -285,6 +285,8 @@ function getCandidateChars(itemDef) {
 // ==================== 背包「道具」标签内容渲染 ====================
 export function renderBagItemContent(container) {
 	window._lastBagContainer = container;
+	// 保存滚动位置：container 即 .bag-body（滚动容器），重建后恢复，避免操作（使用/开启礼包）后画面回顶
+	const _prevScrollTop = container.scrollTop || 0;
 	container.innerHTML = ''; // 先清空，避免刷新时把新列表追加到旧列表之后造成视觉残留
 	const inventory = (Game.Data && Game.Data.getInventory()) || {};
 	const itemIds = Object.keys(ITEM_DEFS)
@@ -341,6 +343,12 @@ export function renderBagItemContent(container) {
 
 	scrollDiv.appendChild(grid);
 	container.appendChild(scrollDiv);
+
+	// 恢复滚动位置（同步 + 下一帧校正）
+	if (_prevScrollTop > 0) {
+		container.scrollTop = _prevScrollTop;
+		requestAnimationFrame(() => { container.scrollTop = _prevScrollTop; });
+	}
 }
 
 // 更新底部道具详情横框

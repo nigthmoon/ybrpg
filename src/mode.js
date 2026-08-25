@@ -933,10 +933,11 @@ function compileTreasureToBreakthroughEntries(baseId, level) {
 	if (Array.isArray(def.effects)) {
 		def.effects.forEach(eff => {
 			if (eff && eff.trigger && typeof eff.content === 'function') {
-				// roundStart 在引擎中只走全局派发点，单位技能需归一为 onTurnStart 才能触发；
-				// 且 onTurnStart 派发会传入 round，故原 filter(round===1) 仍可正确判定首轮。
-				const _trigger = (eff.trigger === 'roundStart') ? 'onTurnStart' : eff.trigger;
-				entries.push({ type: 'skill_effect', trigger: _trigger, filter: eff.filter || null, content: eff.content, probMod: eff.probMod || null, desc: eff.desc || def.name, sourceName: def.name });
+				// 【修复】保留原 trigger（含 roundStart），与装备宝物（adaptTreasureEffects）行为一致：
+				// roundStart 由 showBattleIntro 的 triggerGlobalEffect('roundStart', 1) 开局全局派发触发，
+				// 派发会传入 round，故原 filter(round===1) 可正确判定首轮；
+				// 若归一成 onTurnStart 会把开局特效拖到该角色进入回合才发动（如魑魅天鸟开局秒人变卡死）。
+				entries.push({ type: 'skill_effect', trigger: eff.trigger, filter: eff.filter || null, content: eff.content, probMod: eff.probMod || null, desc: eff.desc || def.name, sourceName: def.name });
 			}
 		});
 	}
@@ -991,7 +992,7 @@ function absorbTreasureIntoSlot(instanceId, slotIndex, treasureInstanceId, popup
 	const baseId = inv.baseId;
 	const level = inv.level || 1;
 	if (!canAbsorbTreasure(baseId, level)) {
-		alert('该宝物暂无可吸收的能力');
+		Game.toast('该宝物暂无可吸收的能力', 'warning');
 		return;
 	}
 	// 若宝物已装备，先卸下
@@ -1154,7 +1155,7 @@ function openTreasureAbsorbPicker(slotIndex, instanceId, popup) {
 	// 只有达到该突破层数（slotIndex < tupolevel）才允许吸收，避免玩家在未解锁槽消耗宝物
 	const _tupolevel = (_inst && typeof _inst.tupolevel === 'number') ? _inst.tupolevel : 0;
 	if (!slotAbsorbed && slotIndex >= _tupolevel) {
-		alert('该突破槽尚未解锁，需先突破到对应层数后才能吸收宝物。');
+		Game.toast('该突破槽尚未解锁，需先突破到对应层数后才能吸收宝物。', 'warning');
 		return;
 	}
 
@@ -3778,7 +3779,13 @@ function showCharSelectPopup(slotIndex) {
 	};
 }
 
+// 背包整体重建（renderBagView）时的滚动位置暂存；-1 表示不恢复（tab 切换/首次打开回到顶部）
+let _bagScrollRestoreTop = -1;
+
 function renderBagView(container) {
+	// 本轮要恢复的滚动位置 = 上一轮保存的值；同时把当前（旧DOM）滚动位置存入，供下一次重建恢复
+	const _restoreTop = _bagScrollRestoreTop;
+	_bagScrollRestoreTop = (container.querySelector('.bag-body') || { scrollTop: 0 }).scrollTop;
 	container.innerHTML = '';
 	// 【修改】优先从存档中获取，如果存档有值，则使用存档值，否则默认为 'char'
 	const savedTab = window.playerProgress?.bagTab || window.bagTab || 'char';
@@ -3813,6 +3820,7 @@ function renderBagView(container) {
 		btn.textContent = cfg.label;
 		btn.onclick = () => {
 			window.bagTab = cfg.key;
+			_bagScrollRestoreTop = -1; // 切换子标签：从顶部开始展示
 			renderBagView(container);
 		};
 		tabsDiv.appendChild(btn);
@@ -4046,6 +4054,15 @@ function renderBagView(container) {
 	}
 
 	container.appendChild(detailBar);
+
+	// 恢复滚动位置（同步 + 下一帧校正，适配图片异步加载后的高度变化）
+	if (_restoreTop > 0) {
+		const _scrollBody = container.querySelector('.bag-body');
+		if (_scrollBody) {
+			_scrollBody.scrollTop = _restoreTop;
+			requestAnimationFrame(() => { _scrollBody.scrollTop = _restoreTop; });
+		}
+	}
 }
 
 /**

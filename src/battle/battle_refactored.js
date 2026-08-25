@@ -1239,6 +1239,11 @@ Battle.nextTurn = function nextTurn() {
 			}
 		});
 
+		// 【修复】onTurnStart 特效（如吸收的魑魅天鸟真伤）可能直接秒杀某一方，
+		// 立即判定胜负并结算，避免继续走行动调度（玩家等待操作却无存活目标）导致卡死。
+		if (isSideDefeated('player')) { endBattle('enemy'); isProcessing = false; return; }
+		if (isSideDefeated('enemy')) { endBattle('player'); isProcessing = false; return; }
+
 		const sideName = nextSide === 'player' ? '我方' : '敌方';
 		const turnNumber = currentActorNumberInSide;
 		addBattleLog(`${sideName}第${turnNumber}个角色行动：${nextActor.name}`);
