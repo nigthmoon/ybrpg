@@ -8318,11 +8318,21 @@ function renderRecruitView(container) {
 	tip.innerHTML = '概率：稀有80% / 伪史诗10% / 真史诗8% / 传说0.02%起（幸运值越高概率越高）<br>十连必出≥橙；每次抽取有1%概率将所得武将拔升为神品（金色，免升品瓶颈）';
 	container.appendChild(tip);
 
-	const pityLine = document.createElement('div');
-	pityLine.style.cssText = 'font-size:13px;color:#ffd700;text-align:center;margin:6px 0;';
-	pityLine.id = 'recruit-pity-line';
-	pityLine.textContent = `幸运值：${Math.min(window.recruitPity, RECRUIT_LUCK_MAX)} / ${RECRUIT_LUCK_MAX}`;
-	container.appendChild(pityLine);
+	// 幸运值横向进度条
+	const pityWrap = document.createElement('div');
+	pityWrap.className = 'recruit-pity-wrap';
+	const pityTrack = document.createElement('div');
+	pityTrack.className = 'recruit-pity-track';
+	const pityFill = document.createElement('div');
+	pityFill.className = 'recruit-pity-fill';
+	pityFill.id = 'recruit-pity-fill';
+	const pityText = document.createElement('span');
+	pityText.className = 'recruit-pity-text';
+	pityText.id = 'recruit-pity-line';
+	pityTrack.appendChild(pityFill); pityTrack.appendChild(pityText);
+	pityWrap.appendChild(pityTrack);
+	container.appendChild(pityWrap);
+	updateRecruitPityBar();
 
 	// UP 将选择
 	const upWrap = document.createElement('div');
@@ -8360,6 +8370,18 @@ function renderRecruitView(container) {
 	ten.onclick = () => doRecruit(10, container);
 	btnRow.appendChild(single); btnRow.appendChild(ten);
 	container.appendChild(btnRow);
+}
+
+// 刷新幸运值进度条（填充宽度 + 文本 + 满值高亮）
+function updateRecruitPityBar() {
+	const pity = Math.min(window.recruitPity || 0, RECRUIT_LUCK_MAX);
+	const fill = document.getElementById('recruit-pity-fill');
+	if (fill) {
+		fill.style.width = `${(pity / RECRUIT_LUCK_MAX) * 100}%`;
+		fill.classList.toggle('full', pity >= RECRUIT_LUCK_MAX);
+	}
+	const text = document.getElementById('recruit-pity-line');
+	if (text) text.textContent = `幸运值：${pity} / ${RECRUIT_LUCK_MAX}${pity >= RECRUIT_LUCK_MAX ? '（必出传说！）' : ''}`;
 }
 
 // 执行招募：固定以金币结算（与按钮展示的 💰 价格一致，不走 >1000 金币自动折算钻石的主货币逻辑）
@@ -8407,8 +8429,7 @@ function doRecruit(count, container) {
 
 	SaveManager.autoSave();
 	// 抽取结束后立即刷新幸运值显示
-	const pityEl = document.getElementById('recruit-pity-line');
-	if (pityEl) pityEl.textContent = `幸运值：${Math.min(window.recruitPity, RECRUIT_LUCK_MAX)} / ${RECRUIT_LUCK_MAX}`;
+	updateRecruitPityBar();
 	showRecruitResult(results);
 }
 
