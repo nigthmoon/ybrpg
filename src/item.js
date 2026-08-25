@@ -457,22 +457,31 @@ function buildStaminaDialog(def, owned) {
 	dialog.appendChild(title);
 
 	let quantity = 1;
-	const qtyWrap = document.createElement('div');
-	qtyWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;';
-	const minusBtn = document.createElement('button'); minusBtn.className = 'ybrpg-confirm-btn'; minusBtn.textContent = '−';
-	const qtyLabel = document.createElement('span'); qtyLabel.style.cssText = 'min-width:90px;text-align:center;font-size:15px;';
-	qtyLabel.textContent = `数量：${quantity}`;
-	const plusBtn = document.createElement('button'); plusBtn.className = 'ybrpg-confirm-btn'; plusBtn.textContent = '＋';
-	function refreshQty() { qtyLabel.textContent = `数量：${quantity}`; }
-	minusBtn.onclick = () => { if (quantity > 1) { quantity--; refreshQty(); } };
-	plusBtn.onclick = () => { if (quantity < owned) { quantity++; refreshQty(); } };
-	qtyWrap.appendChild(minusBtn); qtyWrap.appendChild(qtyLabel); qtyWrap.appendChild(plusBtn);
-	if (owned > 1) {
-		const maxBtn = document.createElement('button'); maxBtn.className = 'ybrpg-confirm-btn'; maxBtn.textContent = '最大';
-		maxBtn.onclick = () => { quantity = owned; refreshQty(); };
-		qtyWrap.appendChild(maxBtn);
-	}
-	dialog.appendChild(qtyWrap);
+	const stepper = document.createElement('div');
+	stepper.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:3px;margin:8px 0;flex-wrap:nowrap;';
+	const mkBtn = (txt, step, css) => {
+		const b = document.createElement('button');
+		b.className = 'ybrpg-confirm-btn';
+		b.textContent = txt;
+		b.style.cssText = `padding:0 6px;height:26px;font-size:13px;border:1px solid #555;white-space:nowrap;${css || ''}`;
+		b.onclick = () => syncQty((txt === '全选') ? owned : quantity + step);
+		return b;
+	};
+	const minus10 = mkBtn('−10', -10);
+	const minus = mkBtn('−1', -1);
+	const qtyEl = document.createElement('div');
+	qtyEl.style.cssText = 'font-size:20px;font-weight:bold;color:#fff;min-width:30px;text-align:center;';
+	qtyEl.textContent = '1';
+	const plus = mkBtn('+1', 1);
+	const plus10 = mkBtn('+10', 10);
+	const allBtn = mkBtn('全选', 0);
+	const syncQty = (v) => {
+		quantity = Math.max(1, Math.min(owned, v));
+		qtyEl.textContent = String(quantity);
+		tip.textContent = `每个恢复 25 点体力（本次 +${quantity * 25}）`;
+	};
+	stepper.appendChild(minus10); stepper.appendChild(minus); stepper.appendChild(qtyEl); stepper.appendChild(plus); stepper.appendChild(plus10); stepper.appendChild(allBtn);
+	dialog.appendChild(stepper);
 
 	const tip = document.createElement('div');
 	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;';
@@ -529,22 +538,30 @@ function buildRandomBoxDialog(def, owned) {
 	dialog.appendChild(title);
 
 	let quantity = 1;
-	const qtyWrap = document.createElement('div');
-	qtyWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;';
-	const minusBtn = document.createElement('button'); minusBtn.className = 'ybrpg-confirm-btn'; minusBtn.textContent = '−';
-	const qtyLabel = document.createElement('span'); qtyLabel.style.cssText = 'min-width:90px;text-align:center;font-size:15px;';
-	qtyLabel.textContent = `数量：${quantity}`;
-	const plusBtn = document.createElement('button'); plusBtn.className = 'ybrpg-confirm-btn'; plusBtn.textContent = '＋';
-	function refreshQty() { qtyLabel.textContent = `数量：${quantity}`; }
-	minusBtn.onclick = () => { if (quantity > 1) { quantity--; refreshQty(); } };
-	plusBtn.onclick = () => { if (quantity < owned) { quantity++; refreshQty(); } };
-	qtyWrap.appendChild(minusBtn); qtyWrap.appendChild(qtyLabel); qtyWrap.appendChild(plusBtn);
-	if (owned > 1) {
-		const maxBtn = document.createElement('button'); maxBtn.className = 'ybrpg-confirm-btn'; maxBtn.textContent = '最大';
-		maxBtn.onclick = () => { quantity = owned; refreshQty(); };
-		qtyWrap.appendChild(maxBtn);
-	}
-	dialog.appendChild(qtyWrap);
+	const stepper = document.createElement('div');
+	stepper.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:3px;margin:8px 0;flex-wrap:nowrap;';
+	const mkBtn = (txt, step, css) => {
+		const b = document.createElement('button');
+		b.className = 'ybrpg-confirm-btn';
+		b.textContent = txt;
+		b.style.cssText = `padding:0 6px;height:26px;font-size:13px;border:1px solid #555;white-space:nowrap;${css || ''}`;
+		b.onclick = () => syncQty((txt === '全选') ? owned : quantity + step);
+		return b;
+	};
+	const minus10 = mkBtn('−10', -10);
+	const minus = mkBtn('−1', -1);
+	const qtyEl = document.createElement('div');
+	qtyEl.style.cssText = 'font-size:20px;font-weight:bold;color:#fff;min-width:30px;text-align:center;';
+	qtyEl.textContent = '1';
+	const plus = mkBtn('+1', 1);
+	const plus10 = mkBtn('+10', 10);
+	const allBtn = mkBtn('全选', 0);
+	const syncQty = (v) => {
+		quantity = Math.max(1, Math.min(owned, v));
+		qtyEl.textContent = String(quantity);
+	};
+	stepper.appendChild(minus10); stepper.appendChild(minus); stepper.appendChild(qtyEl); stepper.appendChild(plus); stepper.appendChild(plus10); stepper.appendChild(allBtn);
+	dialog.appendChild(stepper);
 
 	const tip = document.createElement('div');
 	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;';
@@ -603,22 +620,30 @@ function buildPickBoxDialog(def, owned, candidates) {
 
 	// 数量选择
 	let quantity = 1;
-	const qtyWrap = document.createElement('div');
-	qtyWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;';
-	const minusBtn = document.createElement('button'); minusBtn.className = 'ybrpg-confirm-btn'; minusBtn.textContent = '−';
-	const qtyLabel = document.createElement('span'); qtyLabel.style.cssText = 'min-width:90px;text-align:center;font-size:15px;';
-	qtyLabel.textContent = `数量：${quantity}`;
-	const plusBtn = document.createElement('button'); plusBtn.className = 'ybrpg-confirm-btn'; plusBtn.textContent = '＋';
-	function refreshQty() { qtyLabel.textContent = `数量：${quantity}`; }
-	minusBtn.onclick = () => { if (quantity > 1) { quantity--; refreshQty(); } };
-	plusBtn.onclick = () => { if (quantity < owned) { quantity++; refreshQty(); } };
-	qtyWrap.appendChild(minusBtn); qtyWrap.appendChild(qtyLabel); qtyWrap.appendChild(plusBtn);
-	if (owned > 1) {
-		const maxBtn = document.createElement('button'); maxBtn.className = 'ybrpg-confirm-btn'; maxBtn.textContent = '最大';
-		maxBtn.onclick = () => { quantity = owned; refreshQty(); };
-		qtyWrap.appendChild(maxBtn);
-	}
-	dialog.appendChild(qtyWrap);
+	const stepper = document.createElement('div');
+	stepper.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:3px;margin:8px 0;flex-wrap:nowrap;';
+	const mkBtn = (txt, step, css) => {
+		const b = document.createElement('button');
+		b.className = 'ybrpg-confirm-btn';
+		b.textContent = txt;
+		b.style.cssText = `padding:0 6px;height:26px;font-size:13px;border:1px solid #555;white-space:nowrap;${css || ''}`;
+		b.onclick = () => syncQty((txt === '全选') ? owned : quantity + step);
+		return b;
+	};
+	const minus10 = mkBtn('−10', -10);
+	const minus = mkBtn('−1', -1);
+	const qtyEl = document.createElement('div');
+	qtyEl.style.cssText = 'font-size:20px;font-weight:bold;color:#fff;min-width:30px;text-align:center;';
+	qtyEl.textContent = '1';
+	const plus = mkBtn('+1', 1);
+	const plus10 = mkBtn('+10', 10);
+	const allBtn = mkBtn('全选', 0);
+	const syncQty = (v) => {
+		quantity = Math.max(1, Math.min(owned, v));
+		qtyEl.textContent = String(quantity);
+	};
+	stepper.appendChild(minus10); stepper.appendChild(minus); stepper.appendChild(qtyEl); stepper.appendChild(plus); stepper.appendChild(plus10); stepper.appendChild(allBtn);
+	dialog.appendChild(stepper);
 
 	const selTip = document.createElement('div');
 	selTip.style.cssText = 'font-size:13px;color:#ddd;margin:6px 0 4px;';
@@ -739,48 +764,30 @@ function buildOpenDialog(def, owned, candidates) {
 
 	// 数量选择
 	let quantity = 1;
-	const qtyWrap = document.createElement('div');
-	qtyWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;';
-
-	const minusBtn = document.createElement('button');
-	minusBtn.className = 'ybrpg-confirm-btn';
-	minusBtn.textContent = '−';
-	const qtyLabel = document.createElement('span');
-	qtyLabel.style.cssText = 'min-width:70px;text-align:center;font-size:15px;';
-	qtyLabel.textContent = `数量：${quantity}`;
-	const plusBtn = document.createElement('button');
-	plusBtn.className = 'ybrpg-confirm-btn';
-	plusBtn.textContent = '＋';
-
-	function refreshQty() {
-		qtyLabel.textContent = `数量：${quantity}`;
-	}
-	minusBtn.onclick = () => {
-		if (quantity > 1) {
-			quantity--;
-			refreshQty();
-		}
+	const stepper = document.createElement('div');
+	stepper.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:3px;margin:8px 0;flex-wrap:nowrap;';
+	const mkBtn = (txt, step, css) => {
+		const b = document.createElement('button');
+		b.className = 'ybrpg-confirm-btn';
+		b.textContent = txt;
+		b.style.cssText = `padding:0 6px;height:26px;font-size:13px;border:1px solid #555;white-space:nowrap;${css || ''}`;
+		b.onclick = () => syncQty((txt === '全选') ? owned : quantity + step);
+		return b;
 	};
-	plusBtn.onclick = () => {
-		if (quantity < owned) {
-			quantity++;
-			refreshQty();
-		}
+	const minus10 = mkBtn('−10', -10);
+	const minus = mkBtn('−1', -1);
+	const qtyEl = document.createElement('div');
+	qtyEl.style.cssText = 'font-size:20px;font-weight:bold;color:#fff;min-width:30px;text-align:center;';
+	qtyEl.textContent = '1';
+	const plus = mkBtn('+1', 1);
+	const plus10 = mkBtn('+10', 10);
+	const allBtn = mkBtn('全选', 0);
+	const syncQty = (v) => {
+		quantity = Math.max(1, Math.min(owned, v));
+		qtyEl.textContent = String(quantity);
 	};
-	qtyWrap.appendChild(minusBtn);
-	qtyWrap.appendChild(qtyLabel);
-	qtyWrap.appendChild(plusBtn);
-	if (owned > 1) {
-		const maxBtn = document.createElement('button');
-		maxBtn.className = 'ybrpg-confirm-btn';
-		maxBtn.textContent = '最大';
-		maxBtn.onclick = () => {
-			quantity = owned;
-			refreshQty();
-		};
-		qtyWrap.appendChild(maxBtn);
-	}
-	dialog.appendChild(qtyWrap);
+	stepper.appendChild(minus10); stepper.appendChild(minus); stepper.appendChild(qtyEl); stepper.appendChild(plus); stepper.appendChild(plus10); stepper.appendChild(allBtn);
+	dialog.appendChild(stepper);
 
 	if (owned > 1) {
 		const tip = document.createElement('div');
@@ -880,8 +887,8 @@ function buildOpenDialog(def, owned, candidates) {
 		doOpen(def, quantity, selectedCharId);
 		overlay.remove();
 	};
-	btnRow.appendChild(cancelBtn);
 	btnRow.appendChild(confirmBtn);
+	btnRow.appendChild(cancelBtn);
 	dialog.appendChild(btnRow);
 
 	overlay.appendChild(dialog);
