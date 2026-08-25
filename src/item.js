@@ -287,7 +287,9 @@ export function renderBagItemContent(container) {
 	window._lastBagContainer = container;
 	container.innerHTML = ''; // 先清空，避免刷新时把新列表追加到旧列表之后造成视觉残留
 	const inventory = (Game.Data && Game.Data.getInventory()) || {};
-	const itemIds = Object.keys(inventory).filter(id => inventory[id] > 0 && ITEM_DEFS[id]);
+	const itemIds = Object.keys(ITEM_DEFS)
+		.filter(id => inventory[id] > 0 && ITEM_DEFS[id])
+		.sort((a, b) => Object.keys(ITEM_DEFS).indexOf(a) - Object.keys(ITEM_DEFS).indexOf(b));
 
 	const scrollDiv = document.createElement('div');
 	scrollDiv.className = 'bag-char-scroll';
