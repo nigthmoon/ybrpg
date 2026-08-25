@@ -1105,48 +1105,6 @@ function removeAbsorbedTreasureFromSlot(instanceId, slotIndex, popup) {
  * 二次选择弹窗：列出背包中可吸收的宝物，点击吸收
  */
 function openTreasureAbsorbPicker(slotIndex, instanceId, popup) {
-	const overlay = document.createElement('div');
-	overlay.className = 'ybrpg-confirm-overlay';
-	overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10002;';
-
-	const box = document.createElement('div');
-	box.style.cssText = 'background:#1a1a2e;border:1px solid #d000ff;border-radius:8px;padding:16px;width:420px;max-height:75vh;display:flex;flex-direction:column;color:#eee;';
-	box.innerHTML = `<div style="font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:10px;flex-shrink:0;">选择要吸收的宝物（突破槽 ${slotIndex + 1}）</div>`;
-
-	const list = document.createElement('div');
-	list.style.cssText = 'flex:1;overflow:auto;min-height:0;';
-	box.appendChild(list);
-
-	const invEntries = Object.entries(window.treasureInventory || {});
-	if (invEntries.length === 0) {
-		const empty = document.createElement('div');
-		empty.style.cssText = 'color:#888;padding:20px;text-align:center;';
-		empty.textContent = '背包中没有可吸收的宝物';
-		list.appendChild(empty);
-	}
-	invEntries.forEach(([tInstId, inv]) => {
-		const def = TREASURE_DEFS[inv.baseId] || {};
-		const tdesc = (def.desc && typeof def.desc === 'function') ? def.desc(inv.level || 1) : (def.desc || '');
-		const row = document.createElement('div');
-		row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid #333;cursor:pointer;';
-		const info = document.createElement('div');
-		info.innerHTML = `<span style="color:#ffd700;">${def.name || inv.baseId}</span> <span style="color:#aaa;font-size:12px;">Lv.${inv.level || 1}</span><br><span style="color:#bbb;font-size:12px;">${tdesc}</span>`;
-		const btn = document.createElement('button');
-		btn.className = 'ybrpg-btn';
-		btn.style.cssText = 'padding:4px 10px;font-size:12px;background:#2a1a3a;border-color:#d000ff;color:#d000ff;';
-		btn.textContent = '吸收';
-		btn.onclick = (e) => {
-			e.stopPropagation();
-			absorbTreasureIntoSlot(instanceId, slotIndex, tInstId, popup);
-			document.body.removeChild(overlay);
-		};
-		row.appendChild(info);
-		row.appendChild(btn);
-		row.onmouseover = () => { row.style.background = '#2a2a3a'; };
-		row.onmouseout = () => { row.style.background = 'transparent'; };
-		list.appendChild(row);
-	});
-
 	// 判断当前槽是否已吸收宝物（用于显示「卸下」）
 	const _inst = window.charBagData && window.charBagData[instanceId];
 	const _curSlot = _inst && Array.isArray(_inst.tupoList) ? _inst.tupoList[slotIndex] : null;
@@ -1158,6 +1116,128 @@ function openTreasureAbsorbPicker(slotIndex, instanceId, popup) {
 		Game.toast('该突破槽尚未解锁，需先突破到对应层数后才能吸收宝物。', 'warning');
 		return;
 	}
+
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10002;';
+
+	const box = document.createElement('div');
+	box.style.cssText = 'background:#1a1a2e;border:1px solid #d000ff;border-radius:8px;padding:16px;width:600px;max-width:94vw;max-height:82vh;display:flex;flex-direction:column;color:#eee;';
+	box.innerHTML = `
+		<div style="font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:2px;flex-shrink:0;">选择要吸收的宝物（突破槽 ${slotIndex + 1}）</div>
+		<div style="font-size:12px;color:#888;margin-bottom:10px;flex-shrink:0;">点击宝物卡片可查看其技能并确认吸收</div>
+	`;
+
+	// 宝物网格：复用背包的 gallery-grid 布局（62px 卡片 + 10px 间距），与背包展示尺寸一致
+	const grid = document.createElement('div');
+	grid.className = 'gallery-grid';
+	grid.style.cssText = 'flex:1;overflow-y:auto;min-height:0;align-content:start;padding:6px 10px;';
+	box.appendChild(grid);
+
+	// 宝物品质边框颜色（按宝物数值 rank 1~6 映射，与宝物背包一致）
+	const EQUIP_RANK_BORDER_COLORS = {
+		1: '#88cc88', 2: '#44aaff', 3: '#a335ee', 4: '#ff8800', 5: '#ff8d8d', 6: '#ffff00'
+	};
+
+	// 构建装备者查询表（与宝物背包一致）：被任意角色装备的宝物不可吸收
+	const treasureOwnerMap = {};
+	for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
+		slots.forEach((tId) => {
+			if (tId) treasureOwnerMap[tId] = { ownerId };
+		});
+	}
+
+	// 过滤已装备宝物，得到可吸收候选
+	const absorbable = Object.entries(window.treasureInventory || {})
+		.filter(([tInstId]) => !treasureOwnerMap[tInstId])
+		.map(([tInstId, inv]) => {
+			const def = TREASURE_DEFS[inv.baseId] || {};
+			return { instanceId: tInstId, baseId: inv.baseId, rank: def.rank || 0, level: inv.level || 1 };
+		});
+	// 与宝物背包共用排序规则（已装备已滤除，故按 等级降序 → 品质降序 → baseId 升序）
+	sortTreasuresByBagOrder(absorbable, {});
+
+	if (absorbable.length === 0) {
+		const empty = document.createElement('div');
+		empty.style.cssText = 'color:#888;padding:20px;text-align:center;width:100%;';
+		empty.textContent = '背包中没有可吸收的宝物（已装备的宝物不可吸收）';
+		grid.appendChild(empty);
+	}
+
+	absorbable.forEach((item) => {
+		const inv = window.treasureInventory[item.instanceId];
+		const tInstId = item.instanceId;
+		const def = TREASURE_DEFS[inv.baseId] || {};
+		const itemRank = def.rank || 1;
+		const borderColor = EQUIP_RANK_BORDER_COLORS[itemRank] || '#888';
+		const tdesc = (def.desc && typeof def.desc === 'function') ? def.desc(inv.level || 1) : (def.desc || '暂无描述');
+		const instName = def.name || inv.baseId;
+		const instLevel = inv.level || 1;
+
+		const card = document.createElement('div');
+		// 复用背包卡片类（gallery-char-card 定义 62px 卡片、equipbag-treasure-card 支持角标定位）
+		// 最外层边框用白色，避免与图标品质色边框叠成双重彩框
+		card.className = 'gallery-char-card equipbag-treasure-card';
+		card.style.cssText = `background:#26263a;border:2px solid #ffffff;border-radius:8px;padding:5px 4px 4px;cursor:pointer;position:relative;box-sizing:border-box;`;
+		card.title = `${instName} Lv.${instLevel}`;
+		card.onmouseover = () => { card.style.background = '#2f2f45'; card.style.boxShadow = `0 0 8px ${borderColor}`; };
+		card.onmouseout = () => { card.style.background = '#26263a'; card.style.boxShadow = 'none'; };
+
+		// 图标（复用背包图标类：56x56、3px 品质边框、contain 裁切）
+		const iconWrap = document.createElement('div');
+		iconWrap.className = 'gallery-char-icon equipbag-icon';
+		iconWrap.style.cssText = `border-color:${borderColor};position:relative;`;
+		const makeFallback = () => {
+			const fb = document.createElement('div');
+			fb.style.cssText = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#aaa;';
+			fb.textContent = instName.charAt(0);
+			return fb;
+		};
+		if (def.icon) {
+			const img = document.createElement('img');
+			img.className = 'gallery-char-img equipbag-icon-img';
+			img.src = def.icon;
+			img.alt = instName;
+			img.onerror = function () {
+				this.style.display = 'none';
+				this.parentNode.appendChild(makeFallback());
+			};
+			iconWrap.appendChild(img);
+		} else {
+			iconWrap.appendChild(makeFallback());
+		}
+
+		// 等级角标（右下角，表示宝物培养等级）
+		const levelBadge = document.createElement('div');
+		levelBadge.style.cssText = 'position:absolute;bottom:1px;right:1px;background:rgba(0,0,0,0.8);color:#ffd700;font-size:9px;padding:0 3px;border-radius:2px;font-weight:bold;line-height:13px;pointer-events:none;';
+		levelBadge.textContent = `Lv.${instLevel}`;
+		iconWrap.appendChild(levelBadge);
+
+		card.appendChild(iconWrap);
+
+		// 名称
+		const nameEl = document.createElement('div');
+		nameEl.className = 'gallery-char-name';
+		nameEl.style.cssText = 'font-size:11px;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;';
+		nameEl.textContent = instName;
+		card.appendChild(nameEl);
+
+		// 点选 → 游戏确认弹窗：标题「是否吸收」+ 宝物技能 + 左侧确认右侧取消
+		card.onclick = () => {
+			const skillHtml = `
+				<div style="background:#1e1e30;border:1px solid ${borderColor};border-left:4px solid ${borderColor};border-radius:6px;padding:10px 12px;margin:4px 0;">
+					<div style="color:${borderColor};font-weight:bold;font-size:15px;margin-bottom:4px;">${instName} <span style="color:#ffd700;font-size:12px;">Lv.${instLevel}</span></div>
+					<div style="color:#ccc;font-size:13px;line-height:1.6;white-space:pre-wrap;">${tdesc}</div>
+				</div>
+				<div style="color:#aaa;font-size:12px;margin-top:6px;">吸收后宝物将从背包移除，并镶嵌至该突破槽。</div>`;
+			Game.confirmDialog(skillHtml, () => {
+				absorbTreasureIntoSlot(instanceId, slotIndex, tInstId, popup);
+				document.body.removeChild(overlay);
+			}, null, { title: '是否吸收该宝物？', html: true, reverseButtons: true });
+		};
+
+		grid.appendChild(card);
+	});
 
 	// 底部固定操作栏（不随列表滚动）
 	const footer = document.createElement('div');
@@ -1273,7 +1353,8 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel, instData,
 			}
 			if (isUnlocked && index !== 0) {
 				item.style.cursor = 'pointer';
-				item.onclick = () => { openTreasureAbsorbPicker(index, instanceId, popup); };
+				// 已吸收宝物的槽位再次点击：提示先卸下，不再直接进入吸收替换
+				item.onclick = () => { Game.toast('请先卸下当前宝物，再吸收其他宝物', 'warning'); };
 				item.onmouseover = () => { item.style.background = '#33334a'; };
 				item.onmouseout = () => { item.style.background = '#1a1a1a'; };
 			}

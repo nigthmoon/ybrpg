@@ -2700,6 +2700,17 @@ h1, h2 {
 	justify-content: center;
 }
 
+/* 反转按钮顺序：左侧确认、右侧取消 */
+.ybrpg-confirm-buttons.reverse {
+	flex-direction: row-reverse;
+}
+
+/* 宽版确认弹窗（HTML 内容，如宝物技能展示） */
+.ybrpg-confirm-dialog.wide {
+	max-width: 420px;
+	text-align: left;
+}
+
 .ybrpg-confirm-btn {
 	padding: 10px 25px;
 	border-radius: 6px;

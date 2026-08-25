@@ -50,20 +50,27 @@ function toast(message, type = 'info', duration = 1500) {
 
 /**
  * 确认对话框函数 - 替代原生 confirm
- * @param {string} message 确认文本
+ * @param {string} message 确认文本（html: true 时按 HTML 渲染）
  * @param {Function} onConfirm 确认回调
  * @param {Function} onCancel 取消回调（可选）
+ * @param {Object} [options] 附加选项
+ * @param {string} [options.title] 标题（金色加粗，显示在消息上方）
+ * @param {boolean} [options.html] 是否将 message 作为 HTML 渲染（默认按纯文本处理，换行转 <br>）
+ * @param {boolean} [options.reverseButtons] 反转按钮顺序：左侧确认、右侧取消（默认左取消右确认）
  */
-function confirmDialog(message, onConfirm, onCancel) {
+function confirmDialog(message, onConfirm, onCancel, options = {}) {
 	const overlay = document.createElement('div');
 	overlay.className = 'ybrpg-confirm-overlay';
+	// 确认框需要盖过普通弹层（如吸收宝物选择窗口 z-index:10002），故固定置顶
+	overlay.style.zIndex = '30000';
 
 	const dialog = document.createElement('div');
-	dialog.className = 'ybrpg-confirm-dialog';
+	dialog.className = 'ybrpg-confirm-dialog' + (options.html ? ' wide' : '');
 
 	dialog.innerHTML = `
-		<div class="ybrpg-confirm-message">${message}</div>
-		<div class="ybrpg-confirm-buttons">
+		${options.title ? `<div class="ybrpg-confirm-title">${options.title}</div>` : ''}
+		<div class="ybrpg-confirm-message">${options.html ? message : String(message).replace(/\n/g, '<br>')}</div>
+		<div class="ybrpg-confirm-buttons${options.reverseButtons ? ' reverse' : ''}">
 			<button class="ybrpg-confirm-btn cancel">取消</button>
 			<button class="ybrpg-confirm-btn confirm">确认</button>
 		</div>

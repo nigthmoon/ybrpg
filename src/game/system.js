@@ -1398,9 +1398,9 @@ class UI {
 		return toast(message, type, duration);
 	}
 
-	/** 确认对话框 */
-	static confirmDialog(message, onConfirm, onCancel) {
-		return confirmDialog(message, onConfirm, onCancel);
+	/** 确认对话框（支持 title / html / reverseButtons 选项） */
+	static confirmDialog(message, onConfirm, onCancel, options) {
+		return confirmDialog(message, onConfirm, onCancel, options);
 	}
 
 	/** 生成唯一角色实例ID */
