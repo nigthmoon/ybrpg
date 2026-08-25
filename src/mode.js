@@ -1176,9 +1176,9 @@ function openTreasureAbsorbPicker(slotIndex, instanceId, popup) {
 
 		const card = document.createElement('div');
 		// 复用背包卡片类（gallery-char-card 定义 62px 卡片、equipbag-treasure-card 支持角标定位）
-		// 最外层边框用白色，避免与图标品质色边框叠成双重彩框
+		// 不设外边框，仅保留图标品质色边框，避免边框干扰宝物名称浏览
 		card.className = 'gallery-char-card equipbag-treasure-card';
-		card.style.cssText = `background:#26263a;border:2px solid #ffffff;border-radius:8px;padding:5px 4px 4px;cursor:pointer;position:relative;box-sizing:border-box;`;
+		card.style.cssText = `background:#26263a;border-radius:8px;padding:5px 4px 4px;cursor:pointer;position:relative;box-sizing:border-box;`;
 		card.title = `${instName} Lv.${instLevel}`;
 		card.onmouseover = () => { card.style.background = '#2f2f45'; card.style.boxShadow = `0 0 8px ${borderColor}`; };
 		card.onmouseout = () => { card.style.background = '#26263a'; card.style.boxShadow = 'none'; };
@@ -1218,7 +1218,7 @@ function openTreasureAbsorbPicker(slotIndex, instanceId, popup) {
 		// 名称
 		const nameEl = document.createElement('div');
 		nameEl.className = 'gallery-char-name';
-		nameEl.style.cssText = 'font-size:11px;color:#ddd;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;';
+		nameEl.style.cssText = 'font-size:11px;color:#ddd;white-space:normal;overflow:hidden;text-overflow:ellipsis;';
 		nameEl.textContent = instName;
 		card.appendChild(nameEl);
 
@@ -8172,7 +8172,7 @@ function renderShopHomeView(container) {
 
 	const entries = [
 		{ key: 'treasure', name: '珍宝商城', icon: '🛍️', desc: '定向购买体力瓶等物资' },
-		{ key: 'recruit', name: '招募', icon: '🎯', desc: '抽取武将（十连必出橙，百抽必出红，1% 神品）' },
+		{ key: 'recruit', name: '武将招募', icon: '🎯', desc: '抽取武将（十连必出橙，百抽必出红，1% 神品）' },
 		{ key: 'treasurerecruit', name: '宝物招募', icon: '💎', desc: '抽取宝物（十连必出≥稀有，幸运值满必出传说）' },
 		{ key: 'legacy', name: '旧杂货铺', icon: '🏪', desc: '（旧版随机商店，保留备用）' },
 	];
