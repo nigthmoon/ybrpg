@@ -643,11 +643,41 @@ function buildPickBoxDialog(def, owned, candidates) {
 		const card = document.createElement('div');
 		card.className = 'gallery-char-card';
 		card.style.cursor = 'pointer';
+		card.style.cssText = 'position:relative;';
+
 		const iconDiv = document.createElement('div');
 		iconDiv.className = 'gallery-char-icon';
-		iconDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;font-size:12px;background:#1a1a2a;';
-		iconDiv.textContent = (t && t.name) || id;
+		if (t && t.icon) {
+			const img = document.createElement('img');
+			img.className = 'gallery-char-img';
+			img.src = t.icon;
+			img.alt = t ? t.name : id;
+			img.onerror = function () {
+				this.style.display = 'none';
+				const ph = document.createElement('div');
+				ph.className = 'gallery-char-placeholder';
+				ph.textContent = (t && t.name) ? t.name.charAt(0) : id;
+				this.parentNode.appendChild(ph);
+			};
+			iconDiv.appendChild(img);
+		} else {
+			iconDiv.textContent = (t && t.name) ? t.name.charAt(0) : id;
+		}
+		if (t && RANK_COLORS && RANK_COLORS[t.rank]) iconDiv.style.borderColor = RANK_COLORS[t.rank];
 		card.appendChild(iconDiv);
+
+		const nameDiv = document.createElement('div');
+		nameDiv.className = 'gallery-char-name';
+		nameDiv.textContent = (t && t.name) || id;
+		if (t && RANK_COLORS && RANK_COLORS[t.rank]) nameDiv.style.color = RANK_COLORS[t.rank];
+		card.appendChild(nameDiv);
+
+		// 选中角标 ✓
+		const check = document.createElement('div');
+		check.className = 'gallery-char-check';
+		check.textContent = '✓';
+		card.appendChild(check);
+
 		card.onclick = () => {
 			selectedTreasureId = id;
 			updateSelectedInfo();
