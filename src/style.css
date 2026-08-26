@@ -248,6 +248,20 @@ body {
 	background: #666; 
 }
 
+/* 商城页面：返回键与内容列左对齐（外层容器与 .shop-grid 同宽居中，按钮宽度自适应） */
+.shop-back-wrap {
+	width: 100%;
+	max-width: 600px;
+	box-sizing: border-box;
+	padding-left: 10px; /* 对应 .shop-grid 的 padding */
+	display: flex;
+	justify-content: flex-start;
+}
+.shop-back-btn {
+	margin-left: 0;
+	text-align: left;
+}
+
 /* 底部按钮栏样式 */
 .ybrpg-bottom-bar {
 	width: 100%;
@@ -2219,7 +2233,7 @@ body {
 	flex-direction: row; /* 横向布局：左图右信息 */
 	align-items: stretch; /* 子元素拉伸填满高度 */
 	justify-content: flex-start;
-	width: 146px; /* 固定宽度 */
+	width: 100%; /* 占满网格列宽 */
 	height: 70px; /* 固定高度 */
 	transition: all 0.2s;
 	overflow: hidden;
@@ -2292,6 +2306,7 @@ body {
 /* 新增: 商品信息右侧容器 */
 .shop-item-info {
 	flex: 1;
+	min-width: 0; /* 允许收缩，长名称触发省略号而非撑破卡片 */
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
@@ -2305,6 +2320,7 @@ body {
 	flex-direction: column;
 	justify-content: center;
 	flex: 1;
+	min-width: 0; /* 允许收缩，保证子项省略号生效 */
 }
 
 .shop-item-name {
@@ -2385,6 +2401,48 @@ body {
 .shop-refresh-btn:hover {
 	background: #444;
 	border-color: #ffd700;
+}
+
+/* 一键购买面板：按钮 + 应付金额明细（上方金币/下方钻石） */
+.shop-buy-panel {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.shop-buy-all-btn {
+	padding: 10px 20px;
+	font-size: 14px;
+	cursor: pointer;
+	background: linear-gradient(180deg, #3a6ea5, #2a4a6f);
+	color: #fff;
+	border: 1px solid #5a8ec5;
+	border-radius: 5px;
+	transition: all 0.2s;
+	white-space: pre-wrap;
+}
+.shop-buy-all-btn:hover:not(:disabled) {
+	background: linear-gradient(180deg, #4a7eb5, #3a5a7f);
+	border-color: #ffd700;
+}
+.shop-buy-all-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.shop-price-info {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	font-size: 13px;
+	line-height: 1.3;
+	white-space: nowrap;
+}
+.shop-price-gold {
+	color: #ffd700;
+}
+.shop-price-diamond {
+	color: #7ec8ff;
 }
 
 .settings-btn-group {
@@ -3557,9 +3615,17 @@ h1, h2 {
 .shop-downBtns {
 	display: flex; 
 	gap: 10px; 
-	justify-content: center; 
+	justify-content: space-between; /* 左侧一键购买面板 / 右侧刷新键 */
+	align-items: center;
 	margin-top: 10px;
-	min-width: 90%;
+	width: 100%; /* 与 .shop-grid 对齐：左右边界 = 两列商品 */
+	max-width: 600px;
+	padding: 0 10px;
+	box-sizing: border-box;
+}
+.shop-downBtns .shop-refresh-btn {
+	margin-top: 0;
+	margin-bottom: 0;
 }
 
 

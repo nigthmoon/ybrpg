@@ -28,10 +28,12 @@ const CURRENCY_META = {
  */
 function pickPurchaseCurrency(priceObj, supportedCurrencies) {
 	const p = normalizePrice(priceObj);
+	// 只把价格为正数的货币视为可用，避免纯钻石商品（normalize 后 gold:0）被随机选中导致 0 金币购买
+	const valid = c => typeof p[c] === 'number' && p[c] > 0;
 	const supported = (supportedCurrencies && supportedCurrencies.length)
-		? supportedCurrencies.filter(c => typeof p[c] === 'number')
+		? supportedCurrencies.filter(valid)
 		: [];
-	const pool = supported.length ? supported : Object.keys(p).filter(c => typeof p[c] === 'number');
+	const pool = supported.length ? supported : Object.keys(p).filter(valid);
 	if (pool.length === 0) return 'gold';
 	return pool[Math.floor(Math.random() * pool.length)];
 }
@@ -82,6 +84,10 @@ function getPriceAmount(priceObj, currency) {
  */
 function formatPrice(priceObj) {
 	const p = normalizePrice(priceObj);
+	// 纯钻石商品（体力瓶/贵重宝物，normalize 后 gold:0）：直接显示钻石
+	if (p.diamond && p.gold <= 0) {
+		return `${CURRENCY_SYMBOL.diamond} ${p.diamond}`;
+	}
 	if (p.gold > 1000 && p.diamond) {
 		return `${CURRENCY_SYMBOL.diamond} ${p.diamond}（${CURRENCY_SYMBOL.gold} ${p.gold}）`;
 	}
@@ -146,6 +152,52 @@ function getTreasureTierName(tier) {
 }
 
 /**
+ * 旧版商店（普通/高级）可刷出资源池 —— 硬编码清单
+ * 区分归纳为三类：宝物 / 武将 / 道具；刷新时仅从以下清单中抽取，便于集中维护。
+ * 宝物按品质分层（rank1 绿 → rank6 金）；武将按品质分层（稀有 → 传说，不含突破专属为空占位的角色，如 huruihang / fangjiayu）。
+ */
+const LEGACY_SHOP_POOLS = {
+	// 宝物：与 ITEM_DEFS 各品质宝物箱 contents 保持一致
+	treasures: {
+		rank1: ['bw_10501', 'bw_10502', 'bw_20501', 'bw_20502'],
+		rank2: ['bw_10606', 'bw_10607', 'bw_10608', 'bw_20605', 'bw_20606', 'bw_20607'],
+		rank3: ['bw_11012', 'bw_11013', 'bw_11014', 'bw_11109', 'bw_11110', 'bw_11111',
+			'bw_21012', 'bw_21013', 'bw_21014', 'bw_21109', 'bw_21110', 'bw_21111'],
+		rank4: ['bw_11615', 'bw_11616', 'bw_11617', 'bw_11618', 'bw_11619', 'bw_11620',
+			'bw_11621', 'bw_11622', 'bw_11623', 'bw_11624',
+			'bw_21615', 'bw_21616', 'bw_21617', 'bw_21618', 'bw_21619', 'bw_21620',
+			'bw_21621', 'bw_21622', 'bw_21623', 'bw_21624'],
+		rank5: ['bw_12025', 'bw_12026', 'bw_12027', 'bw_22025', 'bw_22026', 'bw_22027'],
+		rank6: ['bw_13028', 'bw_13029', 'bw_13030', 'bw_23028', 'bw_23029', 'bw_23030'],
+	},
+	// 武将：品质分层与 ITEM_DEFS 各武将包 contents 一致
+	characters: {
+		rare: ['ybsl_019shengyan', 'ybsl_024yuetong', 'ybsl_045gaocong', 'ybsl_053qiuer',
+			'ybsl_054yueer', 'ybsl_055zhengyan', 'ybsl_012zhengjiayi', 'ybsl_037diamondqueen',
+			'ybsl_121tujing', 'ybsl_122wangbingyu', 'ybsl_123xuelang', 'ybsl_044huruihang'],
+		epicfake: ['ybsl_025shiqingyu', 'ybsl_020jiayutong', 'ybsl_025wanghe', 'ybsl_042pingzi',
+			'ybsl_046jiangxuewu', 'ybsl_059starsFall2', 'ybsl_060liutianhang', 'ybsl_079xiaoxin',
+			'ybsl_003yanshuang', 'ybsl_004zhangyujie', 'ybsl_005wangruobing', 'ybsl_007wugege',
+			'ybsl_011gaoyuhang', 'ybsl_047zhangmi', 'ybsl_026can', 'ybsl_027rain', 'ybsl_029dawn',
+			'ybsl_043fangjiayu'],
+		epic: ['ybsl_015wanghairu', 'ybsl_016manchengqi', 'ybsl_018zhangqing', 'ybsl_059starsFall3',
+			'ybsl_059starsFall4', 'ybsl_068qingyue', 'ybsl_070lvyanqiu', 'ybsl_033xiaohui',
+			'ybsl_038bianqiuwen', 'db_ybsl_067snake', 'ybsl_069xiangzi', 'ybsl_001sunlisong',
+			'ybsl_006wanghanzhen', 'ybsl_009liyushan', 'ybsl_010zhouyue', 'ybsl_013yinji',
+			'ybsl_018huanqing', 'ybsl_036bright', 'ybsl_092handan', 'ybsl_083xiaozhu'],
+		legend: ['ybsl_017xiaohong', 'ybsl_059starsFall1', 'ybsl_047shan', 'ybsl_041mmuqin',
+			'ybsl_049waner', 'ybsl_048wushuang', 'ybsl_076zhujun', 'ybsl_107tushanshuili',
+			'ybsl_008wuyuxin', 'ybsl_002chenailin'],
+	},
+	// 道具：武将包 / 体力瓶 / 宝物箱（低中档随机箱）
+	items: {
+		packs: ['pack_rare', 'pack_epicfake', 'pack_epic', 'pack_legend', 'pack_all'],
+		stamina: ['item_stamina_small', 'item_stamina'],
+		boxes: ['box_r1_random', 'box_r2_random', 'box_r3_random'],
+	},
+};
+
+/**
  * 刷新商店物品
  */
 function refreshShopItems(type = 'normal', supportedCurrencies = ['gold', 'diamond']) {
@@ -153,18 +205,17 @@ function refreshShopItems(type = 'normal', supportedCurrencies = ['gold', 'diamo
 	window.shopData.supportedCurrencies = supportedCurrencies;
 	const items = [];
 	const spitems = [];
-	// 3宝物（只售卖有 rank 的宝物）
-	const allTreasureList = Game.Data.getTreasureList();
-	const allTreasureIds = Object.keys(allTreasureList).filter(id => allTreasureList[id].rank);
-	const selectedTreasures = allTreasureIds.sort(() => 0.5 - Math.random()).slice(0, 3);
-	// 3武将
-	const allCharIds = Object.keys(characterList || {}).filter(cid => characterList[cid].group != 'zhujue');
-	const selectedChars = allCharIds.sort(() => 0.5 - Math.random()).slice(0, 3);
-	// 2武将包（可重复）
-	const allPackIds = Object.keys(ITEM_DEFS);
+	// 3宝物：从硬编码宝物池（各品质合并）随机抽 3 个
+	const treasurePool = Object.values(LEGACY_SHOP_POOLS.treasures).flat();
+	const selectedTreasures = [...treasurePool].sort(() => 0.5 - Math.random()).slice(0, 3);
+	// 3武将：从硬编码武将池（各品质合并）随机抽 3 个
+	const charPool = Object.values(LEGACY_SHOP_POOLS.characters).flat();
+	const selectedChars = [...charPool].sort(() => 0.5 - Math.random()).slice(0, 3);
+	// 2道具：从硬编码道具池（武将包/体力瓶/宝物箱合并）随机抽 2 个（可重复）
+	const itemPool = Object.values(LEGACY_SHOP_POOLS.items).flat();
 	const selectedPacks = [];
-	for (let i = 0; i < 2 && allPackIds.length > 0; i++) {
-		selectedPacks.push(allPackIds[Math.floor(Math.random() * allPackIds.length)]);
+	for (let i = 0; i < 2 && itemPool.length > 0; i++) {
+		selectedPacks.push(itemPool[Math.floor(Math.random() * itemPool.length)]);
 	}
 	// 混合并打乱
 	const allIteams = selectedTreasures.concat(selectedChars).concat(selectedPacks);
@@ -426,15 +477,18 @@ function renderShopLegacyView(container) {
 		`&nbsp;&nbsp;<span class="shop-diamond-icon" id="shop-diamond-display">💎 ${fmtGroup4(window.diamond || 0)} 钻石</span>`;
 	container.appendChild(goldBar);
 
-	// 返回商城首页按钮
+	// 返回商城首页按钮（外层包裹与商品列同宽的容器，按钮本身宽度自适应）
+	const backWrap = document.createElement('div');
+	backWrap.className = 'shop-back-wrap';
 	const backBtn = document.createElement('button');
-	backBtn.className = 'ybrpg-back-btn';
-	backBtn.textContent = '← 返回商城';
+	backBtn.className = 'ybrpg-back-btn shop-back-btn';
+	backBtn.textContent = '← 返回';
 	backBtn.onclick = () => {
 		window.shopPage = 'home';
 		renderShopView(container);
 	};
-	container.appendChild(backBtn);
+	backWrap.appendChild(backBtn);
+	container.appendChild(backWrap);
 
 	// 新增: 创建子按钮容器 (普通商店, 高级商店)
 	const tabsContainer = document.createElement('div');
@@ -630,19 +684,16 @@ function renderShopLegacyView(container) {
 
 	container.appendChild(gridDiv);
 
-	// 刷新按钮
+	// 底部操作栏：左侧一键购买面板（按钮+应付金额明细），右侧刷新键固定靠右
 	const downBtns = document.createElement('div');
 	downBtns.className = 'shop-downBtns';
-	// downBtns.cssText =`
-	//	 display: flex; 
-	//	 gap: 10px; 
-	//	 justify-content: center; 
-	//	 margin-top: 10px;
-	//	 min-width: 90%;
-	// `
+
+	// 左侧：一键购买面板
+	const buyPanel = document.createElement('div');
+	buyPanel.className = 'shop-buy-panel';
 
 	const allBuyBtn = document.createElement('button');
-	allBuyBtn.className = 'shop-refresh-btn';
+	allBuyBtn.className = 'shop-buy-all-btn';
 
 	// 1. 获取当前商店模式的物品列表
 	const currentItems = window.shopData[window.shopMode === 'normal' ? 'items' : 'spitems'];
@@ -656,14 +707,24 @@ function renderShopLegacyView(container) {
 		const cur = item.payCurrency || 'diamond';
 		needByCurrency[cur] = (needByCurrency[cur] || 0) + (item.payAmount || 0);
 	});
-	const needParts = Object.keys(needByCurrency)
-		.filter(c => needByCurrency[c] > 0)
-		.map(c => `${CURRENCY_SYMBOL[c]} ${needByCurrency[c]}`);
-	const needText = needParts.length ? needParts.join(' ') : '免费';
+
+	// 应付金额明细：上方金币、下方钻石（金额固定显示，避免布局随文本变动）
+	const priceInfo = document.createElement('div');
+	priceInfo.className = 'shop-price-info';
+	const goldRow = document.createElement('div');
+	goldRow.className = 'shop-price-row shop-price-gold';
+	goldRow.textContent = `金币 ${needByCurrency.gold || 0}`;
+	const diamondRow = document.createElement('div');
+	diamondRow.className = 'shop-price-row shop-price-diamond';
+	diamondRow.textContent = `钻石 ${needByCurrency.diamond || 0}`;
+	priceInfo.appendChild(goldRow);
+	priceInfo.appendChild(diamondRow);
+
+	buyPanel.appendChild(allBuyBtn);
+	buyPanel.appendChild(priceInfo);
+	downBtns.appendChild(buyPanel);
 
 	// 4. 设置按钮文本和状态
-	allBuyBtn.style.whiteSpace = 'pre-wrap';
-
 	if (availableItems.length === 0) {
 		// 如果没有可购买的商品
 		allBuyBtn.textContent = '已售罄';
@@ -672,7 +733,7 @@ function renderShopLegacyView(container) {
 		allBuyBtn.style.cursor = 'not-allowed';
 	} else {
 		// 有可购买的商品
-		allBuyBtn.textContent = `一键购买\n（${needText}）`;
+		allBuyBtn.textContent = '一键购买';
 		allBuyBtn.disabled = false;
 		allBuyBtn.style.opacity = '1';
 		allBuyBtn.style.cursor = 'pointer';
@@ -711,8 +772,8 @@ function renderShopLegacyView(container) {
 			}
 		};
 	}
-	downBtns.appendChild(allBuyBtn);
 
+	// 右侧：刷新键（固定靠右，不随左侧文本长度移动）
 	const refreshBtn = document.createElement('button');
 	refreshBtn.className = 'shop-refresh-btn';
 	var beilv = (window.shopMode === 'advanced') ? 4 : 1;
@@ -894,18 +955,24 @@ function renderTreasureShopView(container) {
 		`&nbsp;&nbsp;<span class="shop-diamond-icon" id="shop-diamond-display">💎 ${fmtGroup4(window.diamond || 0)} 钻石</span>`;
 	container.appendChild(goldBar);
 
-	// 返回 + 标题
-	const head = document.createElement('div');
-	head.style.cssText = 'display:flex;align-items:center;gap:12px;margin:10px 0;';
+	// 返回键：独立一行，与内容列左对齐
+	const backWrap = document.createElement('div');
+	backWrap.className = 'shop-back-wrap';
 	const back = document.createElement('button');
-	back.className = 'shop-refresh-btn';
+	back.className = 'ybrpg-back-btn shop-back-btn';
 	back.textContent = '← 返回';
-	back.style.cssText = 'font-size:13px;';
+	back.style.fontSize = '13px';
 	back.onclick = () => { window.shopPage = 'home'; renderShopView(container); };
+	backWrap.appendChild(back);
+	container.appendChild(backWrap);
+
+	// 标题（居中）
+	const head = document.createElement('div');
+	head.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:12px;margin:10px 0;';
 	const htitle = document.createElement('div');
 	htitle.style.cssText = 'font-size:17px;font-weight:bold;color:#ffd700;';
 	htitle.textContent = '珍宝商城';
-	head.appendChild(back); head.appendChild(htitle);
+	head.appendChild(htitle);
 	container.appendChild(head);
 
 	const grid = document.createElement('div');
@@ -1172,17 +1239,24 @@ function renderRecruitView(container) {
 		`&nbsp;&nbsp;<span class="shop-diamond-icon" id="shop-diamond-display">💎 ${fmtGroup4(window.diamond || 0)} 钻石</span>`;
 	container.appendChild(goldBar);
 
-	const head = document.createElement('div');
-	head.style.cssText = 'display:flex;align-items:center;gap:12px;margin:10px 0;';
+	// 返回键：独立一行，与内容列左对齐
+	const backWrap = document.createElement('div');
+	backWrap.className = 'shop-back-wrap';
 	const back = document.createElement('button');
-	back.className = 'shop-refresh-btn';
+	back.className = 'ybrpg-back-btn shop-back-btn';
 	back.textContent = '← 返回';
-	back.style.cssText = 'font-size:13px;';
+	back.style.fontSize = '13px';
 	back.onclick = () => { window.shopPage = 'home'; renderShopView(container); };
+	backWrap.appendChild(back);
+	container.appendChild(backWrap);
+
+	// 标题（居中）
+	const head = document.createElement('div');
+	head.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:12px;margin:10px 0;';
 	const htitle = document.createElement('div');
 	htitle.style.cssText = 'font-size:17px;font-weight:bold;color:#ffd700;';
 	htitle.textContent = '招募';
-	head.appendChild(back); head.appendChild(htitle);
+	head.appendChild(htitle);
 	container.appendChild(head);
 
 	const tip = document.createElement('div');
@@ -1547,17 +1621,24 @@ function renderTreasureRecruitView(container) {
 		`&nbsp;&nbsp;<span class="shop-diamond-icon" id="shop-diamond-display">💎 ${fmtGroup4(window.diamond || 0)} 钻石</span>`;
 	container.appendChild(goldBar);
 
-	const head = document.createElement('div');
-	head.style.cssText = 'display:flex;align-items:center;gap:12px;margin:10px 0;';
+	// 返回键：独立一行，与内容列左对齐
+	const backWrap = document.createElement('div');
+	backWrap.className = 'shop-back-wrap';
 	const back = document.createElement('button');
-	back.className = 'shop-refresh-btn';
+	back.className = 'ybrpg-back-btn shop-back-btn';
 	back.textContent = '← 返回';
-	back.style.cssText = 'font-size:13px;';
+	back.style.fontSize = '13px';
 	back.onclick = () => { window.shopPage = 'home'; renderShopView(container); };
+	backWrap.appendChild(back);
+	container.appendChild(backWrap);
+
+	// 标题（居中）
+	const head = document.createElement('div');
+	head.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:12px;margin:10px 0;';
 	const htitle = document.createElement('div');
 	htitle.style.cssText = 'font-size:17px;font-weight:bold;color:#ffd700;';
 	htitle.textContent = '宝物招募';
-	head.appendChild(back); head.appendChild(htitle);
+	head.appendChild(htitle);
 	container.appendChild(head);
 
 	const tip = document.createElement('div');
