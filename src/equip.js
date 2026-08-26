@@ -409,10 +409,10 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_10803.png',
 		iconbig: '/image/equip-big/bw_10803.png',
 		rank:3,
-		sellPrice: 300,
+		sellPrice: 5000,
 		price: { gold: 5000, diamond: 5 },
 		desc: function(star){
-			return `请输入文本。`;
+			return `出售可获得 5000 金币。`;
 		},
 	},
 	bw_11012:{
@@ -539,10 +539,10 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_20803.png',
 		iconbig: '/image/equip-big/bw_20803.png',
 		rank:3,
-		sellPrice: 300,
+		sellPrice: 5000,
 		price: { gold: 5000, diamond: 5 },
 		desc: function(star){
-			return `请输入文本。`;
+			return `出售可获得 5000 金币。`;
 		},
 	},
 	bw_21012:{
@@ -669,10 +669,10 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_11304.png',
 		iconbig: '/image/equip-big/bw_11304.png',
 		rank:4,
-		sellPrice: 600,
+		sellPrice: 20000,
 		price: { gold: 40000, diamond: 40 },
 		desc: function(star){
-			return `请输入文本。`;
+			return `出售可获得 20000 金币。`;
 		},
 	},
 	bw_11615:{
@@ -940,10 +940,10 @@ const TREASURE_DEFS= {
 		icon: '/image/equip/bws_21304.png',
 		iconbig: '/image/equip-big/bw_21304.png',
 		rank:4,
-		sellPrice: 600,
+		sellPrice: 20000,
 		price: { gold: 40000, diamond: 40 },
 		desc: function(star){
-			return `请输入文本。`;
+			return `出售可获得 20000 金币。`;
 		},
 	},
 	bw_21615:{

@@ -3860,13 +3860,15 @@ function showCharSelectPopup(slotIndex) {
 	};
 }
 
-// 背包整体重建（renderBagView）时的滚动位置暂存；-1 表示不恢复（tab 切换/首次打开回到顶部）
-let _bagScrollRestoreTop = -1;
+// 背包整体重建（renderBagView）时是否重置滚动位置（tab 切换/首次打开回到顶部）
+let _bagResetScroll = true;
 
 function renderBagView(container) {
-	// 本轮要恢复的滚动位置 = 上一轮保存的值；同时把当前（旧DOM）滚动位置存入，供下一次重建恢复
-	const _restoreTop = _bagScrollRestoreTop;
-	_bagScrollRestoreTop = (container.querySelector('.bag-body') || { scrollTop: 0 }).scrollTop;
+	// 只有显式标记重置（tab 切换）时回顶部；
+	// 其他刷新（出售/吸收/升级等）保持当前滚动位置，直接读取旧 DOM 的 scrollTop
+	const _bagBody = container.querySelector('.bag-body');
+	const _restoreTop = _bagResetScroll ? -1 : (_bagBody ? _bagBody.scrollTop : 0);
+	_bagResetScroll = false;
 	container.innerHTML = '';
 	// 【修改】优先从存档中获取，如果存档有值，则使用存档值，否则默认为 'char'
 	const savedTab = window.playerProgress?.bagTab || window.bagTab || 'char';
@@ -3901,7 +3903,7 @@ function renderBagView(container) {
 		btn.textContent = cfg.label;
 		btn.onclick = () => {
 			window.bagTab = cfg.key;
-			_bagScrollRestoreTop = -1; // 切换子标签：从顶部开始展示
+			_bagResetScroll = true; // 切换子标签：从顶部开始展示
 			renderBagView(container);
 		};
 		tabsDiv.appendChild(btn);
