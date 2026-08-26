@@ -8216,9 +8216,10 @@ function renderShopHomeView(container) {
 }
 
 // ==================== 新商店：珍宝商城 ====================
-// 上架清单：仅保留体力瓶（宝物箱/武将包已移出，后续通过宝物招募等其他方式提供，物品定义不删）
+// 上架清单：体力瓶与小型体力瓶（宝物箱/武将包已移出，后续通过宝物招募等其他方式提供，物品定义不删）
 const TREASURE_SHOP_ITEMS = [
-	'item_stamina', // 体力瓶
+	'item_stamina',       // 体力瓶
+	'item_stamina_small', // 小体力瓶
 ];
 
 // 珍宝商城购买弹窗：可选数量一次购买多个
@@ -8414,7 +8415,83 @@ const RECRUIT_KAMI_UPGRADE_RATE = 0.01; // 每次抽取独立拔升为神品的�
 const RECRUIT_SINGLE_COST = { gold: 500 };
 const RECRUIT_TEN_COST = { gold: 4500 };
 const RECRUIT_HUNDRED_COST = { gold: 45000 }; // 百连=十连×10（保持9折档）
-const DROP_EXCLUDE_IDS_RECRUIT = { ybsl_043fangjiayu: true, ybsl_044huruihang: true };
+const DROP_EXCLUDE_IDS_RECRUIT = {};
+
+// 武将招募池（硬编码）：各品质档位的可招募武将 id 清单（58 人）。
+// 注意：新设计的武将不会自动进入招募池，必须在此清单中显式添加对应 id，
+// 便于日后按主题/限定等需求分割出货池。黑名单（DROP_EXCLUDE_IDS_RECRUIT）为预留结构，当前为空。
+const RECRUIT_POOLS = {
+	// rare（稀有，11 人）
+	rare: [
+		'ybsl_019shengyan',
+		'ybsl_045gaocong',
+		'ybsl_024yuetong',
+		'ybsl_053qiuer',
+		'ybsl_054yueer',
+		'ybsl_055zhengyan',
+		'ybsl_012zhengjiayi',
+		'ybsl_037diamondqueen',
+		'ybsl_121tujing',
+		'ybsl_122wangbingyu',
+		'ybsl_123xuelang',
+	],
+	// epicfake（伪史诗，17 人）
+	epicfake: [
+		'ybsl_025shiqingyu',
+		'ybsl_020jiayutong',
+		'ybsl_025wanghe',
+		'ybsl_042pingzi',
+		'ybsl_046jiangxuewu',
+		'ybsl_059starsFall2',
+		'ybsl_060liutianhang',
+		'ybsl_079xiaoxin',
+		'ybsl_003yanshuang',
+		'ybsl_004zhangyujie',
+		'ybsl_005wangruobing',
+		'ybsl_007wugege',
+		'ybsl_011gaoyuhang',
+		'ybsl_047zhangmi',
+		'ybsl_026can',
+		'ybsl_027rain',
+		'ybsl_029dawn',
+	],
+	// epic（史诗，20 人）
+	epic: [
+		'ybsl_015wanghairu',
+		'ybsl_016manchengqi',
+		'ybsl_018zhangqing',
+		'ybsl_059starsFall3',
+		'ybsl_059starsFall4',
+		'ybsl_068qingyue',
+		'ybsl_070lvyanqiu',
+		'ybsl_033xiaohui',
+		'ybsl_038bianqiuwen',
+		'db_ybsl_067snake',
+		'ybsl_069xiangzi',
+		'ybsl_001sunlisong',
+		'ybsl_006wanghanzhen',
+		'ybsl_009liyushan',
+		'ybsl_010zhouyue',
+		'ybsl_013yinji',
+		'ybsl_018huanqing',
+		'ybsl_036bright',
+		'ybsl_092handan',
+		'ybsl_083xiaozhu',
+	],
+	// legend（传说，10 人）
+	legend: [
+		'ybsl_017xiaohong',
+		'ybsl_059starsFall1',
+		'ybsl_047shan',
+		'ybsl_041mmuqin',
+		'ybsl_049waner',
+		'ybsl_048wushuang',
+		'ybsl_076zhujun',
+		'ybsl_107tushanshuili',
+		'ybsl_008wuyuxin',
+		'ybsl_002chenailin',
+	],
+};
 
 // 当前幸运值下的传说概率（五段分段函数）：
 //   0~40：从 0.02% 线性增长至 2%
@@ -8458,22 +8535,17 @@ function getRecruitRates(luck) {
 	];
 }
 
-// 从指定 rank 池中随机取一个武将 id（含黑名单/突破过滤，池空回退 legend）
+// 从指定 rank 池中随机取一个武将 id（基于硬编码 RECRUIT_POOLS，含防御性过滤，池空回退 legend）
 function pickCharFromPool(rank) {
-	let pool = Object.keys(characterList || {}).filter(id => {
+	// 防御性过滤：硬编码清单中的 id 若已被移除/改名/改动，则跳过（不报错）
+	const inPool = (id, needRank) => {
 		const c = characterList[id];
-		if (!c || c.isFixed) return false;
-		if (DROP_EXCLUDE_IDS_RECRUIT[id]) return false;
-		if (c.rank !== rank) return false;
-		if (!hasRealBreakthrough(c.tupoList)) return false;
-		return true;
-	});
+		return c && !c.isFixed && !DROP_EXCLUDE_IDS_RECRUIT[id] && c.rank === needRank && hasRealBreakthrough(c.tupoList);
+	};
+	let pool = (RECRUIT_POOLS[rank] || []).filter(id => inPool(id, rank));
 	// 若池为空（异常兜底），回退到 legend 池
 	if (pool.length === 0) {
-		pool = Object.keys(characterList || {}).filter(id => {
-			const c = characterList[id];
-			return c && !c.isFixed && c.rank === 'legend' && hasRealBreakthrough(c.tupoList);
-		});
+		pool = (RECRUIT_POOLS.legend || []).filter(id => inPool(id, 'legend'));
 	}
 	return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
 }
@@ -8737,7 +8809,7 @@ function showRecruitResult(results) {
 
 // ==================== 宝物招募（抽取宝物，仿武将招募） ====================
 // 品质档位说明（颜色/标签由 getRankColor/getRankName 提供）：
-//   purple（紫，rank4 宝物）   orange（橙，rank5 宝物）
+//   purple（紫，rank3 宝物）   orange（橙，rank4 宝物）
 //   red（红，直接发 传说宝物箱 box_r5_pick）  gold（金，直接发 尊品宝物箱 box_r6_pick）
 // 红/金共用一个幸运值档位：抽到该档位时，二选一随机发放红箱或金箱
 const TREASURE_BOX_RED = 'box_r5_pick';   // 传说宝物箱（红）
@@ -8756,6 +8828,58 @@ const TR_LUCK_STEP4 = 90, TR_LUCK_STEP4_RATE = 0.50;
 const TREASURE_RECRUIT_SINGLE_COST = { gold: 3000 };
 const TREASURE_RECRUIT_TEN_COST = { gold: 27000 };
 const TREASURE_RECRUIT_HUNDRED_COST = { gold: 270000 }; // 百连=十连×10（保持9折档）
+
+// 宝物招募硬编码池（与 equip.js TREASURE_DEFS 的 rank 一一对应）
+// rank 对应：3紫 / 4橙 / 5红(箱子) / 6金(箱子)
+const TREASURE_RECRUIT_POOLS = {
+	// purple（紫，rank3 宝物，14 件）
+	purple: [
+		'bw_10803',   // 经验银书
+		'bw_11012',   // 真空波动拳
+		'bw_11013',   // 逆天神功
+		'bw_11014',   // 南冥神功
+		'bw_11109',   // 荆棘神功
+		'bw_11110',   // 吸蜂神功
+		'bw_11111',   // 天降春雨
+		'bw_20803',   // 经验银兽
+		'bw_21012',   // 天灵鸟
+		'bw_21013',   // 鬼虎
+		'bw_21014',   // 黑背棍猿
+		'bw_21109',   // 五煞之龙
+		'bw_21110',   // 风雷紫电兽
+		'bw_21111',   // 九尾穿云豹
+	],
+	// orange（橙，rank4 宝物，22 件）
+	orange: [
+		'bw_11304',   // 经验金书
+		'bw_11615',   // 女娲补天诀
+		'bw_11616',   // 山海之印
+		'bw_11617',   // 先蚕驱凤诀
+		'bw_11618',   // 狂雷葬世
+		'bw_11619',   // 狂火千爆
+		'bw_11620',   // 造化战诀
+		'bw_11621',   // 轩辕御龙诀
+		'bw_11622',   // 灵枢通天诀
+		'bw_11623',   // 天道战意诀
+		'bw_11624',   // 凤舞天音诀
+		'bw_21304',   // 经验金兽
+		'bw_21615',   // 玄武
+		'bw_21616',   // 闪电雕
+		'bw_21617',   // 朱雀
+		'bw_21618',   // 五毒蛟龙
+		'bw_21619',   // 鬼眼雕王
+		'bw_21620',   // 白虎
+		'bw_21621',   // 青龙
+		'bw_21622',   // 碧眼玉麟
+		'bw_21623',   // 血棘异兽
+		'bw_21624',   // 青鸾
+	],
+	// redgold（红/金箱子，来自 ITEM_DEFS：红=传说宝物箱，金=尊品宝物箱，各 1 件）
+	redgold: [
+		'box_r5_pick', // 传说宝物箱（红）
+		'box_r6_pick', // 尊品宝物箱（金）
+	],
+};
 // 红+金共用档位概率：沿用武将招募的五段保底曲线，满值必出
 function getTreasureRecruitRedGoldRate(luck) {
 	luck = luck || 0;
@@ -8775,17 +8899,25 @@ function getTreasureRecruitRates(luck) {
 		{ tier: 'redgold', rate: redgold },
 	];
 }
-// 按 tier 取一个宝物 id（rank 匹配：purple=4，orange=5）
+// 按 tier 取一个宝物 id（基于硬编码 TREASURE_RECRUIT_POOLS，含防御性过滤，池空回退动态过滤）
 function pickTreasureFromTier(tier) {
-	const rank = tier === 'orange' ? 5 : 4;
+	const rank = tier === 'orange' ? 4 : 3;
 	const tList = Game.Data.getTreasureList() || {};
-	let pool = Object.keys(tList).filter(id => tList[id] && tList[id].rank === rank);
+	// 防御性过滤：硬编码清单中的 id 若已被移除/改名/改动，则跳过（不报错）
+	const inPool = (id, needRank) => tList[id] && tList[id].rank === needRank;
+	let pool = (TREASURE_RECRUIT_POOLS[tier] || []).filter(id => inPool(id, rank));
+	// 若池为空（异常兜底），回退到原动态过滤
+	if (pool.length === 0) pool = Object.keys(tList).filter(id => inPool(id, rank));
 	if (pool.length === 0) pool = Object.keys(tList).filter(id => tList[id] && tList[id].rank);
 	return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
 }
-// 抽到红/金档位时：二选一随机发放红箱或金箱，返回物品 id
+// 抽到红/金档位时：二选一随机发放红箱或金箱，返回物品 id（基于硬编码 TREASURE_RECRUIT_POOLS.redgold）
 function pickTreasureBox() {
-	return Math.random() < 0.5 ? TREASURE_BOX_RED : TREASURE_BOX_GOLD;
+	// 防御性过滤：硬编码清单中的 id 若已在 ITEM_DEFS 中被移除/改名，则跳过（不报错）
+	let pool = (TREASURE_RECRUIT_POOLS.redgold || []).filter(id => ITEM_DEFS[id]);
+	// 若池为空（异常兜底），回退到默认红/金箱
+	if (pool.length === 0) pool = [TREASURE_BOX_RED, TREASURE_BOX_GOLD].filter(id => ITEM_DEFS[id]);
+	return pool.length ? pool[Math.floor(Math.random() * pool.length)] : TREASURE_BOX_RED;
 }
 // 宝物抽取单发：返回 { tid, tier }
 function treasureRecruitRollOne(forceTier) {
@@ -9131,8 +9263,8 @@ function grantCharacter(charId) {
 	return instanceId;
 }
 
-// 掉落黑名单：明确禁止作为战利品发放的占位角色（突破专属全部为空，见记忆约定）
-const DROP_EXCLUDE_IDS = { ybsl_043fangjiayu: true, ybsl_044huruihang: true };
+// 掉落黑名单（预留结构，当前为空）
+const DROP_EXCLUDE_IDS = {};
 
 // 判断突破列表是否含「有效」突破项（排除 null 与空对象 {} 占位）
 function hasRealBreakthrough(tupoList) {
@@ -9148,7 +9280,6 @@ function hasRealBreakthrough(tupoList) {
 /**
  * 按品质从角色库随机抽取武将并发放（每次胜利调用，可重复）
  * - 排除固定角色（主角等 isFixed）
- * - 排除黑名单角色（房佳谕/胡瑞航等占位皮套）
  * - 排除突破列表无效的占位角色（避免发放残缺武将）
  * @param {string} rank 品质：rare / epicfake / epic / legend ...
  * @param {number} count 发放数量（已含难度倍率）

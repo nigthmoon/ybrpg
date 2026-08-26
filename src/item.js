@@ -32,51 +32,102 @@ export const ITEM_DEFS = {
 		id: 'pack_legend',
 		name: '传说武将包',
 		emoji: '🌟',
-		desc: '开启后，可从【传说】品质武将中任选一名获得。拥有多个时可选择开启数量。',
+		desc: '开启后，可从【传说】品质武将中任选一名获得。',
 		rank: 'legend',
 		selectable: true,
 		icon: '/image/header/dj_60404.png',
 		price: { gold: 500 },
+		// 预定出货范围（传说，10 人）
+		contents: [
+			'ybsl_017xiaohong', 'ybsl_059starsFall1', 'ybsl_047shan', 'ybsl_041mmuqin',
+			'ybsl_049waner', 'ybsl_048wushuang', 'ybsl_076zhujun', 'ybsl_107tushanshuili',
+			'ybsl_008wuyuxin', 'ybsl_002chenailin',
+		],
 	},
 	pack_epic: {
 		id: 'pack_epic',
 		name: '史诗武将包',
 		emoji: '💜',
-		desc: '开启后，可从【史诗】品质武将中任选一名获得。拥有多个时可选择开启数量。',
+		desc: '开启后，可从【史诗】品质武将中任选一名获得。',
 		rank: 'epic',
 		selectable: true,
 		icon: '/image/header/dj_60403.png',
 		price: { gold: 300 },
+		// 预定出货范围（史诗，20 人）
+		contents: [
+			'ybsl_015wanghairu', 'ybsl_016manchengqi', 'ybsl_018zhangqing', 'ybsl_059starsFall3',
+			'ybsl_059starsFall4', 'ybsl_068qingyue', 'ybsl_070lvyanqiu', 'ybsl_033xiaohui',
+			'ybsl_038bianqiuwen', 'db_ybsl_067snake', 'ybsl_069xiangzi', 'ybsl_001sunlisong',
+			'ybsl_006wanghanzhen', 'ybsl_009liyushan', 'ybsl_010zhouyue', 'ybsl_013yinji',
+			'ybsl_018huanqing', 'ybsl_036bright', 'ybsl_092handan', 'ybsl_083xiaozhu',
+		],
 	},
 	pack_epicfake: {
 		id: 'pack_epicfake',
 		name: '伪史诗武将包',
 		emoji: '🧡',
-		desc: '开启后，可从【伪史诗】品质武将中任选一名获得。拥有多个时可选择开启数量。',
+		desc: '开启后，可从【伪史诗】品质武将中任选一名获得。',
 		rank: 'epicfake',
 		selectable: true,
 		icon: '/image/header/dj_60402.png',
 		price: { gold: 250 },
+		// 预定出货范围（伪史诗，18 人）
+		contents: [
+			'ybsl_025shiqingyu', 'ybsl_020jiayutong', 'ybsl_025wanghe', 'ybsl_042pingzi',
+			'ybsl_046jiangxuewu', 'ybsl_059starsFall2', 'ybsl_060liutianhang', 'ybsl_079xiaoxin',
+			'ybsl_003yanshuang', 'ybsl_004zhangyujie', 'ybsl_005wangruobing', 'ybsl_007wugege',
+			'ybsl_011gaoyuhang', 'ybsl_047zhangmi', 'ybsl_026can', 'ybsl_027rain',
+			'ybsl_029dawn', 'ybsl_043fangjiayu',
+		],
 	},
 	pack_rare: {
 		id: 'pack_rare',
 		name: '稀有武将包',
 		emoji: '💎',
-		desc: '开启后，可从【稀有】品质武将中任选一名获得。拥有多个时可选择开启数量。',
+		desc: '开启后，可从【稀有】品质武将中任选一名获得。',
 		rank: 'rare',
 		selectable: true,
 		icon: '/image/header/dj_60401.png',
 		price: { gold: 200 },
+		// 预定出货范围（稀有，12 人）
+		contents: [
+			'ybsl_019shengyan', 'ybsl_045gaocong', 'ybsl_024yuetong', 'ybsl_053qiuer',
+			'ybsl_054yueer', 'ybsl_055zhengyan', 'ybsl_012zhengjiayi', 'ybsl_037diamondqueen',
+			'ybsl_121tujing', 'ybsl_122wangbingyu', 'ybsl_123xuelang', 'ybsl_044huruihang',
+		],
 	},
 	pack_all: {
 		id: 'pack_all',
 		name: '全武将自选包',
 		emoji: '🎁',
-		desc: '开启后，可从全部已收录武将中任选一名获得。拥有多个时可选择开启数量。',
+		desc: '开启后，可从全部已武将中任选一名获得。',
 		rank: null,
 		selectable: true,
 		icon: '/image/header/dj_60306.png',
 		price: { gold: 600 },
+		// 预定出货范围（全部可获取武将，60 人；不含平凡品质占位）
+		contents: [
+			// legend 10
+			'ybsl_017xiaohong', 'ybsl_059starsFall1', 'ybsl_047shan', 'ybsl_041mmuqin',
+			'ybsl_049waner', 'ybsl_048wushuang', 'ybsl_076zhujun', 'ybsl_107tushanshuili',
+			'ybsl_008wuyuxin', 'ybsl_002chenailin',
+			// epic 20
+			'ybsl_015wanghairu', 'ybsl_016manchengqi', 'ybsl_018zhangqing', 'ybsl_059starsFall3',
+			'ybsl_059starsFall4', 'ybsl_068qingyue', 'ybsl_070lvyanqiu', 'ybsl_033xiaohui',
+			'ybsl_038bianqiuwen', 'db_ybsl_067snake', 'ybsl_069xiangzi', 'ybsl_001sunlisong',
+			'ybsl_006wanghanzhen', 'ybsl_009liyushan', 'ybsl_010zhouyue', 'ybsl_013yinji',
+			'ybsl_018huanqing', 'ybsl_036bright', 'ybsl_092handan', 'ybsl_083xiaozhu',
+			// epicfake 18
+			'ybsl_025shiqingyu', 'ybsl_020jiayutong', 'ybsl_025wanghe', 'ybsl_042pingzi',
+			'ybsl_046jiangxuewu', 'ybsl_059starsFall2', 'ybsl_060liutianhang', 'ybsl_079xiaoxin',
+			'ybsl_003yanshuang', 'ybsl_004zhangyujie', 'ybsl_005wangruobing', 'ybsl_007wugege',
+			'ybsl_011gaoyuhang', 'ybsl_047zhangmi', 'ybsl_026can', 'ybsl_027rain',
+			'ybsl_029dawn', 'ybsl_043fangjiayu',
+			// rare 12
+			'ybsl_019shengyan', 'ybsl_045gaocong', 'ybsl_024yuetong', 'ybsl_053qiuer',
+			'ybsl_054yueer', 'ybsl_055zhengyan', 'ybsl_012zhengjiayi', 'ybsl_037diamondqueen',
+			'ybsl_121tujing', 'ybsl_122wangbingyu', 'ybsl_123xuelang', 'ybsl_044huruihang',
+		],
 	},
 
 	// ===================== 体力瓶 =====================
@@ -87,8 +138,20 @@ export const ITEM_DEFS = {
 		emoji: '🧪',
 		icon: '/image/header/dj_30006.png',
 		kind: 'stamina',
+		recover: 25,
 		selectable: false,
-		desc: '使用后恢复 25 点体力（可一次使用多个）',
+		desc: '使用后恢复 25 点体力',
+	},
+	item_stamina_small: {
+		id: 'item_stamina_small',
+		name: '小体力瓶',
+		price: { diamond: 5 },
+		emoji: '🧪',
+		icon: '/image/header/dj_30007.png',
+		kind: 'stamina',
+		recover: 5,
+		selectable: false,
+		desc: '使用后恢复 5 点体力',
 	},
 
 	// ===================== 宝物箱（按品质分类，硬编码可选宝物） =====================
@@ -104,7 +167,7 @@ export const ITEM_DEFS = {
 		rank: 1,
 		selectable: false,
 		contents: ['bw_10501', 'bw_10502', 'bw_20501', 'bw_20502'],
-		desc: '随机开出 1 件 rank1 宝物',
+		desc: '随机开出 1 件绿色宝物',
 	},
 	box_r1_pick: {
 		id: 'box_r1_pick',
@@ -117,7 +180,7 @@ export const ITEM_DEFS = {
 		rank: 1,
 		selectable: false,
 		contents: ['bw_10501', 'bw_10502', 'bw_20501', 'bw_20502'],
-		desc: '自选 1 件 rank1 宝物（×1.2 价）',
+		desc: '自选 1 件绿色宝物',
 	},
 	// rank2
 	box_r2_random: {
@@ -131,7 +194,7 @@ export const ITEM_DEFS = {
 		rank: 2,
 		selectable: false,
 		contents: ['bw_10606', 'bw_10607', 'bw_10608', 'bw_20605', 'bw_20606', 'bw_20607'],
-		desc: '随机开出 1 件 rank2 宝物',
+		desc: '随机开出 1 件蓝色宝物',
 	},
 	box_r2_pick: {
 		id: 'box_r2_pick',
@@ -144,7 +207,7 @@ export const ITEM_DEFS = {
 		rank: 2,
 		selectable: false,
 		contents: ['bw_10606', 'bw_10607', 'bw_10608', 'bw_20605', 'bw_20606', 'bw_20607'],
-		desc: '自选 1 件 rank2 宝物（×1.2 价）',
+		desc: '自选 1 件蓝色宝物',
 	},
 	// rank3
 	box_r3_random: {
@@ -161,7 +224,7 @@ export const ITEM_DEFS = {
 			'bw_11012', 'bw_11013', 'bw_11014', 'bw_11109', 'bw_11110', 'bw_11111',
 			'bw_21012', 'bw_21013', 'bw_21014', 'bw_21109', 'bw_21110', 'bw_21111'
 		],
-		desc: '随机开出 1 件 rank3 宝物',
+		desc: '随机开出 1 件紫色宝物',
 	},
 	box_r3_pick: {
 		id: 'box_r3_pick',
@@ -177,7 +240,7 @@ export const ITEM_DEFS = {
 			'bw_11012', 'bw_11013', 'bw_11014', 'bw_11109', 'bw_11110', 'bw_11111',
 			'bw_21012', 'bw_21013', 'bw_21014', 'bw_21109', 'bw_21110', 'bw_21111'
 		],
-		desc: '自选 1 件 rank3 宝物（×1.2 价）',
+		desc: '自选 1 件紫色宝物（×1.2 价）',
 	},
 	// rank4
 	box_r4_random: {
@@ -196,7 +259,7 @@ export const ITEM_DEFS = {
 			'bw_21615', 'bw_21616', 'bw_21617', 'bw_21618', 'bw_21619', 'bw_21620',
 			'bw_21621', 'bw_21622', 'bw_21623', 'bw_21624'
 		],
-		desc: '随机开出 1 件 rank4 宝物',
+		desc: '随机开出 1 件橙色宝物',
 	},
 	box_r4_pick: {
 		id: 'box_r4_pick',
@@ -214,7 +277,7 @@ export const ITEM_DEFS = {
 			'bw_21615', 'bw_21616', 'bw_21617', 'bw_21618', 'bw_21619', 'bw_21620',
 			'bw_21621', 'bw_21622', 'bw_21623', 'bw_21624'
 		],
-		desc: '自选 1 件 rank4 宝物（×1.2 价）',
+		desc: '自选 1 件橙色宝物',
 	},
 	// rank5（仅定向）
 	box_r5_pick: {
@@ -228,7 +291,7 @@ export const ITEM_DEFS = {
 		rank: 5,
 		selectable: false,
 		contents: ['bw_12025', 'bw_12026', 'bw_12027', 'bw_22025', 'bw_22026', 'bw_22027'],
-		desc: '自选 1 件 rank5 宝物',
+		desc: '自选 1 件红色宝物',
 	},
 	// rank6（仅定向）
 	box_r6_pick: {
@@ -242,7 +305,7 @@ export const ITEM_DEFS = {
 		rank: 6,
 		selectable: false,
 		contents: ['bw_13028', 'bw_13029', 'bw_13030', 'bw_23028', 'bw_23029', 'bw_23030'],
-		desc: '自选 1 件 rank6 宝物',
+		desc: '自选 1 件金色宝物',
 	},
 };
 
@@ -266,15 +329,37 @@ function renderItemIcon(iconDiv, def) {
 	}
 }
 
+// 武将包黑名单（预留结构，与 mode.js DROP_EXCLUDE_IDS 保持一致，当前为空）
+const PACK_EXCLUDE_IDS = {};
+
+// 判断突破列表是否含「有效」突破项（排除 null 与空对象 {} 占位，与 mode.js hasRealBreakthrough 一致）
+function hasRealBreakthrough(tupoList) {
+	if (!Array.isArray(tupoList)) return false;
+	return tupoList.some(x => {
+		if (!x) return false;
+		if (typeof x === 'string') return true;
+		if (typeof x === 'object') return Object.keys(x).length > 0;
+		return false;
+	});
+}
+
 /**
- * 根据道具定义，筛选可获得的候选武将ID列表
+ * 根据道具定义，筛选可获得的候选武将ID列表（基于硬编码 contents 预定出货范围）
+ * - 优先使用 itemDef.contents（预定出货范围，显式列出的角色直接放行）；未配置时回退全部武将键
  * - 排除 isFixed（主角等固定角色）
+ * - 排除黑名单（PACK_EXCLUDE_IDS，当前为空）
+ * - 仅动态回退路径排除突破列表无效/为空的占位角色
  * - rank 有值时按品质筛选，为 null 时返回全部
  */
 function getCandidateChars(itemDef) {
-	return Object.keys(characterList).filter(charId => {
+	const isHardcoded = !!(itemDef.contents && itemDef.contents.length);
+	const base = isHardcoded ? itemDef.contents : Object.keys(characterList);
+	return base.filter(charId => {
 		const c = characterList[charId];
 		if (!c || c.isFixed) return false;
+		if (PACK_EXCLUDE_IDS[charId]) return false;
+		// 硬编码 contents 中的角色视为已预定放行；动态回退路径仍过滤空突破占位
+		if (!isHardcoded && !hasRealBreakthrough(c.tupoList)) return false;
 		if (itemDef.rank) {
 			return c.rank === itemDef.rank;
 		}
@@ -455,6 +540,7 @@ export function useItem(itemId) {
 
 // ===================== 体力瓶：数量选择后恢复体力 =====================
 function buildStaminaDialog(def, owned) {
+	const recover = def.recover || 25;
 	const overlay = document.createElement('div');
 	overlay.className = 'ybrpg-confirm-overlay';
 	overlay.style.zIndex = '30000';
@@ -488,14 +574,14 @@ function buildStaminaDialog(def, owned) {
 	const syncQty = (v) => {
 		quantity = Math.max(1, Math.min(owned, v));
 		qtyEl.textContent = String(quantity);
-		tip.textContent = `每个恢复 25 点体力（本次 +${quantity * 25}）`;
+		tip.textContent = `每个恢复 ${recover} 点体力（本次 +${quantity * recover}）`;
 	};
 	stepper.appendChild(minus10); stepper.appendChild(minus); stepper.appendChild(qtyEl); stepper.appendChild(plus); stepper.appendChild(plus10); stepper.appendChild(allBtn);
 	dialog.appendChild(stepper);
 
 	const tip = document.createElement('div');
 	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;';
-	tip.textContent = `每个恢复 25 点体力（本次 +${quantity * 25}）`;
+	tip.textContent = `每个恢复 ${recover} 点体力（本次 +${quantity * recover}）`;
 	dialog.appendChild(tip);
 
 	const confirmBtn = document.createElement('button');
@@ -505,14 +591,14 @@ function buildStaminaDialog(def, owned) {
 	confirmBtn.onclick = () => {
 		if (quantity > owned) { Game.toast('数量超过拥有数', 'warning'); return; }
 		// 允许超出体力上限（超出部分不自然恢复，regenStamina 会保留存量）
-		window.stamina = (window.stamina || 0) + quantity * 25;
+		window.stamina = (window.stamina || 0) + quantity * recover;
 		// 重置体力恢复时间轴，避免与本次手动补充叠加导致显示异常
 		window.staminaTs = Date.now();
 		if (Game.Data && Game.Data.removeItem) Game.Data.removeItem(def.id, quantity);
 		if (typeof ensureResourceHUD === 'function') ensureResourceHUD();
 		if (typeof updateResourceHUD === 'function') updateResourceHUD();
 		if (Game.SaveManager && Game.SaveManager.autoSave) Game.SaveManager.autoSave();
-		Game.toast(`使用 ${quantity} 个体力瓶，恢复 ${quantity * 25} 点体力`, 'success');
+		Game.toast(`使用 ${quantity} 个${def.name}，恢复 ${quantity * recover} 点体力`, 'success');
 		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
 		// 刷新背包页
 		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
