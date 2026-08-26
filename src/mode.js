@@ -8395,6 +8395,7 @@ const RECRUIT_LUCK_STEP4_RATE = 0.50;
 const RECRUIT_KAMI_UPGRADE_RATE = 0.01; // 每次抽取独立拔升为神品的概率
 const RECRUIT_SINGLE_COST = { gold: 500 };
 const RECRUIT_TEN_COST = { gold: 4500 };
+const RECRUIT_HUNDRED_COST = { gold: 45000 }; // 百连=十连×10（保持9折档）
 const DROP_EXCLUDE_IDS_RECRUIT = { ybsl_043fangjiayu: true, ybsl_044huruihang: true };
 
 // 当前幸运值下的传说概率（五段分段函数）：
@@ -8524,7 +8525,7 @@ function renderRecruitView(container) {
 
 	const tip = document.createElement('div');
 	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;line-height:1.6;';
-	tip.innerHTML = '概率：稀有80% / 伪史诗10% / 真史诗8% / 传说0.02%起（幸运值越高概率越高）<br>十连必出≥橙；每次抽取有1%概率将所得武将拔升为神品（金色，免升品瓶颈）';
+	tip.innerHTML = '概率：稀有80% / 伪史诗10% / 真史诗8% / 传说0.02%起（幸运值越高概率越高）<br>十连/百连每十抽必出≥橙；每次抽取有1%概率将所得武将拔升为神品（金色，免升品瓶颈）';
 	container.appendChild(tip);
 
 	// 幸运值横向进度条
@@ -8577,7 +8578,12 @@ function renderRecruitView(container) {
 	ten.textContent = `十连抽\n（💰 ${RECRUIT_TEN_COST.gold}）`;
 	ten.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;background:#c0392b;';
 	ten.onclick = () => doRecruit(10, container);
-	btnRow.appendChild(single); btnRow.appendChild(ten);
+	const hundred = document.createElement('button');
+	hundred.className = 'shop-refresh-btn';
+	hundred.textContent = `百连抽\n（💰 ${RECRUIT_HUNDRED_COST.gold}）`;
+	hundred.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;background:#b8860b;';
+	hundred.onclick = () => doRecruit(100, container);
+	btnRow.appendChild(single); btnRow.appendChild(ten); btnRow.appendChild(hundred);
 	container.appendChild(btnRow);
 }
 
@@ -8595,7 +8601,7 @@ function updateRecruitPityBar() {
 
 // 执行招募：固定以金币结算（与按钮展示的 💰 价格一致，不走 >1000 金币自动折算钻石的主货币逻辑）
 function doRecruit(count, container) {
-	const cost = count === 10 ? RECRUIT_TEN_COST : RECRUIT_SINGLE_COST;
+	const cost = count === 10 ? RECRUIT_TEN_COST : count === 100 ? RECRUIT_HUNDRED_COST : RECRUIT_SINGLE_COST;
 	const meta = CURRENCY_META.gold;
 	const payAmt = cost.gold || 0;
 	const balance = window[meta.varKey] || 0;
@@ -8615,8 +8621,8 @@ function doRecruit(count, container) {
 
 		let res = recruitRollOne(forceRank);
 
-		// 十连第10抽保底≥橙：若自然结果低于橙（稀有），提升为伪史诗（不覆盖更高概率命中）
-		if (count === 10 && i === 9 && !forceRank && res.rank === 'rare') {
+		// 十连/百连每第10抽保底≥橙：若自然结果低于橙（稀有），提升为伪史诗（不覆盖更高概率命中）
+		if (count >= 10 && i % 10 === 9 && !forceRank && res.rank === 'rare') {
 			res = { charId: pickCharFromPool('epicfake'), rank: 'epicfake', isKami: false };
 		}
 
@@ -8684,6 +8690,14 @@ function showRecruitResult(results) {
 		label.style.cssText = `font-size:10px;color:${getRankColor(r.rank)};font-weight:bold;margin-top:3px;`;
 		label.textContent = r.isKami ? '神品' : getRankLabel(r.rank);
 		cell.appendChild(label);
+		// 红/金出货光晕：红色=传说，金色=神品
+		if (r.rank === 'legend' || r.rank === 'kami') {
+			const kami = r.rank === 'kami';
+			cell.classList.add(kami ? 'recruit-kami-glow' : 'recruit-legend-glow');
+			label.style.textShadow = kami
+				? '0 0 6px rgba(255,215,0,0.95), 0 0 12px rgba(255,215,0,0.6)'
+				: '0 0 6px rgba(255,68,68,0.95), 0 0 12px rgba(255,68,68,0.6)';
+		}
 		const nm = document.createElement('div');
 		nm.style.cssText = 'font-size:10px;color:#fff;margin-top:1px;line-height:1.2;word-break:break-all;';
 		nm.textContent = r.name;
@@ -8723,6 +8737,7 @@ const TR_LUCK_STEP3 = 80, TR_LUCK_STEP3_RATE = 0.10;
 const TR_LUCK_STEP4 = 90, TR_LUCK_STEP4_RATE = 0.50;
 const TREASURE_RECRUIT_SINGLE_COST = { gold: 3000 };
 const TREASURE_RECRUIT_TEN_COST = { gold: 27000 };
+const TREASURE_RECRUIT_HUNDRED_COST = { gold: 270000 }; // 百连=十连×10（保持9折档）
 // 红+金共用档位概率：沿用武将招募的五段保底曲线，满值必出
 function getTreasureRecruitRedGoldRate(luck) {
 	luck = luck || 0;
@@ -8811,7 +8826,7 @@ function renderTreasureRecruitView(container) {
 
 	const tip = document.createElement('div');
 	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;line-height:1.6;';
-	tip.innerHTML = '概率：紫(史诗宝物) 80% / 橙(传说宝物) 19.92% / 红+金(宝物箱) 0.08%起<br>幸运值越高红金概率越高，满值必出红或金箱；十连必出≥橙';
+	tip.innerHTML = '概率：紫(史诗宝物) 80% / 橙(传说宝物) 19.92% / 红+金(宝物箱) 0.08%起<br>幸运值越高红金概率越高，满值必出红或金箱；十连/百连每十抽必出≥橙';
 	container.appendChild(tip);
 
 	// 幸运值横向进度条
@@ -8843,7 +8858,12 @@ function renderTreasureRecruitView(container) {
 	ten.textContent = `十连抽\n（💰 ${TREASURE_RECRUIT_TEN_COST.gold}）`;
 	ten.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;background:#c0392b;';
 	ten.onclick = () => doTreasureRecruit(10, container);
-	btnRow.appendChild(single); btnRow.appendChild(ten);
+	const hundred = document.createElement('button');
+	hundred.className = 'shop-refresh-btn';
+	hundred.textContent = `百连抽\n（💰 ${TREASURE_RECRUIT_HUNDRED_COST.gold}）`;
+	hundred.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;background:#b8860b;';
+	hundred.onclick = () => doTreasureRecruit(100, container);
+	btnRow.appendChild(single); btnRow.appendChild(ten); btnRow.appendChild(hundred);
 	container.appendChild(btnRow);
 }
 
@@ -8859,7 +8879,7 @@ function updateTreasureRecruitPityBar() {
 }
 
 function doTreasureRecruit(count, container) {
-	const cost = count === 10 ? TREASURE_RECRUIT_TEN_COST : TREASURE_RECRUIT_SINGLE_COST;
+	const cost = count === 10 ? TREASURE_RECRUIT_TEN_COST : count === 100 ? TREASURE_RECRUIT_HUNDRED_COST : TREASURE_RECRUIT_SINGLE_COST;
 	const meta = CURRENCY_META.gold;
 	const payAmt = cost.gold || 0;
 	const balance = window[meta.varKey] || 0;
@@ -8877,8 +8897,8 @@ function doTreasureRecruit(count, container) {
 
 		let res = treasureRecruitRollOne(forceTier);
 
-		// 十连第10抽保底≥橙：若自然结果为紫（低于橙），提升为橙
-		if (count === 10 && i === 9 && !forceTier && res.tier === 'purple') {
+		// 十连/百连每第10抽保底≥橙：若自然结果为紫（低于橙），提升为橙
+		if (count >= 10 && i % 10 === 9 && !forceTier && res.tier === 'purple') {
 			res = { tid: pickTreasureFromTier('orange'), tier: 'orange' };
 		}
 
@@ -8941,6 +8961,14 @@ function showTreasureRecruitResult(results) {
 		label.style.cssText = `font-size:10px;color:${color};font-weight:bold;margin-top:3px;`;
 		label.textContent = getTreasureTierName(r.tier);
 		cell.appendChild(label);
+		// 红/金出货光晕：红色=红箱（传说），金色=金箱（尊品）
+		if (r.tier === 'red' || r.tier === 'gold') {
+			const gold = r.tier === 'gold';
+			cell.classList.add(gold ? 'recruit-kami-glow' : 'recruit-legend-glow');
+			label.style.textShadow = gold
+				? '0 0 6px rgba(255,215,0,0.95), 0 0 12px rgba(255,215,0,0.6)'
+				: '0 0 6px rgba(255,68,68,0.95), 0 0 12px rgba(255,68,68,0.6)';
+		}
 		const nm = document.createElement('div');
 		nm.style.cssText = 'font-size:10px;color:#fff;margin-top:1px;line-height:1.2;word-break:break-all;';
 		nm.textContent = r.name;
