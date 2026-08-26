@@ -4069,10 +4069,12 @@ function renderBagView(container) {
 				return;
 			}
 
-			// 计算出售价格（按等效金币价值的一半，出售固定获得金币）
-			const _pObj = normalizePrice(tDef.price || { gold: 100 });
-			const _equivalentGold = _pObj.gold || (_pObj.diamond || 0) * 1000;
-			const sellPrice = Math.floor(_equivalentGold * 0.5);
+			// 计算出售价格（未配置 sellPrice 的宝物不可出售）
+			const sellPrice = getSellPrice(tDef);
+			if (sellPrice == null) {
+				Game.toast('该宝物不可出售', 'warning');
+				return;
+			}
 
 			// 确认对话框
 			Game.confirmDialog(`确定要出售【${tDef.name}】吗？\n获得 ${sellPrice} 金币`, () => {
@@ -7513,6 +7515,20 @@ function formatPrice(priceObj) {
 }
 
 /**
+ * 获取商品的出售价格（金币）。购买价与出售价分离：
+ * 1. 定义中显式配置 sellPrice 字段时直接采用（数字视为金币，也支持 {gold}/{diamond} 对象）；
+ * 2. 未配置 sellPrice 时返回 null，表示该商品不可出售。
+ * @param {{sellPrice?:number|object, price?:number|object}} def 商品定义
+ * @returns {number|null} 出售所得金币；null 表示不可出售
+ */
+function getSellPrice(def) {
+	if (!def || def.sellPrice == null) return null;
+	if (typeof def.sellPrice === 'number') return Math.floor(def.sellPrice);
+	const sp = normalizePrice(def.sellPrice);
+	return Math.floor((sp.gold || 0) + (sp.diamond || 0) * 1000);
+}
+
+/**
  * 获取角色品质对应价格（对象结构）
  */
 function getCharPrice(rank) {
@@ -8902,7 +8918,8 @@ function doTreasureRecruit(count, container) {
 			res = { tid: pickTreasureFromTier('orange'), tier: 'orange' };
 		}
 
-		if (forceTier === 'redgold') window.treasurePity = 0;
+		// 出红/金（含保底强制）后幸运值清零，与武将招募出传说清零规则一致
+		if (res.tier === 'red' || res.tier === 'gold') window.treasurePity = 0;
 
 		grantTreasureRecruit(res.tid, res.tier);
 
