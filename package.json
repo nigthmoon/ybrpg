@@ -1,7 +1,7 @@
 {
   "name": "ybrpg",
   "private": true,
-  "version": "2.7.6",
+  "version": "2.7.7",
   "description": "星河之契 - RPG游戏",
   "type": "module",
   "scripts": {
