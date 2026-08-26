@@ -76,8 +76,8 @@ function initEventListeners() {
 		btnSettings.addEventListener('click', () => {
 			const settingsView = document.getElementById('settings-view');
 
-			// 如果设置视图已经初始化过，直接显示即可
-			if (settingsView && settingsView.children.length === 0) {
+			// 每次点击都重新渲染设置主视图（子视图返回后内容可能残留）
+			if (settingsView) {
 				renderSettingsView(settingsView);
 			}
 

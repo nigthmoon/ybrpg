@@ -1312,12 +1312,22 @@ function doRecruit(count, container) {
 
 // 招募结果弹窗
 function showRecruitResult(results) {
+	// 多抽按品质排序：开启设置且为多连抽时，按背包角色排序规则（品质降序 → 名称升序）展示
+	if (window.multiSortByRank && results.length > 1) {
+		// 与背包 RANK_ORDER 一致：数值越小品质越高（刚抽到的角色不在队/无突破/同等级，前几键恒等）
+		const RANK_ORDER = { kami: 1, legend: 2, epic: 3, epicfake: 4, rare: 5, common: 6, junk: 7 };
+		results = [...results].sort((a, b) => {
+			const rankDiff = (RANK_ORDER[a.rank] || 99) - (RANK_ORDER[b.rank] || 99);
+			if (rankDiff !== 0) return rankDiff;
+			return (a.name || '').localeCompare(b.name || '');
+		});
+	}
 	const overlay = document.createElement('div');
 	overlay.className = 'ybrpg-confirm-overlay';
 	overlay.style.zIndex = '30000';
 	const dialog = document.createElement('div');
 	dialog.className = 'ybrpg-confirm-dialog';
-	dialog.style.cssText = 'width:380px;max-height:82vh;overflow-y:auto;';
+	dialog.style.cssText = 'width:380px;max-height:82vh;display:flex;flex-direction:column;';
 
 	const title = document.createElement('div');
 	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;text-align:center;margin-bottom:8px;';
@@ -1333,7 +1343,7 @@ function showRecruitResult(results) {
 		const imgWrap = document.createElement('div');
 		imgWrap.style.cssText = 'width:100%;aspect-ratio:3/4;overflow:hidden;border-radius:4px;background:#000;';
 		const img = document.createElement('img');
-		img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+		img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top;display:block;';
 		img.alt = r.name;
 		if (r.charId) {
 			img.src = `/image/character/${r.charId}.jpg`;
@@ -1366,7 +1376,11 @@ function showRecruitResult(results) {
 		cell.appendChild(nm);
 		grid.appendChild(cell);
 	});
-	dialog.appendChild(grid);
+	// 结果网格放入可滚动区，确定按钮固定在弹窗底部
+	const scrollWrap = document.createElement('div');
+	scrollWrap.style.cssText = 'flex:1;overflow-y:auto;min-height:0;';
+	scrollWrap.appendChild(grid);
+	dialog.appendChild(scrollWrap);
 
 	const ok = document.createElement('button');
 	ok.className = 'ybrpg-confirm-btn';
@@ -1650,12 +1664,22 @@ function doTreasureRecruit(count, container) {
 
 // 宝物抽取结果弹窗
 function showTreasureRecruitResult(results) {
+	// 多抽按品质排序：开启设置且为多连抽时，按背包宝物排序规则（品质降序 → baseId 升序）展示
+	if (window.multiSortByRank && results.length > 1) {
+		// 与背包 sortTreasuresByBagOrder 一致：品质降序后按 tid（即宝物 baseId）升序；新抽宝物未装备/同等级，前几键恒等
+		const TIER_ORDER = ['purple', 'orange', 'red', 'gold'];
+		results = [...results].sort((a, b) => {
+			const tierDiff = TIER_ORDER.indexOf(b.tier) - TIER_ORDER.indexOf(a.tier);
+			if (tierDiff !== 0) return tierDiff;
+			return (a.tid || '').localeCompare(b.tid || '');
+		});
+	}
 	const overlay = document.createElement('div');
 	overlay.className = 'ybrpg-confirm-overlay';
 	overlay.style.zIndex = '30000';
 	const dialog = document.createElement('div');
 	dialog.className = 'ybrpg-confirm-dialog';
-	dialog.style.cssText = 'width:380px;max-height:82vh;overflow-y:auto;';
+	dialog.style.cssText = 'width:380px;max-height:82vh;display:flex;flex-direction:column;';
 
 	const title = document.createElement('div');
 	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;text-align:center;margin-bottom:8px;';
@@ -1698,7 +1722,11 @@ function showTreasureRecruitResult(results) {
 		cell.appendChild(nm);
 		grid.appendChild(cell);
 	});
-	dialog.appendChild(grid);
+	// 结果网格放入可滚动区，确定按钮固定在弹窗底部
+	const scrollWrap = document.createElement('div');
+	scrollWrap.style.cssText = 'flex:1;overflow-y:auto;min-height:0;';
+	scrollWrap.appendChild(grid);
+	dialog.appendChild(scrollWrap);
 
 	const ok = document.createElement('button');
 	ok.className = 'ybrpg-confirm-btn';

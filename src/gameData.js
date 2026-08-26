@@ -128,6 +128,7 @@ class GameData {
 		if (!this.data.playerPreferences) this.data.playerPreferences = {};
 		this.data.playerPreferences.showFormulaDetail = window.showFormulaDetail !== undefined ? window.showFormulaDetail : true;
 		this.data.playerPreferences.bagTab = window.bagTab || 'char';
+		this.data.playerPreferences.multiSortByRank = window.multiSortByRank !== undefined ? window.multiSortByRank : false;
 
 		localStorage.setItem(key, JSON.stringify(this.data));
 		console.log(`[GameData] 已保存到槽位 ${slotIndex}`, this.data);
@@ -149,6 +150,8 @@ class GameData {
 				window.showFormulaDetail = this.data.playerPreferences.showFormulaDetail !== undefined
 					? this.data.playerPreferences.showFormulaDetail : true;
 				window.bagTab = this.data.playerPreferences.bagTab || 'char';
+				window.multiSortByRank = this.data.playerPreferences.multiSortByRank !== undefined
+					? this.data.playerPreferences.multiSortByRank : false;
 			}
 
 			// 恢复宝物实例化数据到 window

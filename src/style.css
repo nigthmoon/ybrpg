@@ -2416,6 +2416,33 @@ body {
 	transform: scale(1.05);
 }
 
+/* 设置视图内偏好开关小区块 */
+.ybrpg-misc-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: min(440px, 80%);
+	padding: 14px 20px;
+	margin-bottom: 12px;
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid #555;
+	border-radius: 10px;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+	flex-shrink: 0;
+}
+.ybrpg-misc-label {
+	/* color: #ccc; 注释掉：让字体略微不显眼（继承父级颜色） */
+	font-size: 14px;
+	margin-right: 24px;
+	white-space: nowrap;
+}
+.ybrpg-misc-toggle {
+	width: 70px;
+	height: 38px;
+	font-size: 14px;
+	flex-shrink: 0;
+}
+
 h1, h2 {
 	text-shadow: 0 0 10px rgba(0,0,0,0.5);
 }

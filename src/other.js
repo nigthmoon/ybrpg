@@ -18,6 +18,9 @@ function renderSettingsView(container) {
 	// 清空容器以防重复渲染
 	container.innerHTML = '';
 
+	// 恢复主设置视图的居中布局（子视图可能改为顶部对齐）
+	container.style.justifyContent = 'center';
+
 	// 创建按钮组容器
 	const groupDiv = document.createElement('div');
 	groupDiv.className = 'settings-btn-group';
@@ -66,67 +69,16 @@ function renderSettingsView(container) {
 	redeemBtn.onclick = () => renderRedeemView(container);
 	galleryRow.appendChild(redeemBtn);
 
+	// 设置按钮（AI托管 / 公式显示 等）
+	const miscBtn = document.createElement('button');
+	miscBtn.className = 'ybrpg-settings-btn';
+	miscBtn.id = 'btn-setting-misc';
+	miscBtn.textContent = '设置';
+	miscBtn.onclick = () => renderMiscSettingsView(container);
+	galleryRow.appendChild(miscBtn);
+
 	groupDiv.appendChild(galleryRow);
 
-	// ... 之前的图鉴行 ...
-
-	// AI托管设置
-	const autoSettingRow = document.createElement('div');
-	autoSettingRow.style.cssText = 'display:flex;gap:15px;justify-content:center;align-items:center;width:100%;margin-top:10px;';
-
-	const autoLabel = document.createElement('span');
-	autoLabel.style.color = '#ccc';
-	autoLabel.style.fontSize = '14px';
-	autoLabel.textContent = 'AI战斗托管: ';
-
-	const autoToggle = document.createElement('button');
-	autoToggle.className = 'ybrpg-settings-btn';
-	autoToggle.style.cssText = 'width:70px;height:40px;font-size:14px;';
-	autoToggle.textContent = window.autoBattle ? '开启' : '关闭';
-	autoToggle.onclick = () => {
-		window.autoBattle = !window.autoBattle;
-		autoToggle.textContent = window.autoBattle ? '开启' : '关闭';
-		Game.toast(`AI战斗托管已${window.autoBattle ? '开启' : '关闭'}`, 'info');
-	};
-	autoSettingRow.appendChild(autoLabel);
-	autoSettingRow.appendChild(autoToggle);
-	groupDiv.appendChild(autoSettingRow);
-
-
-
-	// ===== 【新增】公式显示设置 =====
-	const formulaSettingRow = document.createElement('div');
-	formulaSettingRow.style.cssText = 'display:flex;gap:15px;justify-content:center;align-items:center;width:100%;margin-top:10px;';
-
-	const formulaLabel = document.createElement('span');
-	formulaLabel.style.color = '#ccc';
-	formulaLabel.style.fontSize = '14px';
-	formulaLabel.textContent = '面板显示属性公式: ';
-
-	const formulaToggle = document.createElement('button');
-	formulaToggle.className = 'ybrpg-settings-btn';
-	formulaToggle.style.cssText = 'width:70px;height:40px;font-size:14px;';
-	formulaToggle.textContent = window.showFormulaDetail ? '开启' : '关闭';
-	formulaToggle.onclick = () => {
-		window.showFormulaDetail = !window.showFormulaDetail;
-		formulaToggle.textContent = window.showFormulaDetail ? '开启' : '关闭';
-		Game.toast(`属性公式显示已${window.showFormulaDetail ? '开启' : '关闭'}`, 'info');
-
-		// 如果当前在队伍视图，刷新显示
-		const teamView = document.getElementById('team-view');
-		if (teamView && teamView.style.display !== 'none' && window._selectedSlotIndex !== null) {
-			const idx = window._selectedSlotIndex;
-			const instanceId = window.currentTeam[idx];
-			if (instanceId) {
-				const instData = window.charBagData && window.charBagData[instanceId];
-				const charId = instData ? instData.charId : instanceId;
-				showTeamCharInfo(idx, instanceId, charId);
-			}
-		}
-	};
-	formulaSettingRow.appendChild(formulaLabel);
-	formulaSettingRow.appendChild(formulaToggle);
-	groupDiv.appendChild(formulaSettingRow);
 	// ... 存档管理按钮 ...
 
 
@@ -145,6 +97,81 @@ function renderSettingsView(container) {
 	versionInfo.style.cssText = 'color:#888;font-size:12px;margin-top:20px;text-align:center;';
 	versionInfo.textContent = `版本: ${window.GAME_VERSION || 'v1.0'}`;
 	container.appendChild(versionInfo);
+}
+
+// 渲染：设置（AI托管 / 公式显示 等偏好项）
+function renderMiscSettingsView(container) {
+	container.innerHTML = '';
+
+	// 标题靠上，设置项在剩余区域竖向居中
+	container.style.justifyContent = 'flex-start';
+
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-back-btn';
+	backBtn.textContent = '← 返回';
+	backBtn.onclick = () => renderSettingsView(container);
+	container.appendChild(backBtn);
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:20px;font-weight:bold;text-align:center;margin:6px 0 24px;color:#ffd700;';
+	title.textContent = '⚙ 设置';
+	container.appendChild(title);
+
+	const wrap = document.createElement('div');
+	wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%;';
+	container.appendChild(wrap);
+
+	// 生成一行偏好设置：左侧描述 + 右侧开关按钮（小区块分割，两列对齐）
+	function makeSettingRow(labelText, getValue, onToggle) {
+		const row = document.createElement('div');
+		row.className = 'ybrpg-misc-row';
+
+		const label = document.createElement('span');
+		label.className = 'ybrpg-misc-label';
+		label.textContent = labelText;
+
+		const toggle = document.createElement('button');
+		toggle.className = 'ybrpg-settings-btn ybrpg-misc-toggle';
+		toggle.textContent = getValue() ? '开启' : '关闭';
+		toggle.onclick = () => {
+			onToggle(toggle);
+			toggle.textContent = getValue() ? '开启' : '关闭';
+		};
+
+		row.appendChild(label);
+		row.appendChild(toggle);
+		wrap.appendChild(row);
+	}
+
+	// AI托管设置
+	makeSettingRow('AI战斗托管', () => window.autoBattle, () => {
+		window.autoBattle = !window.autoBattle;
+		Game.toast(`AI战斗托管已${window.autoBattle ? '开启' : '关闭'}`, 'info');
+	});
+
+	// 多抽按品质排序设置
+	makeSettingRow('多抽按品质排序', () => window.multiSortByRank, () => {
+		window.multiSortByRank = !window.multiSortByRank;
+		Game.toast(`多抽按品质排序已${window.multiSortByRank ? '开启' : '关闭'}`, 'info');
+	});
+
+	// 公式显示设置
+	makeSettingRow('面板显示属性公式', () => window.showFormulaDetail, () => {
+		window.showFormulaDetail = !window.showFormulaDetail;
+		Game.toast(`属性公式显示已${window.showFormulaDetail ? '开启' : '关闭'}`, 'info');
+
+		// 如果当前在队伍视图，刷新显示
+		const teamView = document.getElementById('team-view');
+		if (teamView && teamView.style.display !== 'none' && window._selectedSlotIndex !== null) {
+			const idx = window._selectedSlotIndex;
+			const instanceId = window.currentTeam[idx];
+			if (instanceId) {
+				const instData = window.charBagData && window.charBagData[instanceId];
+				const charId = instData ? instData.charId : instanceId;
+				showTeamCharInfo(idx, instanceId, charId);
+			}
+		}
+	});
 }
 
 // ===================== 兑换码系统 =====================
@@ -2058,6 +2085,7 @@ function initNewGame() {
 	window.treasureBagData = {}; // 宝物背包数据
 	window.autoBattle = false;
 	window.showFormulaDetail = false; // 属性面板显示公式，默认关闭
+	window.multiSortByRank = false; // 多抽出货按品质降序排列，默认关闭
 
 	// ===== 经济 / 限制系统初始状态 =====
 	window.stamina = STAMINA_MAX;
@@ -2287,6 +2315,7 @@ const SaveManager = {
 			treasureEquipData: window.treasureEquipData || {},
 			treasureBagData: window.treasureBagData || {},
 			autoBattle: window.autoBattle || false,
+			multiSortByRank: window.multiSortByRank || false,
 			saveTime: new Date().toLocaleString(),
 		saveName: `存档${slot}`,
 		_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
@@ -2303,7 +2332,8 @@ const SaveManager = {
 			shopPage: window.shopPage || 'home',
 			playerPreferences: {  // 【新增】
 				bagTab: window.bagTab || 'char',
-				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true
+				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true,
+				multiSortByRank: window.multiSortByRank !== undefined ? window.multiSortByRank : false
 			}
 		};
 		localStorage.setItem(`ybrpg_save_${slot}`, JSON.stringify(compatData));
@@ -2345,6 +2375,8 @@ const SaveManager = {
 				window.bagTab = parsed.playerPreferences.bagTab || 'char';
 				window.showFormulaDetail = parsed.playerPreferences.showFormulaDetail !== undefined
 					? parsed.playerPreferences.showFormulaDetail : true;
+				window.multiSortByRank = parsed.playerPreferences.multiSortByRank !== undefined
+					? parsed.playerPreferences.multiSortByRank : false;
 			} else {
 				window.bagTab = 'char';
 			}
@@ -2385,6 +2417,7 @@ const SaveManager = {
 			window.gameGold = parsed.gameGold || 1000;
 			window.charBagData = charBag;
 			window.showFormulaDetail = parsed.showFormulaDetail !== undefined ? parsed.showFormulaDetail : true;
+			window.multiSortByRank = parsed.multiSortByRank || false;
 			// window.charTreasureSlots = (data && data._charTreasureSlots) || parsed.charTreasureSlots || {};
 			window.treasureEquipData = parsed.treasureEquipData || {};
 			window.treasureBagData = parsed.treasureBagData || {};
@@ -2455,7 +2488,8 @@ const SaveManager = {
 			const prefs = data.playerPreferences || data._playerPreferences || {};
 			window.bagTab = prefs.bagTab || 'char';
 			window.showFormulaDetail = prefs.showFormulaDetail !== undefined ? prefs.showFormulaDetail : true;
-		}
+			window.multiSortByRank = prefs.multiSortByRank !== undefined ? prefs.multiSortByRank : false;
+			}
 
 		// 确保 Game.Data 内存与存档数据一致
 		if (data) {
@@ -2544,6 +2578,7 @@ const SaveManager = {
 			treasureBagData: window.treasureBagData || {},
 			autoBattle: window.autoBattle || false,
 			showFormulaDetail: window.showFormulaDetail || false,
+			multiSortByRank: window.multiSortByRank || false,
 			saveTime: new Date().toLocaleString(),
 		saveName: '自动存档',
 		_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
@@ -2561,7 +2596,8 @@ const SaveManager = {
 			shopPage: window.shopPage || 'home',
 			playerPreferences: {
 				bagTab: window.bagTab || 'char',
-				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true
+				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true,
+				multiSortByRank: window.multiSortByRank !== undefined ? window.multiSortByRank : false
 			}
 		};
 		localStorage.setItem(SaveManager.AUTO_KEY, JSON.stringify(compatData));
@@ -2609,6 +2645,8 @@ const SaveManager = {
 					window.bagTab = parsed.playerPreferences.bagTab || 'char';
 					window.showFormulaDetail = parsed.playerPreferences.showFormulaDetail !== undefined
 						? parsed.playerPreferences.showFormulaDetail : true;
+					window.multiSortByRank = parsed.playerPreferences.multiSortByRank !== undefined
+						? parsed.playerPreferences.multiSortByRank : false;
 				} else {
 					window.bagTab = 'char';
 				}
@@ -2644,6 +2682,7 @@ const SaveManager = {
 					});
 				}
 				window.showFormulaDetail = parsed.showFormulaDetail !== undefined ? parsed.showFormulaDetail : true;
+				window.multiSortByRank = parsed.multiSortByRank || false;
 				window.currentDifficulty = parsed.currentDifficulty || 'normal';
 				window.shopMode = parsed.shopMode || 'normal';
 				window.shopData = parsed.shopData || { items: [], refreshCost: 50 };
@@ -2709,6 +2748,7 @@ const SaveManager = {
 				window.treasureEquipData = data._treasures || {};
 				window.treasureBagData = data._treasureBag || {};
 				window.autoBattle = parsed.autoBattle || false;  // ✅ 使用 window.autoBattle 保持原值
+				window.multiSortByRank = parsed.multiSortByRank || false;
 			// ===== 经济 / 限制系统 =====
 			window.stamina = parsed.stamina != null ? parsed.stamina : STAMINA_MAX;
 			window.maxStamina = parsed.maxStamina != null ? parsed.maxStamina : STAMINA_MAX;
@@ -2726,6 +2766,7 @@ const SaveManager = {
 				const prefs2 = data.playerPreferences || data._playerPreferences || {};
 				window.bagTab = prefs2.bagTab || 'char';
 				window.showFormulaDetail = prefs2.showFormulaDetail !== undefined ? prefs2.showFormulaDetail : true;
+				window.multiSortByRank = prefs2.multiSortByRank !== undefined ? prefs2.multiSortByRank : false;
 			}
 
 			// 同步到 Game.Data 内存（确保结构完整）
@@ -3017,7 +3058,7 @@ function renderSaveView(container, fromGame = true) {
  */
 
 // 导出本模块定义的函数（供其他模块 import）
-export { renderSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView };
+export { renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView };
 
 // 暴露给外部模块（shared 注册表 / window / Game）
 shared.hideOtherViews = hideOtherViews;
