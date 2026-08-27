@@ -79,9 +79,6 @@ function renderSettingsView(container) {
 
 	groupDiv.appendChild(galleryRow);
 
-	// ... 存档管理按钮 ...
-
-
 	// 存档管理按钮
 	const saveBtn = document.createElement('button');
 	saveBtn.className = 'ybrpg-settings-btn';
@@ -172,6 +169,277 @@ function renderMiscSettingsView(container) {
 			}
 		}
 	});
+
+}
+
+// ===================== 存档导出 / 导入 =====================
+
+// 收集当前游戏进度（与 saveToSlot 的 compatData 结构一致，但不写 localStorage）
+function collectCurrentSaveData() {
+	return {
+		gameVersion: window.GAME_VERSION || 'v1.0',
+		playerProgress: window.playerProgress || {},
+		currentTeam: window.currentTeam || [null, null, null, null, null, null],
+		currentDifficulty: window.currentDifficulty || 'normal',
+		shopMode: window.shopMode || 'normal',
+		shopData: window.shopData || { items: [], refreshCost: 50 },
+		gameGold: window.gameGold || 1000,
+		charTreasureSlots: window.charTreasureSlots || {},
+		charBagData: window.charBagData || {},
+		showFormulaDetail: window.showFormulaDetail || false,
+		treasureEquipData: window.treasureEquipData || {},
+		treasureBagData: window.treasureBagData || {},
+		autoBattle: window.autoBattle || false,
+		multiSortByRank: window.multiSortByRank || false,
+		saveTime: new Date().toLocaleString(),
+		saveName: '导出存档',
+		_treasureInventory: JSON.parse(JSON.stringify(window.treasureInventory || {})),
+		stamina: window.stamina,
+		maxStamina: window.maxStamina,
+		staminaTs: window.staminaTs,
+		diamond: window.diamond,
+		dailySign: window.dailySign || { lastSignDate: '', streak: 0 },
+		dailyTasks: window.dailyTasks || null,
+		redeemedCodes: window.redeemedCodes || [],
+		recruitPity: window.recruitPity || 0,
+		recruitUpCharId: window.recruitUpCharId || null,
+		treasurePity: window.treasurePity || 0,
+		shopPage: window.shopPage || 'home',
+		playerPreferences: {
+			bagTab: window.bagTab || 'char',
+			showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true,
+			multiSortByRank: window.multiSortByRank !== undefined ? window.multiSortByRank : false
+		},
+		// 图鉴数据（handbook 是存档级数据，导出必须携带，否则导入后图鉴丢失）
+		handbook: JSON.parse(JSON.stringify(
+			(Game.Data.data && Game.Data.data.handbook)
+			|| { ownedCharacters: [], viewedCharacters: [], collectionProgress: { total: 0, owned: 0 } }
+		))
+	};
+}
+
+// 仅导出当前存档信息为 JSON 文件下载
+function exportCurrentSave() {
+	// 【拦截未初始化导出】无游戏进度时拒绝导出（防止主界面/空档导出空数据）
+	const prog = window.playerProgress;
+	if (!prog || Object.keys(prog).length === 0) {
+		Game.toast('当前没有可导出的游戏进度', 'error');
+		console.warn('[存档导出] 未检测到游戏进度，已拦截导出');
+		return;
+	}
+	const data = collectCurrentSaveData();
+	const backup = {
+		app: 'ybrpg',
+		type: 'ybrpg-save-single',
+		version: 1,
+		gameVersion: window.GAME_VERSION || 'v1.0',
+		exportedAt: new Date().toISOString(),
+		data,
+	};
+
+	// 【优化】一行紧凑格式，避免美化缩进导致十几万行、体积膨胀
+	const json = JSON.stringify(backup);
+	const blob = new Blob([json], { type: 'application/json' });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = `ybrpg_save_${fmtSaveTimestamp()}.json`;
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+	URL.revokeObjectURL(url);
+
+	Game.toast('已导出当前存档，请前往浏览器下载文件夹查看', 'success');
+}
+
+// localStorage 配额（Chrome/Edge 约 5MiB，按 UTF-16 code unit 计），留 5% 余量
+const STORAGE_QUOTA = Math.floor(5 * 1024 * 1024 * 0.95);
+
+// 当前 localStorage 已用字符数（UTF-16 code units）
+function storageUsed() {
+	let used = 0;
+	for (let i = 0; i < localStorage.length; i++) {
+		const k = localStorage.key(i);
+		if (k) used += k.length + (localStorage.getItem(k) || '').length;
+	}
+	return used;
+}
+
+// 导入存档：选择文件后弹出槽位选择，写入所选栏位
+function importSaveData() {
+	const input = document.createElement('input');
+	input.type = 'file';
+	input.accept = '.json,application/json';
+	input.style.display = 'none';
+	input.onchange = () => {
+		const file = input.files && input.files[0];
+		if (!file) return;
+		const reader = new FileReader();
+		reader.onload = () => {
+			let parsed;
+			try {
+				parsed = JSON.parse(reader.result);
+			} catch (e) {
+				console.error('[导入存档] 解析失败:', e);
+				Game.toast('导入失败：文件不是有效的 JSON', 'error');
+				return;
+			}
+			if (!parsed || typeof parsed !== 'object' || parsed.type !== 'ybrpg-save-single' || !parsed.data || typeof parsed.data !== 'object') {
+				Game.toast('导入失败：不是本游戏导出的存档文件', 'error');
+				return;
+			}
+			// 选择目标槽位（覆盖警告在弹窗内处理）
+			showSaveSlotPicker('导入存档', `文件：${file.name}`, (slot) => {
+				writeImportedSave(slot, parsed.data);
+			});
+		};
+		reader.readAsText(file);
+	};
+	document.body.appendChild(input);
+	input.click();
+	document.body.removeChild(input);
+}
+
+// 槽位选择弹窗：列出自动存档 + 手动存档栏位，点击选择（已有存档的槽位会二次确认覆盖）
+function showSaveSlotPicker(title, message, onPick) {
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog wide';
+	dialog.style.cssText = 'padding:18px 20px;max-width:340px;';
+
+	const titleEl = document.createElement('div');
+	titleEl.style.cssText = 'font-size:15px;font-weight:bold;color:#ffd700;margin-bottom:6px;text-align:center;';
+	titleEl.textContent = title;
+	dialog.appendChild(titleEl);
+
+	const msgEl = document.createElement('div');
+	msgEl.style.cssText = 'font-size:12px;color:#aaa;margin-bottom:12px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+	msgEl.textContent = message;
+	dialog.appendChild(msgEl);
+
+	const hintEl = document.createElement('div');
+	hintEl.style.cssText = 'font-size:11px;color:#e8a33d;margin-bottom:10px;text-align:center;';
+	hintEl.textContent = '注意：导入会覆盖所选栏位的现有存档';
+	dialog.appendChild(hintEl);
+
+	for (let i = 0; i <= Game.Data.SLOT_COUNT; i++) {
+		const raw = localStorage.getItem(`${Game.Data.STORAGE_KEY}_${i}`);
+		let hasData = false;
+		let info = '空栏位';
+		if (raw) {
+			hasData = true;
+			try {
+				const d = JSON.parse(raw);
+				const t = d.saveTime || (d.baseInfo && d.baseInfo.saveTime) || '';
+				info = t ? `已有存档（${t}）` : '已有存档';
+			} catch (e) { info = '已有存档'; }
+		}
+		const btn = document.createElement('button');
+		btn.className = 'ybrpg-confirm-btn';
+		btn.style.cssText = 'display:flex;justify-content:space-between;align-items:center;width:100%;margin:4px 0;padding:8px 12px;font-size:13px;'
+			+ (hasData ? 'border-color:#e8a33d;' : '');
+		const nameSpan = document.createElement('span');
+		nameSpan.textContent = (hasData ? '⚠ ' : '') + (i === 0 ? '🔄 自动存档' : `存档 ${i}`);
+		if (hasData) nameSpan.style.color = '#e8a33d';
+		const infoSpan = document.createElement('span');
+		infoSpan.style.cssText = (hasData ? 'color:#e8a33d;' : 'color:#888;') + 'font-size:12px;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+		infoSpan.textContent = info;
+		btn.appendChild(nameSpan);
+		btn.appendChild(infoSpan);
+		btn.onclick = () => {
+			const doPick = () => {
+				document.body.removeChild(overlay);
+				onPick(i);
+			};
+			if (hasData) {
+				Game.confirmDialog(`槽位${i === 0 ? '（自动存档）' : ` ${i}`}已有存档，导入将覆盖它！是否继续？`, doPick, null, { title: '覆盖确认' });
+			} else {
+				doPick();
+			}
+		};
+		dialog.appendChild(btn);
+	}
+
+	const cancelBtn = document.createElement('button');
+	cancelBtn.className = 'ybrpg-confirm-btn cancel';
+	cancelBtn.textContent = '取消';
+	cancelBtn.style.cssText = 'margin-top:10px;width:100%;';
+	cancelBtn.onclick = () => document.body.removeChild(overlay);
+	dialog.appendChild(cancelBtn);
+
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
+}
+
+// 将导入的存档数据写入目标栏位（自动档走双通道并补 baseInfo，保证被自动存档系统识别）
+function writeImportedSave(slot, data) {
+	// 【修复图鉴丢失】导入文件缺失 handbook 时，用当前内存图鉴补上（避免导入后图鉴被清空）
+	if (!data.handbook) {
+		const curHandbook = Game.Data.data && Game.Data.data.handbook;
+		if (curHandbook && ((curHandbook.ownedCharacters || []).length > 0 || (curHandbook.viewedCharacters || []).length > 0)) {
+			data = Object.assign({}, data, { handbook: JSON.parse(JSON.stringify(curHandbook)) });
+		}
+	}
+	let payloads;
+	if (slot === 0) {
+		// 自动存档：补 baseInfo.saveName='自动存档'，并同时写入 ybrpg_save_0 与 ybrpg_autosave
+		const autoData = Object.assign({}, data, {
+			baseInfo: Object.assign({}, data.baseInfo || {}, {
+				saveName: '自动存档',
+				saveTime: new Date().toISOString(),
+			}),
+		});
+		const autoJson = JSON.stringify(autoData);
+		payloads = [
+			[`${Game.Data.STORAGE_KEY}_0`, autoJson],
+			[SaveManager.AUTO_KEY, autoJson],
+		];
+	} else {
+		payloads = [[`${Game.Data.STORAGE_KEY}_${slot}`, JSON.stringify(data)]];
+	}
+	// 空间预检：新写入的净增量 + 当前已用不得超过配额
+	let net = 0;
+	payloads.forEach(([k, v]) => {
+		const existing = localStorage.getItem(k);
+		net += v.length + k.length - (existing ? existing.length : 0);
+	});
+	if (storageUsed() + net > STORAGE_QUOTA) {
+		Game.toast('存储空间不足，无法导入。可先在存档管理中删除部分存档释放空间', 'error');
+		return;
+	}
+	try {
+		payloads.forEach(([k, v]) => localStorage.setItem(k, v));
+		Game.toast(slot === 0 ? '已导入存档到自动存档' : `已导入存档到存档${slot}`, 'success');
+		// 刷新存档界面
+		const sv = document.getElementById('save-view');
+		if (sv) renderSaveView(sv, false);
+		// 询问是否立即读取
+		Game.confirmDialog(`已导入存档到${slot === 0 ? '自动存档' : `存档${slot}`}，是否立即读取该存档？`, () => {
+			if (slot === 0) {
+				SaveManager.loadAutoSave();
+			} else {
+				SaveManager.loadFromSlot(slot);
+			}
+			Game.toast(slot === 0 ? '已读取自动存档' : `已读取存档${slot}`, 'success');
+			const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+			if (bottomBar) bottomBar.style.display = 'flex';
+			hideOtherViews('team-view');
+			const teamView = document.getElementById('team-view');
+			if (teamView) teamView.style.display = 'flex';
+		}, null, { title: '导入完成' });
+	} catch (e) {
+		console.error('[导入存档] 写入失败:', e);
+		Game.toast('导入失败：本地存储空间不足，请删除部分存档后重试', 'error');
+	}
+}
+
+// 导出文件名时间戳：YYYYMMDD_HHMMSS
+function fmtSaveTimestamp() {
+	const d = new Date();
+	const p = n => String(n).padStart(2, '0');
+	return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
 }
 
 // ===================== 兑换码系统 =====================
@@ -684,7 +952,7 @@ function renderGalleryView(container) {
 
 	// 获取已拥有角色列表（调试：临时全部解锁）
 	// const ownedChars = Object.keys(characterList);
-	const ownedChars = Game.Data.data.handbook.ownedCharacters
+	const ownedChars = (Game.Data.data.handbook && Game.Data.data.handbook.ownedCharacters) || [];
 
 	// 滚动容器
 	const scrollDiv = document.createElement('div');
@@ -2242,8 +2510,8 @@ const SaveManager = {
 						dungeon: data.dungeon || {},
 						shop: data.shop || {},
 						handbook: data.handbook || {},
-						saveTime: data.baseInfo?.saveTime || null,
-						saveName: data.baseInfo?.saveName || `存档${i}`,
+						saveTime: data.baseInfo?.saveTime || data.saveTime || null,
+						saveName: data.baseInfo?.saveName || data.saveName || `存档${i}`,
 						playerProgress: window.playerProgress || {},
 						currentTeam: window.currentTeam || [null, null, null, null, null, null],
 						currentDifficulty: window.currentDifficulty || 'normal',
@@ -2296,9 +2564,11 @@ const SaveManager = {
 		// 同步到 GameData
 		Game.Data.data.baseInfo.saveName = `存档${slot}`;
 		Game.Data.data.baseInfo.saveTime = new Date().toISOString();
-
-		// 保存到 localStorage
-		Game.Data.save(slot);
+		Game.Data.data.baseInfo.version = window.GAME_VERSION || 'v1.0';
+		Game.Data.data.playerPreferences.showFormulaDetail = window.showFormulaDetail !== undefined ? window.showFormulaDetail : true;
+		Game.Data.data.playerPreferences.multiSortByRank = window.multiSortByRank !== undefined ? window.multiSortByRank : false;
+		// 【修复存储超限】不再调用 Game.Data.save(slot) 写完整结构（会被下方 compatData 同 key 覆盖，
+		// 纯浪费且完整结构体积大，是 QuotaExceededError 的主要来源），直接写 compatData
 
 		// 兼容格式也加上
 		const compatData = {
@@ -2334,15 +2604,42 @@ const SaveManager = {
 				bagTab: window.bagTab || 'char',
 				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true,
 				multiSortByRank: window.multiSortByRank !== undefined ? window.multiSortByRank : false
+			},
+			// 【修复图鉴丢失】compatData 会覆盖 Game.Data.save() 写入的完整结构，必须带上 handbook
+			handbook: JSON.parse(JSON.stringify(
+				(Game.Data.data && Game.Data.data.handbook)
+				|| { ownedCharacters: [], viewedCharacters: [], collectionProgress: { total: 0, owned: 0 } }
+			))
+			};
+			// ===== 【修复存储超限】写入前空间预检，超限时友好提示而非 Uncaught 报错 =====
+			const slotJson = JSON.stringify(compatData);
+			const payloads = [[`ybrpg_save_${slot}`, slotJson]];
+			let net = 0;
+			payloads.forEach(([k, v]) => {
+				const existing = localStorage.getItem(k);
+				net += v.length + k.length - (existing ? existing.length : 0);
+			});
+			if (storageUsed() + net > STORAGE_QUOTA) {
+				Game.toast('存储空间不足，无法保存！请先删除部分旧存档释放空间', 'error');
+				console.warn(`[存档保存] 槽位${slot} 存储空间不足，已取消保存`);
+				return null;
 			}
-		};
-		localStorage.setItem(`ybrpg_save_${slot}`, JSON.stringify(compatData));
-		console.log(`已保存到槽位${slot}`);
+			try {
+				payloads.forEach(([k, v]) => localStorage.setItem(k, v));
+				console.log(`已保存到槽位${slot}`);
+			} catch (e) {
+				console.error(`[存档保存] 槽位${slot} 写入失败:`, e);
+				Game.toast('保存失败：本地存储空间不足，请删除部分旧存档后重试', 'error');
+				return null;
+			}
 		return compatData;
 	},
 
 	// 从指定槽位读取（同步到 GameData 和 window）
 	loadFromSlot(slot) {
+		// 先缓存当前内存图鉴（用于抢救缺失 handbook 的旧存档）
+		const prevHandbook = Game.Data.data && Game.Data.data.handbook;
+		let restoredHandbook = null;
 		// 使用 GameData 加载（索引0留给自动存档，手动存档从索引1开始）
 		const data = Game.Data.load(slot);
 
@@ -2470,6 +2767,22 @@ const SaveManager = {
 			if (parsed._charTreasureSlots) {
 				window.charTreasureSlots = JSON.parse(JSON.stringify(parsed._charTreasureSlots));
 			}
+
+			// ===== 【修复图鉴丢失】恢复图鉴数据 =====
+			if (parsed.handbook) {
+				restoredHandbook = parsed.handbook;
+			} else if (prevHandbook && (prevHandbook.ownedCharacters || []).length > 0) {
+				// 旧存档没有 handbook 字段：用当前内存图鉴抢救，并写回持久化修复
+				restoredHandbook = JSON.parse(JSON.stringify(prevHandbook));
+				try {
+					const repaired = Object.assign({}, parsed, { handbook: JSON.parse(JSON.stringify(restoredHandbook)) });
+					localStorage.setItem(compatKey, JSON.stringify(repaired));
+					console.log('[存档加载] 已为旧存档补回图鉴数据');
+				} catch (e) {
+					console.warn('[存档加载] 补回图鉴写回失败:', e);
+				}
+			}
+			// ==========================================
 		} else if (data) {
 			// 如果只有 GameData 格式，从 GameData 恢复 window 变量
 			window.currentTeam = [...(data.team?.members || []), ...Array(6).fill(null)].slice(0, 6);
@@ -2494,7 +2807,9 @@ const SaveManager = {
 		// 确保 Game.Data 内存与存档数据一致
 		if (data) {
 			const defaults = Game.Data.getDefaultData();
-			Game.Data.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
+			// 【修复图鉴丢失】存档缺 handbook 时回退到默认空图鉴（restoredHandbook 已优先抢救）
+			const handbook = restoredHandbook || data.handbook || defaults.handbook;
+			Game.Data.data = { ...defaults, ...data, handbook, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
 		}
 
 		// ========== 新增：同步宝物数据到 window ==========
@@ -2560,9 +2875,20 @@ const SaveManager = {
 		Game.Data.data.dailyTasks = JSON.parse(JSON.stringify(window.dailyTasks || null));
 		Game.Data.data.baseInfo.saveName = '自动存档';
 		Game.Data.data.baseInfo.saveTime = new Date().toISOString();
+		Game.Data.data.baseInfo.version = window.GAME_VERSION || 'v1.0';
 
-		Game.Data.save(0);
-
+		// ===== 【修复存储超限】ybrpg_save_0 只写精简结构 =====
+		// loadAutoSave 仅依赖 baseInfo/team/bag/handbook/playerPreferences；
+		// 其余大体积数据（_charBag/_treasureInventory 等）都在 ybrpg_autosave 的 compatData 中，
+		// 不再让完整结构常驻 localStorage，从根源避免 QuotaExceededError
+		const slot0Full = JSON.stringify({
+			baseInfo: Game.Data.data.baseInfo,
+			team: Game.Data.data.team,
+			bag: Game.Data.data.bag,
+			handbook: Game.Data.data.handbook,
+			playerPreferences: Game.Data.data.playerPreferences
+		});
+		// =====================================================
 
 		// 兼容格式
 		const compatData = {
@@ -2598,11 +2924,45 @@ const SaveManager = {
 				bagTab: window.bagTab || 'char',
 				showFormulaDetail: window.showFormulaDetail !== undefined ? window.showFormulaDetail : true,
 				multiSortByRank: window.multiSortByRank !== undefined ? window.multiSortByRank : false
+			},
+			// 【修复图鉴丢失】自动档 compatData 同样带上 handbook，与 ybrpg_save_0 保持一致
+			handbook: JSON.parse(JSON.stringify(
+				(Game.Data.data && Game.Data.data.handbook)
+				|| { ownedCharacters: [], viewedCharacters: [], collectionProgress: { total: 0, owned: 0 } }
+			))
+			};
+			// ===== 【修复存储超限】写入前空间预检，超限时友好提示而非 Uncaught 报错 =====
+			const autoCompatJson = JSON.stringify(compatData);
+			const payloads = [
+				[`${Game.Data.STORAGE_KEY}_0`, slot0Full],
+				[SaveManager.AUTO_KEY, autoCompatJson]
+			];
+			let net = 0;
+			payloads.forEach(([k, v]) => {
+				const existing = localStorage.getItem(k);
+				net += v.length + k.length - (existing ? existing.length : 0);
+			});
+			if (storageUsed() + net > STORAGE_QUOTA) {
+				// 节流提示，避免频繁 Toast 刷屏
+				const now = Date.now();
+				if (!window._autoSaveQuotaWarnAt || now - window._autoSaveQuotaWarnAt > 30000) {
+					window._autoSaveQuotaWarnAt = now;
+					Game.toast('存储空间不足，自动存档失败！请在存档管理中删除部分手动存档后重试', 'error');
+				}
+				console.warn('[自动存档] 存储空间不足，跳过本次保存');
+				return;
 			}
-		};
-		localStorage.setItem(SaveManager.AUTO_KEY, JSON.stringify(compatData));
-
-		console.log('[自动存档] 已保存');
+			try {
+				payloads.forEach(([k, v]) => localStorage.setItem(k, v));
+				console.log('[自动存档] 已保存');
+			} catch (e) {
+				console.error('[自动存档] 保存失败:', e);
+				const now = Date.now();
+				if (!window._autoSaveQuotaWarnAt || now - window._autoSaveQuotaWarnAt > 30000) {
+					window._autoSaveQuotaWarnAt = now;
+					Game.toast('自动存档失败：本地存储空间不足，请删除部分手动存档', 'error');
+				}
+			}
 	},
 
 	loadAutoSave() {
@@ -2614,6 +2974,9 @@ const SaveManager = {
 		try { data = JSON.parse(raw); } catch { return null; }
 
 		if (data && data.baseInfo?.saveName === '自动存档') {
+			// 先缓存当前内存图鉴（用于抢救缺失 handbook 的旧存档）
+			const prevHandbook = Game.Data.data && Game.Data.data.handbook;
+			let restoredHandbook = null;
 			// ========== 新增：先迁移宝物数据（在恢复 window 之前） ==========
 			Game.Data.data = data;  // 临时置入 data，方便迁移函数读取
 			migrateTreasuresToInstanceId();
@@ -2741,6 +3104,26 @@ const SaveManager = {
 					Game.Bag.ensureSlots();
 				}
 				// ==========================================
+
+				// ===== 【修复图鉴丢失】恢复图鉴数据 =====
+				if (parsed.handbook) {
+					restoredHandbook = parsed.handbook;
+				} else if (data.handbook) {
+					restoredHandbook = data.handbook;
+				} else if (prevHandbook && (prevHandbook.ownedCharacters || []).length > 0) {
+					// 旧存档没有 handbook：用当前内存图鉴抢救，并写回持久化修复
+					restoredHandbook = JSON.parse(JSON.stringify(prevHandbook));
+					try {
+						const repaired = Object.assign({}, parsed, { handbook: JSON.parse(JSON.stringify(restoredHandbook)) });
+						localStorage.setItem(compatKey, JSON.stringify(repaired));
+						const repairedFull = Object.assign({}, data, { handbook: JSON.parse(JSON.stringify(restoredHandbook)) });
+						localStorage.setItem(key, JSON.stringify(repairedFull));
+						console.log('[自动存档加载] 已为旧存档补回图鉴数据');
+					} catch (e) {
+						console.warn('[自动存档加载] 补回图鉴写回失败:', e);
+					}
+				}
+				// ==========================================
 			} else {
 				window.currentTeam = [...(data.team?.members || []), ...Array(6).fill(null)].slice(0, 6);
 				window.gameGold = data.bag?.gold || 1000;
@@ -2771,7 +3154,9 @@ const SaveManager = {
 
 			// 同步到 Game.Data 内存（确保结构完整）
 			const defaults = Game.Data.getDefaultData();
-			Game.Data.data = { ...defaults, ...data, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
+			// 【修复图鉴丢失】存档缺 handbook 时回退到默认空图鉴（restoredHandbook 已优先抢救）
+			const handbook = restoredHandbook || data.handbook || defaults.handbook;
+			Game.Data.data = { ...defaults, ...data, handbook, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
 
 			// ========== 新增：同步宝物数据 ==========
 			syncTreasureEquipData();
@@ -2867,6 +3252,29 @@ function renderSaveView(container, fromGame = true) {
 		}
 	};
 	container.appendChild(backBtn);
+
+	// 存档工具栏：导出当前存档 / 导入存档
+	const actionBar = document.createElement('div');
+	actionBar.style.cssText = 'display:flex;gap:10px;justify-content:flex-start;margin-bottom:14px;';
+
+	// 【拦截主界面导出】主界面无游戏进度，导出只会得到未初始化的空数据，仅游戏内显示导出按钮
+	if (fromGame) {
+		const exportBtn = document.createElement('button');
+		exportBtn.className = 'ybrpg-btn';
+		exportBtn.textContent = '导出当前存档';
+		exportBtn.style.cssText = 'width:auto;padding:6px 14px;font-size:13px;';
+		exportBtn.onclick = exportCurrentSave;
+		actionBar.appendChild(exportBtn);
+	}
+
+	const importBtn = document.createElement('button');
+	importBtn.className = 'ybrpg-btn';
+	importBtn.textContent = '导入存档';
+	importBtn.style.cssText = 'width:auto;padding:6px 14px;font-size:13px;';
+	importBtn.onclick = importSaveData;
+	actionBar.appendChild(importBtn);
+
+	container.appendChild(actionBar);
 
 	// 创建存档槽位网格
 	const gridDiv = document.createElement('div');
@@ -2992,7 +3400,8 @@ function renderSaveView(container, fromGame = true) {
 						Game.toast('当前没有游戏进度，请先开始游戏', 'warning');
 						return;
 					}
-					SaveManager.saveToSlot(i);
+					const saveResult = SaveManager.saveToSlot(i);
+					if (!saveResult) return;  // 失败时 saveToSlot 内部已 Toast 提示
 					Game.toast(`已保存到存档${i}`, 'success');
 					renderSaveView(container, fromGame);
 				};
@@ -3036,7 +3445,8 @@ function renderSaveView(container, fromGame = true) {
 						Game.toast('当前没有游戏进度，请先开始游戏', 'warning');
 						return;
 					}
-					SaveManager.saveToSlot(i);
+					const saveResult = SaveManager.saveToSlot(i);
+					if (!saveResult) return;  // 失败时 saveToSlot 内部已 Toast 提示
 					Game.toast(`已保存到存档${i}`, 'success');
 					renderSaveView(container, fromGame);
 				};

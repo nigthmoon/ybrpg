@@ -253,7 +253,8 @@ class Bag {
 			icon: def.icon || '',
 			baseId: data.baseId,
 			level: level,
-			maxLevel: 10
+			// 等级上限取自宝物定义，未配置的宝物一律不可升级（上限 1）
+			maxLevel: def.maxLevel || 1
 		};
 	}
 
@@ -316,6 +317,9 @@ class Bag {
 			return;
 		}
 
+		// 等级上限：未配置 maxLevel 的宝物不可升级（上限 1）
+		const maxLevel = def.maxLevel || 1;
+
 		const fodderInstanceIds = Bag.getAbsorbFodderList(treasureInstanceId);
 
 		const fodderCount = fodderInstanceIds.length;
@@ -363,7 +367,7 @@ class Bag {
 		nameLevel.style.cssText = 'flex:1;';
 		nameLevel.innerHTML = `
 		<div style="font-size:16px;font-weight:bold;color:#fff;">${def.name}</div>
-		<div style="font-size:13px;color:#ffd700;" data-level-display>Lv.${currentLevel}/10</div>
+		<div style="font-size:13px;color:#ffd700;" data-level-display>Lv.${currentLevel}/${maxLevel}</div>
 	`;
 		headerRow.appendChild(nameLevel);
 		infoSection.appendChild(headerRow);
@@ -459,11 +463,11 @@ class Bag {
 		upgradeBtn.style.cssText = 'width:auto;padding:8px 20px;font-size:14px;flex:1;min-width:80px;';
 		upgradeBtn.textContent = '升级';
 
-		if (fodderCount < needCount || currentLevel >= 10) {
+		if (fodderCount < needCount || currentLevel >= maxLevel) {
 			upgradeBtn.disabled = true;
 			upgradeBtn.style.opacity = '0.5';
 			upgradeBtn.style.cursor = 'not-allowed';
-			if (currentLevel >= 10) {
+			if (currentLevel >= maxLevel) {
 				upgradeBtn.textContent = '已满级';
 			} else {
 				upgradeBtn.textContent = `材料不足(${fodderCount}/${needCount})`;
@@ -479,7 +483,7 @@ class Bag {
 
 			const latestLevel = latestTreasureData.level || 1;
 
-			if (latestLevel >= 10) {
+			if (latestLevel >= maxLevel) {
 				toast('宝物已达到最高等级', 'warning');
 				upgradeBtn.textContent = '已满级';
 				upgradeBtn.disabled = true;
@@ -507,7 +511,7 @@ class Bag {
 					}
 
 					const confirmLevel = confirmTreasureData.level || 1;
-					if (confirmLevel >= 10) {
+					if (confirmLevel >= maxLevel) {
 						toast('宝物已达到最高等级', 'warning');
 						return;
 					}
@@ -611,9 +615,12 @@ class Bag {
 	static refreshUpgradeUI(popup, def, baseId, treasureInstanceId, currentLevel, upgradeBtn, charInstanceId) {
 		if (!popup) return;
 
+		// 等级上限：未配置 maxLevel 的宝物不可升级（上限 1）
+		const maxLevel = (def && def.maxLevel) || 1;
+
 		const levelDisplay = popup.querySelector('[data-level-display]');
 		if (levelDisplay) {
-			levelDisplay.textContent = `Lv.${currentLevel}/10`;
+			levelDisplay.textContent = `Lv.${currentLevel}/${maxLevel}`;
 		}
 
 		const attrRow = popup.querySelector('[data-attr-display]');
@@ -657,7 +664,7 @@ class Bag {
 
 		const previewSection = popup.querySelector('[data-preview-section]');
 		if (previewSection) {
-			if (currentLevel < 10) {
+			if (currentLevel < maxLevel) {
 				const multiplier = currentLevel + 1;
 				let previewText = '';
 				if (def.atk > 0) previewText += `攻击: ${def.atk * currentLevel} → ${def.atk * multiplier}\n`;
@@ -676,7 +683,7 @@ class Bag {
 		}
 
 		if (upgradeBtn) {
-			if (currentLevel >= 10) {
+			if (currentLevel >= maxLevel) {
 				upgradeBtn.textContent = '已满级';
 				upgradeBtn.disabled = true;
 				upgradeBtn.style.opacity = '0.5';
