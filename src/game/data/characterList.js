@@ -1,4 +1,4 @@
-import { shared } from './shared.js';
+import { shared } from '../shared';
 
 /**
  * 生成完整的20阶突破列表

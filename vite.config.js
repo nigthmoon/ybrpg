@@ -12,6 +12,8 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    // 本机 IDE 对批量删除有安全拦截，构建时跳过 outDir 清空（同名文件覆盖写）
+    emptyOutDir: false,
     // 单页应用：任意前端路由回退到 index.html
   },
 });

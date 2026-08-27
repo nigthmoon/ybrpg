@@ -1,6 +1,6 @@
-import { TREASURE_DEFS } from './equip.js';
+import { TREASURE_DEFS } from './data/equip';
 // Bag 直接来自定义文件（避免经 core.js 形成循环依赖）
-import { Bag } from './game/system.js';
+import { Bag } from './system';
 
 /**
  * 夜白旅程 - 游戏数据管理类

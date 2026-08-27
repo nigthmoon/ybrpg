@@ -3,14 +3,14 @@
  * 由 mode.js 拆分而来（原行号见下文分段注释）
  */
 
-import { shared } from './shared.js';
-import { characterList } from './characterList.js';
-import { TREASURE_DEFS } from './equip.js';
-import { Game } from './core.js';
-import { useItem, renderBagItemContent } from './item.js';
-import { showBagCharDetail, showBagCharDetailPopup } from './team.js';
-import { formatPrice, getRankColor, getSellPrice } from './shop.js';
-import { SaveManager } from './other.js';
+import { shared } from './shared';
+import { characterList } from './data/characterList';
+import { TREASURE_DEFS } from './data/equip';
+import { Game } from './core';
+import { useItem, renderBagItemContent } from './item';
+import { showBagCharDetail, showBagCharDetailPopup } from './team';
+import { formatPrice, getRankColor, getSellPrice } from './shop';
+import { SaveManager } from './other';
 
 let _bagResetScroll = true;
 

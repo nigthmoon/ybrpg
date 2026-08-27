@@ -3,11 +3,11 @@
  * 包含：宝物实例化(Bag)、升级、战力计算(Stat)、视图刷新/工具(UI)等核心系统
  */
 
-import { shared } from '../shared.js';
-import { TREASURE_DEFS } from '../equip.js';
-import { BREAKTHROUGH_BUFF_LIBRARY } from '../charBreakthroughConfig.js';
-import { characterTemplate, characterList } from '../characterList.js';
-import { toast, confirmDialog, generateInstanceId, getMainCharacterSlotIndex } from '../ui/utils.js';
+import { shared } from './shared';
+import { TREASURE_DEFS } from './data/equip';
+import { BREAKTHROUGH_BUFF_LIBRARY } from './data/charBreakthroughConfig';
+import { characterTemplate, characterList } from './data/characterList';
+import { toast, confirmDialog, generateInstanceId, getMainCharacterSlotIndex } from './utils';
 
 // ====== Bag - 宝物/背包/装备系统 ======
 

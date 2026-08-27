@@ -18,10 +18,10 @@
  * 切勿反向 import './core.js'，否则会形成循环依赖。
  */
 
-import { Bag, Stat, UI } from './game/system.js';
-import { GameData, gameData } from './gameData.js';
-import { Battle, BattleEvents } from './battle/battle_refactored.js';
-import { toast, confirmDialog, generateInstanceId, getMainCharacterSlotIndex } from './ui/utils.js';
+import { Bag, Stat, UI } from './system';
+import { GameData, gameData } from './gameData';
+import { Battle, BattleEvents } from './battle';
+import { toast, confirmDialog, generateInstanceId, getMainCharacterSlotIndex } from './utils';
 
 // ====== 单一根命名空间：所有核心功能收纳于此 ======
 class Game {

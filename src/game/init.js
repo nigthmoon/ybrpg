@@ -3,11 +3,11 @@
  * 由 mode.js 拆分而来（原行号见下文分段注释）
  */
 
-import { renderTeamView } from './team.js';
-import { renderBagView } from './bag.js';
-import { renderDungeonView } from './dungeon.js';
-import { renderShopView } from './shop.js';
-import { hideOtherViews, renderSettingsView, showMainView } from './other.js';
+import { renderTeamView } from './team';
+import { renderBagView } from './bag';
+import { renderDungeonView } from './dungeon';
+import { renderShopView } from './shop';
+import { hideOtherViews, renderSettingsView, showMainView } from './other';
 
 function initEventListeners() {
 	const btnTeam = document.getElementById('btn-team');

@@ -3,16 +3,16 @@
  * 由 mode.js 拆分而来（原行号见下文分段注释）
  */
 
-import { shared } from './shared.js';
-import { contentList } from './contentList.js';
-import { characterList, characterTemplate } from './characterList.js';
-import { BREAKTHROUGH_BUFF_LIBRARY, STANDARD_BREAKTHROUGH_TEMPLATE } from './charBreakthroughConfig.js';
-import { TREASURE_DEFS } from './equip.js';
-import { Game } from './core.js';
-import { renderBagView, sortTreasuresByBagOrder, updateBagCharDetailBar } from './bag.js';
-import { grantCharacter, renderDungeonView } from './dungeon.js';
-import { renderShopView } from './shop.js';
-import { SaveManager, ensureResourceHUD, hideOtherViews, showFullImage, updateResourceHUD } from './other.js';
+import { shared } from './shared';
+import { contentList } from './data/contentList';
+import { characterList, characterTemplate } from './data/characterList';
+import { BREAKTHROUGH_BUFF_LIBRARY, STANDARD_BREAKTHROUGH_TEMPLATE } from './data/charBreakthroughConfig';
+import { TREASURE_DEFS } from './data/equip';
+import { Game } from './core';
+import { renderBagView, sortTreasuresByBagOrder, updateBagCharDetailBar } from './bag';
+import { grantCharacter, renderDungeonView } from './dungeon';
+import { renderShopView } from './shop';
+import { SaveManager, ensureResourceHUD, hideOtherViews, showFullImage, updateResourceHUD } from './other';
 
 function showteam() {
 	const teamView = document.getElementById('team-view');

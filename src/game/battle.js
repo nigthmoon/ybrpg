@@ -1,11 +1,11 @@
 // ====== 星河之契 - 重构战斗核心系统 (事件驱动版) ======
 
-import { shared } from '../shared.js';
-import { contentList } from '../contentList.js';
-import { characterList, characterTemplate } from '../characterList.js';
-import { BREAKTHROUGH_BUFF_LIBRARY } from '../charBreakthroughConfig.js';
-import { confirmDialog } from '../ui/utils.js';
-import { Stat } from '../game/system.js';
+import { shared } from './shared';
+import { contentList } from './data/contentList';
+import { characterList, characterTemplate } from './data/characterList';
+import { BREAKTHROUGH_BUFF_LIBRARY } from './data/charBreakthroughConfig';
+import { confirmDialog } from './utils';
+import { Stat } from './system';
 
 class Battle {}
 

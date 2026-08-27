@@ -3,16 +3,16 @@
  * 由 mode.js 拆分而来（原行号见下文分段注释）
  */
 
-import { shared } from './shared.js';
-import { contentList } from './contentList.js';
-import { characterList, characterTemplate } from './characterList.js';
-import { BREAKTHROUGH_BUFF_LIBRARY, STANDARD_BREAKTHROUGH_TEMPLATE } from './charBreakthroughConfig.js';
-import { TREASURE_DEFS } from './equip.js';
-import { Game } from './core.js';
-import { ITEM_DEFS } from './item.js';
-import { buildSkillSection, compileCharacterStats, getRankLabel, mergeNoOverwrite, refreshAllTeamSlots, renderTeamView, showTeamCharInfo, syncTreasureEquipData } from './team.js';
-import { DIFFICULTY_SCALE, buildRewardPlan, computeLevelGold, doSweep } from './dungeon.js';
-import { formatPrice, getRankColor, normalizePrice, refreshShopItems } from './shop.js';
+import { shared } from './shared';
+import { contentList } from './data/contentList';
+import { characterList, characterTemplate } from './data/characterList';
+import { BREAKTHROUGH_BUFF_LIBRARY, STANDARD_BREAKTHROUGH_TEMPLATE } from './data/charBreakthroughConfig';
+import { TREASURE_DEFS } from './data/equip';
+import { Game } from './core';
+import { ITEM_DEFS } from './item';
+import { buildSkillSection, compileCharacterStats, getRankLabel, mergeNoOverwrite, refreshAllTeamSlots, renderTeamView, showTeamCharInfo, syncTreasureEquipData } from './team';
+import { DIFFICULTY_SCALE, buildRewardPlan, computeLevelGold, doSweep } from './dungeon';
+import { formatPrice, getRankColor, normalizePrice, refreshShopItems } from './shop';
 
 function renderSettingsView(container) {
 	// 清空容器以防重复渲染

@@ -12,8 +12,8 @@
  *   selectable: 是否自选武将（true 时从候选中手动选择要获得的武将）
  */
 
-import { characterList } from './characterList.js';
-import { Game } from './core.js';
+import { characterList } from './data/characterList';
+import { Game } from './core';
 
 // 品质边框/文字颜色（与背包武将卡片保持一致）
 const RANK_COLORS = {

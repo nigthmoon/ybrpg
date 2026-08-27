@@ -3,16 +3,16 @@
  * 由 mode.js 拆分而来（原行号见下文分段注释）
  */
 
-import { shared } from './shared.js';
-import { characterList } from './characterList.js';
-import { TREASURE_DEFS } from './equip.js';
-import { eventList, SPeventList } from './eventList.js';
-import { Game } from './core.js';
-import { ITEM_DEFS } from './item.js';
-import { breakthroughMainCharacter, compileCharacterStats, getRankLabel, levelUpMainCharacter, mergeNoOverwrite, promoteMainCharacter, syncTreasureEquipData } from './team.js';
-import { renderBagView } from './bag.js';
-import { getRankColor } from './shop.js';
-import { SaveManager, getStaminaCost, hideOtherViews, recordDailyClear, showOutputPreview, trySpendStamina } from './other.js';
+import { shared } from './shared';
+import { characterList } from './data/characterList';
+import { TREASURE_DEFS } from './data/equip';
+import { eventList, SPeventList } from './data/eventList';
+import { Game } from './core';
+import { ITEM_DEFS } from './item';
+import { breakthroughMainCharacter, compileCharacterStats, getRankLabel, levelUpMainCharacter, mergeNoOverwrite, promoteMainCharacter, syncTreasureEquipData } from './team';
+import { renderBagView } from './bag';
+import { getRankColor } from './shop';
+import { SaveManager, getStaminaCost, hideOtherViews, recordDailyClear, showOutputPreview, trySpendStamina } from './other';
 
 function getCharSaveData(charId) {
 	if (!window.charBagData) window.charBagData = {};

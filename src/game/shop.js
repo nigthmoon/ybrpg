@@ -3,13 +3,13 @@
  * 由 mode.js 拆分而来（原行号见下文分段注释）
  */
 
-import { shared } from './shared.js';
-import { characterList } from './characterList.js';
-import { Game } from './core.js';
-import { ITEM_DEFS } from './item.js';
-import { compileCharacterStats, getRankLabel, mergeNoOverwrite, refreshTeamViewDisplay } from './team.js';
-import { grantCharacter, hasRealBreakthrough } from './dungeon.js';
-import { SaveManager, addDailyTaskProgress, fmtGroup4, showCharDetail, updateResourceHUD } from './other.js';
+import { shared } from './shared';
+import { characterList } from './data/characterList';
+import { Game } from './core';
+import { ITEM_DEFS } from './item';
+import { compileCharacterStats, getRankLabel, mergeNoOverwrite, refreshTeamViewDisplay } from './team';
+import { grantCharacter, hasRealBreakthrough } from './dungeon';
+import { SaveManager, addDailyTaskProgress, fmtGroup4, showCharDetail, updateResourceHUD } from './other';
 
 const CURRENCY_SYMBOL = { gold: '💰', diamond: '💎' };
 

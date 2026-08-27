@@ -5,9 +5,9 @@
  * 战斗系统通过 normalizeBreakthroughData 编译后，直接推入角色的 skills 数组
  * 由 triggerSelfEffect / triggerGlobalEffect 根据 trigger 时机自动调用
  */
-import { shared } from './shared.js';
+import { shared } from '../shared';
 // 战斗日志/UI 更新统一收纳于 Game.Battle（避免散落的 window.* 全局调用）
-import { Game } from './core.js';
+import { Game } from '../core';
 
 // ==================== 全局 Buff 库定义 ====================
 const BREAKTHROUGH_BUFF_LIBRARY = {
