@@ -1,101 +1,16 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<title>星河之契</title>
-	<link rel="stylesheet" href="/src/style.css">
-	<!-- 游戏版本号：直接在此修改，全局（界面显示 / 存档版本戳 / 兼容性判断）统一使用 -->
-	<script>
-		window.GAME_VERSION = 'v2.8.2';
-	</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>星河之契</title>
+  <script>
+    window.GAME_VERSION = 'v3.0.0';
+  </script>
+  <link rel="icon" type="image/png" href="/favicon.ico" />
 </head>
-
 <body>
-	<!-- 加载遮罩：模块完全加载完成前显示，避免底部导航等 UI 提前露出 -->
-	<div id="ybrpg-loading">
-		<div class="ybrpg-loading-spinner"></div>
-		<div class="ybrpg-loading-text">加载中...</div>
-	</div>
-	<!-- 游戏主容器 (初始隐藏，模块加载完成后由 main.js 显示) -->
-	<div id="ybrpg-root" style="display: none;">
-		<!-- 主内容区域 -->
-		<div class="ybrpg-main-content">
-			<!-- 主视图 (默认显示) -->
-			<div id="main-view">
-				<h2>游戏主界面</h2>
-			</div>
-			<!-- 新增存档界面 -->
-			<div id="save-view">
-				<!-- 存档界面内容将由JS动态生成 -->
-			</div>
-
-			<!-- 队伍视图 (默认隐藏，内容为空，由JS动态加载) -->
-			<div id="team-view" style="display: none;">
-			</div>
-
-			<!-- 背包视图 (默认隐藏) -->
-			<div id="bag-view" style="display: none;">
-			</div>
-
-			<!-- 副本视图 (默认隐藏) -->
-			<div id="dungeon-view" style="display: none;">
-			</div>
-
-			<!-- 商店视图 (默认隐藏) -->
-			<div id="shop-view" style="display: none;">
-			</div>
-
-			<!-- 设置视图 (默认隐藏) -->
-			<div id="settings-view" style="display: none;">
-			</div>
-
-			<!-- 战斗视图 (默认隐藏) -->
-			<div id="battle-view" style="display: none;">
-			</div>
-		</div>
-
-		<!-- 底部导航栏 (战斗时隐藏) -->
-		<div class="ybrpg-bottom-bar">
-			<button class="ybrpg-nav-btn" id="btn-team">队伍</button>
-			<button class="ybrpg-nav-btn" id="btn-bag">背包</button>
-			<button class="ybrpg-nav-btn" id="btn-dungeon">副本</button>
-			<button class="ybrpg-nav-btn" id="btn-shop">商店</button>
-			<button class="ybrpg-nav-btn" id="btn-settings">其他</button>
-		</div>
-	</div>
-	<script>
-		// // ====== 页面关闭/切后台时自动存档 ======
-		// // 页面隐藏（切后台/锁屏/切标签页）
-		// document.addEventListener('visibilitychange', () => {
-		// 	if (document.hidden) {
-		// 		if (window.SaveManager && window.SaveManager._dirty) {
-		// 			window.SaveManager.flushSave();
-		// 		}
-		// 	}
-		// });
-
-		// // 页面即将关闭/刷新
-		// window.addEventListener('beforeunload', () => {
-		// 	if (window.SaveManager && window.SaveManager._dirty) {
-		// 		// 同步写入（不等待异步）
-		// 		window.SaveManager._performAutoSave();
-		// 	}
-		// });
-
-		// // 移动端页面可见性变化
-		// document.addEventListener('pagehide', () => {
-		// 	if (window.SaveManager && window.SaveManager._dirty) {
-		// 		window.SaveManager._performAutoSave();
-		// 	}
-		// });
-	</script>
-	<!-- 引入宝物定义（需在 gameData.js 之前） -->
-	<!-- <script src="./treasureList.js"></script> -->
-	<!-- 模块入口（Vite / ESM 加载） -->
-	<script type="module" src="/src/main.js"></script>
-
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
 </body>
-
 </html>
