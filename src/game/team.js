@@ -3,7 +3,7 @@
  * 由 mode.js 拆分而来（原行号见下文分段注释）
  */
 
-import { shared } from './shared';
+import { shared, lazyImageSrc, chunkAppend } from './shared';
 import { contentList } from './data/contentList';
 import { characterList, characterTemplate } from './data/characterList';
 import { BREAKTHROUGH_BUFF_LIBRARY, STANDARD_BREAKTHROUGH_TEMPLATE } from './data/charBreakthroughConfig';
@@ -38,6 +38,10 @@ function showteam() {
  */
 function renderTeamView(container) {
 	container.innerHTML = '';
+	// 兜底：确保整个队伍视图任意位置（含方格间隙）都允许 drop，
+	// 否则鼠标移动到非方格元素上时会显示禁止图标且无法落位
+	container.addEventListener('dragover', (e) => { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; });
+	container.addEventListener('dragenter', (e) => { e.preventDefault(); });
 
 	// ===== 【新增】阵容总战力显示（固定在顶部） =====
 	const totalPowerBar = document.createElement('div');
@@ -89,6 +93,9 @@ function renderTeamView(container) {
 	const gridDiv = document.createElement('div');
 	gridDiv.className = 'team-grid';
 	gridDiv.id = 'team-grid';
+	// 给整个放置区兜底：确保网格内任何位置（含空隙）都允许 drop，避免拖拽时显示禁止图标
+	gridDiv.addEventListener('dragover', (e) => { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = 'move'; });
+	gridDiv.addEventListener('dragenter', (e) => { e.preventDefault(); });
 
 	// 创建6个方格
 	for (let i = 0; i < 6; i++) {
@@ -2147,6 +2154,7 @@ function renderTeamSlot(slotEl, index) {
 		// 名字标签
 		const nameTag = document.createElement('div');
 		nameTag.className = 'team-slot-name';
+		nameTag.style.pointerEvents = 'none'; // 防止拖拽时 target 落在标签上导致拖拽失效
 		const tupoText = char.tupolevel ? `+${char.tupolevel}` : '';
 		const levelText = char.level ? `Lv.${char.level}` : '';
 		nameTag.textContent = char.name + tupoText;
@@ -2879,7 +2887,7 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
 		scrollDiv.appendChild(emptyTip);
 	}
 
-	displayList.forEach(item => {
+	chunkAppend(displayList, scrollDiv, (item) => {
 		const row = document.createElement('div');
 		row.className = 'treasure-select-row';
 
@@ -2901,12 +2909,12 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
 		iconDiv.className = 'treasure-select-icon';
 		if (item.icon) {
 			const img = document.createElement('img');
-			img.src = item.icon;
 			img.className = 'treasure-icon-img';
 			img.onerror = function () {
 				this.style.display = 'none';
 				iconDiv.textContent = item.name.charAt(0);
 			};
+			lazyImageSrc(img, item.icon);
 			iconDiv.appendChild(img);
 		} else {
 			iconDiv.textContent = item.name.charAt(0);
@@ -2979,7 +2987,7 @@ function showTreasureSelectPopup(charInstanceId, slotIndex) {
 		}
 		row.appendChild(btn);
 
-		scrollDiv.appendChild(row);
+		return row;
 	});
 
 	popup.appendChild(scrollDiv);
@@ -3239,31 +3247,42 @@ function _clearDragStyles() {
 // --- 桌面端 Drag & Drop ---
 function onSlotDragStart(e, index) {
 	_dragSourceIndex = index;
-	e.dataTransfer.effectAllowed = 'move';
-	e.dataTransfer.setData('text/plain', String(index));
-	e.target.classList.add('team-slot-dragging');
+	if (e.dataTransfer) {
+		// 用 'all' 而非 'move'，避免 effectAllowed 与 dragover 的 dropEffect 不匹配导致全程禁止图标
+		e.dataTransfer.effectAllowed = 'all';
+		try { e.dataTransfer.setData('text/plain', String(index)); } catch (err) { /* 忽略：部分浏览器在 dragstart 禁止 setData */ }
+	}
+	// 用 currentTarget 确保高亮加在 slot 本身（子元素已设 pointer-events:none）
+	e.currentTarget.classList.add('team-slot-dragging');
 }
 
 function onSlotDragOver(e) {
 	e.preventDefault();
-	e.dataTransfer.dropEffect = 'move';
+	if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
 }
 
 function onSlotDragEnter(e, index) {
 	e.preventDefault();
 	if (index !== _dragSourceIndex) {
-		e.target.closest('.team-slot')?.classList.add('team-slot-drag-over');
+		e.currentTarget.classList.add('team-slot-drag-over');
 	}
 }
 
 function onSlotDragLeave(e) {
-	e.target.closest('.team-slot')?.classList.remove('team-slot-drag-over');
+	e.preventDefault();
+	e.currentTarget.classList.remove('team-slot-drag-over');
 }
 
 function onSlotDrop(e, targetIndex) {
 	e.preventDefault();
-	e.target.closest('.team-slot')?.classList.remove('team-slot-drag-over');
-	swapTeamSlots(_dragSourceIndex, targetIndex);
+	e.currentTarget.classList.remove('team-slot-drag-over');
+	// 优先从 dataTransfer 读取源索引（最可靠），回退到 _dragSourceIndex
+	let fromIndex = _dragSourceIndex;
+	if (e.dataTransfer) {
+		const t = e.dataTransfer.getData('text/plain');
+		if (t !== '' && !isNaN(Number(t))) fromIndex = Number(t);
+	}
+	swapTeamSlots(fromIndex, targetIndex);
 	_dragSourceIndex = null;
 }
 

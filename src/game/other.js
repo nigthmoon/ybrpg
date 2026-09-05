@@ -84,7 +84,14 @@ function renderSettingsView(container) {
 	saveBtn.className = 'ybrpg-settings-btn';
 	saveBtn.id = 'btn-setting-save';
 	saveBtn.textContent = '存档管理';
-	saveBtn.onclick = () => showSaveView();
+	saveBtn.onclick = () => {
+		// 【Vue 桥接】主界面态由 Vue 路由接管存档页；游戏态走宿主层
+		if (window.__ybrpgBridge && typeof window.__ybrpgBridge.goSaves === 'function') {
+			window.__ybrpgBridge.goSaves();
+			return;
+		}
+		showSaveView();
+	};
 	groupDiv.appendChild(saveBtn);
 
 	container.appendChild(groupDiv);
@@ -417,17 +424,19 @@ function writeImportedSave(slot, data) {
 		if (sv) renderSaveView(sv, false);
 		// 询问是否立即读取
 		Game.confirmDialog(`已导入存档到${slot === 0 ? '自动存档' : `存档${slot}`}，是否立即读取该存档？`, () => {
-			if (slot === 0) {
-				SaveManager.loadAutoSave();
-			} else {
-				SaveManager.loadFromSlot(slot);
-			}
-			Game.toast(slot === 0 ? '已读取自动存档' : `已读取存档${slot}`, 'success');
-			const bottomBar = document.querySelector('.ybrpg-bottom-bar');
-			if (bottomBar) bottomBar.style.display = 'flex';
-			hideOtherViews('team-view');
-			const teamView = document.getElementById('team-view');
-			if (teamView) teamView.style.display = 'flex';
+			runLoadWithOverlay(() => {
+				if (slot === 0) {
+					SaveManager.loadAutoSave();
+				} else {
+					SaveManager.loadFromSlot(slot);
+				}
+				Game.toast(slot === 0 ? '已读取自动存档' : `已读取存档${slot}`, 'success');
+				const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+				if (bottomBar) bottomBar.style.display = 'flex';
+				hideOtherViews('team-view');
+				const teamView = document.getElementById('team-view');
+				if (teamView) teamView.style.display = 'flex';
+			}, slot === 0 ? '正在读取自动存档…' : `正在读取存档${slot}…`);
 		}, null, { title: '导入完成' });
 	} catch (e) {
 		console.error('[导入存档] 写入失败:', e);
@@ -2263,6 +2272,11 @@ function syncResourceHUDViewMode(currentViewId) {
 // }
 // 美化版showMainView函数
 function showMainView() {
+	// 【Vue 桥接】返回主界面由 Vue 路由接管（宿主层无 #main-view 时旧逻辑静默安全）
+	if (typeof window !== 'undefined' && window.__ybrpgBridge && typeof window.__ybrpgBridge.exitGame === 'function') {
+		window.__ybrpgBridge.exitGame();
+	}
+
 	const mainView = document.getElementById('main-view');
 	const bottomBar = document.querySelector('.ybrpg-bottom-bar');
 	const saveView = document.getElementById('save-view');
@@ -3226,6 +3240,42 @@ function migrateTreasuresToInstanceId() {
 	console.log('[迁移] 宝物数据迁移完成，共迁移了 ' + Object.keys(newTreasures).length + ' 个实例的宝物');
 }
 
+// ===== 加载遮罩（读取存档等耗时操作期间显示，拦截误触） =====
+function showLoadingOverlay(msg) {
+	let ov = document.getElementById('ybrpg-loading-overlay');
+	if (!ov) {
+		ov = document.createElement('div');
+		ov.id = 'ybrpg-loading-overlay';
+		const sp = document.createElement('div');
+		sp.className = 'ybrpg-loading-spinner';
+		const tx = document.createElement('div');
+		tx.className = 'ybrpg-loading-text';
+		ov.appendChild(sp);
+		ov.appendChild(tx);
+		document.body.appendChild(ov);
+	}
+	ov.querySelector('.ybrpg-loading-text').textContent = msg || '加载中…';
+	ov.style.display = 'flex';
+}
+function hideLoadingOverlay() {
+	const ov = document.getElementById('ybrpg-loading-overlay');
+	if (ov) ov.style.display = 'none';
+}
+// 暴露给 store 等其它模块复用
+window.ybrpgShowLoading = showLoadingOverlay;
+window.ybrpgHideLoading = hideLoadingOverlay;
+// 包装：先显示遮罩并绘制，再执行耗时读取，渲染完成后隐藏遮罩
+function runLoadWithOverlay(loadFn, msg) {
+	showLoadingOverlay(msg);
+	setTimeout(() => {
+		try {
+			loadFn();
+		} finally {
+			setTimeout(hideLoadingOverlay, 350);
+		}
+	}, 30);
+}
+
 // 渲染存档界面
 function renderSaveView(container, fromGame = true) {
 	// 清空容器
@@ -3314,13 +3364,15 @@ function renderSaveView(container, fromGame = true) {
 		autoLoadBtn.style.borderColor = '#4ecdc4';
 		autoLoadBtn.textContent = '读取';
 		autoLoadBtn.onclick = () => {
-			SaveManager.loadAutoSave();
-			Game.toast('已读取自动存档', 'success');
-			const bottomBar = document.querySelector('.ybrpg-bottom-bar');
-			if (bottomBar) bottomBar.style.display = 'flex';
-			hideOtherViews('team-view');
-			const teamView = document.getElementById('team-view');
-			if (teamView) teamView.style.display = 'flex';
+			runLoadWithOverlay(() => {
+				SaveManager.loadAutoSave();
+				Game.toast('已读取自动存档', 'success');
+				const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+				if (bottomBar) bottomBar.style.display = 'flex';
+				hideOtherViews('team-view');
+				const teamView = document.getElementById('team-view');
+				if (teamView) teamView.style.display = 'flex';
+			}, '正在读取存档…');
 		};
 		autoSlot.appendChild(autoLoadBtn);
 
@@ -3380,13 +3432,15 @@ function renderSaveView(container, fromGame = true) {
 			loadBtn.className = 'save-action-btn';
 			loadBtn.textContent = '读取';
 			loadBtn.onclick = () => {
-				SaveManager.loadFromSlot(i);
-				Game.toast(`已读取存档${i}`, 'success');
-				const bottomBar = document.querySelector('.ybrpg-bottom-bar');
-				if (bottomBar) bottomBar.style.display = 'flex';
-				hideOtherViews('team-view');
-				const teamView = document.getElementById('team-view');
-				if (teamView) teamView.style.display = 'flex';
+				runLoadWithOverlay(() => {
+					SaveManager.loadFromSlot(i);
+					Game.toast(`已读取存档${i}`, 'success');
+					const bottomBar = document.querySelector('.ybrpg-bottom-bar');
+					if (bottomBar) bottomBar.style.display = 'flex';
+					hideOtherViews('team-view');
+					const teamView = document.getElementById('team-view');
+					if (teamView) teamView.style.display = 'flex';
+				}, `正在读取存档${i}…`);
 			};
 			saveSlot.appendChild(loadBtn);
 
@@ -3468,7 +3522,7 @@ function renderSaveView(container, fromGame = true) {
  */
 
 // 导出本模块定义的函数（供其他模块 import）
-export { renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView };
+export { renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView, collectCurrentSaveData, exportCurrentSave, importSaveData, showSaveSlotPicker, writeImportedSave };
 
 // 暴露给外部模块（shared 注册表 / window / Game）
 shared.hideOtherViews = hideOtherViews;

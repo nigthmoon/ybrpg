@@ -3,7 +3,7 @@
  * 由 mode.js 拆分而来（原行号见下文分段注释）
  */
 
-import { shared } from './shared';
+import { shared, lazyImageSrc, chunkAppend } from './shared';
 import { characterList } from './data/characterList';
 import { TREASURE_DEFS } from './data/equip';
 import { Game } from './core';
@@ -362,8 +362,8 @@ function renderBagEquipContent(container) {
 	// 与「更换宝物」弹窗共用同一套排序（已装备 → 等级 → 品质 → baseId）
 	sortTreasuresByBagOrder(allInstances, treasureOwnerMap);
 
-	// 遍历所有宝物实例，每个独立展示
-	allInstances.forEach(item => {
+	// 遍历所有宝物实例，每个独立展示（分片异步渲染 + 图片懒加载）
+	chunkAppend(allInstances, grid, (item) => {
 		const ownerInfo = treasureOwnerMap[item.instanceId];
 		const isEquipped = !!ownerInfo;
 
@@ -404,7 +404,6 @@ function renderBagEquipContent(container) {
 		if (item.icon) {
 			const img = document.createElement('img');
 			img.className = 'gallery-char-img equipbag-icon-img';
-			img.src = item.icon;
 			img.alt = item.name;
 			img.onerror = function () {
 				this.style.display = 'none';
@@ -413,6 +412,7 @@ function renderBagEquipContent(container) {
 				fallback.textContent = item.emoji || item.name.charAt(0);
 				this.parentNode.appendChild(fallback);
 			};
+			lazyImageSrc(img, item.icon);
 			iconDiv.appendChild(img);
 		} else {
 			const placeholder = document.createElement('div');
@@ -548,7 +548,7 @@ function renderBagEquipContent(container) {
 		// };
 
 
-		grid.appendChild(card);
+		return card;
 	});
 
 	scrollDiv.appendChild(grid);
@@ -725,7 +725,8 @@ function renderBagCharContent(container) {
 
 	// ... 在 renderBagCharContent 函数内部 ...
 
-	for (const charInst of ownedInstances) {
+	// 分片异步渲染，避免一次性创建上千节点冻结主线程
+	chunkAppend(ownedInstances, grid, (charInst) => {
 		const borderColor = RANK_BORDER_COLORS[charInst.rank] || '#888';
 		const isInTeam = window.currentTeam && window.currentTeam.includes(charInst.instanceId);
 
@@ -748,7 +749,6 @@ function renderBagCharContent(container) {
 
 		const img = document.createElement('img');
 		img.className = 'gallery-char-img';
-		img.src = `/image/character/${charInst.charId}.jpg`;
 		img.alt = charInst.name;
 		img.onerror = function () {
 			this.onerror = function () {
@@ -760,6 +760,8 @@ function renderBagCharContent(container) {
 			};
 			this.src = `/image/character/${charInst.charId}.webp`;
 		};
+		// 懒加载：进入视口才发起图片请求
+		lazyImageSrc(img, `/image/character/${charInst.charId}.jpg`);
 		iconDiv.appendChild(img);
 
 		// 【新增】等级徽章 (左下角)
@@ -804,8 +806,8 @@ function renderBagCharContent(container) {
 			card.classList.add('selected');
 		};
 
-		grid.appendChild(card);
-	}
+		return card;
+	});
 	// ...
 
 	if (ownedInstances.length === 0) {

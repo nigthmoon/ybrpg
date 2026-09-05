@@ -1,53 +1,66 @@
 <script setup>
-import { GAME_VERSION } from '../version';
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useGameStore } from '../stores/game';
+
+const router = useRouter();
+const store = useGameStore();
+const host = ref(null);
+
+onMounted(async () => {
+  await store.initGame();
+  store.renderSettingsInto(host.value);
+});
 </script>
 
 <template>
-  <div class="settings-view">
-    <h2 class="section-title">设置</h2>
-    <div class="setting-card">
-      <div class="setting-row">
-        <span class="setting-label">游戏版本</span>
-        <span class="setting-value">{{ GAME_VERSION }}</span>
-      </div>
-      <div class="setting-row">
-        <span class="setting-label">引擎</span>
-        <span class="setting-value">Vue 3 重构版（迁移中）</span>
-      </div>
+  <div class="settings-page">
+    <div class="page-header">
+      <button class="back-btn" @click="router.push('/')">‹ 返回</button>
+      <h2 class="page-title">设置</h2>
+      <span class="header-spacer"></span>
     </div>
+
+    <!-- 旧设置视图渲染容器（图鉴/每日任务/签到/兑换码/偏好设置等） -->
+    <div ref="host" class="settings-host"></div>
   </div>
 </template>
 
 <style scoped>
-.settings-view {
-  max-width: 640px;
+.settings-page {
+  max-width: 560px;
   margin: 0 auto;
+  padding: 16px;
 }
-.section-title {
-  color: #ffd700;
-  margin-bottom: 14px;
-}
-.setting-card {
-  background: rgba(13, 27, 51, 0.6);
-  border: 1px solid rgba(255, 215, 0, 0.2);
-  border-radius: 10px;
-  padding: 6px 14px;
-}
-.setting-row {
+.page-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(143, 163, 200, 0.15);
+  gap: 12px;
+  margin-bottom: 16px;
 }
-.setting-row:last-child {
-  border-bottom: none;
-}
-.setting-label {
-  color: #dfe6f2;
-}
-.setting-value {
-  color: #8fa3c8;
+.back-btn {
+  padding: 6px 12px;
   font-size: 13px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.35);
+  color: #e8eaf6;
+  border: 1px solid #455a64;
+  border-radius: 6px;
+}
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.page-title {
+  flex: 1;
+  text-align: center;
+  font-size: 18px;
+  margin: 0;
+  color: #e8eaf6;
+}
+.header-spacer {
+  width: 64px;
+}
+.settings-host {
+  min-height: 300px;
 }
 </style>

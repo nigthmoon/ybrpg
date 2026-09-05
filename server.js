@@ -1,12 +1,16 @@
 /**
  * 星河之契 - 纯 Node.js 静态服务器（零依赖，仅使用内置模块）
  *
+ * 用途：托管「已构建」的游戏（npm run build 生成的 dist 目录），双击即玩、无需 Vite。
  * 启动方式：
- *   node server.js          （手动启动，自动用 Chrome 打开）
- *   npm run dev / npm start （等价）
- *   start.bat               （双击启动，自动开 Chrome）
+ *   node server.js           （自动用 Chrome 打开 http://localhost:3000）
+ *   npm start / npm run serve（等价）
+ *   start.bat                （开发模式：npm run dev 启动 Vite，带热更新）
  * 关闭：stop.bat 或 Ctrl+C
  * 端口可用环境变量覆盖：PORT=8080 node server.js
+ *
+ * 注意：本服务器只提供静态文件，不会编译 .vue。若 dist 不存在，会回退到项目根目录，
+ *       但根目录的源码（/src/main.js、*.vue）无法被浏览器直接运行——请先 `npm run build`。
  */
 import http from 'node:http';
 import { stat } from 'node:fs/promises';
@@ -18,6 +22,10 @@ import { exec } from 'node:child_process';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
+const DIST_DIR = path.join(ROOT, 'dist');
+// 优先使用构建产物 dist；未构建时回退到项目根（仅适合已被其它方式编译的场景）
+const WEB_ROOT = existsSync(DIST_DIR) ? DIST_DIR : ROOT;
+const USING_DIST = WEB_ROOT === DIST_DIR;
 const PORT = process.env.PORT || 3000;
 const HOST = '0.0.0.0';
 
@@ -59,19 +67,21 @@ async function resolveFile(urlPath) {
   let reqPath = decodeURIComponent(urlPath.split('?')[0]);
   if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
 
-  // 1) 优先 public 目录（模拟 Vite：public 内容映射到站点根路径，如 /image/... -> public/image/...）
-  const pubPath = safeJoin(PUBLIC_DIR, reqPath);
-  if (pubPath && (await existsFile(pubPath))) return pubPath;
+  // 1) 优先以 WEB_ROOT（dist 或项目根）解析
+  const webPath = safeJoin(WEB_ROOT, reqPath);
+  if (webPath && (await existsFile(webPath))) return webPath;
 
-  // 2) 项目根目录（如 /src/main.js、/index.html）
-  const rootPath = safeJoin(ROOT, reqPath);
-  if (rootPath && (await existsFile(rootPath))) return rootPath;
+  // 2) 开发模式兼容：public 目录内容映射到站点根（如 /image/... -> public/image/...）
+  if (!USING_DIST) {
+    const pubPath = safeJoin(PUBLIC_DIR, reqPath);
+    if (pubPath && (await existsFile(pubPath))) return pubPath;
+  }
 
   // 3) 仅当请求「无扩展名」（看起来像前端路由）时，才兜底回退到 index.html；
   //    带扩展名的缺失资源（.js/.png 等）直接返回 null -> 404，避免把 HTML 当模块/图片解析
   const lastSeg = reqPath.split('/').pop();
   if (!lastSeg.includes('.')) {
-    const fallback = safeJoin(ROOT, '/index.html');
+    const fallback = safeJoin(WEB_ROOT, '/index.html');
     if (fallback && (await existsFile(fallback))) return fallback;
   }
 
@@ -123,8 +133,18 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n[星河之契] 端口 ${PORT} 已被占用！请先运行 stop.bat 关闭旧服务，或改用 PORT=8080 node server.js`);
+  } else {
+    console.error('[星河之契] 服务器启动失败:', err);
+  }
+  process.exit(1);
+});
+
 server.listen(PORT, HOST, () => {
   const url = `http://localhost:${PORT}`;
   console.log(`[星河之契] 服务器已启动: ${url}`);
+  console.log(`[星河之契] 服务模式: ${USING_DIST ? '生产构建(dist)' : '项目根(未构建, 建议先 npm run build)'}`);
   openBrowser(url);
 });

@@ -516,7 +516,7 @@ body {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding-top: 10px;
+	padding-top: 56px;
 	overflow: hidden;
 }
 
@@ -2143,13 +2143,15 @@ body {
 
 /* 设置视图风格 */
 #settings-view {
-	width: 100%;
+	width: 90%;
+	max-width: 760px;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center; /* 居中显示按钮组 */
-	padding-top: 20px;
+	padding-top: 56px; /* 避开顶部常驻资源条，避免返回键被遮挡 */
+	margin: 0 auto;
 }
 
 /* 副本视图风格 */
@@ -2160,18 +2162,20 @@ body {
 	flex-direction: column;
 	align-items: center;
 	justify-content: flex-start; /* 修改: 确保内容从顶部开始排列，而不是居中 */
-	padding-top: 20px;
+	padding-top: 56px;
 	overflow-y: auto; /* 允许垂直滚动 */
 }
 
 /* 新增: 商店视图风格 */
 #shop-view {
-	width: 100%;
+	width: 90%;
+	max-width: 760px;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding-top: 20px;
+	padding-top: 56px;
+	margin: 0 auto;
 	overflow-y: auto; /* 允许垂直滚动 */
 }
 
@@ -2631,6 +2635,43 @@ h1, h2 {
 	border-color: #ffd700;
 }
 
+/* 读取存档/加载期间的遮罩动画，拦截误触 */
+#ybrpg-loading-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 10000; /* 高于常驻资源条(9999) */
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 18px;
+	background: rgba(10, 12, 20, 0.72);
+	backdrop-filter: blur(2px);
+	cursor: wait;
+	pointer-events: auto; /* 阻断下方所有点击，防止加载期间乱点出错 */
+}
+
+/* 旋转圆环 */
+.ybrpg-loading-spinner {
+	width: 54px;
+	height: 54px;
+	border: 5px solid rgba(255, 255, 255, 0.18);
+	border-top-color: #4ecdc4;
+	border-radius: 50%;
+	animation: ybrpg-spin 0.9s linear infinite;
+}
+
+@keyframes ybrpg-spin {
+	to { transform: rotate(360deg); }
+}
+
+.ybrpg-loading-text {
+	color: #e6f3ff;
+	font-size: 15px;
+	letter-spacing: 1px;
+	user-select: none;
+}
+
 /* 主界面新按钮样式 */
 /* 修改主界面容器样式 */
 #main-view {
@@ -2909,6 +2950,7 @@ h1, h2 {
 /* 图鉴滚动区域 */
 .gallery-scroll {
 	flex: 1;
+	min-height: 0; /* 关键：允许 flex 子项被压缩，否则内容撑开容器导致最下一行被裁且无法滚动 */
 	width: 100%;
 	overflow-y: auto;
 	padding-bottom: 20px;

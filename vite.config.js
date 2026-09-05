@@ -9,6 +9,8 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
+    strictPort: false,  // 端口被占用时自动顺延(3001...)，避免启动即退出
+    open: false,        // 关闭内置打开；由 start.bat 统一用谷歌浏览器打开
   },
   build: {
     outDir: 'dist',
