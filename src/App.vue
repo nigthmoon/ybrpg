@@ -1,10 +1,33 @@
 <script setup>
+import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useGameStore } from './stores/game';
+import { useAuthStore } from './stores/auth';
+import { setOnAuthError } from './api/client';
+import { confirmDialog } from './composables/useConfirm';
 import { GAME_VERSION } from './version';
 import ConfirmHost from './components/ConfirmHost.vue';
 import BackendBanner from './components/BackendBanner.vue';
 
 const store = useGameStore();
+const auth = useAuthStore();
+const router = useRouter();
+
+// 被顶号 / 挂机踢 / 登录过期：弹提示并回登录页
+onMounted(() => {
+  setOnAuthError((e) => {
+    if (!auth.isLoggedIn) return;
+    confirmDialog({
+      title: '登录状态',
+      message: e.message || '你已被踢下线，请重新登录',
+      danger: true,
+      confirmText: '知道了',
+    }).then(() => {
+      auth.logout();
+      if (router.currentRoute.value.path !== '/') router.push('/');
+    });
+  });
+});
 
 // 游戏态底部导航
 const navs = [

@@ -16,12 +16,17 @@ import { nextTick } from 'vue';
 import router from '../router';
 import { useAuthStore } from './auth';
 import { downloadSlot, uploadSlot, deleteCloudSlot } from '../game/cloud';
+import { getSaveNamespace } from '../game/saveNs';
+import { api } from '../api/client';
+import { confirmDialog } from '../composables/useConfirm';
 
 // 动态加载的逻辑层模块引用（首次 initGame 后缓存）
 let otherApi = null;
 
 // 各渲染函数分散在不同模块，统一在此聚合，供 _renderView 调用
 let renderFns = null;
+let hbTimer = null;   // 在线心跳定时器
+let hbVis = null;     // 可见性变化处理器
 
 export const useGameStore = defineStore('game', {
   state: () => ({
@@ -82,7 +87,7 @@ export const useGameStore = defineStore('game', {
       this.hasAuto = sm.hasAutoSave();
       this.autoSaveTime = null;
       try {
-        const raw = localStorage.getItem('ybrpg_save_0');
+        const raw = localStorage.getItem(getSaveNamespace() + ':ybrpg_save_0');
         if (raw) {
           const d = JSON.parse(raw);
           this.autoSaveTime = d?.baseInfo?.saveTime || d?.saveTime || null;
@@ -97,10 +102,39 @@ export const useGameStore = defineStore('game', {
     },
 
     /**
+     * 登录态：把云端该账号的存档拉齐到本地（供存档页展示与读取），再刷新列表。
+     * 换设备登录同一账号时，靠它从云端继承存档。
+     */
+    async ensureCloudSaves() {
+      if (!this.ready) return;
+      if (useAuthStore().isLoggedIn) {
+        try {
+          const d = await api.listSaves();
+          const list = (d && d.saves) || [];
+          for (const s of list) {
+            if (s && s.exists) { try { await downloadSlot(s.slot); } catch (e) { /* 单个失败忽略 */ } }
+          }
+        } catch (e) { /* 后端不在/网络异常：仅用本地 */ }
+      }
+      this.refreshSaves();
+    },
+
+    /**
      * 开始新游戏：初始化逻辑层 → initNewGame → 进入队伍视图
      */
     async newGame() {
       await this.initGame();
+      // 已有自动存档时，开始新游戏会覆盖进度，需二次确认
+      const sm = window.Game.SaveManager;
+      if (sm && typeof sm.hasAutoSave === 'function' && sm.hasAutoSave()) {
+        const ok = await confirmDialog({
+          title: '开始新游戏',
+          message: '当前已有自动存档进度。\n开始新游戏将重置当前进度(自动存档会被覆盖)。\n确定开始吗？重要进度建议先保存到手动存档。',
+          danger: true,
+          confirmText: '开始新游戏',
+        });
+        if (!ok) return;
+      }
       otherApi.initNewGame();
       await this.enterGame('team-view');
     },
@@ -172,6 +206,7 @@ export const useGameStore = defineStore('game', {
       otherApi.ensureResourceHUD();
       this._forceReset(); // 清空全部视图，读取新存档后强制刷新
       this.showView(viewId);
+      this.startHeartbeat(); // 登录态启动在线心跳
     },
 
     /**
@@ -216,23 +251,39 @@ export const useGameStore = defineStore('game', {
     /**
      * 退出游戏返回主界面
      */
+    startHeartbeat() {
+      this.stopHeartbeat();
+      if (!useAuthStore().isLoggedIn) return; // 仅登录用户有会话
+      const ping = (saved) => { api.sessionPing(saved).catch(() => {}); };
+      ping(false);
+      hbTimer = setInterval(() => ping(false), 45000); // 45s 心跳（<2 分钟窗口）
+      hbVis = () => { if (document.visibilityState === 'visible') ping(false); };
+      document.addEventListener('visibilitychange', hbVis);
+    },
+    stopHeartbeat() {
+      if (hbTimer) { clearInterval(hbTimer); hbTimer = null; }
+      if (hbVis) { document.removeEventListener('visibilitychange', hbVis); hbVis = null; }
+    },
+
     exitGame() {
       // 已登录：退出时把当前自动档上传云端做备份
       if (this.ready && useAuthStore().isLoggedIn) {
         uploadSlot(0).catch(() => {});
       }
+      this.stopHeartbeat();
       this.inGame = false;
       this.activeView = '';
       if (router.currentRoute.value.path !== '/') router.push('/');
     },
 
     /** 退出登录并返回主界面（等待重新登录） */
-    logoutAndExit() {
+    async logoutAndExit() {
       // 退出前尝试上传自动档
       if (this.ready && useAuthStore().isLoggedIn) {
         uploadSlot(0).catch(() => {});
       }
-      useAuthStore().logout();
+      await useAuthStore().logout();
+      this.stopHeartbeat();
       this.inGame = false;
       this.activeView = '';
       this._forceReset();

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import db from './db.js';
 import authRouter, { parseAvatar } from './routes/auth.js';
 import savesRouter from './routes/saves.js';
+import sessionRouter from './routes/session.js';
 import { authRequired } from './authMiddleware.js';
 import { PORT } from './config.js';
 
@@ -24,6 +25,7 @@ app.get('/api/me', authRequired, (req, res) => {
   res.json({ user: { id: u.id, username: u.username, nickname: u.nickname || null, avatar: parseAvatar(u.avatar), created_at: u.created_at, last_login: u.last_login } });
 });
 app.use('/api/saves', savesRouter);
+app.use('/api/session', sessionRouter);
 
 // ---- 静态托管构建产物（生产部署用；开发期 dist 可能不存在，跳过） ----
 const distDir = join(__dirname, '..', 'dist');

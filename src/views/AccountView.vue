@@ -225,12 +225,11 @@ async function submitChangePw() {
   }
 }
 
-function doLogout() {
-  confirmDialog({ message: '确定退出登录吗？' }).then((ok) => {
-    if (!ok) return;
-    auth.logout();
-    router.push('/');
-  });
+async function doLogout() {
+  const ok = await confirmDialog({ message: '确定退出登录吗？' });
+  if (!ok) return;
+  await auth.logout();
+  router.push('/');
 }
 
 async function doDelete() {

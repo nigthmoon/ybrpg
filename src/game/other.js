@@ -13,6 +13,8 @@ import { ITEM_DEFS } from './item';
 import { buildSkillSection, compileCharacterStats, getRankLabel, mergeNoOverwrite, refreshAllTeamSlots, renderTeamView, showTeamCharInfo, syncTreasureEquipData } from './team';
 import { DIFFICULTY_SCALE, buildRewardPlan, computeLevelGold, doSweep } from './dungeon';
 import { formatPrice, getRankColor, normalizePrice, refreshShopItems } from './shop';
+import { getSaveNamespace } from './saveNs';
+import { api, getToken } from '../api/client';
 
 function renderSettingsView(container) {
 	// 清空容器以防重复渲染
@@ -1860,12 +1862,13 @@ function trySpendStamina(cost) {
 }
 
 // ---------- 每关每日挑战次数限制（含扫荡，按关卡·按天，本地实现）----------
-const DAILY_LEVEL_TRIES_KEY = 'ybrpg_daily_level_tries';
 const DAILY_LEVEL_TRIES_MAX = 10;
+// 每日关卡次数按身份隔离（与存档命名空间一致）
+function dailyTriesKey() { return getSaveNamespace() + ':ybrpg_daily_level_tries'; }
 function getDailyTries() {
   const today = getTodayStr();
   let obj = {};
-  try { obj = JSON.parse(localStorage.getItem(DAILY_LEVEL_TRIES_KEY) || '{}'); } catch (e) { obj = {}; }
+  try { obj = JSON.parse(localStorage.getItem(dailyTriesKey()) || '{}'); } catch (e) { obj = {}; }
   if (!obj || typeof obj !== 'object' || obj.date !== today) obj = { date: today, counts: {} };
   return obj;
 }
@@ -1879,7 +1882,7 @@ function consumeLevelTry(eventId) {
   const obj = getDailyTries();
   if (!obj.counts) obj.counts = {};
   obj.counts[eventId] = (obj.counts[eventId] || 0) + 1;
-  try { localStorage.setItem(DAILY_LEVEL_TRIES_KEY, JSON.stringify(obj)); } catch (e) { /* ignore */ }
+  try { localStorage.setItem(dailyTriesKey(), JSON.stringify(obj)); } catch (e) { /* ignore */ }
 }
 
 // ---------- 钻石 ----------
@@ -2675,7 +2678,7 @@ const SaveManager = {
 			};
 			// ===== 【修复存储超限】写入前空间预检，超限时友好提示而非 Uncaught 报错 =====
 			const slotJson = JSON.stringify(compatData);
-			const payloads = [[`ybrpg_save_${slot}`, slotJson]];
+			const payloads = [[`${Game.Data.STORAGE_KEY}_${slot}`, slotJson]];
 			let net = 0;
 			payloads.forEach(([k, v]) => {
 				const existing = localStorage.getItem(k);
@@ -2708,7 +2711,7 @@ const SaveManager = {
 		// ========== 新增：迁移旧版宝物数据 ==========
 		migrateTreasuresToInstanceId();  // 在 window 变量恢复前迁移
 
-		const compatKey = `ybrpg_save_${slot}`;
+		const compatKey = `${Game.Data.STORAGE_KEY}_${slot}`;
 		const compatData = localStorage.getItem(compatKey);
 
 		if (compatData) {
@@ -2887,12 +2890,12 @@ const SaveManager = {
 	// 删除指定槽位存档
 	deleteSlot(slot) {
 		Game.Data.deleteSave(slot); // 索引0留给自动存档，手动存档从索引1开始
-		localStorage.removeItem(`ybrpg_save_${slot}`);
+		localStorage.removeItem(`${Game.Data.STORAGE_KEY}_${slot}`);
 		console.log(`已删除槽位${slot}的存档`);
 	},
 
 	// ====== 自动存档 ======
-	AUTO_KEY: 'ybrpg_autosave',
+	get AUTO_KEY() { return getSaveNamespace() + ':ybrpg_autosave'; },
 
 	autoSave() {
 		// 确保 Game.Data.data 完整
@@ -3025,7 +3028,16 @@ const SaveManager = {
 					Game.toast('自动存档失败：本地存储空间不足，请删除部分手动存档', 'error');
 				}
 			}
-	},
+
+			// 刷新服务端“最近存档时间”（挂机踢依据；节流 60s，仅登录态）
+			if (getToken()) {
+				const __now = Date.now();
+				if (!window.__lastSavePing || __now - window.__lastSavePing > 60000) {
+					window.__lastSavePing = __now;
+					api.sessionPing(true).catch(() => {});
+				}
+			}
+			},
 
 	loadAutoSave() {
 		// 直接读取 localStorage，避免 Game.Data.load() 覆盖内存数据

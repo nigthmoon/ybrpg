@@ -20,7 +20,7 @@ function enterGuest() {
 async function backToEntry() {
   if (auth.isLoggedIn) {
     if (await confirmDialog({ message: '确定退出登录并返回吗？' })) {
-      auth.logout();
+      await auth.logout();
     }
     return;
   }
@@ -80,7 +80,7 @@ async function backToEntry() {
 }
 .account-fab {
   position: fixed;
-  top: 14px;
+  top: 34px;
   right: 14px;
   width: 42px;
   height: 42px;

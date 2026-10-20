@@ -8,7 +8,7 @@ const store = useGameStore();
 
 onMounted(async () => {
   await store.initGame();
-  store.refreshSaves();
+  await store.ensureCloudSaves();
 });
 
 function fmtTime(t) {

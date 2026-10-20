@@ -33,6 +33,20 @@ CREATE TABLE IF NOT EXISTS saves (
 );
 
 CREATE INDEX IF NOT EXISTS idx_saves_user ON saves(user_id);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL,
+  jti        TEXT NOT NULL UNIQUE,
+  device     TEXT,
+  last_seen  TEXT NOT NULL DEFAULT (datetime('now')),
+  last_save  TEXT NOT NULL DEFAULT (datetime('now')),
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  revoked_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+-- 每个用户同时只允许一个未吊销会话（防 Race 顶号）
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_active ON sessions(user_id) WHERE revoked_at IS NULL;
 `);
 
 // 兼容旧库：为已存在的 users 表补充新列（已存在则忽略错误）

@@ -7,6 +7,7 @@
  */
 import { defineStore } from 'pinia';
 import { api, getToken, setToken } from '../api/client';
+import { setSaveNamespace } from '../game/saveNs';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -30,6 +31,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const d = await api.me();
         this.user = d.user;
+        setSaveNamespace('u' + d.user.id);
       } catch (e) {
         if (e.status === 401) this._clearLocal();
         // 其它网络错误：保留 token，下次再试
@@ -44,6 +46,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = d.user;
       this.guest = false;
       this.initialized = true;
+      setSaveNamespace('u' + d.user.id);
       return d.user;
     },
 
@@ -54,6 +57,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = d.user;
       this.guest = false;
       this.initialized = true;
+      setSaveNamespace('u' + d.user.id);
       return d.user;
     },
 
@@ -78,10 +82,12 @@ export const useAuthStore = defineStore('auth', {
       this._clearLocal();
     },
 
-    enterGuest() { this.guest = true; },
-    exitGuest() { this.guest = false; },
+    enterGuest() { this.guest = true; setSaveNamespace('guest'); },
+    exitGuest() { this.guest = false; setSaveNamespace('guest'); },
 
-    logout() {
+    async logout() {
+      // 先通知服务端吊销会话（单登录释放名额），失败也在本地登出
+      try { await api.sessionLogout(); } catch (e) { /* 后端不在也继续本地登出 */ }
       this._clearLocal();
     },
 
@@ -89,6 +95,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = '';
       this.user = null;
       this.guest = false;
+      setSaveNamespace('guest');
       setToken('');
     },
   },

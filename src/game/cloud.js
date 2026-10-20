@@ -8,14 +8,13 @@
  * 上传/下载都以 { key: 原始JSON字符串 } 的形式打包，保证两端字节一致。
  */
 import { api } from '../api/client';
+import { getSaveNamespace } from './saveNs';
 
-const KEY_BASE = 'ybrpg_save';
-const AUTO_KEY = 'ybrpg_autosave';
-
-/** 某槽位对应的 localStorage key 列表 */
+/** 某槽位对应的 localStorage key 列表（带身份命名空间前缀，与 SaveManager 同源） */
 export function keysForSlot(slot) {
-  if (Number(slot) === 0) return [`${KEY_BASE}_0`, AUTO_KEY];
-  return [`${KEY_BASE}_${slot}`];
+	const ns = getSaveNamespace();
+	if (Number(slot) === 0) return [`${ns}:ybrpg_save_0`, `${ns}:ybrpg_autosave`];
+	return [`${ns}:ybrpg_save_${slot}`];
 }
 
 /** 打包本地某槽为 { key: rawJson }；该槽无本地数据时返回空对象 */

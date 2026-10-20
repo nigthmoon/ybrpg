@@ -1,3 +1,4 @@
+import { getSaveNamespace } from './saveNs';
 import { TREASURE_DEFS } from './data/equip';
 // Bag 直接来自定义文件（避免经 core.js 形成循环依赖）
 import { Bag } from './system';
@@ -8,12 +9,15 @@ import { Bag } from './system';
  */
 class GameData {
 	constructor() {
-		// 存储键名
-		this.STORAGE_KEY = 'ybrpg_save';
 		this.SLOT_COUNT = 4; // 存档槽位数量
 		
 		// 初始化各模块数据
 		this.data = this.getDefaultData();
+	}
+
+	// 存储键名（带身份命名空间前缀，实现账号/游客存档隔离）
+	get STORAGE_KEY() {
+		return getSaveNamespace() + ':ybrpg_save';
 	}
 
 	/**

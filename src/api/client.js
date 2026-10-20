@@ -22,6 +22,10 @@ export function setToken(t) {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
+// 401（被顶号/挂机踢/过期）全局回调，由应用层注册用于提示并回登录
+let onAuthErrorCb = null;
+export function setOnAuthError(cb) { onAuthErrorCb = cb; }
+
 const OFFLINE_MSG = '无法连接游戏服务器(后端未启动)。请双击 start.bat 启动服务后重试。';
 
 /** 基础请求：自动带 token、解析 JSON、非 2xx 抛错（带 status） */
@@ -65,6 +69,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
     const e = new Error((data && data.message) || ('HTTP ' + res.status));
     e.status = res.status;
     e.data = data;
+    if (res.status === 401 && onAuthErrorCb) { try { onAuthErrorCb(e); } catch (err) { /* ignore */ } }
     throw e;
   }
   return data;
@@ -84,4 +89,6 @@ export const api = {
   setAvatar: (avatar) => request('/auth/avatar', { method: 'PUT', body: { avatar } }),
   changePassword: (oldPassword, newPassword) => request('/auth/password', { method: 'PUT', body: { oldPassword, newPassword } }),
   deleteAccount: (password) => request('/auth/delete-account', { method: 'POST', body: { password } }),
+  sessionPing: (saved) => request('/session/ping', { method: 'POST', body: { saved: !!saved } }),
+  sessionLogout: () => request('/session/logout', { method: 'POST' }),
 };
