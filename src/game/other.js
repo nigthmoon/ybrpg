@@ -1859,7 +1859,28 @@ function trySpendStamina(cost) {
   return true;
 }
 
-// ---------- 每日首通武将限制（按关卡·每天）----------
+// ---------- 每关每日挑战次数限制（含扫荡，按关卡·按天，本地实现）----------
+const DAILY_LEVEL_TRIES_KEY = 'ybrpg_daily_level_tries';
+const DAILY_LEVEL_TRIES_MAX = 10;
+function getDailyTries() {
+  const today = getTodayStr();
+  let obj = {};
+  try { obj = JSON.parse(localStorage.getItem(DAILY_LEVEL_TRIES_KEY) || '{}'); } catch (e) { obj = {}; }
+  if (!obj || typeof obj !== 'object' || obj.date !== today) obj = { date: today, counts: {} };
+  return obj;
+}
+// 某关卡今日剩余可挑战/扫荡次数
+function levelTriesLeft(eventId) {
+  const used = (getDailyTries().counts || {})[eventId] || 0;
+  return Math.max(0, DAILY_LEVEL_TRIES_MAX - used);
+}
+// 消耗一次（挑战或扫荡各算一次）
+function consumeLevelTry(eventId) {
+  const obj = getDailyTries();
+  if (!obj.counts) obj.counts = {};
+  obj.counts[eventId] = (obj.counts[eventId] || 0) + 1;
+  try { localStorage.setItem(DAILY_LEVEL_TRIES_KEY, JSON.stringify(obj)); } catch (e) { /* ignore */ }
+}
 
 // ---------- 钻石 ----------
 
@@ -2013,6 +2034,8 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 
 	const cost = getStaminaCost(event);
 	const staminaOk = (window.stamina || 0) >= cost;
+	const triesLeft = levelTriesLeft(eventId);
+	const triesOk = triesLeft > 0;
 
 	// 秘境首通奖励文案（与战斗结算 onWin 逻辑保持一致）
 	let secretText = '';
@@ -2039,12 +2062,14 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 		`<div class="reward-title">📦 产出预览</div>` +
 		`<div class="reward-sub">${diffName}难度 · ${event.name || eventId}</div>` +
 		`<div class="reward-gold">💰 ${plan.gold || 0} <small>金币</small></div>` +
+		(!isSP && plan.diamond ? `<div class="reward-gold">💎 ${plan.diamond} <small>钻石</small></div>` : '') +
 		`<div class="reward-stamina${staminaOk ? '' : ' insufficient'}">⚡ 消耗 ${cost} 体力（当前 ${window.stamina || 0}/${window.maxStamina || STAMINA_MAX}）</div>` +
+		`<div class="reward-stamina${triesOk ? '' : ' insufficient'}">🗓 今日剩余次数：${triesLeft}/${DAILY_LEVEL_TRIES_MAX}</div>` +
 		(isSP && secretText ? `<div class="preview-secret-note">★ ${secretText}</div>` : '') +
-		section('获得武将', plan.chars) +
-		section('获得宝物', plan.treasures) +
-		section('获得道具', plan.items) +
-		(isSP ? `<div class="reward-empty" style="margin-top:10px;">（秘境仅产出金币）</div>` : '');
+		(isSP
+			? `<div class="reward-empty" style="margin-top:10px;">（秘境仅产出金币）</div>`
+			: section('获得宝物', plan.treasures) + section('获得道具', plan.items) +
+			  `<div class="reward-empty" style="margin-top:6px;">（关卡奖励已改革为钻石，不再掉落武将）</div>`);
 
 	const close = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
 	overlay.onclick = (e) => { if (e.target === overlay) close(); };
@@ -2056,11 +2081,11 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 	const challengeBtn = document.createElement('button');
 	challengeBtn.className = 'reward-ok-btn preview-btn-challenge';
 	challengeBtn.textContent = '挑战';
-	if (!opts.canChallenge || !staminaOk) {
+	if (!opts.canChallenge || !staminaOk || !triesOk) {
 		challengeBtn.disabled = true;
 		challengeBtn.style.opacity = '0.5';
 		challengeBtn.style.cursor = 'not-allowed';
-		challengeBtn.title = !opts.canChallenge ? '关卡未解锁' : '体力不足';
+		challengeBtn.title = !opts.canChallenge ? '关卡未解锁' : (!triesOk ? '今日次数已用完' : '体力不足');
 	} else {
 		challengeBtn.onclick = (e) => {
 			e.stopPropagation();
@@ -2072,11 +2097,11 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 	const sweepBtn = document.createElement('button');
 	sweepBtn.className = 'reward-ok-btn preview-btn-sweep';
 	sweepBtn.textContent = '扫荡';
-	if (!opts.canSweep || !staminaOk) {
+	if (!opts.canSweep || !staminaOk || !triesOk) {
 		sweepBtn.disabled = true;
 		sweepBtn.style.opacity = '0.5';
 		sweepBtn.style.cursor = 'not-allowed';
-		sweepBtn.title = !opts.canSweep ? '仅已通关关卡可扫荡' : '体力不足';
+		sweepBtn.title = !opts.canSweep ? '仅已通关关卡可扫荡' : (!triesOk ? '今日次数已用完' : '体力不足');
 	} else {
 		sweepBtn.onclick = (e) => {
 			e.stopPropagation();
@@ -2089,19 +2114,20 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 
 	const sweep5Btn = document.createElement('button');
 	sweep5Btn.className = 'reward-ok-btn preview-btn-sweep';
-	sweep5Btn.textContent = '扫荡5次';
-	if (!opts.canSweep || !staminaOk) {
+	const sweep5Count = Math.max(1, Math.min(5, triesLeft)); // 不足5次时扫剩余次数
+	sweep5Btn.textContent = `扫荡${sweep5Count}次`;
+	if (!opts.canSweep || !staminaOk || !triesOk) {
 		sweep5Btn.disabled = true;
 		sweep5Btn.style.opacity = '0.5';
 		sweep5Btn.style.cursor = 'not-allowed';
-		sweep5Btn.title = !opts.canSweep ? '仅已通关关卡可扫荡' : '体力不足';
+		sweep5Btn.title = !opts.canSweep ? '仅已通关关卡可扫荡' : (!triesOk ? '今日次数已用完' : '体力不足');
 	} else {
 		sweep5Btn.onclick = (e) => {
 			e.stopPropagation();
 			close();
 			doSweep(event, diffKey, index, eventId, chapterKey, () => {
 				showOutputPreview(event, diffKey, index, eventId, chapterKey, opts);
-			}, 5);
+			}, sweep5Count);
 		};
 	}
 
@@ -3544,7 +3570,7 @@ function renderSaveView(container, fromGame = true) {
  */
 
 // 导出本模块定义的函数（供其他模块 import）
-export { renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView, collectCurrentSaveData, exportCurrentSave, importSaveData, showSaveSlotPicker, writeImportedSave };
+export { renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, levelTriesLeft, consumeLevelTry, DAILY_LEVEL_TRIES_MAX, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView, collectCurrentSaveData, exportCurrentSave, importSaveData, showSaveSlotPicker, writeImportedSave };
 
 // 暴露给外部模块（shared 注册表 / window / Game）
 shared.hideOtherViews = hideOtherViews;

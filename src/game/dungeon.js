@@ -12,7 +12,7 @@ import { ITEM_DEFS } from './item';
 import { breakthroughMainCharacter, compileCharacterStats, getRankLabel, levelUpMainCharacter, mergeNoOverwrite, promoteMainCharacter, syncTreasureEquipData } from './team';
 import { renderBagView } from './bag';
 import { getRankColor } from './shop';
-import { SaveManager, getStaminaCost, hideOtherViews, recordDailyClear, showOutputPreview, trySpendStamina } from './other';
+import { SaveManager, consumeLevelTry, getStaminaCost, hideOtherViews, levelTriesLeft, recordDailyClear, showOutputPreview, trySpendStamina } from './other';
 
 function getCharSaveData(charId) {
 	if (!window.charBagData) window.charBagData = {};
@@ -311,6 +311,24 @@ function defaultLevelGold(eventId) {
 	const p = ch + (lv - 1) / 10;
 	const raw = 150 * Math.pow(p, 1.6);
 	return Math.round(raw / 10) * 10; // 取整到 10
+}
+
+// 关卡钻石梯度产出（改革后主线关卡不再掉武将，改为钻石奖励）
+// 与金币同形状的凸曲线：普通难度以 DIAMOND_LEVEL_BASE 钻起步，随章节/小节递增；难度按金币倍率缩放
+const DIAMOND_LEVEL_BASE = 3; // 普通难度第1关基础钻石（可调）
+function defaultLevelDiamond(eventId) {
+	const m = /c(\d+)-(\d+)/.exec(eventId || '');
+	if (!m) return DIAMOND_LEVEL_BASE;
+	const ch = parseInt(m[1], 10) || 1;
+	const lv = parseInt(m[2], 10) || 1;
+	const p = ch + (lv - 1) / 10;
+	return Math.max(1, Math.round(DIAMOND_LEVEL_BASE * Math.pow(p, 1.6)));
+}
+// 计算单次通关/扫荡获得的钻石（主线按进度梯度×难度倍率；秘境不发放钻石，返回0）
+function computeLevelDiamond(event, diffKey, chapterKey) {
+	if (/^sp/i.test(chapterKey || '')) return 0;
+	const goldScale = DIFFICULTY_SCALE[diffKey]?.gold || 1.0;
+	return Math.max(1, Math.round(defaultLevelDiamond(event && event.id) * goldScale));
 }
 // 根据难度获取事件数据（支持噩梦和地狱难度）
 function getEventForDifficulty(chapterKey, eventId, difficulty) {
@@ -613,6 +631,8 @@ function renderChapterEventList(container, chapterKey) {
 					Game.toast(lockReason, 'warning');
 					return;
 				}
+				if (levelTriesLeft(eventId) <= 0) { Game.toast('今日挑战次数已用完（每关每天10次）', 'error'); return; }
+				consumeLevelTry(eventId);
 				let event = SPchapterData.eventPack[eventId];
 				let checkEventId = eventId;
 				console.log(`进入副本: ${event.name}, ID: ${checkEventId}, 难度: ${currentDifficulty}`);
@@ -896,6 +916,8 @@ function renderChapterEventList(container, chapterKey) {
 			}
 
 			const enterLevel = () => {
+					if (levelTriesLeft(checkEventId) <= 0) { Game.toast('今日挑战次数已用完（每关每天10次）', 'error'); return; }
+					consumeLevelTry(checkEventId);
 					console.log(`进入副本: ${event.name}, ID: ${checkEventId}, 难度: ${currentDifficulty}`);
 
 					// 确保宝物装备数据已同步
@@ -982,21 +1004,12 @@ function renderChapterEventList(container, chapterKey) {
 						const goldReward = Math.floor(baseGold * goldScale);
 						window.gameGold = (window.gameGold || 0) + goldReward;
 						recordDailyClear(chapterKey, currentDifficulty);
-					// 掉落物：优先用事件固定配置 event.reward；未配置则按档位自动规则兜底
-					const dropStat = { chars: [], treasures: [], items: [] };
+					// 改革：主线关卡不再掉落武将，改为钻石奖励；宝物/道具按固定配置发放
+					const dropStat = { chars: [], treasures: [], items: [], diamond: 0 };
+					const diamondReward = computeLevelDiamond(event, diffKey, chapterKey);
+					if (diamondReward > 0) { window.diamond = (window.diamond || 0) + diamondReward; dropStat.diamond = diamondReward; }
 					if (rewardCfg) {
-						grantFixedReward(rewardCfg, dropMult, dropStat);
-					} else {
-						const isMiniBoss = (event.type === 'boss' && index !== 9); // 小boss：boss关且非末关
-						const isBigBoss = (index === 9);                           // 大boss：末关
-						grantCharactersByRank('rare', dropMult, dropStat.chars);
-						if (isMiniBoss) {
-							grantCharactersByRank('epicfake', dropMult, dropStat.chars);
-							grantCharactersByRank('epic', dropMult, dropStat.chars);
-						}
-						if (isBigBoss) {
-							grantCharactersByRank('legend', dropMult, dropStat.chars);
-						}
+						grantFixedReward(rewardCfg, dropMult, dropStat); // 内部不再发武将，仅宝物/道具
 					}
 							// 刷新背包视图（若处于开启状态）
 							if (window.renderBagView) {
@@ -1164,14 +1177,7 @@ function grantCharactersByRank(rank, count, droppedNames) {
  */
 function grantFixedReward(reward, mult, stat) {
 	if (!reward || typeof reward !== 'object') return;
-	// 武将：直接发放指定角色（作者已手动挑选，跳过黑名单占位角色）
-	(reward.characters || []).forEach(id => {
-		for (let i = 0; i < mult; i++) {
-			if (DROP_EXCLUDE_IDS[id]) { console.warn('[掉落] 黑名单角色，跳过:', id); continue; }
-			const inst = grantCharacter(id);
-			if (inst && characterList[id]) stat.chars.push(characterList[id].name);
-		}
-	});
+	// 改革：主线关卡不再发放武将（reward.characters 已忽略，改为钻石奖励，由调用方发放）
 	// 宝物
 	(reward.treasures || []).forEach(id => {
 		for (let i = 0; i < mult; i++) {
@@ -1215,18 +1221,9 @@ function buildRewardPlan(event, diffKey, index) {
 		return Object.keys(m).map(k => m[k]);
 	};
 
-	let chars = [], treasures = [], items = [];
+	// 改革：主线不再发放/预览武将，chars 恒为空；仅保留宝物/道具，并给出钻石梯度奖励
+	let treasures = [], items = [];
 	if (rewardCfg) {
-		// 固定配置：确定性，解析名字 + 图标（角色另有 rank 用于边框配色）
-		chars = groupById((rewardCfg.characters || [])
-			.filter(id => !DROP_EXCLUDE_IDS[id] && characterList[id])
-			.map(id => ({
-				id,
-				name: characterList[id].name,
-				rank: characterList[id].rank,
-				icon: `/image/character/${id}.jpg`,
-			}))
-			.flatMap(o => Array(dropMult).fill(o)));
 		treasures = groupById((rewardCfg.treasures || [])
 			.map(id => {
 				const d = TREASURE_DEFS[id];
@@ -1239,21 +1236,9 @@ function buildRewardPlan(event, diffKey, index) {
 				return { id, name: (d && d.name) || id, icon: (d && d.icon) || null };
 			})
 			.flatMap(o => Array(dropMult).fill(o)));
-	} else {
-		// 随机兜底：仅展示数量与品质（主线不会走到这里）
-		const rankCounts = { '随机稀有武将': dropMult };
-		const isMiniBoss = (event.type === 'boss' && index !== 9);
-		const isBigBoss = (index === 9);
-		if (isMiniBoss) {
-			rankCounts['随机伪史诗武将'] = (rankCounts['随机伪史诗武将'] || 0) + dropMult;
-			rankCounts['随机史诗武将'] = (rankCounts['随机史诗武将'] || 0) + dropMult;
-		}
-		if (isBigBoss) {
-			rankCounts['随机传说武将'] = (rankCounts['随机传说武将'] || 0) + dropMult;
-		}
-		chars = Object.keys(rankCounts).map(name => ({ name, count: rankCounts[name], icon: null }));
 	}
-	return { gold, chars, treasures, items };
+	const diamond = Math.max(1, Math.round(defaultLevelDiamond(event.id) * goldScale));
+	return { gold, diamond, chars: [], treasures, items };
 }
 
 /**
@@ -1284,15 +1269,17 @@ function doSweep(event, diffKey, index, eventId, chapterKey, onClose, count) {
 	const diffName = DIFFICULTY_SCALE[diffKey]?.name || diffKey;
 
 	let totalGold = 0;
-	const totalDrop = { chars: [], treasures: [], items: [] };
+	const totalDrop = { chars: [], treasures: [], items: [], diamond: 0 };
 	let done = 0;
 	let interrupted = false;
+	let stoppedReason = ''; // '' | 'stamina' | 'tries'
 
 	const finalize = () => {
 		showSweepResultPanel({
-			title: count > 1 ? `扫荡成功（${count}次${interrupted ? '，体力不足中断' : ''}）` : '扫荡成功',
+			title: count > 1 ? `扫荡成功（${count}次${interrupted ? (stoppedReason === 'tries' ? '，次数不足中断' : '，体力不足中断') : ''}）` : '扫荡成功',
 			sub: `${diffName}难度 · ${event.name || eventId}`,
 			gold: totalGold,
+			diamond: totalDrop.diamond || 0,
 			chars: totalDrop.chars,
 			treasures: totalDrop.treasures,
 			items: totalDrop.items,
@@ -1302,6 +1289,9 @@ function doSweep(event, diffKey, index, eventId, chapterKey, onClose, count) {
 
 	const runOnce = () => {
 		if (done >= count) { finalize(); return; }
+		// 每日次数限制（挑战/扫荡共用）
+		if (levelTriesLeft(eventId) <= 0) { Game.toast('今日挑战次数已用完，扫荡结束', 'warning'); interrupted = true; stoppedReason = 'tries'; finalize(); return; }
+		consumeLevelTry(eventId);
 		// 体力预扣（上云接口）
 		if (!trySpendStamina(getStaminaCost(event))) {
 			Game.toast('体力不足，扫荡中断', 'error');
@@ -1315,21 +1305,10 @@ function doSweep(event, diffKey, index, eventId, chapterKey, onClose, count) {
 
 		if (!isSP) {
 			const dropMult = DROP_MULT[diffKey] || 1;
+			const diamondReward = computeLevelDiamond(event, diffKey, chapterKey);
+			if (diamondReward > 0) { window.diamond = (window.diamond || 0) + diamondReward; totalDrop.diamond += diamondReward; }
 			const rewardCfg = event.reward || null;
-			if (rewardCfg) {
-				grantFixedReward(rewardCfg, dropMult, totalDrop);
-			} else {
-				const isMiniBoss = (event.type === 'boss' && index !== 9);
-				const isBigBoss = (index === 9);
-				grantCharactersByRank('rare', dropMult, totalDrop.chars);
-				if (isMiniBoss) {
-					grantCharactersByRank('epicfake', dropMult, totalDrop.chars);
-					grantCharactersByRank('epic', dropMult, totalDrop.chars);
-				}
-				if (isBigBoss) {
-					grantCharactersByRank('legend', dropMult, totalDrop.chars);
-				}
-			}
+			if (rewardCfg) grantFixedReward(rewardCfg, dropMult, totalDrop); // 不再发武将，仅宝物/道具
 		}
 
 		// 刷新背包视图（若处于开启状态）
@@ -1417,7 +1396,7 @@ function showSweepResultPanel(opt) {
 		`<div class="sweep-title">⚡ ${opt.title || '扫荡成功'}</div>` +
 		(opt.sub ? `<div class="sweep-sub">${opt.sub}</div>` : '') +
 		`<div class="sweep-gold">💰 ${opt.gold || 0} <small>金币</small></div>` +
-		section('获得武将', charList) +
+		(opt.diamond ? `<div class="sweep-gold">💎 ${opt.diamond} <small>钻石</small></div>` : '') +
 		section('获得宝物', treaList) +
 		section('获得道具', itemList);
 

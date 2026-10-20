@@ -1051,9 +1051,9 @@ const RECRUIT_LUCK_STEP3_RATE = 0.10;
 const RECRUIT_LUCK_STEP4 = 90;      // 幸运值90 → 50%
 const RECRUIT_LUCK_STEP4_RATE = 0.50;
 const RECRUIT_KAMI_UPGRADE_RATE = 0.01; // 每次抽取独立拔升为神品的概率
-const RECRUIT_SINGLE_COST = { gold: 500 };
-const RECRUIT_TEN_COST = { gold: 4500 };
-const RECRUIT_HUNDRED_COST = { gold: 45000 }; // 百连=十连×10（保持9折档）
+const RECRUIT_SINGLE_COST = { diamond: 100 };
+const RECRUIT_TEN_COST = { diamond: 900 };    // 十连=单抽×9（维持原9折）
+const RECRUIT_HUNDRED_COST = { diamond: 9000 }; // 百连=十连×10（维持9折档）
 const DROP_EXCLUDE_IDS_RECRUIT = {};
 
 // 武将招募池（硬编码）：各品质档位的可招募武将 id 清单（58 人）。
@@ -1306,17 +1306,17 @@ function renderRecruitView(container) {
 	btnRow.style.cssText = 'display:flex;gap:12px;justify-content:center;margin:14px 0;';
 	const single = document.createElement('button');
 	single.className = 'shop-refresh-btn';
-	single.textContent = `单抽\n（💰 ${RECRUIT_SINGLE_COST.gold}）`;
+	single.textContent = `单抽\n（💎 ${RECRUIT_SINGLE_COST.diamond}）`;
 	single.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;';
 	single.onclick = () => doRecruit(1, container);
 	const ten = document.createElement('button');
 	ten.className = 'shop-refresh-btn';
-	ten.textContent = `十连抽\n（💰 ${RECRUIT_TEN_COST.gold}）`;
+	ten.textContent = `十连抽\n（💎 ${RECRUIT_TEN_COST.diamond}）`;
 	ten.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;background:#c0392b;';
 	ten.onclick = () => doRecruit(10, container);
 	const hundred = document.createElement('button');
 	hundred.className = 'shop-refresh-btn';
-	hundred.textContent = `百连抽\n（💰 ${RECRUIT_HUNDRED_COST.gold}）`;
+	hundred.textContent = `百连抽\n（💎 ${RECRUIT_HUNDRED_COST.diamond}）`;
 	hundred.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;background:#b8860b;';
 	hundred.onclick = () => doRecruit(100, container);
 	btnRow.appendChild(single); btnRow.appendChild(ten); btnRow.appendChild(hundred);
@@ -1335,11 +1335,11 @@ function updateRecruitPityBar() {
 	if (text) text.textContent = `幸运值：${pity} / ${RECRUIT_LUCK_MAX}${pity >= RECRUIT_LUCK_MAX ? '（必出传说！）' : ''}`;
 }
 
-// 执行招募：固定以金币结算（与按钮展示的 💰 价格一致，不走 >1000 金币自动折算钻石的主货币逻辑）
+// 执行招募：以钻石结算
 function doRecruit(count, container) {
 	const cost = count === 10 ? RECRUIT_TEN_COST : count === 100 ? RECRUIT_HUNDRED_COST : RECRUIT_SINGLE_COST;
-	const meta = CURRENCY_META.gold;
-	const payAmt = cost.gold || 0;
+	const meta = CURRENCY_META.diamond;
+	const payAmt = cost.diamond || 0;
 	const balance = window[meta.varKey] || 0;
 	if (balance < payAmt) { Game.toast(meta.insufficient + '，无法招募！', 'error'); return; }
 	window[meta.varKey] = balance - payAmt;
@@ -1485,9 +1485,9 @@ const TR_LUCK_STEP1 = 40, TR_LUCK_STEP1_RATE = 0.02;
 const TR_LUCK_STEP2 = 60, TR_LUCK_STEP2_RATE = 0.05;
 const TR_LUCK_STEP3 = 80, TR_LUCK_STEP3_RATE = 0.10;
 const TR_LUCK_STEP4 = 90, TR_LUCK_STEP4_RATE = 0.50;
-const TREASURE_RECRUIT_SINGLE_COST = { gold: 3000 };
-const TREASURE_RECRUIT_TEN_COST = { gold: 27000 };
-const TREASURE_RECRUIT_HUNDRED_COST = { gold: 270000 }; // 百连=十连×10（保持9折档）
+const TREASURE_RECRUIT_SINGLE_COST = { diamond: 80 };
+const TREASURE_RECRUIT_TEN_COST = { diamond: 720 };      // 十连=单抽×9（维持原9折）
+const TREASURE_RECRUIT_HUNDRED_COST = { diamond: 7200 }; // 百连=十连×10（维持9折档）
 
 // 宝物招募硬编码池（与 equip.js TREASURE_DEFS 的 rank 一一对应）
 // rank 对应：3紫 / 4橙 / 5红(箱子) / 6金(箱子)
@@ -1667,17 +1667,17 @@ function renderTreasureRecruitView(container) {
 	btnRow.style.cssText = 'display:flex;gap:12px;justify-content:center;margin:14px 0;';
 	const single = document.createElement('button');
 	single.className = 'shop-refresh-btn';
-	single.textContent = `单抽\n（💰 ${TREASURE_RECRUIT_SINGLE_COST.gold}）`;
+	single.textContent = `单抽\n（💎 ${TREASURE_RECRUIT_SINGLE_COST.diamond}）`;
 	single.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;';
 	single.onclick = () => doTreasureRecruit(1, container);
 	const ten = document.createElement('button');
 	ten.className = 'shop-refresh-btn';
-	ten.textContent = `十连抽\n（💰 ${TREASURE_RECRUIT_TEN_COST.gold}）`;
+	ten.textContent = `十连抽\n（💎 ${TREASURE_RECRUIT_TEN_COST.diamond}）`;
 	ten.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;background:#c0392b;';
 	ten.onclick = () => doTreasureRecruit(10, container);
 	const hundred = document.createElement('button');
 	hundred.className = 'shop-refresh-btn';
-	hundred.textContent = `百连抽\n（💰 ${TREASURE_RECRUIT_HUNDRED_COST.gold}）`;
+	hundred.textContent = `百连抽\n（💎 ${TREASURE_RECRUIT_HUNDRED_COST.diamond}）`;
 	hundred.style.cssText = 'padding:10px 18px;font-size:14px;white-space:pre-wrap;background:#b8860b;';
 	hundred.onclick = () => doTreasureRecruit(100, container);
 	btnRow.appendChild(single); btnRow.appendChild(ten); btnRow.appendChild(hundred);
@@ -1697,8 +1697,8 @@ function updateTreasureRecruitPityBar() {
 
 function doTreasureRecruit(count, container) {
 	const cost = count === 10 ? TREASURE_RECRUIT_TEN_COST : count === 100 ? TREASURE_RECRUIT_HUNDRED_COST : TREASURE_RECRUIT_SINGLE_COST;
-	const meta = CURRENCY_META.gold;
-	const payAmt = cost.gold || 0;
+	const meta = CURRENCY_META.diamond;
+	const payAmt = cost.diamond || 0;
 	const balance = window[meta.varKey] || 0;
 	if (balance < payAmt) { Game.toast(meta.insufficient + '，无法招募！', 'error'); return; }
 	window[meta.varKey] = balance - payAmt;
