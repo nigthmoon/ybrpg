@@ -1,0 +1,10 @@
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+export const PORT = Number(process.env.PORT || 4000);
+export const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-please-change';
+export const JWT_EXPIRES = process.env.JWT_EXPIRES || '7d';
+// SQLite 数据文件存放目录（默认 server/data/app.db，可用环境变量覆盖）
+export const DB_PATH = process.env.DB_PATH || join(__dirname, 'data', 'app.db');

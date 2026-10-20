@@ -1,6 +1,8 @@
 <script setup>
 import { useGameStore } from './stores/game';
 import { GAME_VERSION } from './version';
+import ConfirmHost from './components/ConfirmHost.vue';
+import BackendBanner from './components/BackendBanner.vue';
 
 const store = useGameStore();
 
@@ -65,6 +67,11 @@ function switchView(id) {
         <!-- <button class="game-nav-btn home" @click="store.exitGame()">主界面</button> -->
       </nav>
     </div>
+
+    <!-- 全局确认弹窗 -->
+    <ConfirmHost />
+    <!-- 后端离线提示 -->
+    <BackendBanner />
   </div>
 </template>
 

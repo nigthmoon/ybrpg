@@ -10,3 +10,6 @@ dev_run.log
 # 本地启动/关闭脚本（如希望忽略，可取消下面两行的注释）
 # start.bat
 # stop.bat
+
+# 后端 SQLite 数据文件（运行时生成，勿提交）
+server/data/

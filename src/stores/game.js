@@ -14,6 +14,8 @@
 import { defineStore } from 'pinia';
 import { nextTick } from 'vue';
 import router from '../router';
+import { useAuthStore } from './auth';
+import { downloadSlot, uploadSlot, deleteCloudSlot } from '../game/cloud';
 
 // 动态加载的逻辑层模块引用（首次 initGame 后缓存）
 let otherApi = null;
@@ -63,6 +65,7 @@ export const useGameStore = defineStore('game', {
       if (window.__ybrpgBridge) return;
       window.__ybrpgBridge = {
         exitGame: () => this.exitGame(),
+        logoutAndExit: () => this.logoutAndExit(),
         goSaves: () => {
           if (this.inGame) this.showView('save-view');
           else router.push('/save');
@@ -107,6 +110,10 @@ export const useGameStore = defineStore('game', {
      */
     async loadSlot(slot) {
       await this.initGame();
+      // 已登录且本地无该槽时，先从云端拉取（本地已有则不覆盖）
+      if (useAuthStore().isLoggedIn) {
+        try { await downloadSlot(slot); } catch (e) { /* 忽略，回退本地 */ }
+      }
       window.Game.SaveManager.loadFromSlot(slot);
       await this.enterGame('team-view');
     },
@@ -118,6 +125,10 @@ export const useGameStore = defineStore('game', {
       if (window.ybrpgShowLoading) window.ybrpgShowLoading('正在读取自动存档…');
       try {
         await this.initGame();
+        // 已登录且本地无自动档时，先从云端拉取
+        if (useAuthStore().isLoggedIn) {
+          try { await downloadSlot(0); } catch (e) { /* 忽略，回退本地 */ }
+        }
         window.Game.SaveManager.loadAutoSave();
         await this.enterGame('team-view');
       } finally {
@@ -131,7 +142,12 @@ export const useGameStore = defineStore('game', {
      */
     saveSlot(slot) {
       if (!this.ready) return null;
-      return window.Game.SaveManager.saveToSlot(slot);
+      const result = window.Game.SaveManager.saveToSlot(slot);
+      // 已登录：异步上传到云端（不阻塞界面）
+      if (useAuthStore().isLoggedIn && result) {
+        uploadSlot(slot).catch(e => console.warn('[云存档] 上传失败:', e));
+      }
+      return result;
     },
 
     /**
@@ -140,6 +156,9 @@ export const useGameStore = defineStore('game', {
     deleteSlot(slot) {
       if (!this.ready) return;
       window.Game.SaveManager.deleteSlot(slot);
+      if (useAuthStore().isLoggedIn) {
+        deleteCloudSlot(slot).catch(() => {});
+      }
       this.refreshSaves();
     },
 
@@ -198,8 +217,25 @@ export const useGameStore = defineStore('game', {
      * 退出游戏返回主界面
      */
     exitGame() {
+      // 已登录：退出时把当前自动档上传云端做备份
+      if (this.ready && useAuthStore().isLoggedIn) {
+        uploadSlot(0).catch(() => {});
+      }
       this.inGame = false;
       this.activeView = '';
+      if (router.currentRoute.value.path !== '/') router.push('/');
+    },
+
+    /** 退出登录并返回主界面（等待重新登录） */
+    logoutAndExit() {
+      // 退出前尝试上传自动档
+      if (this.ready && useAuthStore().isLoggedIn) {
+        uploadSlot(0).catch(() => {});
+      }
+      useAuthStore().logout();
+      this.inGame = false;
+      this.activeView = '';
+      this._forceReset();
       if (router.currentRoute.value.path !== '/') router.push('/');
     },
 

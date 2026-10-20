@@ -94,6 +94,28 @@ function renderSettingsView(container) {
 	};
 	groupDiv.appendChild(saveBtn);
 
+	// 退出登录（仅登录态显示）：二次确认后经桥接退出并回主界面等待登录
+	if (localStorage.getItem('ybrpg_token')) {
+		const logoutBtn = document.createElement('button');
+		logoutBtn.className = 'ybrpg-settings-btn';
+		logoutBtn.id = 'btn-setting-logout';
+		logoutBtn.textContent = '退出登录';
+		logoutBtn.style.cssText = 'background:#b71c1c;border-color:#e53935;color:#fff;';
+		logoutBtn.onclick = () => {
+			const doLogout = () => {
+				if (window.__ybrpgBridge && typeof window.__ybrpgBridge.logoutAndExit === 'function') {
+					window.__ybrpgBridge.logoutAndExit();
+				}
+			};
+			if (window.Game && typeof window.Game.confirmDialog === 'function') {
+				window.Game.confirmDialog('确定退出登录吗？将返回主界面等待登录。', doLogout);
+			} else {
+				doLogout();
+			}
+		};
+		groupDiv.appendChild(logoutBtn);
+	}
+
 	container.appendChild(groupDiv);
 
 

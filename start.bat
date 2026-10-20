@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul 2>&1
-title YBRPG Dev Server
+title YBRPG Launcher
 cd /d "%~dp0" || (
   echo [ERROR] Cannot change to script directory.
   pause
@@ -26,48 +26,40 @@ if not exist "%~dp0node_modules" (
   echo [INFO] Dependencies missing, running npm install ...
   call npm install
   if errorlevel 1 (
-    echo [ERROR] npm install failed. Check network / npm config.
+    echo [ERROR] npm install failed.
     pause
     exit /b 1
   )
-) else (
-  echo [INFO] Dependencies already installed.
 )
 
-REM Free port 3000 (kill any old process holding it)
-echo [INFO] Freeing port 3000 ...
-for /f "tokens=5" %%a in ('netstat -ano 2^>nul ^| findstr /i ":3000" ^| findstr /i "LISTENING"') do (
-  if not "%%a"=="" taskkill /F /PID %%a >nul 2>nul
-)
-powershell -NoProfile -Command "$p=3000; (Get-NetTCPConnection -LocalPort $p -ErrorAction SilentlyContinue).OwningProcess | Sort-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }" 2>nul
+REM Free ports 3000 (web) and 4000 (api)
+echo [INFO] Freeing ports 3000 / 4000 ...
+for /f "tokens=5" %%a in ('netstat -ano 2^>nul ^| findstr /i ":3000" ^| findstr /i "LISTENING"') do taskkill /F /PID %%a >nul 2>nul
+for /f "tokens=5" %%a in ('netstat -ano 2^>nul ^| findstr /i ":4000" ^| findstr /i "LISTENING"') do taskkill /F /PID %%a >nul 2>nul
 
-REM Locate Google Chrome (prefer it over default browser)
+REM Locate Google Chrome
 set "CHROME="
-if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
-  set "CHROME=C:\Program Files\Google\Chrome\Application\chrome.exe"
-) else if exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" (
-  set "CHROME=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
-) else if exist "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" (
-  set "CHROME=%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"
-)
-if defined CHROME (
-  echo [INFO] Chrome found: %CHROME%
-) else (
-  echo [WARN] Chrome not found, will use default browser.
+if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" set "CHROME=C:\Program Files\Google\Chrome\Application\chrome.exe"
+if not defined CHROME if exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" set "CHROME=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+if not defined CHROME if exist "%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe" set "CHROME=%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"
+
+REM Start backend API (port 4000) and web dev server (port 3000) in minimized windows
+echo [INFO] Starting backend API (4000) and web dev server (3000) ...
+start "YBRPG-API" /min cmd /c "node --no-warnings server\index.js"
+start "YBRPG-WEB" /min cmd /c "npm run dev"
+
+REM Poll until web is up, then open Chrome (or default browser)
+echo [INFO] Waiting for web server, browser will open automatically ...
+for /l %%i in (1,1,120) do (
+  curl -s -o nul "http://localhost:3000/" 2>nul && (
+    if defined CHROME ( start "" "%CHROME%" "http://localhost:3000/" ) else ( start "" "http://localhost:3000/" )
+    goto :opened
+  )
+  ping -n 2 127.0.0.1 >nul
 )
 
-REM Background poller: once the server is up, open it in Chrome (or default browser)
-echo [INFO] Starting dev server, browser opens automatically when ready ...
-start "YBRPG-OPEN" /min powershell -NoProfile -Command "for($i=0;$i -lt 90;$i++){ foreach($p in 3000,3001,3002){ try { Invoke-WebRequest -Uri ('http://localhost:'+ $p +'/') -UseBasicParsing -TimeoutSec 1 | Out-Null; if($env:CHROME){ Start-Process $env:CHROME ('http://localhost:'+ $p +'/') } else { Start-Process ('http://localhost:'+ $p +'/') }; exit } catch {} }; Start-Sleep -Seconds 2 }"
-REM Foreground run vite (this window is the live server log; close it to stop)
-call npm run dev
-if errorlevel 1 (
-  echo.
-  echo [ERROR] Vite failed to start (exit %errorlevel%).
-  pause
-  exit /b 1
-)
-
-echo.
-echo [INFO] Dev server stopped.
-pause
+:opened
+echo [OK] Services started. If the browser did not open, visit http://localhost:3000
+echo [INFO] To stop, run stop.bat or close the "YBRPG-API" / "YBRPG-WEB" windows.
+timeout /t 4 >nul
+exit

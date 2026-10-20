@@ -11,6 +11,13 @@ export default defineConfig({
     port: 3000,
     strictPort: false,  // 端口被占用时自动顺延(3001...)，避免启动即退出
     open: false,        // 关闭内置打开；由 start.bat 统一用谷歌浏览器打开
+    // 开发期把 /api 代理到本地后端（生产期后端同源托管，无需代理）
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     outDir: 'dist',
