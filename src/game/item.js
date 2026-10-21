@@ -36,7 +36,7 @@ export const ITEM_DEFS = {
 		rank: 'legend',
 		selectable: true,
 		icon: '/image/header/dj_60404.png',
-		price: { gold: 500 },
+		price: { gold: 5000 },
 		// 预定出货范围（传说，10 人）
 		contents: [
 			'ybsl_017xiaohong', 'ybsl_059starsFall1', 'ybsl_047shan', 'ybsl_041mmuqin',
@@ -52,7 +52,7 @@ export const ITEM_DEFS = {
 		rank: 'epic',
 		selectable: true,
 		icon: '/image/header/dj_60403.png',
-		price: { gold: 300 },
+		price: { gold: 3000 },
 		// 预定出货范围（史诗，20 人）
 		contents: [
 			'ybsl_015wanghairu', 'ybsl_016manchengqi', 'ybsl_018zhangqing', 'ybsl_059starsFall3',
@@ -70,7 +70,7 @@ export const ITEM_DEFS = {
 		rank: 'epicfake',
 		selectable: true,
 		icon: '/image/header/dj_60402.png',
-		price: { gold: 250 },
+		price: { gold: 2500 },
 		// 预定出货范围（伪史诗，18 人）
 		contents: [
 			'ybsl_025shiqingyu', 'ybsl_020jiayutong', 'ybsl_025wanghe', 'ybsl_042pingzi',
@@ -88,7 +88,7 @@ export const ITEM_DEFS = {
 		rank: 'rare',
 		selectable: true,
 		icon: '/image/header/dj_60401.png',
-		price: { gold: 200 },
+		price: { gold: 2000 },
 		// 预定出货范围（稀有，12 人）
 		contents: [
 			'ybsl_019shengyan', 'ybsl_045gaocong', 'ybsl_024yuetong', 'ybsl_053qiuer',
@@ -104,7 +104,7 @@ export const ITEM_DEFS = {
 		rank: null,
 		selectable: true,
 		icon: '/image/header/dj_60306.png',
-		price: { gold: 600 },
+		price: { gold: 6000 },
 		// 预定出货范围（全部可获取武将，60 人；不含平凡品质占位）
 		contents: [
 			// legend 10
@@ -159,7 +159,7 @@ export const ITEM_DEFS = {
 	box_r1_random: {
 		id: 'box_r1_random',
 		name: '平凡宝物箱(随机)',
-		price: { gold: 200 },
+		price: { gold: 2000 },
 		emoji: '📦',
 		icon: '/image/header/dj_20030.png',
 		kind: 'treasurebox',
@@ -172,7 +172,7 @@ export const ITEM_DEFS = {
 	box_r1_pick: {
 		id: 'box_r1_pick',
 		name: '平凡宝物箱(定向)',
-		price: { gold: 240 },
+		price: { gold: 2400 },
 		emoji: '📦',
 		icon: '/image/header/dj_20019.png',
 		kind: 'treasurebox',
@@ -186,7 +186,7 @@ export const ITEM_DEFS = {
 	box_r2_random: {
 		id: 'box_r2_random',
 		name: '精品宝物箱(随机)',
-		price: { gold: 800 },
+		price: { gold: 8000 },
 		emoji: '📦',
 		icon: '/image/header/dj_20031.png',
 		kind: 'treasurebox',
@@ -199,7 +199,7 @@ export const ITEM_DEFS = {
 	box_r2_pick: {
 		id: 'box_r2_pick',
 		name: '精品宝物箱(定向)',
-		price: { gold: 960 },
+		price: { gold: 9600 },
 		emoji: '📦',
 		icon: '/image/header/dj_20020.png',
 		kind: 'treasurebox',

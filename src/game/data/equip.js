@@ -8,7 +8,7 @@ const TREASURE_DEFS= {
 		atk: 200,
 		baoji: 1000,
 		icon: '/image/skill/wusheng.png',
-		price: { gold: 2000, diamond: 2 },// 300 金币
+		price: { gold: 20000, diamond: 2 },// 300 金币
 	},
 	ganglie: {
 		id: 'ganglie',
@@ -19,13 +19,13 @@ const TREASURE_DEFS= {
 		def: 100,
 		gedang: 1000,
 		icon: '/image/skill/ganglie.png',
-		price: { gold: 2000, diamond: 2 },
+		price: { gold: 20000, diamond: 2 },
 	},
 	guipu: {
 		id: 'guipu',
 		name: '鬼仆',
 		icon: '/image/skill/guipu.png',
-		price: { gold: 2000, diamond: 2 },
+		price: { gold: 20000, diamond: 2 },
 		kangbao: 1000,
 		desc:function(star){
 			return `生命加${star*2000}，抗暴加1000。`;
@@ -41,7 +41,7 @@ const TREASURE_DEFS= {
 			return `攻击加${star*200}，命中加1000。`;
 		},
 		icon: '/image/skill/paoxiao.png',
-		price: { gold: 2000, diamond: 2 },
+		price: { gold: 20000, diamond: 2 },
 	},
 	shelie: {
 		id: 'shelie',
@@ -52,7 +52,7 @@ const TREASURE_DEFS= {
 			return `生命加${star*2000}，闪避加800。`;
 		},
 		icon: '/image/skill/shelie.png',
-		price: { gold: 2000, diamond: 2 },
+		price: { gold: 20000, diamond: 2 },
 	},
 	zhengnan: {
 		id: 'zhengnan',
@@ -63,7 +63,7 @@ const TREASURE_DEFS= {
 			return `防御加${star*100}，破击加1000。`;
 		},
 		icon: '/image/skill/zhengnan.png',
-		price: { gold: 2000, diamond: 2 },
+		price: { gold: 20000, diamond: 2 },
 	},
 	qingguo:{
 		id: 'qingguo',
@@ -74,7 +74,7 @@ const TREASURE_DEFS= {
 			return `防御加${star*200}，闪避加3200。`;
 		},
 		icon: '/image/skill/qingguo.png',
-		price: { gold: 8000, diamond: 8 },
+		price: { gold: 80000, diamond: 8 },
 	},
 	wansha:{
 		id: 'wansha',
@@ -85,7 +85,7 @@ const TREASURE_DEFS= {
 			return `攻击加${star*400}，使用技能后，100%几率封印目标一回合。`;
 		},
 		icon: '/image/skill/wanbao.png',
-		price: { gold: 8000, diamond: 8 },
+		price: { gold: 80000, diamond: 8 },
 	},
 
 
@@ -156,7 +156,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10501.png',
 		rank:1,
 		sellPrice: 20,
-		price: { gold: 200 },
+		price: { gold: 2000 },
 		atk:20,
 		// 特效：造成伤害时，若血量高于对方，则伤害增加20%（内联完整效果，不引用库）
 		effects: [{
@@ -180,7 +180,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10502.png',
 		rank:1,
 		sellPrice: 20,
-		price: { gold: 200 },
+		price: { gold: 2000 },
 		hp:120,
 		// 特效：受到伤害时，若血量高于对方，则伤害减少20%（内联完整效果，不引用库）
 		effects: [{
@@ -204,7 +204,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20501.png',
 		rank:1,
 		sellPrice: 20,
-		price: { gold: 200 },
+		price: { gold: 2000 },
 		atk:20,
 		// 特效：造成伤害时，若血量低于对方，则伤害增加20%（内联完整效果，不引用库）
 		effects: [{
@@ -228,7 +228,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20502.png',
 		rank:1,
 		sellPrice: 20,
-		price: { gold: 200 },
+		price: { gold: 2000 },
 		hp:120,
 		// 特效：受到伤害时，若血量低于对方，则伤害减少20%（内联完整效果，不引用库）
 		effects: [{
@@ -254,7 +254,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10606.png',
 		rank:2,
 		sellPrice: 100,
-		price: { gold: 800 },
+		price: { gold: 8000 },
 		hp:240,
 		// 普攻命中时，50%几率令目标中毒2回合（每回合失去 施加者攻击力*33% 生命）
 		effects: [{
@@ -282,7 +282,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10607.png',
 		rank:2,
 		sellPrice: 100,
-		price: { gold: 800 },
+		price: { gold: 8000 },
 		hp:240,
 		// 普攻命中时，20%几率眩晕目标1回合
 		effects: [{
@@ -309,7 +309,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10608.png',
 		rank:2,
 		sellPrice: 100,
-		price: { gold: 800 },
+		price: { gold: 8000 },
 		hp:240,
 		// 普攻命中时，80%几率减少目标45%防御1回合（def 类 buff，value 为带符号分数）
 		effects: [{
@@ -337,7 +337,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20605.png',
 		rank:2,
 		sellPrice: 100,
-		price: { gold: 800 },
+		price: { gold: 8000 },
 		atk:40,
 		// 技能命中时，20%几率封印目标1回合
 		effects: [{
@@ -364,7 +364,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20606.png',
 		rank:2,
 		sellPrice: 100,
-		price: { gold: 800 },
+		price: { gold: 8000 },
 		atk:40,
 		// 技能命中时，20%几率减少目标1能量
 		effects: [{
@@ -390,7 +390,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20607.png',
 		rank:2,
 		sellPrice: 100,
-		price: { gold: 800 },
+		price: { gold: 8000 },
 		atk:40,
 		// 技能命中时，50%几率令目标中毒2回合（每回合失去 施加者攻击力*33% 生命）
 		effects: [{
@@ -420,7 +420,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_10803.png',
 		rank:3,
 		sellPrice: 5000,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		desc: function(star){
 			return `出售可获得 5000 金币。`;
 		},
@@ -433,7 +433,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11012.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		hp:600,
 		gedang:200,
 		// 格挡反击：格挡成功时，对来源发起一次特殊普攻（50%攻击系数），isSpecial 防止反击再触发格挡反击
@@ -461,7 +461,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11013.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		hp:600,
 		shanbi:200,
 		desc: function(star){
@@ -476,7 +476,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11014.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		hp:600,
 		kangbao:200,
 		desc: function(star){
@@ -491,7 +491,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11109.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		hp:600,
 		gedang:200,
 		desc: function(star){
@@ -506,7 +506,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11110.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		hp:600,
 		kangbao:200,
 		// 受到伤害时，20%几率减少来源1能量
@@ -533,7 +533,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11111.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		hp:600,
 		shanbi:200,
 		// 治疗效果+20%：战斗开始（首轮）时给自身叠加 pctHeal（applyHeal 读取施术者 pctHeal 生效）
@@ -557,7 +557,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_20803.png',
 		rank:3,
 		sellPrice: 5000,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		desc: function(star){
 			return `出售可获得 5000 金币。`;
 		},
@@ -570,7 +570,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21012.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		atk:100,
 		baoji:200,
 		// 装备者发动「治疗系普攻」且命中队友时，20%几率令该队友增加1能量（正向收益，仅治疗普攻触发 healPugongHit）
@@ -597,7 +597,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21013.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		atk:100,
 		baoji:200,
 		desc: function(star){
@@ -612,7 +612,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21014.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		atk:100,
 		mingzhong:200,
 		desc: function(star){
@@ -627,7 +627,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21109.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		atk:100,
 		poji:200,
 		desc: function(star){
@@ -642,7 +642,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21110.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		atk:100,
 		poji:200,
 		// 普攻命中时，对左右相邻目标造成50%溅射伤害（复用【吴爽】溅射写法 Battle.splashToAdjacent）
@@ -665,7 +665,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21111.png',
 		rank:3,
 		sellPrice: 300,
-		price: { gold: 5000, diamond: 5 },
+		price: { gold: 50000, diamond: 5 },
 		atk:100,
 		mingzhong:200,
 		// 普攻命中时，20%几率减少目标1能量
@@ -694,7 +694,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11304.png',
 		rank:4,
 		sellPrice: 20000,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		desc: function(star){
 			return `出售可获得 20000 金币。`;
 		},
@@ -707,7 +707,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11615.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		hp:1200,
 		kangbao:400,
 		// 受到暴击时，降低来源1能量（onHitSelf 触发时攻击方 _lastHitIsCrit 已记录本次是否暴击）
@@ -734,7 +734,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11616.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		hp:1200,
 		shanbi:400,
 		// 触发闪避时，对来源造成本次伤害等额真实伤害。
@@ -767,7 +767,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11617.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		hp:1200,
 		gedang:400,
 		// 格挡反击：格挡成功时，对来源发起一次特殊普攻（75%攻击系数）
@@ -796,7 +796,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11618.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		hp:1200,
 		kangbao:400,
 		shouhu:2000,
@@ -812,7 +812,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11619.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		hp:1200,
 		shanbi:400,
 		// 受到非真实伤害时，反伤20%（onHitSelf 仅在非真实伤害路径触发，自动满足"非真实"条件）
@@ -845,7 +845,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11620.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		hp:1200,
 		gedang:400,
 		// 触发格挡时，回复1能量
@@ -872,7 +872,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11621.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		hp:1200,
 		kangbao:400,
 		// 受到暴击时，回复1能量
@@ -899,7 +899,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11622.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		hp:1200,
 		kangbao:400,
 		// 概率修正：敌方发动特效判定概率时，其成功率 -20%（通过引擎 rollChance 的 probMod.enemy 生效）
@@ -921,7 +921,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11623.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		hp:1200,
 		gedang:400,
 		// 被攻击时，40%几率令来源减少1能量
@@ -948,7 +948,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_11624.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		hp:1200,
 		shanbi:400,
 		// 触发闪避时，20%几率恢复全队1能量
@@ -976,7 +976,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21304.png',
 		rank:4,
 		sellPrice: 20000,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		desc: function(star){
 			return `出售可获得 20000 金币。`;
 		},
@@ -989,7 +989,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21615.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		atk:200,
 		mingzhong:400,
 		// 发出攻击指令后，若实际目标数少于额定最大目标数，每少一个目标，本次伤害 +25%
@@ -1016,7 +1016,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21616.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		atk:200,
 		mingzhong:400,
 		// 对封印的目标造成伤害+50%
@@ -1037,7 +1037,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21617.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		atk:200,
 		mingzhong:400,
 		// 普攻命中时对目标额外造成 20% 攻击力的真实伤害（原意"指令下达后先造成"，当前无前置 trigger，近似置于命中时；真实伤害无视防御/闪避）
@@ -1068,7 +1068,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21618.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		atk:200,
 		poji:400,
 		// 造成伤害时（普攻/技能），100%几率令目标中毒2回合（毒素伤害为施加者攻击力33%）
@@ -1088,7 +1088,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21619.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		atk:200,
 		poji:400,
 		// 技能后，恢复2能量
@@ -1115,7 +1115,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21620.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		atk:200,
 		baoji:400,
 		baoshang:2000,
@@ -1131,7 +1131,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21621.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		atk:200,
 		baoji:400,
 		// 技能命中时，对左右相邻目标造成80%溅射伤害（复用【吴爽】溅射写法 Battle.splashToAdjacent）
@@ -1154,7 +1154,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21622.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		atk:200,
 		poji:400,
 		// 概率修正：自身发动特效判定概率时，成功率 +20%（通过引擎 rollChance 的 probMod.self 生效）
@@ -1176,7 +1176,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21623.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		atk:200,
 		poji:400,
 		// 普攻命中时吸血60%（借鉴突破库的 lifesteal_pugong，按本次实际伤害 _lastDamage 回血）
@@ -1204,7 +1204,7 @@ const TREASURE_DEFS= {
 		iconbig: '/image/equip-big/bw_21624.png',
 		rank:4,
 		sellPrice: 600,
-		price: { gold: 40000, diamond: 40 },
+		price: { gold: 400000, diamond: 40 },
 		atk:200,
 		baoji:400,
 		// 技能系数 +20%、普攻系数 +10%（通过 coeffBonus 时点接入，见 Battle.getCoeffBonus）

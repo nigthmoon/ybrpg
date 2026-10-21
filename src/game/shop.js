@@ -112,7 +112,7 @@ function getSellPrice(def) {
  * 获取角色品质对应价格（对象结构）
  */
 function getCharPrice(rank) {
-	return { legend: { gold: 500 }, epic: { gold: 300 } }[rank] || { gold: 200 };
+	return { legend: { gold: 5000 }, epic: { gold: 3000 } }[rank] || { gold: 2000 };
 }
 
 /**
