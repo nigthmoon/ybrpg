@@ -31,7 +31,7 @@ async function backToEntry() {
 <template>
   <div class="main-page">
     <!-- 角落用户中心入口（仅已进入态显示） -->
-    <button v-if="entered" class="account-fab" title="用户中心" @click="router.push('/account')">👤</button>
+    <button v-if="entered" class="account-fab" title="用户中心" @click="store.openAccount()">👤</button>
 
     <div class="hero">
       <div class="hero-logo">✦</div>

@@ -15,6 +15,7 @@ import { DIFFICULTY_SCALE, buildRewardPlan, computeLevelGold, doSweep } from './
 import { formatPrice, getRankColor, normalizePrice, refreshShopItems } from './shop';
 import { getSaveNamespace } from './saveNs';
 import { api, getToken } from '../api/client';
+import { uploadSlot, deleteCloudSlot, genSid } from './cloud';
 
 function renderSettingsView(container) {
 	// 清空容器以防重复渲染
@@ -96,27 +97,17 @@ function renderSettingsView(container) {
 	};
 	groupDiv.appendChild(saveBtn);
 
-	// 退出登录（仅登录态显示）：二次确认后经桥接退出并回主界面等待登录
-	if (localStorage.getItem('ybrpg_token')) {
-		const logoutBtn = document.createElement('button');
-		logoutBtn.className = 'ybrpg-settings-btn';
-		logoutBtn.id = 'btn-setting-logout';
-		logoutBtn.textContent = '退出登录';
-		logoutBtn.style.cssText = 'background:#b71c1c;border-color:#e53935;color:#fff;';
-		logoutBtn.onclick = () => {
-			const doLogout = () => {
-				if (window.__ybrpgBridge && typeof window.__ybrpgBridge.logoutAndExit === 'function') {
-					window.__ybrpgBridge.logoutAndExit();
-				}
-			};
-			if (window.Game && typeof window.Game.confirmDialog === 'function') {
-				window.Game.confirmDialog('确定退出登录吗？将返回主界面等待登录。', doLogout);
-			} else {
-				doLogout();
-			}
-		};
-		groupDiv.appendChild(logoutBtn);
-	}
+	// 账号按钮：进入账号设置（登录/游客态由 AccountView 内展示）
+	const accountBtn = document.createElement('button');
+	accountBtn.className = 'ybrpg-settings-btn';
+	accountBtn.id = 'btn-setting-account';
+	accountBtn.textContent = '账号';
+	accountBtn.onclick = () => {
+		if (window.__ybrpgBridge && typeof window.__ybrpgBridge.goAccount === 'function') {
+			window.__ybrpgBridge.goAccount();
+		}
+	};
+	groupDiv.appendChild(accountBtn);
 
 	container.appendChild(groupDiv);
 
@@ -2676,6 +2667,13 @@ const SaveManager = {
 				|| { ownedCharacters: [], viewedCharacters: [], collectionProgress: { total: 0, owned: 0 } }
 			))
 			};
+			// ===== 【修复存储超限】写入前空间预检，超限时友好		};
+			// 保留/生成 sid（云端防重复与跨设备识别）：优先沿用该槽既有档的 sid
+			try {
+				const __old = localStorage.getItem(`${Game.Data.STORAGE_KEY}_${slot}`);
+				const __osid = __old ? JSON.parse(__old).sid : null;
+				compatData.sid = __osid || genSid();
+			} catch (e) { compatData.sid = genSid(); }
 			// ===== 【修复存储超限】写入前空间预检，超限时友好提示而非 Uncaught 报错 =====
 			const slotJson = JSON.stringify(compatData);
 			const payloads = [[`${Game.Data.STORAGE_KEY}_${slot}`, slotJson]];
@@ -2692,6 +2690,8 @@ const SaveManager = {
 			try {
 				payloads.forEach(([k, v]) => localStorage.setItem(k, v));
 				console.log(`已保存到槽位${slot}`);
+				// 登录态：保存后同步上传云端（修复游戏内存档不进云）
+				if (getToken()) uploadSlot(slot).catch(() => {});
 			} catch (e) {
 				console.error(`[存档保存] 槽位${slot} 写入失败:`, e);
 				Game.toast('保存失败：本地存储空间不足，请删除部分旧存档后重试', 'error');
@@ -2892,6 +2892,7 @@ const SaveManager = {
 		Game.Data.deleteSave(slot); // 索引0留给自动存档，手动存档从索引1开始
 		localStorage.removeItem(`${Game.Data.STORAGE_KEY}_${slot}`);
 		console.log(`已删除槽位${slot}的存档`);
+		if (getToken()) deleteCloudSlot(slot).catch(() => {});
 	},
 
 	// ====== 自动存档 ======
@@ -2996,6 +2997,13 @@ const SaveManager = {
 				|| { ownedCharacters: [], viewedCharacters: [], collectionProgress: { total: 0, owned: 0 } }
 			))
 			};
+			// ===== 【修复存储超限】写入前空间预检，超限时友		};
+			// 保留/生成 sid：优先沿用自动档既有 sid
+			try {
+				const __old = localStorage.getItem(SaveManager.AUTO_KEY);
+				const __osid = __old ? JSON.parse(__old).sid : null;
+				compatData.sid = __osid || genSid();
+			} catch (e) { compatData.sid = genSid(); }
 			// ===== 【修复存储超限】写入前空间预检，超限时友好提示而非 Uncaught 报错 =====
 			const autoCompatJson = JSON.stringify(compatData);
 			const payloads = [
@@ -3035,6 +3043,11 @@ const SaveManager = {
 				if (!window.__lastSavePing || __now - window.__lastSavePing > 60000) {
 					window.__lastSavePing = __now;
 					api.sessionPing(true).catch(() => {});
+				}
+				// 自动档节流上传云端（每 120s，避免高频大 JSON 上传）
+				if (!window.__lastAutoUpload || __now - window.__lastAutoUpload > 120000) {
+					window.__lastAutoUpload = __now;
+					uploadSlot(0).catch(() => {});
 				}
 			}
 			},

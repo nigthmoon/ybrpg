@@ -1,7 +1,7 @@
 <template>
   <div class="account-page">
     <div class="page-header">
-      <button class="back-btn" @click="router.push('/')">‹ 返回</button>
+      <button class="back-btn" @click="back">‹ 返回</button>
       <h2 class="page-title">用户中心</h2>
       <span class="header-spacer"></span>
     </div>
@@ -108,10 +108,15 @@
 import { computed, nextTick, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { useGameStore } from '../stores/game';
 import { confirmDialog } from '../composables/useConfirm';
 
 const router = useRouter();
 const auth = useAuthStore();
+const gstore = useGameStore();
+
+// 返回：来自游戏内则恢复游戏，否则回主界面
+function back() { gstore.backFromAccount(); }
 
 const charOptions = ref([]);
 const treasureOptions = ref([]);

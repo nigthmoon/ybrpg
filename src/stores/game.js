@@ -36,6 +36,7 @@ export const useGameStore = defineStore('game', {
     saves: [],             // 手动存档槽位快照（Vue 存档页用）
     hasAuto: false,        // 是否存在自动存档
     autoSaveTime: null,    // 自动存档时间
+    accountReturnToGame: false, // 账号页是否应返回游戏内（从游戏内进入时为 true）
   }),
 
   actions: {
@@ -71,6 +72,7 @@ export const useGameStore = defineStore('game', {
       window.__ybrpgBridge = {
         exitGame: () => this.exitGame(),
         logoutAndExit: () => this.logoutAndExit(),
+        goAccount: () => this.goAccount(),
         goSaves: () => {
           if (this.inGame) this.showView('save-view');
           else router.push('/save');
@@ -273,6 +275,28 @@ export const useGameStore = defineStore('game', {
       this.stopHeartbeat();
       this.inGame = false;
       this.activeView = '';
+      if (router.currentRoute.value.path !== '/') router.push('/');
+    },
+
+    /** 游戏内进入账号页：保留游戏 DOM（仅 v-show 隐藏），记录返回时恢复游戏 */
+    goAccount() {
+      this.accountReturnToGame = this.inGame;
+      this.stopHeartbeat();
+      this.inGame = false; // 隐藏游戏层，但 DOM 不销毁，返回时可恢复
+      if (router.currentRoute.value.path !== '/account') router.push('/account');
+    },
+
+    /** 主界面级进入账号页（返回回主界面） */
+    openAccount() {
+      this.accountReturnToGame = false;
+      if (router.currentRoute.value.path !== '/account') router.push('/account');
+    },
+
+    /** 账号页返回：来自游戏内则恢复游戏层，否则回主界面 */
+    backFromAccount() {
+      const rt = this.accountReturnToGame;
+      this.accountReturnToGame = false;
+      if (rt) { this.inGame = true; this.startHeartbeat(); }
       if (router.currentRoute.value.path !== '/') router.push('/');
     },
 
