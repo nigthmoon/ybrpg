@@ -10,10 +10,11 @@ import { BREAKTHROUGH_BUFF_LIBRARY, STANDARD_BREAKTHROUGH_TEMPLATE } from './dat
 import { TREASURE_DEFS } from './data/equip';
 import { Game } from './core';
 import { ITEM_DEFS } from './item';
-import { buildSkillSection, compileCharacterStats, getRankLabel, mergeNoOverwrite, refreshAllTeamSlots, renderTeamView, showTeamCharInfo, syncTreasureEquipData } from './team';
+import { buildFodderArrays, buildSkillSection, compileCharacterStats, getRankLabel, mergeNoOverwrite, refreshAllTeamSlots, renderTeamView, showTeamCharInfo, syncTreasureEquipData } from './team';
 import { DIFFICULTY_SCALE, buildRewardPlan, computeLevelGold, doSweep } from './dungeon';
 import { formatPrice, getRankColor, normalizePrice, refreshShopItems } from './shop';
 import { getSaveNamespace } from './saveNs';
+import { createCharacter } from './charFactory';
 import { api, getToken } from '../api/client';
 import { uploadSlot, deleteCloudSlot, genSid } from './cloud';
 
@@ -28,49 +29,26 @@ function renderSettingsView(container) {
 	const groupDiv = document.createElement('div');
 	groupDiv.className = 'settings-btn-group';
 
-	// 图鉴行：角色图鉴 + 宝物图鉴
+	// 第一行：图鉴 / 活动 / 设置
 	const galleryRow = document.createElement('div');
 	galleryRow.style.cssText = 'display:flex;gap:20px;justify-content:center;flex-wrap:wrap;';
 
-	// 角色图鉴按钮
-	const galleryBtn = document.createElement('button');
-	galleryBtn.className = 'ybrpg-settings-btn';
-	galleryBtn.id = 'btn-setting-gallery';
-	galleryBtn.textContent = '角色图鉴';
-	galleryBtn.onclick = () => renderGalleryView(container);
-	galleryRow.appendChild(galleryBtn);
+	// 图鉴（进入后选择 角色图鉴 / 宝物图鉴）
+	const galleryMenuBtn = document.createElement('button');
+	galleryMenuBtn.className = 'ybrpg-settings-btn';
+	galleryMenuBtn.id = 'btn-setting-gallery-menu';
+	galleryMenuBtn.textContent = '图鉴';
+	galleryMenuBtn.onclick = () => renderGalleryMenuView(container);
+	galleryRow.appendChild(galleryMenuBtn);
 
-	// 宝物图鉴按钮
-	const treasureBtn = document.createElement('button');
-	treasureBtn.className = 'ybrpg-settings-btn';
-	treasureBtn.id = 'btn-setting-treasure-gallery';
-	treasureBtn.textContent = '宝物图鉴';
-	treasureBtn.onclick = () => renderTreasureGalleryView(container);
-	galleryRow.appendChild(treasureBtn);
-
-	// 每日任务按钮
-	const taskBtn = document.createElement('button');
-	taskBtn.className = 'ybrpg-settings-btn';
-	taskBtn.id = 'btn-setting-daily-task';
-	taskBtn.textContent = '每日任务';
-	taskBtn.onclick = () => renderDailyTaskView(container);
-	galleryRow.appendChild(taskBtn);
-
-	// 每日签到按钮
-	const signBtn = document.createElement('button');
-	signBtn.className = 'ybrpg-settings-btn';
-	signBtn.id = 'btn-setting-daily-sign';
-	signBtn.textContent = '每日签到';
-	signBtn.onclick = () => renderDailySignView(container);
-	galleryRow.appendChild(signBtn);
-
-	// 兑换码按钮
-	const redeemBtn = document.createElement('button');
-	redeemBtn.className = 'ybrpg-settings-btn';
-	redeemBtn.id = 'btn-setting-redeem';
-	redeemBtn.textContent = '兑换码';
-	redeemBtn.onclick = () => renderRedeemView(container);
-	galleryRow.appendChild(redeemBtn);
+	// 活动（进入后选择 每日签到 / 每日任务 / 兑换码）
+	const activityBtn = document.createElement('button');
+	activityBtn.className = 'ybrpg-settings-btn';
+	activityBtn.id = 'btn-setting-activity';
+	activityBtn.textContent = '活动';
+	activityBtn.onclick = () => renderActivityView(container);
+	if (hasSignReward() || hasTaskReward()) addRedDot(activityBtn); // 有可领时主设置“活动”也亮红点
+	galleryRow.appendChild(activityBtn);
 
 	// 设置按钮（AI托管 / 公式显示 等）
 	const miscBtn = document.createElement('button');
@@ -116,6 +94,105 @@ function renderSettingsView(container) {
 	versionInfo.style.cssText = 'color:#888;font-size:12px;margin-top:20px;text-align:center;';
 	versionInfo.textContent = `版本: ${window.GAME_VERSION || 'v1.0'}`;
 	container.appendChild(versionInfo);
+}
+
+// ===== 设置入口“可领取”红点 =====
+function hasSignReward() {
+	ensureDailyData();
+	return window.dailySign.lastSignDate !== getTodayStr(); // 今日未签到即可领
+}
+function hasTaskReward() {
+	ensureDailyData();
+	return (window.dailyTasks.tasks || []).some(t => !t.claimed && t.progress >= t.target); // 有已完成未领任务
+}
+// 给按钮加右上角红点（按钮需 position:relative）
+function addRedDot(btn) {
+	if (!btn) return;
+	if (!btn.style.position) btn.style.position = 'relative';
+	const dot = document.createElement('span');
+	dot.className = 'settings-red-dot';
+	btn.appendChild(dot);
+}
+
+// 渲染：图鉴目录（进入后选择 角色图鉴 / 宝物图鉴）
+function renderGalleryMenuView(container) {
+	container.innerHTML = '';
+	container.style.justifyContent = 'flex-start';
+
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-back-btn';
+	backBtn.textContent = '← 返回';
+	backBtn.onclick = () => renderSettingsView(container);
+	container.appendChild(backBtn);
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:20px;font-weight:bold;text-align:center;margin:15px 0;color:#44aaff;';
+	title.textContent = '📖 图鉴';
+	container.appendChild(title);
+
+	const row = document.createElement('div');
+	row.style.cssText = 'display:flex;gap:20px;justify-content:center;flex-wrap:wrap;';
+
+	const charBtn = document.createElement('button');
+	charBtn.className = 'ybrpg-settings-btn';
+	charBtn.id = 'btn-setting-gallery';
+	charBtn.textContent = '角色图鉴';
+	charBtn.onclick = () => renderGalleryView(container);
+	row.appendChild(charBtn);
+
+	const treBtn = document.createElement('button');
+	treBtn.className = 'ybrpg-settings-btn';
+	treBtn.id = 'btn-setting-treasure-gallery';
+	treBtn.textContent = '宝物图鉴';
+	treBtn.onclick = () => renderTreasureGalleryView(container);
+	row.appendChild(treBtn);
+
+	container.appendChild(row);
+}
+
+// 渲染：活动目录（进入后选择 每日签到 / 每日任务 / 兑换码）
+function renderActivityView(container) {
+	container.innerHTML = '';
+	container.style.justifyContent = 'flex-start';
+
+	const backBtn = document.createElement('button');
+	backBtn.className = 'ybrpg-back-btn';
+	backBtn.textContent = '← 返回';
+	backBtn.onclick = () => renderSettingsView(container);
+	container.appendChild(backBtn);
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:20px;font-weight:bold;text-align:center;margin:15px 0;color:#ffaa00;';
+	title.textContent = '🎁 活动';
+	container.appendChild(title);
+
+	const row = document.createElement('div');
+	row.style.cssText = 'display:flex;gap:20px;justify-content:center;flex-wrap:wrap;';
+
+	const signBtn = document.createElement('button');
+	signBtn.className = 'ybrpg-settings-btn';
+	signBtn.id = 'btn-setting-daily-sign';
+	signBtn.textContent = '每日签到';
+	signBtn.onclick = () => renderDailySignView(container);
+	if (hasSignReward()) addRedDot(signBtn);
+	row.appendChild(signBtn);
+
+	const taskBtn = document.createElement('button');
+	taskBtn.className = 'ybrpg-settings-btn';
+	taskBtn.id = 'btn-setting-daily-task';
+	taskBtn.textContent = '每日任务';
+	taskBtn.onclick = () => renderDailyTaskView(container);
+	if (hasTaskReward()) addRedDot(taskBtn);
+	row.appendChild(taskBtn);
+
+	const redeemBtn = document.createElement('button');
+	redeemBtn.className = 'ybrpg-settings-btn';
+	redeemBtn.id = 'btn-setting-redeem';
+	redeemBtn.textContent = '兑换码';
+	redeemBtn.onclick = () => renderRedeemView(container);
+	row.appendChild(redeemBtn);
+
+	container.appendChild(row);
 }
 
 // 渲染：设置（AI托管 / 公式显示 等偏好项）
@@ -794,14 +871,23 @@ function renderDailySignView(container) {
 	DAILY_SIGN_REWARDS.forEach((rw, i) => {
 		const day = i + 1;
 		const cell = document.createElement('div');
+		// 三态：今天已签的那格(金) / 今天待签到的那格(蓝绿高亮+光晕) / 其它未签(暗)
+		const signedTodayCell = signed && ((window.dailySign.streak - 1) % DAILY_SIGN_REWARDS.length) === i;
+		const todayTargetCell = !signed && (window.dailySign.streak % DAILY_SIGN_REWARDS.length) === i;
+		let bg = '#222', border = '1px solid #555', extra = '';
+		if (signedTodayCell) { bg = 'rgba(255,215,0,0.2)'; border = '1px solid #ffd700'; }
+		else if (todayTargetCell) { bg = 'rgba(64,196,255,0.22)'; border = '1px solid #40c4ff'; extra = 'box-shadow:0 0 10px rgba(64,196,255,.55);'; }
 		cell.style.cssText = `
-			border:1px solid #555;border-radius:8px;padding:12px 6px;text-align:center;
-			background:${signed && ((window.dailySign.streak - 1) % DAILY_SIGN_REWARDS.length) === i ? 'rgba(255,215,0,0.2)' : '#222'};
+			border:${border};border-radius:8px;padding:12px 6px;text-align:center;
+			background:${bg};${extra}
 		`;
+		let todayTag = '';
+		if (todayTargetCell) todayTag = `<div style="color:#40c4ff;font-size:11px;font-weight:bold;margin-top:3px;">● 待签到</div>`;
+		else if (signedTodayCell) todayTag = `<div style="color:#ffd700;font-size:11px;font-weight:bold;margin-top:3px;">✓ 已签到</div>`;
 		cell.innerHTML = `<div style="color:#aaa;font-size:12px;">第${day}天</div>
 			<div style="font-size:18px;margin:6px 0;">💎</div>
 			<div style="color:#ffd700;font-weight:bold;">${rw}</div>
-			<div style="color:#ffcf66;font-size:12px;margin-top:2px;">+${rw * 10}💰</div>`;
+			<div style="color:#ffcf66;font-size:12px;margin-top:2px;">+${rw * 10}💰</div>${todayTag}`;
 		grid.appendChild(cell);
 	});
 	container.appendChild(grid);
@@ -2031,21 +2117,12 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 	const triesLeft = levelTriesLeft(eventId);
 	const triesOk = triesLeft > 0;
 
-	// 秘境首通奖励文案（与战斗结算 onWin 逻辑保持一致）
+	// 秘境奖励文案（与战斗结算 onWin 一致，取自关卡配置 event.drops）
 	let secretText = '';
-	if (isSP) {
-		if (chapterKey === 'spEvent1') {
-			const m = String(eventId).match(/sp1-(\d+)/);
-			const lv = m ? parseInt(m[1]) : 1;
-			secretText = `首次通过可令主角突破至 ${lv} 阶`;
-		} else if (chapterKey === 'spEvent2') {
-			const rankMap = {
-				'sp2-1': 'common', 'sp2-2': 'rare', 'sp2-3': 'epicfake',
-				'sp2-4': 'epic', 'sp2-5': 'legend', 'sp2-6': 'kami',
-			};
-			const r = rankMap[eventId];
-			if (r) secretText = `首次通过可令主角提升至「${getRankLabel(r)}」品质`;
-		}
+	const baseDrops = Array.isArray(event.drops) ? event.drops : [];
+	if (baseDrops.length) {
+		const parts = baseDrops.filter(d => d && d.item && d.count > 0).map(d => `${(ITEM_DEFS[d.item] && ITEM_DEFS[d.item].name) || d.item}×${d.count}`);
+		if (parts.length) secretText = `每次通关可获得：${parts.join('、')}`;
 	}
 
 	const overlay = document.createElement('div');
@@ -2438,34 +2515,8 @@ function initNewGame() {
 	// const pickedAll = shuffledAll.slice(0, 1);
 	const pickedAll = ['zhujue'];
 	pickedAll.forEach(id => {
-		const base = characterList[id];
-		// 修改：生成 instanceId
-		const instanceId = Game.genId(id);
-		// 1. 先编译基础属性
-		const stats = compileCharacterStats(base);
-
-		window.charBagData[instanceId] = {
-			charId: id,
-			level: 1,
-			// 2. 使用编译后的属性
-			// rank: base.rank || 'common',	  
-			// template: base.template || 'balanced',
-			// rank: base.rank||'rare',
-			// template: base.template||'balanced',
-			// tip: base.tip,
-			// tip: baseChar.tip,
-			// ties: baseChar.ties,
-			// tupoList: baseChar.tupoList,
-
-			hp: stats.hp,
-			atk: stats.atk,
-			def: stats.def,
-			spe: stats.spe,
-			// 其他字段...
-			currentHp: stats.hp, // 记得初始化当前血量
-			maxHp: stats.hp
-		};
-		mergeNoOverwrite(window.charBagData[instanceId], base)
+		// 武将实例统一走工厂（版本/体系分层）
+		createCharacter(id);
 	});
 	syncTreasureEquipData();
 
@@ -2487,25 +2538,9 @@ function initNewGame() {
 	const mainCharId = 'zhujue';
 	// 如果背包里没有主角，先创建一个
 	if (!window.charBagData || !Object.values(window.charBagData).some(inst => inst.charId === mainCharId)) {
-		const mainInstId = Game.genId(mainCharId);
-		const baseChar = characterList[mainCharId];
-		if (baseChar) {
-			// 编译属性
-			const stats = compileCharacterStats(baseChar);
-			window.charBagData[mainInstId] = {
-				charId: mainCharId,
-				level: 1,
-				rank: baseChar.rank,
-				template: baseChar.template,
-				hp: stats.hp,
-				atk: stats.atk,
-				def: stats.def,
-				spe: stats.spe,
-				currentHp: stats.hp,
-				maxHp: stats.hp,
-				openSpskill: false,
-			};
-			mergeNoOverwrite(window.charBagData[mainInstId], baseChar)
+		// 武将实例统一走工厂（版本/体系分层）
+		const mainInstId = createCharacter(mainCharId);
+		if (mainInstId) {
 			// 【关键】将主角强制放在队伍第一位
 			window.currentTeam[0] = mainInstId;
 		}

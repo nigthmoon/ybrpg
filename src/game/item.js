@@ -28,6 +28,33 @@ const RANK_COLORS = {
 
 // ==================== 道具定义 ====================
 export const ITEM_DEFS = {
+	// ===================== 培养材料（只能查看，不可使用/出售） =====================
+	breakthrough_stone: {
+		id: 'breakthrough_stone',
+		name: '突破石',
+		emoji: '💠',
+		kind: 'material',
+		icon: '/image/header/dj_50001.png',
+		desc: '武将突破材料（与同名本体一起消耗）。不可出售。',
+	},
+	awaken_stone: {
+		id: 'awaken_stone',
+		name: '觉醒石',
+		emoji: '🔮',
+		kind: 'material',
+		icon: '/image/header/dj_50101.png',
+		desc: '接引式升品材料。不可出售。',
+	},
+	item_zhujue_sub: {
+		id: 'item_zhujue_sub',
+		name: '主角替身卡',
+		emoji: '🃏',
+		kind: 'material',
+		icon: '/image/header/dj_50058.png',
+		price: { diamond: 1000 },
+		desc: '主角突破专用（代替主角本体）。珍宝商城出售，不可出售。',
+	},
+
 	pack_legend: {
 		id: 'pack_legend',
 		name: '传说武将包',
@@ -36,7 +63,7 @@ export const ITEM_DEFS = {
 		rank: 'legend',
 		selectable: true,
 		icon: '/image/header/dj_60404.png',
-		price: { gold: 5000 },
+		price: { gold: 72000 },
 		// 预定出货范围（传说，10 人）
 		contents: [
 			'ybsl_017xiaohong', 'ybsl_059starsFall1', 'ybsl_047shan', 'ybsl_041mmuqin',
@@ -52,7 +79,7 @@ export const ITEM_DEFS = {
 		rank: 'epic',
 		selectable: true,
 		icon: '/image/header/dj_60403.png',
-		price: { gold: 3000 },
+		price: { gold: 18000 },
 		// 预定出货范围（史诗，20 人）
 		contents: [
 			'ybsl_015wanghairu', 'ybsl_016manchengqi', 'ybsl_018zhangqing', 'ybsl_059starsFall3',
@@ -70,7 +97,7 @@ export const ITEM_DEFS = {
 		rank: 'epicfake',
 		selectable: true,
 		icon: '/image/header/dj_60402.png',
-		price: { gold: 2500 },
+		price: { gold: 9600 },
 		// 预定出货范围（伪史诗，18 人）
 		contents: [
 			'ybsl_025shiqingyu', 'ybsl_020jiayutong', 'ybsl_025wanghe', 'ybsl_042pingzi',
@@ -88,7 +115,7 @@ export const ITEM_DEFS = {
 		rank: 'rare',
 		selectable: true,
 		icon: '/image/header/dj_60401.png',
-		price: { gold: 2000 },
+		price: { gold: 2400 },
 		// 预定出货范围（稀有，12 人）
 		contents: [
 			'ybsl_019shengyan', 'ybsl_045gaocong', 'ybsl_024yuetong', 'ybsl_053qiuer',
@@ -104,7 +131,7 @@ export const ITEM_DEFS = {
 		rank: null,
 		selectable: true,
 		icon: '/image/header/dj_60306.png',
-		price: { gold: 6000 },
+		price: { gold: 96000 },
 		// 预定出货范围（全部可获取武将，60 人；不含平凡品质占位）
 		contents: [
 			// legend 10
@@ -153,13 +180,24 @@ export const ITEM_DEFS = {
 		selectable: false,
 		desc: '使用后恢复 5 点体力',
 	},
+	item_goldbag: {
+		id: 'item_goldbag',
+		name: '金币袋',
+		price: { diamond: 10 },
+		emoji: '💰',
+		icon: '/image/header/dj_20265.png',
+		kind: 'goldbag',
+		reward: { gold: 10000 },
+		selectable: false,
+		desc: '开启后获得 10000 金币',
+	},
 
 	// ===================== 宝物箱（按品质分类，硬编码可选宝物） =====================
 	// rank1
 	box_r1_random: {
 		id: 'box_r1_random',
 		name: '平凡宝物箱(随机)',
-		price: { gold: 2000 },
+		price: { gold: 200 },
 		emoji: '📦',
 		icon: '/image/header/dj_20030.png',
 		kind: 'treasurebox',
@@ -172,7 +210,7 @@ export const ITEM_DEFS = {
 	box_r1_pick: {
 		id: 'box_r1_pick',
 		name: '平凡宝物箱(定向)',
-		price: { gold: 2400 },
+		price: { gold: 240 },
 		emoji: '📦',
 		icon: '/image/header/dj_20019.png',
 		kind: 'treasurebox',
@@ -186,7 +224,7 @@ export const ITEM_DEFS = {
 	box_r2_random: {
 		id: 'box_r2_random',
 		name: '精品宝物箱(随机)',
-		price: { gold: 8000 },
+		price: { gold: 800 },
 		emoji: '📦',
 		icon: '/image/header/dj_20031.png',
 		kind: 'treasurebox',
@@ -199,7 +237,7 @@ export const ITEM_DEFS = {
 	box_r2_pick: {
 		id: 'box_r2_pick',
 		name: '精品宝物箱(定向)',
-		price: { gold: 9600 },
+		price: { gold: 960 },
 		emoji: '📦',
 		icon: '/image/header/dj_20020.png',
 		kind: 'treasurebox',
@@ -213,7 +251,7 @@ export const ITEM_DEFS = {
 	box_r3_random: {
 		id: 'box_r3_random',
 		name: '稀有宝物箱(随机)',
-		price: { diamond: 5 },
+		price: { gold: 2000 },
 		emoji: '📦',
 		icon: '/image/header/dj_20032.png',
 		kind: 'treasurebox',
@@ -229,7 +267,7 @@ export const ITEM_DEFS = {
 	box_r3_pick: {
 		id: 'box_r3_pick',
 		name: '稀有宝物箱(定向)',
-		price: { diamond: 6 },
+		price: { gold: 2400 },
 		emoji: '📦',
 		icon: '/image/header/dj_20021.png',
 		kind: 'treasurebox',
@@ -246,7 +284,7 @@ export const ITEM_DEFS = {
 	box_r4_random: {
 		id: 'box_r4_random',
 		name: '史诗宝物箱(随机)',
-		price: { diamond: 40 },
+		price: { gold: 10000 },
 		emoji: '📦',
 		icon: '/image/header/dj_20033.png',
 		kind: 'treasurebox',
@@ -264,7 +302,7 @@ export const ITEM_DEFS = {
 	box_r4_pick: {
 		id: 'box_r4_pick',
 		name: '史诗宝物箱(定向)',
-		price: { diamond: 48 },
+		price: { gold: 12000 },
 		emoji: '📦',
 		icon: '/image/header/dj_20022.png',
 		kind: 'treasurebox',
@@ -283,7 +321,7 @@ export const ITEM_DEFS = {
 	box_r5_pick: {
 		id: 'box_r5_pick',
 		name: '传说宝物箱(定向)',
-		price: { diamond: 100 },
+		price: { gold: 50000 },
 		emoji: '📦',
 		icon: '/image/header/dj_20023.png',
 		kind: 'treasurebox',
@@ -297,7 +335,7 @@ export const ITEM_DEFS = {
 	box_r6_pick: {
 		id: 'box_r6_pick',
 		name: '尊品宝物箱(定向)',
-		price: { diamond: 200 },
+		price: { gold: 100000 },
 		emoji: '📦',
 		icon: '/image/header/dj_20024.png',
 		kind: 'treasurebox',
@@ -512,6 +550,16 @@ export function useItem(itemId) {
 		return;
 	}
 
+	// 培养材料：只能查看，不可主动使用（在突破/升品界面消耗）
+	if (def.kind === 'material') {
+		Game.toast(`${def.name}是培养材料，请在突破/升品界面使用`, 'warning');
+		return;
+	}
+	if (def.kind === 'goldbag') {
+		buildGoldBagDialog(def, owned);
+		return;
+	}
+
 	// 按道具类型分派开启逻辑
 	if (def.kind === 'stamina') {
 		buildStaminaDialog(def, owned);
@@ -605,6 +653,83 @@ function buildStaminaDialog(def, owned) {
 			renderBagItemContent(window._lastBagContainer);
 		}
 		// 刷新底部预览栏（数量为 0 则清空）
+		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
+	};
+	const cancelBtn = document.createElement('button');
+	cancelBtn.className = 'ybrpg-confirm-btn';
+	cancelBtn.textContent = '取消';
+	cancelBtn.onclick = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:10px;';
+	btnRow.appendChild(confirmBtn); btnRow.appendChild(cancelBtn);
+	dialog.appendChild(btnRow);
+
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
+}
+
+// ===================== 金币袋：数量选择后获得金币 =====================
+function buildGoldBagDialog(def, owned) {
+	const gold = (def.reward && def.reward.gold) || 10000;
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30000';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:8px;text-align:center;';
+	title.textContent = `开启【${def.name}】`;
+	dialog.appendChild(title);
+
+	let quantity = 1;
+	const stepper = document.createElement('div');
+	stepper.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:3px;margin:8px 0;flex-wrap:nowrap;';
+	const mkBtn = (txt, step, css) => {
+		const b = document.createElement('button');
+		b.className = 'ybrpg-confirm-btn';
+		b.textContent = txt;
+		b.style.cssText = `padding:0 6px;height:26px;font-size:13px;border:1px solid #555;white-space:nowrap;${css || ''}`;
+		b.onclick = () => syncQty((txt === '全选') ? owned : quantity + step);
+		return b;
+	};
+	const minus10 = mkBtn('−10', -10);
+	const minus = mkBtn('−1', -1);
+	const qtyEl = document.createElement('div');
+	qtyEl.style.cssText = 'font-size:20px;font-weight:bold;color:#fff;min-width:30px;text-align:center;';
+	qtyEl.textContent = '1';
+	const plus = mkBtn('+1', 1);
+	const plus10 = mkBtn('+10', 10);
+	const allBtn = mkBtn('全选', 0);
+	const syncQty = (v) => {
+		quantity = Math.max(1, Math.min(owned, v));
+		qtyEl.textContent = String(quantity);
+		tip.textContent = `每个获得 ${gold} 金币（本次 +${quantity * gold}）`;
+	};
+	stepper.appendChild(minus10); stepper.appendChild(minus); stepper.appendChild(qtyEl); stepper.appendChild(plus); stepper.appendChild(plus10); stepper.appendChild(allBtn);
+	dialog.appendChild(stepper);
+
+	const tip = document.createElement('div');
+	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;';
+	tip.textContent = `每个获得 ${gold} 金币（本次 +${quantity * gold}）`;
+	dialog.appendChild(tip);
+
+	const confirmBtn = document.createElement('button');
+	confirmBtn.className = 'ybrpg-confirm-btn';
+	confirmBtn.textContent = '确定';
+	confirmBtn.style.cssText = 'background:#d32f2f;';
+	confirmBtn.onclick = () => {
+		if (quantity > owned) { Game.toast('数量超过拥有数', 'warning'); return; }
+		window.gameGold = (window.gameGold || 0) + quantity * gold;
+		if (Game.Data && Game.Data.removeItem) Game.Data.removeItem(def.id, quantity);
+		if (typeof ensureResourceHUD === 'function') ensureResourceHUD();
+		if (typeof updateResourceHUD === 'function') updateResourceHUD();
+		if (Game.SaveManager && Game.SaveManager.autoSave) Game.SaveManager.autoSave();
+		Game.toast(`开启 ${quantity} 个${def.name}，获得 ${quantity * gold} 金币`, 'success');
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
+			renderBagItemContent(window._lastBagContainer);
+		}
 		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
 	};
 	const cancelBtn = document.createElement('button');

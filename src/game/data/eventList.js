@@ -1,6 +1,6 @@
 const SPeventList = {
 	spEvent1: {
-		name: '主角升阶秘境',
+		name: '突破石秘境',
 		difficulty: 'normal',
 		procedure: [
 			'sp1-1', 'sp1-2', 'sp1-3', 'sp1-4', 'sp1-5',
@@ -11,58 +11,66 @@ const SPeventList = {
 		eventPack: {
 			// ===== 第1阶段：突破0→4，敌人突破4 =====
 			'sp1-1': {
+
+				drops: [{ item: 'breakthrough_stone', count: 10 }],
 				name: '1阶秘境',
 				id: 'sp1-1',
 				type: 'battle',
-				text: '通过本关会令主角突破至1阶',
+				text: '通关获得突破石（突破材料）',
 				prev: null,
 				gold: 300,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 5, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 1, tupolevel: 0, rank: 'epicfake', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 5, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 1, tupolevel: 0, rank: 'epicfake', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 5, tupolevel: 4, rank: 'epicfake', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 1, tupolevel: 0, rank: 'epicfake', template: 'defense', buff: [] },
 					{}
 				],
 			},
 			'sp1-2': {
+
+				drops: [{ item: 'breakthrough_stone', count: 70 }],
 				name: '2阶秘境',
 				id: 'sp1-2',
 				type: 'battle',
-				text: '通过本关会令主角突破至2阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-1',
 				gold: 500,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 10, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 10, tupolevel: 2, rank: 'epicfake', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 10, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 10, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 10, tupolevel: 4, rank: 'epicfake', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 10, tupolevel: 2, rank: 'epicfake', template: 'defense', buff: [] },
 					{}
 				],
 			},
 			'sp1-3': {
+
+				drops: [{ item: 'breakthrough_stone', count: 154 }],
 				name: '3阶秘境',
 				id: 'sp1-3',
 				type: 'battle',
-				text: '通过本关会令主角突破至3阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-2',
 				gold: 700,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 15, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },
+					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 15, tupolevel: 3, rank: 'epicfake', template: 'balanced', buff: [] },
 					{},
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 15, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 15, tupolevel: 3, rank: 'epicfake', template: 'damger', buff: [] },
 					{},
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 15, tupolevel: 4, rank: 'epicfake', template: 'defense', buff: [] },
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 15, tupolevel: 3, rank: 'epicfake', template: 'defense', buff: [] },
 					{}
 				],
 			},
 			'sp1-4': {
+
+				drops: [{ item: 'breakthrough_stone', count: 360 }],
 				name: '4阶秘境',
 				id: 'sp1-4',
 				type: 'battle',
-				text: '通过本关会令主角突破至4阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-3',
 				gold: 1000,
 				enemy: [
@@ -77,10 +85,12 @@ const SPeventList = {
 
 			// ===== 第2阶段：突破4→8，敌人突破8 =====
 			'sp1-5': {
+
+				drops: [{ item: 'breakthrough_stone', count: 532 }],
 				name: '5阶秘境',
 				id: 'sp1-5',
 				type: 'battle',
-				text: '通过本关会令主角突破至5阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-4',
 				gold: 1500,
 				enemy: [
@@ -93,10 +103,12 @@ const SPeventList = {
 				],
 			},
 			'sp1-6': {
+
+				drops: [{ item: 'breakthrough_stone', count: 726 }],
 				name: '6阶秘境',
 				id: 'sp1-6',
 				type: 'battle',
-				text: '通过本关会令主角突破至6阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-5',
 				gold: 1750,
 				enemy: [
@@ -109,10 +121,12 @@ const SPeventList = {
 				],
 			},
 			'sp1-7': {
+
+				drops: [{ item: 'breakthrough_stone', count: 928 }],
 				name: '7阶秘境',
 				id: 'sp1-7',
 				type: 'battle',
-				text: '通过本关会令主角突破至7阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-6',
 				gold: 2000,
 				enemy: [
@@ -125,10 +139,12 @@ const SPeventList = {
 				],
 			},
 			'sp1-8': {
+
+				drops: [{ item: 'breakthrough_stone', count: 1248 }],
 				name: '8阶秘境',
 				id: 'sp1-8',
 				type: 'battle',
-				text: '通过本关会令主角突破至8阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-7',
 				gold: 2200,
 				enemy: [
@@ -143,10 +159,12 @@ const SPeventList = {
 
 			// ===== 第3阶段：突破8→12，敌人突破12 =====
 			'sp1-9': {
+
+				drops: [{ item: 'breakthrough_stone', count: 1564 }],
 				name: '9阶秘境',
 				id: 'sp1-9',
 				type: 'battle',
-				text: '通过本关会令主角突破至9阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-8',
 				gold: 2800,
 				enemy: [
@@ -159,10 +177,12 @@ const SPeventList = {
 				],
 			},
 			'sp1-10': {
+
+				drops: [{ item: 'breakthrough_stone', count: 1890 }],
 				name: '10阶秘境',
 				id: 'sp1-10',
 				type: 'battle',
-				text: '通过本关会令主角突破至10阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-9',
 				gold: 3300,
 				enemy: [
@@ -175,10 +195,12 @@ const SPeventList = {
 				],
 			},
 			'sp1-11': {
+
+				drops: [{ item: 'breakthrough_stone', count: 2470 }],
 				name: '11阶秘境',
 				id: 'sp1-11',
 				type: 'battle',
-				text: '通过本关会令主角突破至11阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-10',
 				gold: 3800,
 				enemy: [
@@ -191,10 +213,12 @@ const SPeventList = {
 				]
 			},
 			'sp1-12': {
+
+				drops: [{ item: 'breakthrough_stone', count: 2888 }],
 				name: '12阶秘境',
 				id: 'sp1-12',
 				type: 'battle',
-				text: '通过本关会令主角突破至12阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-11',
 				gold: 4300,
 				enemy: [
@@ -209,10 +233,12 @@ const SPeventList = {
 
 			// ===== 第4阶段：突破12→16，敌人突破16 =====
 			'sp1-13': {
+
+				drops: [{ item: 'breakthrough_stone', count: 3360 }],
 				name: '13阶秘境',
 				id: 'sp1-13',
 				type: 'battle',
-				text: '通过本关会令主角突破至13阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-12',
 				gold: 5500,
 				enemy: [
@@ -225,10 +251,12 @@ const SPeventList = {
 				]
 			},
 			'sp1-14': {
+
+				drops: [{ item: 'breakthrough_stone', count: 4050 }],
 				name: '14阶秘境',
 				id: 'sp1-14',
 				type: 'battle',
-				text: '通过本关会令主角突破至14阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-13',
 				gold: 6700,
 				enemy: [
@@ -241,10 +269,12 @@ const SPeventList = {
 				]
 			},
 			'sp1-15': {
+
+				drops: [{ item: 'breakthrough_stone', count: 5040 }],
 				name: '15阶秘境',
 				id: 'sp1-15',
 				type: 'battle',
-				text: '通过本关会令主角突破至15阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-14',
 				gold: 7900,
 				enemy: [
@@ -257,10 +287,12 @@ const SPeventList = {
 				]
 			},
 			'sp1-16': {
+
+				drops: [{ item: 'breakthrough_stone', count: 6240 }],
 				name: '16阶秘境',
 				id: 'sp1-16',
 				type: 'battle',
-				text: '通过本关会令主角突破至16阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-15',
 				gold: 9000,
 				enemy: [
@@ -276,10 +308,12 @@ const SPeventList = {
 			// ===== 第5阶段：突破16→20，敌人突破20 =====
 			// ===== 第5阶段：突破16→20，敌人突破20 =====
 			'sp1-17': {
+
+				drops: [{ item: 'breakthrough_stone', count: 7200 }],
 				name: '17阶秘境',
 				id: 'sp1-17',
 				type: 'battle',
-				text: '通过本关会令主角突破至17阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-16',
 				gold: 20000,
 				enemy: [
@@ -292,10 +326,12 @@ const SPeventList = {
 				]
 			},
 			'sp1-18': {
+
+				drops: [{ item: 'breakthrough_stone', count: 8625 }],
 				name: '18阶秘境',
 				id: 'sp1-18',
 				type: 'battle',
-				text: '通过本关会令主角突破至18阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-17',
 				gold: 40000,
 				enemy: [
@@ -308,10 +344,12 @@ const SPeventList = {
 				]
 			},
 			'sp1-19': {
+
+				drops: [{ item: 'breakthrough_stone', count: 10120 }],
 				name: '19阶秘境',
 				id: 'sp1-19',
 				type: 'battle',
-				text: '通过本关会令主角突破至19阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-18',
 				gold: 60000,
 				enemy: [
@@ -324,10 +362,12 @@ const SPeventList = {
 				]
 			},
 			'sp1-20': {
+
+				drops: [{ item: 'breakthrough_stone', count: 11865 }],
 				name: '20阶秘境',
 				id: 'sp1-20',
 				type: 'battle',
-				text: '通过本关会令主角突破至20阶',
+				text: '通关获得突破石（突破材料）',
 				prev: 'sp1-19',
 				gold: 80000,
 				enemy: [
@@ -342,32 +382,35 @@ const SPeventList = {
 		}
 	},
 	spEvent2: {
-		name: '主角蜕变秘境',
+		name: '觉醒石秘境',
 		difficulty: 'hard',
 		procedure: [
-			// 'sp2-1', 
+			'sp2-1', 
 			'sp2-2', 'sp2-3', 'sp2-4', 'sp2-5','sp2-6'
 		],
 		eventPack:{
 			'sp2-1': {
+				drops: [{ item: 'awaken_stone', count: 1 }],
 				name: '平凡试炼',
 				id: 'sp2-1',
 				type: 'battle',
-				text: '通过本关会令主角升品至精品',
-				prev: 'sp1-1',
+				text: '通关获得觉醒石（接引升品材料）',
+				prev: null,
 				gold : 900,
 				enemy: [
-					{ name: '雷魔鹰', id: 'ybsl_leimoying',  level: 1, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },{}, 
-					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 1, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },{}, 
-					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 1, tupolevel: 4, rank: 'epicfake', template: 'defense', buff: []}, {}
+					{ name: '雷魔鹰', id: 'ybsl_leimoying',  level: 1, tupolevel: 0, rank: 'epicfake', template: 'balanced', buff: [] },{}, 
+					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 1, tupolevel: 0, rank: 'epicfake', template: 'damger', buff: [] },{}, 
+					{ name: '魇魔花', id: 'ybsl_yanmohua', level: 1, tupolevel: 0, rank: 'epicfake', template: 'defense', buff: []}, {}
 				],
 			},
 			'sp2-2': {
+
+				drops: [{ item: 'awaken_stone', count: 2 }],
 				name: '精英试炼',
 				id: 'sp2-2',
 				type: 'battle',
-				text: '通过本关会令主角升品至稀有',
-				prev: 'sp1-2',
+				text: '通关获得觉醒石（接引升品材料）',
+				prev: 'sp2-1',
 				gold: 1200,
 				enemy: [
 					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 20, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -379,11 +422,13 @@ const SPeventList = {
 				],
 			},
 			'sp2-3': {
+
+				drops: [{ item: 'awaken_stone', count: 4 }],
 				name: '史诗试炼',
 				id: 'sp2-3',
 				type: 'battle',
-				text: '通过本关会令主角升品至史诗',
-				prev: 'sp1-4',
+				text: '通关获得觉醒石（接引升品材料）',
+				prev: 'sp2-2',
 				gold: 2400,
 				enemy: [
 					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 40, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
@@ -395,11 +440,13 @@ const SPeventList = {
 				],
 			},
 			'sp2-4': {
+
+				drops: [{ item: 'awaken_stone', count: 6 }],
 				name: '真史诗试炼',
 				id: 'sp2-4',
 				type: 'battle',
-				text: '通过本关会令主角升品为真史诗',
-				prev: 'sp1-8',
+				text: '通关获得觉醒石（接引升品材料）',
+				prev: 'sp2-3',
 				gold: 4800,
 				enemy: [
 					{ name: '雷魔鹰', id: 'ybsl_leimoying', level: 60, tupolevel: 12, rank: 'epic', template: 'balanced', buff: [] },
@@ -411,11 +458,13 @@ const SPeventList = {
 				]
 			},
 			'sp2-5': {
+
+				drops: [{ item: 'awaken_stone', count: 10 }],
 				name: '传说试炼',
 				id: 'sp2-5',
 				type: 'battle',
-				text: '通过本关会令主角升品为传说',
-				prev: 'sp1-12',
+				text: '通关获得觉醒石（接引升品材料）',
+				prev: 'sp2-4',
 				gold: 9600,
 				enemy: [
 					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 80, tupolevel: 16, rank: 'legend', template: 'damger', buff: [] },
@@ -427,11 +476,13 @@ const SPeventList = {
 				]
 			},
 			'sp2-6': {
+
+				drops: [{ item: 'awaken_stone', count: 16 }],
 				name: '真神秘境',
 				id: 'sp2-6',
 				type: 'battle',
-				text: '通过本关会令主角升品为神品',
-				prev: 'sp1-16',
+				text: '通关获得觉醒石（接引升品材料）',
+				prev: 'sp2-5',
 				gold: 19200,
 				enemy: [
 					{ name: '风魔狼', id: 'ybsl_fengmolang', level: 120, tupolevel: 20, rank: 'kami', template: 'damger', buff: [] },

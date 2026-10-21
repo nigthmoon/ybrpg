@@ -2143,14 +2143,14 @@ body {
 
 /* 设置视图风格 */
 #settings-view {
-	width: 90%;
+	width: 80%;
 	max-width: 760px;
-	height: 100%;
+	height: 86%;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center; /* 居中显示按钮组 */
-	padding-top: 56px; /* 避开顶部常驻资源条，避免返回键被遮挡 */
+	justify-content: center;
+	padding-top: 56px;
 	margin: 0 auto;
 }
 
@@ -2250,6 +2250,39 @@ body {
 
 .shop-item.sold-out {
 	opacity: 0.4;
+	pointer-events: none;
+}
+
+/* 随机商店：热销商品（左上角折扣角标 + 高亮边框） */
+.shop-item { position: relative; }
+.shop-item.hot-sale {
+	border-color: #ff5722;
+	box-shadow: 0 0 10px rgba(255, 87, 34, 0.45);
+}
+.shop-item-hot-tag {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	z-index: 2;
+	background: linear-gradient(135deg, #ff3d00, #ff9100);
+	color: #fff;
+	font-size: 11px;
+	font-weight: bold;
+	padding: 1px 6px;
+	border-radius: 4px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+	pointer-events: none;
+}
+/* 设置入口“可领取”红点（按钮右上角） */
+.settings-red-dot {
+	position: absolute;
+	top: 4px;
+	right: 6px;
+	width: 10px;
+	height: 10px;
+	background: #ff3b30;
+	border-radius: 50%;
+	box-shadow: 0 0 5px rgba(255, 59, 48, 0.9);
 	pointer-events: none;
 }
 

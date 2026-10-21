@@ -535,20 +535,25 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 		if (baseCharForAction) {
 			let breakInfo = getBreakthroughInfo(baseCharForAction, currentTupoForAction);
 			let needPromotion = needUpgrade(instData);
-			// 在 doBreakBtn 附近，先计算可用材料数量
+			// 突破材料：主角用“主角替身卡”（代替同名本体），其他人用同名本体
+			const isMainAction = charIdForAction === 'zhujue';
 			const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
 				if (id === instanceId) return false;
 				const inst = window.charBagData[id];
 				return inst && (inst.charId === charIdForAction || id === charIdForAction);
 			});
-			const availableCount = availableFodderIds.length;
+			const materialName = isMainAction ? '主角替身卡' : '同名角色';
+			const availableCount = isMainAction
+				? ((window.gameItems && window.gameItems['item_zhujue_sub']) || 0)
+				: availableFodderIds.length;
+			const stoneCostForAction = breakInfo.stoneCost || 0;
 			// 突破按钮
 			// 突破按钮
 			if (!breakInfo.maxed && !needPromotion) {
 				// ===== 【新增】突破等级门槛：突破到 currentTupoForAction+1 阶需先达到指定等级 =====
 				const reqLevel = getBreakthroughRequiredLevel(currentTupoForAction + 1);
 				const curLevel = instData.level || 1;
-				const levelOk = curLevel >= reqLevel;
+				const levelOk = isMainAction ? true : (curLevel >= reqLevel); // 主角豁免等级门槛（与突破逻辑一致）
 
 				// 用垂直包裹层，让警告（如有）显示在突破键上方，按钮保持原样
 				const breakWrap = document.createElement('div');
@@ -586,7 +591,9 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 					transition: all 0.2s;
 				`;
 				// 按钮文字保持：突破（可用/需要），不受等级影响
-				doBreakBtn.textContent = `突破（${availableCount}/${breakInfo.cost}）`;
+				doBreakBtn.textContent = stoneCostForAction > 0
+					? `突破（${materialName} ${availableCount}/${breakInfo.cost} · 突破石 ${stoneCostForAction}）`
+					: `突破（${materialName} ${availableCount}/${breakInfo.cost}）`;
 				// 如果材料不足或等级不足，按钮置灰
 				if (!levelOk) {
 					doBreakBtn.style.background = '#555';
@@ -604,21 +611,22 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 				doBreakBtn.onclick = (e) => {
 					e.stopPropagation();
 
-					const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
-						if (id === instanceId) return false;
-						const inst = window.charBagData[id];
-						return inst && (inst.charId === charIdForAction || id === charIdForAction);
-					});
-					const availableCount = availableFodderIds.length;
+					const avail = isMainAction
+						? ((window.gameItems && window.gameItems['item_zhujue_sub']) || 0)
+						: Object.keys(window.charBagData || {}).filter(id => {
+							if (id === instanceId) return false;
+							const inst = window.charBagData[id];
+							return inst && (inst.charId === charIdForAction || id === charIdForAction);
+						}).length;
 
-					if (availableCount < breakInfo.cost) {
-						Game.toast(`突破材料不足！需要 ${breakInfo.cost} 个同名角色，当前可用: ${availableCount}`, 'error');
+					if (avail < breakInfo.cost) {
+						Game.toast(`突破材料不足！需要 ${breakInfo.cost} 个${materialName}，当前可用: ${avail}`, 'error');
 						return;
 					}
 
 					// 改为直接刷新弹窗内部数据：
 					Game.confirmDialog(
-						`确定要突破【${baseCharForAction.name}】吗？\n当前突破等级: ${currentTupoForAction}阶 → 目标: ${currentTupoForAction + 1}阶\n消耗: ${breakInfo.cost}个同名角色`,
+						`确定要突破【${baseCharForAction.name}】吗？\n当前突破等级: ${currentTupoForAction}阶 → 目标: ${currentTupoForAction + 1}阶\n消耗: ${breakInfo.cost}个${materialName}${stoneCostForAction > 0 ? ` + ${stoneCostForAction}个突破石` : ''}`,
 						() => {
 							const result = breakthroughCharacterInstance(instanceId);
 							if (result.success) {
@@ -675,10 +683,13 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 					border-radius: 6px;
 					transition: all 0.2s;
 				`;
-				// ===== 【修改】显示当前可用/需要 =====
-				const promotionCost = Math.floor(currentTupoForAction / 4) + 1;
-				promoteBtn.textContent = `升阶（${availableCount}/${promotionCost}）`;
-				if (availableCount < promotionCost) {
+				// 接引式升品：显示觉醒石 持有/需要
+				const __inst = window.charBagData[instanceId] || {};
+				const __info = getPromotionInfo(__inst.tupolevel || 0, __inst.rank || 'junk');
+				const __need = __info ? __info.awakenCost : 0;
+				const __have = (window.gameItems && window.gameItems['awaken_stone']) || 0;
+				promoteBtn.textContent = `升品（💎${__have}/${__need}）`;
+				if (__have < __need) {
 					promoteBtn.style.background = '#555';
 					promoteBtn.style.cursor = 'not-allowed';
 					promoteBtn.style.opacity = '0.6';
@@ -688,58 +699,10 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 				}
 				promoteBtn.onclick = (e) => {
 					e.stopPropagation();
-
-					const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
-						if (id === instanceId) return false;
-						const inst = window.charBagData[id];
-						return inst && (inst.charId === charIdForAction || id === charIdForAction);
+					doAscend(instanceId, baseCharForAction.name, () => {
+						refreshTeamViewDisplay();
+						refreshBreakthroughPopupContent(popup, instanceId);
 					});
-					const availableCount = availableFodderIds.length;
-
-					if (availableCount < promotionCost) {
-						Game.toast(`升阶材料不足！需要 ${promotionCost} 个同名角色，当前可用: ${availableCount}`, 'error');
-						return;
-					}
-
-					Game.confirmDialog(
-						`确定要将【${baseCharForAction.name}】升阶至【${getRankLabel(needPromotion)}】吗？`,
-						() => {
-							const result = promoteCharacterRank(instanceId);
-							if (result.success) {
-								Game.toast(result.message, 'success');
-								// if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-								// showBreakthroughPreviewPopup();
-								// Game.UI.refresh({
-								// 	instanceId: instanceId,
-								// 	forceTeamRebuild: false
-								// });
-
-								// 优化方案：只刷新必要的部分
-								// 1. 更新角色实例的 openSpskill
-								const instData = window.charBagData && window.charBagData[instanceId];
-								if (instData) {
-									const updatedStats = updateCharacterSP(instData);
-									if (updatedStats && updatedStats.openSpskill !== undefined) {
-										instData.openSpskill = updatedStats.openSpskill;
-									}
-								}
-
-								// 2. 只刷新阵容显示（不重新渲染整个视图）
-								refreshTeamViewDisplay();
-
-								// 3. 刷新当前弹窗
-								refreshBreakthroughPopupContent(popup, instanceId);
-
-								// 4. 自动保存
-								if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
-									SaveManager.autoSave();
-								}
-								// refreshBreakthroughPopupContent(popup, instanceId);
-							} else {
-								Game.toast(result.message, 'error');
-							}
-						}
-					);
 				};
 		actionBtnRow.appendChild(promoteBtn);
 	}
@@ -1581,9 +1544,13 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 			border-radius: 6px;
 			transition: all 0.2s;
 		`;
-		promoteBtn.textContent = `升阶（${availableCount}/${promotionCost}）`;
+		const __inst2 = window.charBagData[instanceId] || {};
+		const __info2 = getPromotionInfo(__inst2.tupolevel || 0, __inst2.rank || 'junk');
+		const __need2 = __info2 ? __info2.awakenCost : 0;
+		const __have2 = (window.gameItems && window.gameItems['awaken_stone']) || 0;
+		promoteBtn.textContent = `升品（💎${__have2}/${__need2}）`;
 
-		if (availableCount < promotionCost) {
+		if (__have2 < __need2) {
 			promoteBtn.style.background = '#555';
 			promoteBtn.style.cursor = 'not-allowed';
 			promoteBtn.style.opacity = '0.6';
@@ -1592,43 +1559,10 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 			promoteBtn.onmouseout = () => { promoteBtn.style.background = '#ffaa00'; };
 			promoteBtn.onclick = (e) => {
 				e.stopPropagation();
-				Game.confirmDialog(
-					`确定要将【${baseChar.name}】升阶至【${getRankLabel(needPromotion)}】吗？`,
-					() => {
-						const result = promoteCharacterRank(instanceId);
-						if (result.success) {
-							Game.toast(result.message, 'success');
-							// Game.UI.refresh({
-							// 	instanceId: instanceId,
-							// 	forceTeamRebuild: false
-							// });
-
-							// 优化方案：只刷新必要的部分
-							// 1. 更新角色实例的 openSpskill
-							const instData = window.charBagData && window.charBagData[instanceId];
-							if (instData) {
-								const updatedStats = updateCharacterSP(instData);
-								if (updatedStats && updatedStats.openSpskill !== undefined) {
-									instData.openSpskill = updatedStats.openSpskill;
-								}
-							}
-
-							// 2. 只刷新阵容显示（不重新渲染整个视图）
-							refreshTeamViewDisplay();
-
-							// 3. 刷新当前弹窗
-							refreshBreakthroughPopupContent(popup, instanceId);
-
-							// 4. 自动保存
-							if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) {
-								SaveManager.autoSave();
-							}
-							// refreshBreakthroughPopupContent(popup, instanceId);
-						} else {
-							Game.toast(result.message, 'error');
-						}
-					}
-				);
+				doAscend(instanceId, baseChar.name, () => {
+					refreshTeamViewDisplay();
+					refreshBreakthroughPopupContent(popup, instanceId);
+				});
 			};
 		}
 		container.appendChild(promoteBtn);
@@ -2399,6 +2333,93 @@ function onTeamNavTrain() {
  * @param {string|number} charId - 角色ID，用于标识具体的角色
  * @returns {void}
  */
+// ===== 接引武将展示（详情页技能模块下；仅当实例带接引键值对时显示）=====
+function collectFodder(inst) {
+	const out = [];
+	if (!inst) return out;
+	['fodder_epicfake', 'fodder_epic', 'fodder_legend', 'fodder_kami'].forEach(k => {
+		if (Array.isArray(inst[k])) inst[k].forEach(f => { if (f) out.push(f); });
+	});
+	return out;
+}
+function renderFodderBlock(container, inst) {
+	const fodder = collectFodder(inst);
+	if (!fodder.length) return;
+	const block = document.createElement('div');
+	block.style.cssText = 'background:#1a1a2e;border:1px solid rgba(255,215,0,.35);border-radius:6px;padding:8px 10px;margin:8px 0;';
+	const title = document.createElement('div');
+	title.style.cssText = 'display:flex;justify-content:space-between;align-items:center;font-size:13px;';
+	title.innerHTML = `<span style="color:#ffd700;font-weight:bold;">接引武将</span><span style="color:#9aa4bd;font-size:11px;">共 ${fodder.length} 名（点击查看）</span>`;
+	block.appendChild(title);
+	const row = document.createElement('div');
+	row.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;';
+	fodder.forEach(f => {
+		const cell = document.createElement('div');
+		cell.style.cssText = 'width:54px;text-align:center;cursor:pointer;';
+		cell.title = `${f.name || f.charId}（点击查看）`;
+		const img = document.createElement('img');
+		img.src = `/image/character/${f.charId}.jpg`;
+		img.style.cssText = 'width:46px;height:46px;object-fit:cover;object-position:center top;border-radius:6px;border:1px solid rgba(255,255,255,.2);display:block;margin:0 auto;';
+		img.onerror = function () { this.src = '/image/character/default.jpg'; };
+		const nm = document.createElement('div');
+		nm.style.cssText = 'font-size:11px;color:#cfd6e6;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+		nm.textContent = f.name || f.charId;
+		cell.appendChild(img); cell.appendChild(nm);
+		cell.onclick = () => openFodderDetail(f);
+		row.appendChild(cell);
+	});
+	block.appendChild(row);
+	container.appendChild(block);
+}
+// 接引武将快照详情（被消耗的接引实例，读取记录于此的数据）
+function openFodderDetail(f) {
+	if (!f) return;
+	const base = characterList[f.charId] || {};
+	const overlay = document.createElement('div');
+	overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:10001;display:flex;align-items:center;justify-content:center;';
+	const panel = document.createElement('div');
+	panel.style.cssText = 'background:#1a1e2e;border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:18px;max-width:360px;width:90%;color:#e8ecf6;text-align:center;max-height:86%;overflow:auto;';
+	const img = document.createElement('img');
+	img.src = `/image/character/${f.charId}.jpg`;
+	img.style.cssText = 'width:96px;height:96px;object-fit:cover;object-position:center top;border-radius:8px;border:1px solid rgba(255,255,255,.2);';
+	img.onerror = function () { this.src = '/image/character/default.jpg'; };
+	const nm = document.createElement('div');
+	nm.style.cssText = 'font-size:18px;font-weight:bold;color:#ffd700;margin-top:8px;';
+	nm.textContent = f.name || base.name || f.charId;
+	const meta = document.createElement('div');
+	meta.style.cssText = 'font-size:13px;color:#9aa4bd;margin-top:4px;';
+	meta.textContent = `品质：${getRankLabel(f.rank || base.rank || 'junk')} · 等级：Lv.${f.level || 1}`;
+	panel.appendChild(img); panel.appendChild(nm); panel.appendChild(meta);
+	const sids = base.skills || f.skills || [];
+	if (sids.length) {
+		const skTitle = document.createElement('div');
+		skTitle.style.cssText = 'font-size:13px;color:#5ba8ff;margin:12px 0 4px;text-align:left;';
+		skTitle.textContent = '技能';
+		panel.appendChild(skTitle);
+		const src = [contentList.pugong, contentList.skill, contentList.spskill];
+		const labels = ['普攻', '技能', '必杀'];
+		sids.forEach((sid, i) => {
+			const d = src[i] && src[i][sid];
+			const row = document.createElement('div');
+			row.style.cssText = 'font-size:12px;color:#cfd6e6;text-align:left;margin-top:3px;';
+			row.textContent = `${labels[i] || '技能'}：${d ? d.name : sid}`;
+			panel.appendChild(row);
+		});
+	}
+	const tip = document.createElement('div');
+	tip.style.cssText = 'font-size:11px;color:#777;margin-top:12px;line-height:1.5;';
+	tip.textContent = '该武将已被作为接引消耗，其实例记录于此（快照）。';
+	panel.appendChild(tip);
+	const closeBtn = document.createElement('button');
+	closeBtn.textContent = '关闭';
+	closeBtn.style.cssText = 'margin-top:12px;padding:7px 18px;background:#444;color:#fff;border:none;border-radius:6px;cursor:pointer;';
+	closeBtn.onclick = () => { if (overlay.parentNode) document.body.removeChild(overlay); };
+	panel.appendChild(closeBtn);
+	overlay.appendChild(panel);
+	overlay.onclick = (e) => { if (e.target === overlay) document.body.removeChild(overlay); };
+	document.body.appendChild(overlay);
+}
+
 function showTeamCharInfo(slotIndex, instanceId, charId) {
 	const infoArea = document.getElementById('team-info-area');
 	if (!infoArea) return;
@@ -2754,6 +2775,9 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 			attrDiv.appendChild(sectionDiv);
 		}
 	}
+
+	// 接引武将展示（技能模块下，若实例带接引键值对）
+	renderFodderBlock(attrDiv, char);
 
 	// 将 attrDiv 放入 rightScroll
 	rightScroll.appendChild(attrDiv);
@@ -4191,6 +4215,9 @@ function showBagCharDetailPopup(instanceId, charId) {
 		}
 	}
 
+	// 接引武将展示（技能模块下，若实例带接引键值对）
+	renderFodderBlock(skillsDiv, charT);
+
 	dialog.appendChild(skillsDiv);
 
 
@@ -4962,6 +4989,31 @@ function getRankLabel(rank) {
 }
 
 /**
+ * 接引升品：按基础品质生成累积的“接引实例”空数组（新武将专属）。
+ * 规则：稀有及以下建 fodder_epicfake/epic/legend/kami；伪史诗建 epic/legend/kami；
+ *       史诗建 legend/kami；传说建 kami；神品不建。
+ * 旧版本武将没有这些键 => 不需接引即可升品。
+ */
+export function buildFodderArrays(rank) {
+	const order = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
+	const keyOf = { epicfake: 'fodder_epicfake', epic: 'fodder_epic', legend: 'fodder_legend', kami: 'fodder_kami' };
+	const idx = order.indexOf(rank);
+	const out = {};
+	['epicfake', 'epic', 'legend', 'kami'].forEach((t) => {
+		if (idx >= 0 && idx < order.indexOf(t)) out[keyOf[t]] = [];
+	});
+	return out;
+}
+
+// 突破至 1~20 阶所需突破石（索引=当前阶，即突破到“当前阶+1”所需；如 0 阶→1 阶需 10）
+const BREAKTHROUGH_STONE_COST = [
+	10, 100, 280, 800, 1400,              // 突破到 1~5 阶
+	2200, 3200, 4800, 6800, 9000,         // 6~10
+	13000, 16500, 21000, 27000, 36000,    // 11~15
+	48000, 60000, 75000, 92000, 113000,   // 16~20
+];
+
+/**
  * 获取突破消耗信息（不再涉及升阶判断）
  * @param {Object} character - 角色对象
  * @param {number} currentBreakthrough - 当前突破等级
@@ -4972,14 +5024,16 @@ function getBreakthroughInfo(character, currentBreakthrough) {
 
 	// 如果已满级
 	if (tupoxxxx >= 20) {
-		return { cost: 0, maxed: true };
+		return { cost: 0, stoneCost: 0, maxed: true };
 	}
 
-	// 突破消耗：每4阶增加1个材料
-	const cost = Math.floor(tupoxxxx / 4) + 1;
-
+	// 本体/替身材料：每4阶+1（主角用“主角替身卡”代替同名本体）；突破石按目标阶查表
+	const bodyCost = Math.floor(tupoxxxx / 4) + 1;
+	const isMain = character.charId === 'zhujue';
 	return {
-		cost: character.charId === 'zhujue' ? 0 : cost,
+		cost: bodyCost,
+		bodyType: isMain ? 'sub' : 'same', // sub=主角替身卡，same=同名本体
+		stoneCost: BREAKTHROUGH_STONE_COST[tupoxxxx] || 0,
 		maxed: false
 	};
 }
@@ -5348,35 +5402,53 @@ function breakthroughCharacterInstance(targetInstId) {
 		};
 	}
 
-	// 计算突破消耗（只消耗同名角色，不涉及升阶）
-	const cost = targetInst.charId === 'zhujue' ? 0 : (Math.floor(currentTupoLevel / 4) + 1);
+	// 计算突破消耗：本体/替身卡（每4阶+1）+ 突破石（按目标阶查表）
+	const bodyCost = Math.floor(currentTupoLevel / 4) + 1;
+	const stoneCost = BREAKTHROUGH_STONE_COST[currentTupoLevel] || 0;
+	const stoneHave = (window.gameItems && window.gameItems['breakthrough_stone']) || 0;
+	const subHave = (window.gameItems && window.gameItems['item_zhujue_sub']) || 0;
 
-	// 资源校验
+	// 资源校验：非主角=同名本体；主角=主角替身卡（代替无法产出的主角本体）；均另需突破石
 	const allInstIds = Object.keys(window.charBagData);
 	const fodderCandidates = allInstIds.filter(id => {
 		if (id === targetInstId) return false;
 		const inst = window.charBagData[id];
 		return inst && (inst.charId === charId || id === charId);
 	});
-
-	if (fodderCandidates.length < cost) {
+	if (isMainChar) {
+		if (subHave < bodyCost) {
+			return { success: false, message: `主角突破需要 ${bodyCost} 张【主角替身卡】，当前拥有: ${subHave}（可在珍宝商城购买）` };
+		}
+	} else if (fodderCandidates.length < bodyCost) {
 		return {
 			success: false,
-			message: `突破需要 ${cost} 个同名角色作为材料，当前可用: ${fodderCandidates.length}`
+			message: `突破需要 ${bodyCost} 个同名角色作为材料，当前可用: ${fodderCandidates.length}`
 		};
 	}
+	if (stoneHave < stoneCost) {
+		return { success: false, message: `突破到 ${currentTupoLevel + 1} 阶需要 ${stoneCost} 个【突破石】，材料不足！（可通过升阶秘境获得）` };
+	}
 
-	// 执行消耗：移除作为材料的实例
-	for (let i = 0; i < cost; i++) {
-		const fodderId = fodderCandidates[i];
-		if (window.currentTeam && window.currentTeam.includes(fodderId)) {
-			window.currentTeam = window.currentTeam.filter(id => id !== fodderId);
-		}
-		delete window.charBagData[fodderId];
-		if (window.treasureEquipData && window.treasureEquipData[fodderId]) {
-			delete window.treasureEquipData[fodderId];
+	// 执行消耗：非主角消耗同名本体；主角消耗“主角替身卡”
+	if (isMainChar) {
+		window.gameItems = window.gameItems || {};
+		window.gameItems['item_zhujue_sub'] = subHave - bodyCost;
+	} else {
+		for (let i = 0; i < bodyCost; i++) {
+			const fodderId = fodderCandidates[i];
+			if (window.currentTeam && window.currentTeam.includes(fodderId)) {
+				window.currentTeam = window.currentTeam.filter(id => id !== fodderId);
+			}
+			delete window.charBagData[fodderId];
+			if (window.treasureEquipData && window.treasureEquipData[fodderId]) {
+				delete window.treasureEquipData[fodderId];
+			}
 		}
 	}
+
+	// 扣除突破石
+	window.gameItems = window.gameItems || {};
+	window.gameItems['breakthrough_stone'] = (window.gameItems['breakthrough_stone'] || 0) - stoneCost;
 
 	// 提升突破阶数
 	targetInst.tupolevel = currentTupoLevel + 1;
@@ -5441,29 +5513,18 @@ function breakthroughCharacterInstance(targetInstId) {
  * @param {string} currentRank - 当前品质
  * @returns {Object|null} 如果需要升阶，返回目标品质和升阶消耗；否则返回 null
  */
+// 品质递进 + 觉醒石消耗 + 接引键（接引式升品）
+const RANK_ORDER = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
+const AWAKEN_COST = { junk: 1, common: 2, rare: 4, epicfake: 8, epic: 16, legend: 32 };
+const FODDER_KEY = { epicfake: 'fodder_epicfake', epic: 'fodder_epic', legend: 'fodder_legend', kami: 'fodder_kami' };
 function getPromotionInfo(tupolevel, currentRank) {
-	const rankList = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
-	const currentRankIndex = rankList.indexOf(currentRank);
-
-	// 定义各阶数对应的目标品质
-	const promotionMap = {
-		2: 'rare',
-		4: 'epicfake',
-		8: 'epic',
-		12: 'legend',
-		16: 'kami'
-	};
-
-	const targetRank = promotionMap[tupolevel];
-	if (!targetRank) return null;
-
-	const targetRankIndex = rankList.indexOf(targetRank);
-	if (currentRankIndex >= targetRankIndex) return null; // 品质已经足够，不需要升阶
-
+	const idx = RANK_ORDER.indexOf(currentRank);
+	if (idx < 0 || idx >= RANK_ORDER.length - 1) return null; // 未知品质或已最高
+	const targetRank = RANK_ORDER[idx + 1];
 	return {
 		targetRank: targetRank,
-		cost: Math.floor(tupolevel / 4) + 1, // 升阶消耗：根据阶数递增
-		stoneCost: 1 // 突破石消耗（可按需调整）
+		awakenCost: AWAKEN_COST[currentRank] || 0,
+		fodderKey: FODDER_KEY[targetRank] || null, // 目标为精品/稀有时无接引键（不接引）
 	};
 }
 
@@ -5472,7 +5533,7 @@ function getPromotionInfo(tupolevel, currentRank) {
  * @param {string} targetInstId - 目标角色实例ID
  * @returns {Object} { success: boolean, message: string }
  */
-function promoteCharacterRank(targetInstId) {
+function promoteCharacterRank(targetInstId, fodderInstId) {
 	if (!targetInstId || !window.charBagData || !window.charBagData[targetInstId]) {
 		return { success: false, message: '无效的目标实例' };
 	}
@@ -5485,31 +5546,52 @@ function promoteCharacterRank(targetInstId) {
 		return { success: false, message: '未找到角色基础数据' };
 	}
 
-	const currentTupoLevel = targetInst.tupolevel || 0;
-	const currentRank = targetInst.rank || baseChar.rank || 'common';
+	const currentRank = targetInst.rank || baseChar.rank || 'junk';
 
-	// 获取升阶信息
-	const promotionInfo = getPromotionInfo(currentTupoLevel, currentRank);
-	if (!promotionInfo) {
-		return { success: false, message: '当前突破等级无需升阶或已达到最高品质' };
+	// 获取升品信息（品质递进）
+	const info = getPromotionInfo(targetInst.tupolevel || 0, currentRank);
+	if (!info) {
+		return { success: false, message: '已达到最高品质' };
 	}
 
-	// 校验资源：突破石
-	const hasStone = (window.gameItems && window.gameItems['breakthrough_stone'])
-		? window.gameItems['breakthrough_stone'] >= (promotionInfo.stoneCost || 0)
-		: true; // 如果没有道具系统，默认true
-
-	if (!hasStone) {
-		return { success: false, message: `升阶需要 ${promotionInfo.stoneCost} 个【突破石】，材料不足！` };
+	// 觉醒石校验
+	const awakenHave = (window.gameItems && window.gameItems['awaken_stone']) || 0;
+	if (awakenHave < info.awakenCost) {
+		return { success: false, message: `升品需要 ${info.awakenCost} 个【觉醒石】，材料不足！（可通过蜕变秘境获得）` };
 	}
 
-	// 扣除突破石
-	if (window.gameItems && window.gameItems['breakthrough_stone']) {
-		window.gameItems['breakthrough_stone'] -= promotionInfo.stoneCost || 0;
+	// 接引判断：目标实例“有对应接引键”(新武将) 才需要接引；无键(旧武将)则不接引
+	const needFodder = info.fodderKey && Object.prototype.hasOwnProperty.call(targetInst, info.fodderKey);
+	if (needFodder) {
+		if (!fodderInstId) {
+			return { success: false, needFodder: true, fodderKey: info.fodderKey, targetRank: info.targetRank, awakenCost: info.awakenCost, message: '需要选择接引武将' };
+		}
+		const fodder = window.charBagData[fodderInstId];
+		if (!fodder) return { success: false, message: '接引武将无效' };
+		if ((fodder.rank || 'junk') !== info.targetRank) {
+			return { success: false, message: `接引需选择【${getRankLabel(info.targetRank)}】品质的武将` };
+		}
+		if ((fodder.level || 1) !== 1 || (fodder.tupolevel || 0) !== 0) {
+			return { success: false, message: '接引武将必须未培养（1级且无突破）' };
+		}
+		// 吃掉接引武将：完整实例存入目标实例的接引数组，再从背包/队伍移除
+		targetInst[info.fodderKey] = Array.isArray(targetInst[info.fodderKey]) ? targetInst[info.fodderKey] : [];
+		targetInst[info.fodderKey].push(JSON.parse(JSON.stringify(fodder)));
+		if (window.currentTeam && window.currentTeam.includes(fodderInstId)) {
+			window.currentTeam = window.currentTeam.filter(id => id !== fodderInstId);
+		}
+		delete window.charBagData[fodderInstId];
+		if (window.treasureEquipData && window.treasureEquipData[fodderInstId]) {
+			delete window.treasureEquipData[fodderInstId];
+		}
 	}
+
+	// 扣除觉醒石
+	window.gameItems = window.gameItems || {};
+	window.gameItems['awaken_stone'] = awakenHave - info.awakenCost;
 
 	// 改变品质
-	targetInst.rank = promotionInfo.targetRank;
+	targetInst.rank = info.targetRank;
 
 	// 重新计算属性
 	if (typeof updateCharacterSP === 'function') {
@@ -5529,10 +5611,104 @@ function promoteCharacterRank(targetInstId) {
 
 	return {
 		success: true,
-		message: `升阶成功！品质提升至【${getRankLabel(promotionInfo.targetRank)}】`,
-		targetRank: promotionInfo.targetRank
+		message: `升品成功！品质提升至【${getRankLabel(info.targetRank)}】`,
+		targetRank: info.targetRank
 	};
 
+}
+
+/**
+ * 接引式升品入口（供“升阶/升品”按钮调用）。
+ * 花觉醒石；若目标武将有接引键(新武将)则弹窗选 1 名未培养的对应品质武将作为接引；
+ * 旧武将(无接引键)或精品/稀有级则不接引，确认后直接升品。
+ */
+function doAscend(instanceId, name, onDone) {
+	const inst = window.charBagData && window.charBagData[instanceId];
+	if (!inst) { Game.toast('无效的角色', 'error'); return; }
+	const info = getPromotionInfo(inst.tupolevel || 0, inst.rank || 'junk');
+	if (!info) { Game.toast('已达到最高品质', 'warning'); return; }
+	const awakenHave = (window.gameItems && window.gameItems['awaken_stone']) || 0;
+	if (awakenHave < info.awakenCost) { Game.toast(`需要 ${info.awakenCost} 个【觉醒石】（蜕变秘境掉落）`, 'error'); return; }
+	const done = () => {
+		if (typeof onDone === 'function') { try { onDone(); } catch (e) { /* ignore */ } }
+		refreshAllTeamSlots();
+		if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
+	};
+	const needFodder = info.fodderKey && Object.prototype.hasOwnProperty.call(inst, info.fodderKey);
+	if (needFodder) {
+		openAscendFodderPicker(instanceId, info, done);
+	} else {
+		Game.confirmDialog(`确定将【${name}】升品至【${getRankLabel(info.targetRank)}】吗？\n消耗 ${info.awakenCost} 觉醒石。`, () => {
+			const result = promoteCharacterRank(instanceId);
+			Game.toast(result.message, result.success ? 'success' : 'error');
+			if (result.success) done();
+		});
+	}
+}
+
+/** 接引武将选择弹窗：列出未培养(1级+无突破)且品质=info.targetRank 的武将，选一个即“吃掉”并升品 */
+function openAscendFodderPicker(targetInstId, info, onDone) {
+	const cands = Object.keys(window.charBagData || {}).filter(id => {
+		if (id === targetInstId) return false;
+		const inst = window.charBagData[id];
+		return inst && (inst.rank || 'junk') === info.targetRank && (inst.level || 1) === 1 && (inst.tupolevel || 0) === 0;
+	});
+	const overlay = document.createElement('div');
+	overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10000;display:flex;align-items:center;justify-content:center;';
+	const panel = document.createElement('div');
+	panel.style.cssText = 'background:#1a1e2e;border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:18px;max-width:560px;width:92%;max-height:82%;overflow:auto;color:#e8ecf6;';
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:4px;';
+	title.textContent = `选择接引武将（${getRankLabel(info.targetRank)}）`;
+	const sub = document.createElement('div');
+	sub.style.cssText = 'font-size:12px;color:#9aa4bd;margin-bottom:12px;line-height:1.6;';
+	sub.innerHTML = `将消耗 1 名<b>未培养</b>的【${getRankLabel(info.targetRank)}】武将作为接引（它会被“吃掉”，实例记录在该武将内），并消耗 <b>${info.awakenCost}</b> 觉醒石。`;
+	panel.appendChild(title); panel.appendChild(sub);
+	const close = () => { if (overlay.parentNode) document.body.removeChild(overlay); };
+	if (cands.length === 0) {
+		const empty = document.createElement('div');
+		empty.style.cssText = 'color:#ff9b9b;font-size:13px;padding:20px;text-align:center;';
+		empty.textContent = `没有可用的未培养【${getRankLabel(info.targetRank)}】武将（需 1 级且未突破）`;
+		panel.appendChild(empty);
+	} else {
+		const grid = document.createElement('div');
+		grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;';
+		cands.forEach(id => {
+			const inst = window.charBagData[id];
+			const card = document.createElement('div');
+			card.style.cssText = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .15s;';
+			card.onmouseover = () => { card.style.borderColor = '#ffd700'; };
+			card.onmouseout = () => { card.style.borderColor = 'rgba(255,255,255,.16)'; };
+			const img = document.createElement('img');
+			img.src = `/image/character/${inst.charId}.jpg`;
+			img.style.cssText = 'width:48px;height:48px;object-fit:cover;object-position:center top;border-radius:6px;display:block;margin:0 auto;';
+			img.onerror = function () { this.style.display = 'none'; };
+			const nm = document.createElement('div');
+			nm.style.cssText = 'font-size:12px;margin-top:5px;color:#e8ecf6;';
+			nm.textContent = inst.name || inst.charId;
+			card.appendChild(img); card.appendChild(nm);
+			card.onclick = () => {
+				const result = promoteCharacterRank(targetInstId, id);
+				if (result.success) {
+					Game.toast(result.message, 'success');
+					close();
+					if (typeof onDone === 'function') { try { onDone(); } catch (e) { /* ignore */ } }
+				} else {
+					Game.toast(result.message, 'error');
+				}
+			};
+			grid.appendChild(card);
+		});
+		panel.appendChild(grid);
+	}
+	const closeBtn = document.createElement('button');
+	closeBtn.textContent = '取消';
+	closeBtn.style.cssText = 'margin-top:14px;padding:8px 18px;background:#444;color:#fff;border:none;border-radius:6px;cursor:pointer;';
+	closeBtn.onclick = close;
+	panel.appendChild(closeBtn);
+	overlay.appendChild(panel);
+	overlay.onclick = (e) => { if (e.target === overlay) close(); };
+	document.body.appendChild(overlay);
 }
 
 /**

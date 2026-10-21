@@ -9,10 +9,12 @@ import { TREASURE_DEFS } from './data/equip';
 import { eventList, SPeventList } from './data/eventList';
 import { Game } from './core';
 import { ITEM_DEFS } from './item';
-import { breakthroughMainCharacter, compileCharacterStats, getRankLabel, levelUpMainCharacter, mergeNoOverwrite, promoteMainCharacter, syncTreasureEquipData } from './team';
+import { breakthroughMainCharacter, buildFodderArrays, compileCharacterStats, getRankLabel, levelUpMainCharacter, mergeNoOverwrite, promoteMainCharacter, syncTreasureEquipData } from './team';
+import { createCharacter } from './charFactory';
 import { renderBagView } from './bag';
 import { getRankColor } from './shop';
 import { SaveManager, consumeLevelTry, getStaminaCost, hideOtherViews, levelTriesLeft, recordDailyClear, showOutputPreview, trySpendStamina } from './other';
+import { rollEncounterDrops, applyEncounterDrops } from './encounterDrop';
 
 function getCharSaveData(charId) {
 	if (!window.charBagData) window.charBagData = {};
@@ -695,44 +697,6 @@ function renderChapterEventList(container, chapterKey) {
 						if (!window.playerProgress) window.playerProgress = {};
 						if (!window.playerProgress[checkEventId]) {
 							window.playerProgress[checkEventId] = true;
-
-							// 判断是主角突破秘境还是升阶秘境
-							if (chapterKey === 'spEvent1') {
-								// 主角升阶秘境 - 根据关卡ID提取突破等级
-								// sp1-1 到 sp1-20，提取数字部分作为目标突破等级
-								const match = eventId.match(/sp1-(\d+)/);
-							if (match) {
-								const targetTupoLevel = parseInt(match[1]);
-								const ok = breakthroughMainCharacter(targetTupoLevel);
-								if (ok) {
-									Game.toast(`主角突破至 ${targetTupoLevel} 阶！`, 'success');
-								} else {
-									Game.toast(`主角突破至 ${targetTupoLevel} 阶失败（已达最大突破阶数或目标超限）`, 'warning');
-								}
-							} else {
-								// 默认突破1次
-								breakthroughMainCharacter();
-							}
-							} else if (chapterKey === 'spEvent2') {
-								// 主角蜕变秘境 - 根据关卡ID确定目标品质
-								const rankMap = {
-									'sp2-1': 'common',	 // 平凡试炼 -> 精品
-									'sp2-2': 'rare',	   // 精英试炼 -> 稀有
-									'sp2-3': 'epicfake',   // 史诗试炼 -> 伪史诗
-									'sp2-4': 'epic',	   // 真史诗试炼 -> 真史诗
-									'sp2-5': 'legend',	 // 传说试炼 -> 传说
-									'sp2-6': 'kami'		// 真神秘境 -> 神品
-								};
-
-								const targetRank = rankMap[eventId];
-								if (targetRank) {
-									promoteMainCharacter(targetRank);
-									Game.toast(`主角品质提升至【${getRankLabel(targetRank)}】！`, 'success');
-								} else {
-									// 默认执行升阶检查
-									promoteMainCharacter();
-								}
-							}
 						}
 
 						// 战斗胜利金币奖励
@@ -743,9 +707,30 @@ function renderChapterEventList(container, chapterKey) {
 						const goldReward = Math.floor(goldScale);
 						window.gameGold = (window.gameGold || 0) + goldReward;
 						recordDailyClear(chapterKey, currentDifficulty);
+						// 关卡基础掉落（每次胜利；种类/数量取自关卡配置 event.drops，可扩展任意道具）
+						let matGain = '';
+						const baseDrops = Array.isArray(event.drops) ? event.drops : [];
+						if (baseDrops.length) {
+							window.gameItems = window.gameItems || {};
+							const parts = [];
+							baseDrops.forEach(d => {
+								if (d && d.item && d.count > 0) {
+									window.gameItems[d.item] = (window.gameItems[d.item] || 0) + d.count;
+									parts.push(`${(ITEM_DEFS[d.item] && ITEM_DEFS[d.item].name) || d.item}×${d.count}`);
+								}
+							});
+							if (parts.length) matGain = '、' + parts.join('、');
+						}
+						// 奇遇掉落（预留接口：目前为空；以后节日按 time 返回，和一般掉落一起显示）
+						let encGain = '';
+						const encDrops = rollEncounterDrops(chapterKey, Date.now());
+						if (encDrops.length) {
+							const granted = applyEncounterDrops(encDrops);
+							if (granted.length) encGain = '、奇遇:' + granted.map(d => `${d.name}×${d.count}`).join('、');
+						}
 						// 事件完成后自动存档
 						SaveManager.autoSave();
-						Game.toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币`, 'success');
+						Game.toast(`恭喜通关 ${DIFFICULTY_SCALE[currentDifficulty]?.name || ''}: ${event.name}！获得 ${goldReward} 金币${matGain}${encGain}`, 'success');
 						// 重新渲染副本视图
 						const dungeonView = document.getElementById('dungeon-view');
 						if (dungeonView) {
@@ -1096,33 +1081,10 @@ function getEventName(id) {
 
 // ===== 以下来自原 mode.js 9237-9591 行 =====
 
-function grantCharacter(charId) {
-	const baseChar = characterList[charId];
-	if (!baseChar) {
-		Game.toast('角色数据错误', 'error');
-		return false;
-	}
-	// A. 生成唯一实例ID
-	const instanceId = Game.genId(charId);
-	// B. 编译属性并创建背包数据
-	const stats = compileCharacterStats(baseChar);
-	window.charBagData[instanceId] = {
-		charId: charId,
-		level: 1,
-		hp: stats.hp,
-		atk: stats.atk,
-		def: stats.def,
-		spe: stats.spe,
-		currentHp: stats.hp,
-		maxHp: stats.hp,
-		openSpskill: false,
-	};
-	mergeNoOverwrite(window.charBagData[instanceId], baseChar);
-	// C. 添加到图鉴
-	if (typeof Game.Data.addToHandbook === 'function') {
-		Game.Data.addToHandbook(charId);
-	}
-	return instanceId;
+// 武将实例统一走工厂（版本/体系分层）；此处保留 grantCharacter 供既有调用方使用
+function grantCharacter(charId, opts) {
+	const instId = createCharacter(charId, Object.assign({ addToHandbook: true }, opts));
+	return instId || false;
 }
 
 // 掉落黑名单（预留结构，当前为空）
@@ -1269,7 +1231,7 @@ function doSweep(event, diffKey, index, eventId, chapterKey, onClose, count) {
 	const diffName = DIFFICULTY_SCALE[diffKey]?.name || diffKey;
 
 	let totalGold = 0;
-	const totalDrop = { chars: [], treasures: [], items: [], diamond: 0 };
+	const totalDrop = { chars: [], treasures: [], items: [], diamond: 0, materials: {}, encounter: [] };
 	let done = 0;
 	let interrupted = false;
 	let stoppedReason = ''; // '' | 'stamina' | 'tries'
@@ -1280,6 +1242,8 @@ function doSweep(event, diffKey, index, eventId, chapterKey, onClose, count) {
 			sub: `${diffName}难度 · ${event.name || eventId}`,
 			gold: totalGold,
 			diamond: totalDrop.diamond || 0,
+			materials: totalDrop.materials,
+			encounter: totalDrop.encounter,
 			chars: totalDrop.chars,
 			treasures: totalDrop.treasures,
 			items: totalDrop.items,
@@ -1309,6 +1273,25 @@ function doSweep(event, diffKey, index, eventId, chapterKey, onClose, count) {
 			if (diamondReward > 0) { window.diamond = (window.diamond || 0) + diamondReward; totalDrop.diamond += diamondReward; }
 			const rewardCfg = event.reward || null;
 			if (rewardCfg) grantFixedReward(rewardCfg, dropMult, totalDrop); // 不再发武将，仅宝物/道具
+		} else {
+			// 秘境扫荡：关卡基础掉落（取自关卡配置 event.drops，可扩展任意道具）
+			const baseDrops = Array.isArray(event.drops) ? event.drops : [];
+			if (baseDrops.length) {
+				window.gameItems = window.gameItems || {};
+				baseDrops.forEach(d => {
+					if (d && d.item && d.count > 0) {
+						window.gameItems[d.item] = (window.gameItems[d.item] || 0) + d.count;
+						totalDrop.materials[d.item] = (totalDrop.materials[d.item] || 0) + d.count;
+					}
+				});
+			}
+		}
+
+		// 奇遇掉落（每次扫荡，预留接口：目前为空；以后节日按 time 返回）
+		const encDrops = rollEncounterDrops(chapterKey, Date.now());
+		if (encDrops.length) {
+			const granted = applyEncounterDrops(encDrops);
+			granted.forEach(d => totalDrop.encounter.push(d));
 		}
 
 		// 刷新背包视图（若处于开启状态）
@@ -1397,6 +1380,12 @@ function showSweepResultPanel(opt) {
 		(opt.sub ? `<div class="sweep-sub">${opt.sub}</div>` : '') +
 		`<div class="sweep-gold">💰 ${opt.gold || 0} <small>金币</small></div>` +
 		(opt.diamond ? `<div class="sweep-gold">💎 ${opt.diamond} <small>钻石</small></div>` : '') +
+		(opt.materials && Object.keys(opt.materials).some(k => opt.materials[k] > 0)
+			? `<div class="sweep-gold">📦 ${Object.keys(opt.materials).filter(k => opt.materials[k] > 0).map(k => `${(ITEM_DEFS[k] && ITEM_DEFS[k].name) || k}×${opt.materials[k]}`).join('、')} <small>材料</small></div>`
+			: '') +
+		(opt.encounter && opt.encounter.length
+			? section('✨ 奇遇掉落', opt.encounter.map(d => ({ name: d.name || d.id, count: d.count, icon: d.icon || null, rank: null })))
+			: '') +
 		section('获得宝物', treaList) +
 		section('获得道具', itemList);
 
