@@ -18,6 +18,136 @@ import { createCharacter } from './charFactory';
 import { api, getToken } from '../api/client';
 import { uploadSlot, deleteCloudSlot, genSid } from './cloud';
 
+// ===================== 主页（浮窗化入口大厅）=====================
+// 通用浮窗：overlay + panel + 顶栏(标题+叉号) + body；renderFn(body, close) 填充内容
+function openFloatPanel(title, renderFn, opts) {
+	opts = opts || {};
+	const old = document.getElementById('ybrpg-home-float');
+	if (old) old.remove();
+	const overlay = document.createElement('div');
+	overlay.id = 'ybrpg-home-float';
+	overlay.className = 'home-float-overlay';
+	const panel = document.createElement('div');
+	panel.className = 'home-float-panel';
+	const bar = document.createElement('div');
+	bar.className = 'home-float-bar';
+	const t = document.createElement('div');
+	t.className = 'home-float-title';
+	t.textContent = title || '';
+	const x = document.createElement('button');
+	x.className = 'home-float-close';
+	x.textContent = '✕';
+	const close = () => { if (window.__homeFloatClose === close) window.__homeFloatClose = null; if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	window.__homeFloatClose = close;
+	x.onclick = (e) => { e.stopPropagation(); close(); };
+	// 常驻返回键（可选）：置于标题左侧，点击直接关浮窗回主页
+	if (opts.showBack) {
+		const backBtn = document.createElement('button');
+		backBtn.className = 'home-float-back';
+		backBtn.textContent = '‹ 返回';
+		backBtn.onclick = (e) => { e.stopPropagation(); close(); };
+		bar.appendChild(backBtn);
+	}
+	bar.appendChild(t); bar.appendChild(x);
+	const body = document.createElement('div');
+	body.className = 'home-float-body';
+	panel.appendChild(bar); panel.appendChild(body);
+	overlay.appendChild(panel);
+	overlay.onclick = (e) => { if (e.target === overlay) close(); };
+	document.body.appendChild(overlay);
+	if (typeof renderFn === 'function') renderFn(body, close);
+	return { overlay, panel, body, close };
+}
+
+// 浮窗内“← 返回”：优先关浮窗回主页；无浮窗时回退旧设置页（兼容非浮窗调用）
+function homeBack(container) {
+	if (typeof window.__homeFloatClose === 'function') { window.__homeFloatClose(); return; }
+	renderSettingsView(container);
+}
+
+// 主角实例（主页顶栏用）
+function getMainInstInfo() {
+	return Object.values(window.charBagData || {}).find(i => i && i.charId === 'zhujue') || null;
+}
+
+function mkHomeBtn(label, onclick) {
+	const b = document.createElement('button');
+	b.className = 'home-entry-btn';
+	b.textContent = label;
+	b.onclick = onclick;
+	return b;
+}
+
+// 渲染：主页（每次进入回到入口大界面；内容用浮窗展示，不重绘底板）
+function renderHomeView(container) {
+	container.innerHTML = '';
+	container.style.cssText = 'width:100%;height:100%;display:flex;flex-direction:column;padding:12px;box-sizing:border-box;overflow:hidden;';
+
+	// ===== 顶部账号 UI 行 =====
+	const acc = window.__ybrpgAccount || {};
+	const isGuest = acc.isGuest !== false;
+	const mainInst = getMainInstInfo();
+	let avatarSrc = '/image/character/default.jpg', avatarPos = 'center top';
+	if (!isGuest && acc.avatar) { avatarSrc = acc.avatar.icon || `/image/character/${acc.avatar.id}.jpg`; avatarPos = acc.avatar.type === 'treasure' ? 'center' : 'center top'; }
+	else if (mainInst) { avatarSrc = '/image/character/zhujue.jpg'; }
+	const nickRaw = isGuest ? '游客' : (acc.nickname || '未设置');
+	const nick = nickRaw.length > 6 ? nickRaw.slice(0, 6) + '…' : nickRaw; // 昵称限 6 字
+	const lvl = (mainInst && mainInst.level) || 1;
+	const rank = (mainInst && mainInst.rank) || 'common';
+	const accBar = document.createElement('div');
+	accBar.className = 'home-account-bar';
+	accBar.title = '账号管理';
+	accBar.onclick = () => { if (window.__ybrpgBridge && window.__ybrpgBridge.goAccount) window.__ybrpgBridge.goAccount(); };
+	const av = document.createElement('img');
+	av.className = 'home-account-avatar';
+	av.src = avatarSrc; av.style.objectPosition = avatarPos;
+	av.onerror = function () { this.src = '/image/character/default.jpg'; };
+	const infoCol = document.createElement('div');
+	infoCol.className = 'home-account-info';
+	const nm = document.createElement('span');
+	nm.className = 'home-account-nick';
+	nm.textContent = nick;
+	const lv = document.createElement('span');
+	lv.className = 'home-account-level';
+	lv.style.color = getRankColor(rank);
+	lv.textContent = `Lv.${lvl}`;
+	infoCol.appendChild(nm); infoCol.appendChild(lv);
+	accBar.appendChild(av); accBar.appendChild(infoCol);
+	container.appendChild(accBar);
+
+	// ===== 靠上：活动 =====
+	const topArea = document.createElement('div');
+	topArea.className = 'home-top-area';
+	const actBtn = mkHomeBtn('活动', () => openFloatPanel('活动', (body) => renderActivityView(body)));
+	if (hasSignReward() || hasTaskReward()) addRedDot(actBtn); // 有可领时“活动”亮红点
+	topArea.appendChild(actBtn);
+	container.appendChild(topArea);
+
+	// ===== 中部留空（主打空旷）=====
+	const spacer = document.createElement('div');
+	spacer.className = 'home-spacer';
+	container.appendChild(spacer);
+
+	// ===== 靠下：角色 / 背包 / 图鉴 / 设置 / 每日任务 =====
+	const bottomArea = document.createElement('div');
+	bottomArea.className = 'home-bottom-area';
+	bottomArea.appendChild(mkHomeBtn('角色', () => openFloatPanel('角色', (body) => renderCharListFloat(body))));
+	bottomArea.appendChild(mkHomeBtn('背包', () => openFloatPanel('背包', (body) => { if (window.renderBagView) window.renderBagView(body); })));
+	bottomArea.appendChild(mkHomeBtn('图鉴', () => openFloatPanel('图鉴', (body) => renderGalleryMenuView(body))));
+	bottomArea.appendChild(mkHomeBtn('设置', () => openFloatPanel('设置', (body) => renderSettingsView(body))));
+	bottomArea.appendChild(mkHomeBtn('每日任务', () => openFloatPanel('每日任务', (body) => renderDailyTaskView(body))));
+	container.appendChild(bottomArea);
+}
+
+// 角色浮窗：复用背包架构（tab 栏 + 主体 + 底部详情横框）。
+// 角色模式由 container.dataset.roleMode=1 触发（renderBagView 据此显示 武将/碎片/皮肤 tab）。
+function renderCharListFloat(body) {
+	body.innerHTML = '';
+	body.dataset.roleMode = '1';
+	window.bagTab = 'char';
+	if (window.renderBagView) window.renderBagView(body);
+}
+
 function renderSettingsView(container) {
 	// 清空容器以防重复渲染
 	container.innerHTML = '';
@@ -33,24 +163,7 @@ function renderSettingsView(container) {
 	const galleryRow = document.createElement('div');
 	galleryRow.style.cssText = 'display:flex;gap:20px;justify-content:center;flex-wrap:wrap;';
 
-	// 图鉴（进入后选择 角色图鉴 / 宝物图鉴）
-	const galleryMenuBtn = document.createElement('button');
-	galleryMenuBtn.className = 'ybrpg-settings-btn';
-	galleryMenuBtn.id = 'btn-setting-gallery-menu';
-	galleryMenuBtn.textContent = '图鉴';
-	galleryMenuBtn.onclick = () => renderGalleryMenuView(container);
-	galleryRow.appendChild(galleryMenuBtn);
-
-	// 活动（进入后选择 每日签到 / 每日任务 / 兑换码）
-	const activityBtn = document.createElement('button');
-	activityBtn.className = 'ybrpg-settings-btn';
-	activityBtn.id = 'btn-setting-activity';
-	activityBtn.textContent = '活动';
-	activityBtn.onclick = () => renderActivityView(container);
-	if (hasSignReward() || hasTaskReward()) addRedDot(activityBtn); // 有可领时主设置“活动”也亮红点
-	galleryRow.appendChild(activityBtn);
-
-	// 设置按钮（AI托管 / 公式显示 等）
+	// 设置按钮（AI托管 / 公式显示 等；图鉴/活动/账号已移至主页）
 	const miscBtn = document.createElement('button');
 	miscBtn.className = 'ybrpg-settings-btn';
 	miscBtn.id = 'btn-setting-misc';
@@ -60,32 +173,15 @@ function renderSettingsView(container) {
 
 	groupDiv.appendChild(galleryRow);
 
-	// 存档管理按钮
+	// 存档管理按钮（浮窗展示，不再重绘 html 底板）
 	const saveBtn = document.createElement('button');
 	saveBtn.className = 'ybrpg-settings-btn';
 	saveBtn.id = 'btn-setting-save';
 	saveBtn.textContent = '存档管理';
 	saveBtn.onclick = () => {
-		// 【Vue 桥接】主界面态由 Vue 路由接管存档页；游戏态走宿主层
-		if (window.__ybrpgBridge && typeof window.__ybrpgBridge.goSaves === 'function') {
-			window.__ybrpgBridge.goSaves();
-			return;
-		}
-		showSaveView();
+		openFloatPanel('存档管理', (body) => renderSaveView(body, true));
 	};
 	groupDiv.appendChild(saveBtn);
-
-	// 账号按钮：进入账号设置（登录/游客态由 AccountView 内展示）
-	const accountBtn = document.createElement('button');
-	accountBtn.className = 'ybrpg-settings-btn';
-	accountBtn.id = 'btn-setting-account';
-	accountBtn.textContent = '账号';
-	accountBtn.onclick = () => {
-		if (window.__ybrpgBridge && typeof window.__ybrpgBridge.goAccount === 'function') {
-			window.__ybrpgBridge.goAccount();
-		}
-	};
-	groupDiv.appendChild(accountBtn);
 
 	container.appendChild(groupDiv);
 
@@ -122,7 +218,7 @@ function renderGalleryMenuView(container) {
 	const backBtn = document.createElement('button');
 	backBtn.className = 'ybrpg-back-btn';
 	backBtn.textContent = '← 返回';
-	backBtn.onclick = () => renderSettingsView(container);
+	backBtn.onclick = () => homeBack(container);
 	container.appendChild(backBtn);
 
 	const title = document.createElement('div');
@@ -155,12 +251,6 @@ function renderActivityView(container) {
 	container.innerHTML = '';
 	container.style.justifyContent = 'flex-start';
 
-	const backBtn = document.createElement('button');
-	backBtn.className = 'ybrpg-back-btn';
-	backBtn.textContent = '← 返回';
-	backBtn.onclick = () => renderSettingsView(container);
-	container.appendChild(backBtn);
-
 	const title = document.createElement('div');
 	title.style.cssText = 'font-size:20px;font-weight:bold;text-align:center;margin:15px 0;color:#ffaa00;';
 	title.textContent = '🎁 活动';
@@ -181,7 +271,7 @@ function renderActivityView(container) {
 	taskBtn.className = 'ybrpg-settings-btn';
 	taskBtn.id = 'btn-setting-daily-task';
 	taskBtn.textContent = '每日任务';
-	taskBtn.onclick = () => renderDailyTaskView(container);
+	taskBtn.onclick = () => renderDailyTaskView(container, { onBack: () => renderActivityView(container) });
 	if (hasTaskReward()) addRedDot(taskBtn);
 	row.appendChild(taskBtn);
 
@@ -205,7 +295,7 @@ function renderMiscSettingsView(container) {
 	const backBtn = document.createElement('button');
 	backBtn.className = 'ybrpg-back-btn';
 	backBtn.textContent = '← 返回';
-	backBtn.onclick = () => renderSettingsView(container);
+	backBtn.onclick = () => renderSettingsView(container); // 详细设置返回→回设置主页（浮窗内）
 	container.appendChild(backBtn);
 
 	const title = document.createElement('div');
@@ -676,7 +766,7 @@ function renderRedeemView(container) {
 	const backBtn = document.createElement('button');
 	backBtn.className = 'ybrpg-back-btn';
 	backBtn.textContent = '← 返回';
-	backBtn.onclick = () => renderSettingsView(container);
+	backBtn.onclick = () => renderActivityView(container); // 活动子页：返回活动总览
 	container.appendChild(backBtn);
 
 	const title = document.createElement('div');
@@ -793,16 +883,15 @@ function ensureDailyData() {
 	}
 }
 
-// 任务进度累加（游戏行为钩子）
+// 任务进度累加（游戏行为钩子）：同一 hook 可能对应多个任务(如 打5次/打30次)，需全部累加
 function addDailyTaskProgress(hook, n = 1) {
 	ensureDailyData();
-	const t = window.dailyTasks.tasks.find(x => {
+	window.dailyTasks.tasks.forEach(x => {
 		const def = DAILY_TASK_DEFS.find(d => d.id === x.id);
-		return def && def.hook === hook;
+		if (def && def.hook === hook && !x.claimed) {
+			x.progress = Math.min(x.target, x.progress + n);
+		}
 	});
-	if (t && !t.claimed) {
-		t.progress = Math.min(t.target, t.progress + n);
-	}
 }
 
 // 领取任务奖励
@@ -855,7 +944,7 @@ function renderDailySignView(container) {
 	const backBtn = document.createElement('button');
 	backBtn.className = 'ybrpg-back-btn';
 	backBtn.textContent = '← 返回';
-	backBtn.onclick = () => renderSettingsView(container);
+	backBtn.onclick = () => renderActivityView(container); // 活动子页：返回活动总览
 	container.appendChild(backBtn);
 
 	const title = document.createElement('div');
@@ -910,7 +999,8 @@ function renderDailySignView(container) {
 }
 
 // 渲染：每日任务
-function renderDailyTaskView(container) {
+function renderDailyTaskView(container, opts) {
+	opts = opts || {};
 	ensureDailyData();
 	container.innerHTML = '';
 
@@ -922,7 +1012,7 @@ function renderDailyTaskView(container) {
 	const backBtn = document.createElement('button');
 	backBtn.className = 'ybrpg-back-btn';
 	backBtn.textContent = '← 返回';
-	backBtn.onclick = () => renderSettingsView(container);
+	backBtn.onclick = () => { if (typeof opts.onBack === 'function') opts.onBack(); else homeBack(container); };
 	wrap.appendChild(backBtn);
 
 	const title = document.createElement('div');
@@ -979,7 +1069,7 @@ function renderDailyTaskView(container) {
 		btn.disabled = btnDisabled;
 		if (!btnDisabled && btnText === '领取') {
 			btn.onclick = () => {
-				if (claimDailyTask(t.id)) renderDailyTaskView(container);
+				if (claimDailyTask(t.id)) renderDailyTaskView(container, opts);
 			};
 		}
 		row.appendChild(btn);
@@ -995,9 +1085,7 @@ function renderGalleryView(container) {
 	const backBtn = document.createElement('button');
 	backBtn.className = 'ybrpg-back-btn';
 	backBtn.textContent = '← 返回';
-	backBtn.onclick = () => {
-		renderSettingsView(container);
-	};
+	backBtn.onclick = () => homeBack(container);
 	container.appendChild(backBtn);
 
 	// 阵营切换 Tab（回忆 / 梦境）
@@ -1616,9 +1704,7 @@ function renderTreasureGalleryView(container) {
 	const backBtn = document.createElement('button');
 	backBtn.className = 'ybrpg-back-btn';
 	backBtn.textContent = '← 返回';
-	backBtn.onclick = () => {
-		renderSettingsView(container);
-	};
+	backBtn.onclick = () => homeBack(container);
 	container.appendChild(backBtn);
 
 	// 标题
@@ -3397,6 +3483,8 @@ function renderSaveView(container, fromGame = true) {
 	backBtn.style.marginBottom = '20px';
 	backBtn.textContent = fromGame ? '← 返回上一级' : '← 返回主界面';
 	backBtn.onclick = () => {
+		// 浮窗内（设置→存档管理）：返回设置浮窗主页
+		if (container.closest && container.closest('.home-float-body')) { renderSettingsView(container); return; }
 		if (fromGame) {
 			// 返回设置视图
 			const settingsView = document.getElementById('settings-view');
@@ -3545,6 +3633,8 @@ function renderSaveView(container, fromGame = true) {
 					Game.toast(`已读取存档${i}`, 'success');
 					const bottomBar = document.querySelector('.ybrpg-bottom-bar');
 					if (bottomBar) bottomBar.style.display = 'flex';
+					// 浮窗内读取：先关存档浮窗，再回队伍视图
+					if (container.closest && container.closest('.home-float-body') && typeof window.__homeFloatClose === 'function') window.__homeFloatClose();
 					hideOtherViews('team-view');
 					const teamView = document.getElementById('team-view');
 					if (teamView) teamView.style.display = 'flex';
@@ -3630,7 +3720,7 @@ function renderSaveView(container, fromGame = true) {
  */
 
 // 导出本模块定义的函数（供其他模块 import）
-export { renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, levelTriesLeft, consumeLevelTry, DAILY_LEVEL_TRIES_MAX, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView, collectCurrentSaveData, exportCurrentSave, importSaveData, showSaveSlotPicker, writeImportedSave };
+export { renderHomeView, renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, levelTriesLeft, consumeLevelTry, DAILY_LEVEL_TRIES_MAX, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView, collectCurrentSaveData, exportCurrentSave, importSaveData, showSaveSlotPicker, writeImportedSave };
 
 // 暴露给外部模块（shared 注册表 / window / Game）
 shared.hideOtherViews = hideOtherViews;

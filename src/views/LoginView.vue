@@ -7,6 +7,8 @@
       <input v-model="password" type="password" placeholder="密码" @keyup.enter="submit" />
       <div v-if="error" class="error">{{ error }}</div>
       <button :disabled="loading" @click="submit">{{ loading ? '登录中…' : '登 录' }}</button>
+      <label class="remember-row"><input type="checkbox" v-model="remember" /> 记住我的账号密码</label>
+      <button v-if="savedLogin" class="quick-btn" :disabled="loading" @click="quickLogin">{{ loading ? '登录中…' : '快捷登录（' + savedLogin.u + '）' }}</button>
       <div class="links">
         <router-link to="/register">没有账号？去注册</router-link>
         <router-link to="/" class="guest">返回</router-link>
@@ -16,7 +18,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 
@@ -26,13 +28,29 @@ const username = ref('');
 const password = ref('');
 const error = ref('');
 const loading = ref(false);
+const savedLogin = computed(() => auth.savedLogin);
+const remember = ref(true); // 记住我的账号密码
+
+async function quickLogin() {
+  error.value = '';
+  if (!auth.savedLogin) return;
+  loading.value = true;
+  try {
+    await auth.quickLogin();
+    router.push('/');
+  } catch (e) {
+    error.value = e.message || '快捷登录失败';
+  } finally {
+    loading.value = false;
+  }
+}
 
 async function submit() {
   error.value = '';
   if (!username.value || !password.value) { error.value = '请输入用户名和密码'; return; }
   loading.value = true;
   try {
-    await auth.login(username.value, password.value);
+    await auth.login(username.value, password.value, remember.value);
     router.push('/');
   } catch (e) {
     error.value = e.message || '登录失败';
@@ -51,7 +69,10 @@ async function submit() {
 .auth-card input:focus { border-color: #5b8cff; }
 .auth-card button { margin-top: 4px; background: linear-gradient(180deg,#5b8cff,#3f6fe0); border: none; border-radius: 8px; padding: 12px; color: #fff; font-size: 16px; letter-spacing: 4px; cursor: pointer; }
 .auth-card button:disabled { opacity: .6; cursor: default; }
+.auth-card .quick-btn { background: linear-gradient(180deg,#3fae7a,#2e8c60); letter-spacing: 1px; font-size: 15px; }
 .error { color: #ff7b7b; font-size: 13px; text-align: center; }
+.remember-row { display: flex; align-items: center; gap: 6px; color: #9aa4bd; font-size: 13px; cursor: pointer; margin-top: 2px; }
+.remember-row input { width: 15px; height: 15px; accent-color: #3f6fe0; cursor: pointer; }
 .links { display: flex; justify-content: space-between; font-size: 13px; margin-top: 4px; }
 .links a { color: #8fb0ff; text-decoration: none; }
 .links .guest { color: #9aa4bd; cursor: pointer; }

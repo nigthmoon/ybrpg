@@ -59,6 +59,7 @@ export const useGameStore = defineStore('game', {
         renderBagView: bag.renderBagView,
         renderDungeonView: dungeon.renderDungeonView,
         renderShopView: shop.renderShopView,
+        renderHomeView: otherApi.renderHomeView,
       };
       this.ready = true;
       this._registerBridge();
@@ -230,7 +231,7 @@ export const useGameStore = defineStore('game', {
      * 清空全部游戏视图容器（读取新存档 / 新游戏后强制重渲染，防旧档残留）
      */
     _forceReset() {
-      ['team-view', 'bag-view', 'dungeon-view', 'shop-view', 'battle-view', 'settings-view', 'save-view'].forEach((id) => {
+      ['team-view', 'bag-view', 'dungeon-view', 'shop-view', 'battle-view', 'settings-view', 'save-view', 'home-view'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = '';
       });
@@ -248,7 +249,8 @@ export const useGameStore = defineStore('game', {
       else if (viewId === 'shop-view' && r.renderShopView) r.renderShopView(el);
       else if (viewId === 'settings-view') m.renderSettingsView(el);
       else if (viewId === 'save-view') m.renderSaveView(el, true);
-    },
+      else if (viewId === 'home-view' && r.renderHomeView) r.renderHomeView(el);
+      },
 
     /**
      * 退出游戏返回主界面

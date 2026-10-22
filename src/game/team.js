@@ -549,7 +549,7 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 			const stoneCostForAction = breakInfo.stoneCost || 0;
 			// 突破按钮
 			// 突破按钮
-			if (!breakInfo.maxed && !needPromotion) {
+			if (!breakInfo.maxed) {
 				// ===== 【新增】突破等级门槛：突破到 currentTupoForAction+1 阶需先达到指定等级 =====
 				const reqLevel = getBreakthroughRequiredLevel(currentTupoForAction + 1);
 				const curLevel = instData.level || 1;

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGameStore } from './stores/game';
 import { useAuthStore } from './stores/auth';
@@ -29,17 +29,30 @@ onMounted(() => {
   });
 });
 
-// 游戏态底部导航
+// 同步账号信息到全局（供游戏 DOM 层主页顶栏读取）
+watch(() => [auth.user, auth.token, auth.guest], () => {
+  window.__ybrpgAccount = {
+    isGuest: !auth.token,
+    avatar: (auth.user && auth.user.avatar) || null,
+    nickname: (auth.user && auth.user.nickname) || null,
+  };
+}, { immediate: true });
+
+// 游戏态底部导航（秘境/竞技暂不规划，占位）
 const navs = [
   { id: 'team-view', label: '队伍' },
-  { id: 'bag-view', label: '背包' },
+  { id: 'home-view', label: '主页' },
   { id: 'dungeon-view', label: '副本' },
-  { id: 'shop-view', label: '商店' },
-  { id: 'settings-view', label: '设置' },
+  { id: '__jingmi', label: '秘境', disabled: true },
+  { id: '__jingji', label: '竞技', disabled: true },
 ];
 
-function switchView(id) {
-  store.showView(id);
+function switchView(n) {
+  if (n && n.disabled) {
+    if (window.Game && window.Game.toast) window.Game.toast('暂未开放，敬请期待', 'warning');
+    return;
+  }
+  store.showView(n.id);
 }
 </script>
 
@@ -74,6 +87,7 @@ function switchView(id) {
       <div id="battle-view"></div>
       <div id="settings-view"></div>
       <div id="save-view"></div>
+      <div id="home-view"></div>
 
       <!-- 游戏态底部导航（Vue 渲染，事件走 store） -->
       <nav class="game-nav-bar">
@@ -82,7 +96,7 @@ function switchView(id) {
           :key="n.id"
           class="game-nav-btn"
           :class="{ active: store.activeView === n.id }"
-          @click="switchView(n.id)"
+          @click="switchView(n)"
         >
           {{ n.label }}
         </button>
@@ -147,7 +161,8 @@ function switchView(id) {
 .game-shell :deep(#shop-view),
 .game-shell :deep(#battle-view),
 .game-shell :deep(#settings-view),
-.game-shell :deep(#save-view) {
+.game-shell :deep(#save-view),
+.game-shell :deep(#home-view) {
   display: none;
 }
 .game-nav-bar {

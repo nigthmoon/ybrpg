@@ -1294,6 +1294,9 @@ function doSweep(event, diffKey, index, eventId, chapterKey, onClose, count) {
 			granted.forEach(d => totalDrop.encounter.push(d));
 		}
 
+		// 计入每日任务进度（战斗/扫荡各算一次通关）
+		recordDailyClear(chapterKey, diffKey);
+
 		// 刷新背包视图（若处于开启状态）
 		if (window.renderBagView) {
 			const bagView = document.getElementById('bag-view');

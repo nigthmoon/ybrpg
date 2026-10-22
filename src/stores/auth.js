@@ -15,6 +15,7 @@ export const useAuthStore = defineStore('auth', {
     user: null,          // { id, username, nickname, created_at, last_login }
     initialized: false,
     guest: false,        // 游客模式（本机会话，不落库）
+    savedLogin: null,    // 本地缓存的账密（快捷登录用）：{ u, p }
   }),
 
   getters: {
@@ -26,6 +27,7 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     /** 启动时恢复登录态（有 token 就校验并拉用户信息） */
     async bootstrap() {
+      this._loadSavedLogin();
       if (this.initialized) return;
       if (!this.token) { this.initialized = true; return; }
       try {
@@ -39,7 +41,7 @@ export const useAuthStore = defineStore('auth', {
       this.initialized = true;
     },
 
-    async login(username, password) {
+    async login(username, password, remember = true) {
       const d = await api.login(username, password);
       this.token = d.token;
       setToken(d.token);
@@ -47,6 +49,7 @@ export const useAuthStore = defineStore('auth', {
       this.guest = false;
       this.initialized = true;
       setSaveNamespace('u' + d.user.id);
+      if (remember) this._saveSavedLogin(username, password); else this._clearSavedLogin();
       return d.user;
     },
 
@@ -58,6 +61,7 @@ export const useAuthStore = defineStore('auth', {
       this.guest = false;
       this.initialized = true;
       setSaveNamespace('u' + d.user.id);
+      this._saveSavedLogin(username, password);
       return d.user;
     },
 
@@ -98,5 +102,35 @@ export const useAuthStore = defineStore('auth', {
       setSaveNamespace('guest');
       setToken('');
     },
+
+    /** 快捷登录：使用本地缓存的账密 */
+    async quickLogin() {
+      if (!this.savedLogin) throw new Error('没有缓存的登录信息');
+      return this.login(this.savedLogin.u, this.savedLogin.p);
+    },
+    /** 读取本地缓存的账密 */
+    _loadSavedLogin() {
+      try {
+        const raw = localStorage.getItem('ybrpg_saved_login');
+        if (raw) {
+          const o = JSON.parse(raw);
+          if (o && o.u) this.savedLogin = { u: o.u, p: this._b64d(o.p) };
+        }
+      } catch (e) { /* ignore */ }
+    },
+    /** 缓存账密到本地（密码 base64 降可见，非加密） */
+    _saveSavedLogin(u, p) {
+      try {
+        localStorage.setItem('ybrpg_saved_login', JSON.stringify({ u: u, p: this._b64e(p) }));
+        this.savedLogin = { u: u, p: p };
+      } catch (e) { /* ignore */ }
+    },
+    /** 清除缓存的账密 */
+    _clearSavedLogin() {
+      try { localStorage.removeItem('ybrpg_saved_login'); } catch (e) { /* ignore */ }
+      this.savedLogin = null;
+    },
+    _b64e(s) { try { return btoa(unescape(encodeURIComponent(String(s)))); } catch (e) { return String(s); } },
+    _b64d(s) { try { return decodeURIComponent(escape(atob(s))); } catch (e) { return s; } },
   },
 });

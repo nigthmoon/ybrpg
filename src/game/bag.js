@@ -21,32 +21,28 @@ function renderBagView(container) {
 	const _restoreTop = _bagResetScroll ? -1 : (_bagBody ? _bagBody.scrollTop : 0);
 	_bagResetScroll = false;
 	container.innerHTML = '';
-	// 【修改】优先从存档中获取，如果存档有值，则使用存档值，否则默认为 'char'
-	const savedTab = window.playerProgress?.bagTab || window.bagTab || 'char';
-	if (!window.bagTab) {
-		window.bagTab = savedTab;
+	// 角色模式（角色浮窗 container.dataset.roleMode=1）与背包模式共用本视图架构
+	const roleMode = container.dataset && container.dataset.roleMode === '1';
+	let savedTab;
+	if (roleMode) {
+		savedTab = window.bagTab || 'char';
 	} else {
-		// 如果已存在，但为了保险，与存档同步
-		window.bagTab = savedTab;
+		// 背包模式仅有 道具/装备/其他；过滤掉旧存档可能残留的 'char'
+		const ok = ['item', 'equip', 'other'];
+		savedTab = ok.includes(window.bagTab) ? window.bagTab : (ok.includes(window.playerProgress && window.playerProgress.bagTab) ? window.playerProgress.bagTab : 'item');
 	}
+	window.bagTab = savedTab;
 
-
-	// 在 renderBagView 函数开头添加
 	const defs = Game.Bag.defs();
 	Game.Bag.ensureSlots();
-	// 当前选中的子标签
-	if (!window.bagTab) window.bagTab = 'char';
 
 	// 上方子标签
 	const tabsDiv = document.createElement('div');
 	tabsDiv.className = 'bag-tabs';
 
-	const tabConfigs = [
-		{ key: 'item', label: '道具' },
-		{ key: 'equip', label: '装备' },
-		{ key: 'char', label: '武将' },
-		{ key: 'other', label: '其他' },
-	];
+	const tabConfigs = roleMode
+		? [{ key: 'char', label: '武将' }, { key: 'frag', label: '碎片' }, { key: 'skin', label: '皮肤' }]
+		: [{ key: 'item', label: '道具' }, { key: 'equip', label: '装备' }, { key: 'other', label: '其他' }];
 
 	tabConfigs.forEach(cfg => {
 		const btn = document.createElement('button');
@@ -72,9 +68,10 @@ function renderBagView(container) {
 	} else if (window.bagTab === 'equip') {
 		renderBagEquipContent(bodyDiv);
 	} else {
+		const labelMap = { other: '其他', frag: '碎片', skin: '皮肤' };
 		const tip = document.createElement('div');
 		tip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:30px;';
-		tip.textContent = '其他 - 敬请期待';
+		tip.textContent = `${labelMap[window.bagTab] || '其他'} - 敬请期待`;
 		bodyDiv.appendChild(tip);
 	}
 

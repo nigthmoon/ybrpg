@@ -199,38 +199,39 @@ const LEGACY_SHOP_POOLS = {
 
 /**
  * 刷新商店物品
- * - 普通随机商店(normal)：新构造，仅金币；8 格 = 前 2 热销(5~8 折,折扣高者在前) + 后 6 分档(低/中/高各 2)
- * - 高级商店(sp)：保留原“随机倍率”玩法
+ * 普通/高级随机商店统一采用新商品模板：仅金币，8 格 = 前 2 热销(5~8 折,折扣高者在前) + 后 6 分档(低/中/高各 2)
  */
 function refreshShopItems(type = 'normal', supportedCurrencies = ['gold', 'diamond']) {
 	if (!window.shopData) window.shopData = { items: [], spitems: [], refreshCost: 50 };
-	if (type != 'normal') {
-		// ===== 高级商店(sp)：原“随机倍率”玩法 =====
-		window.shopData.supportedCurrencies = supportedCurrencies;
-		const spitems = [];
-		const treasurePool = Object.values(LEGACY_SHOP_POOLS.treasures).flat();
-		const selectedTreasures = [...treasurePool].sort(() => 0.5 - Math.random()).slice(0, 3);
-		const charPool = Object.values(LEGACY_SHOP_POOLS.characters).flat();
-		const selectedChars = [...charPool].sort(() => 0.5 - Math.random()).slice(0, 3);
-		const itemPool = Object.values(LEGACY_SHOP_POOLS.items).flat();
-		const selectedPacks = [];
-		for (let i = 0; i < 2 && itemPool.length > 0; i++) selectedPacks.push(itemPool[Math.floor(Math.random() * itemPool.length)]);
-		const allProducts = [...selectedTreasures.concat(selectedChars).concat(selectedPacks)].sort(() => Math.random() - 0.5);
-		for (const id of allProducts) {
-			const beilv = Math.floor(Math.random() * 4) + 2;
-			const one = buildShopProduct(id, beilv, supportedCurrencies);
-			if (one) spitems.push(one);
-		}
-		window.shopData.spitems = spitems;
-		window.shopData.refreshCost = 50;
-		return spitems;
-	}
-	// ===== 普通随机商店：新构造（仅金币）=====
 	window.shopData.supportedCurrencies = ['gold'];
-	const items = buildNormalShop();
-	window.shopData.items = items;
+	const list = buildNormalShop(type != 'normal');
+	if (type != 'normal') {
+		window.shopData.spitems = list;
+	} else {
+		window.shopData.items = list;
+	}
 	window.shopData.refreshCost = 50;
-	return items;
+	return list;
+}
+
+// ===== 旧版随机商店（高级 sp：3 宝物 + 3 武将 + 2 道具，价格随机倍率）— 暂不启用，保留以期复用 =====
+// 需要复用旧版高级商店时，把 refreshShopItems 的 sp 分支改回调用本函数即可
+function refreshLegacySpShop(supportedCurrencies = ['gold', 'diamond']) {
+	const spitems = [];
+	const treasurePool = Object.values(LEGACY_SHOP_POOLS.treasures).flat();
+	const selectedTreasures = [...treasurePool].sort(() => 0.5 - Math.random()).slice(0, 3);
+	const charPool = Object.values(LEGACY_SHOP_POOLS.characters).flat();
+	const selectedChars = [...charPool].sort(() => 0.5 - Math.random()).slice(0, 3);
+	const itemPool = Object.values(LEGACY_SHOP_POOLS.items).flat();
+	const selectedPacks = [];
+	for (let i = 0; i < 2 && itemPool.length > 0; i++) selectedPacks.push(itemPool[Math.floor(Math.random() * itemPool.length)]);
+	const allProducts = [...selectedTreasures.concat(selectedChars).concat(selectedPacks)].sort(() => Math.random() - 0.5);
+	for (const id of allProducts) {
+		const beilv = Math.floor(Math.random() * 4) + 2;
+		const one = buildShopProduct(id, beilv, supportedCurrencies);
+		if (one) spitems.push(one);
+	}
+	return spitems;
 }
 
 // 由 id 构造一个商店商品对象（高级商店 sp 用；价格走 scalePrice，可含倍率/钻石折算）
@@ -265,10 +266,12 @@ function buildShopProduct(id, beilv, supportedCurrencies) {
  * 后 6 中宝物类(单个宝物+宝物箱)占 X(2~4)，武将类(单个武将+武将包)占 6-X；
  * 平凡/精品宝物及其箱、体力瓶不进入随机商店。
  */
-function buildNormalShop() {
-	const mkChar = (id) => { const c = characterList[id]; if (!c) return null; const g = (getCharPrice(c.rank) || {}).gold || 0; return { type: 'character', id, name: c.name, desc: `${getRankName(c.rank)} | HP:${c.hp} ATK:${c.atk} DEF:${c.def}`, price: { gold: g }, payCurrency: 'gold', payAmount: g, sold: false, number: 1, rank: c.rank, icon: `/image/character/${id}.jpg` }; };
-	const mkItem = (id) => { const d = ITEM_DEFS[id]; if (!d) return null; const g = (d.price && d.price.gold) || 0; return { type: 'item', id, name: d.name, desc: d.desc, price: { gold: g }, payCurrency: 'gold', payAmount: g, sold: false, number: 1, emoji: d.emoji || '📦', icon: d.icon || '' }; };
-	const mkTre = (id) => { const t = Game.Data.getTreasureList()[id]; if (!t) return null; const g = (t.price && t.price.gold) || 0; return { type: 'treasure', id, name: t.name, desc: t.desc, price: { gold: g }, payCurrency: 'gold', payAmount: g, sold: false, number: 1, icon: t.icon || `/image/skill/${id}.png` }; };
+function buildNormalShop(isSp = false) {
+	// 高级商店：每件商品一次可买多件(数量 2~5 随机,价格按数量计)；普通商店每件 1 个
+	const randMult = () => (isSp ? (2 + Math.floor(Math.random() * 4)) : 1);
+	const mkChar = (id) => { const c = characterList[id]; if (!c) return null; const unit = (getCharPrice(c.rank) || {}).gold || 0; const n = randMult(); const g = unit * n; return { type: 'character', id, name: c.name, desc: `${getRankName(c.rank)} | HP:${c.hp} ATK:${c.atk} DEF:${c.def}`, price: { gold: g }, payCurrency: 'gold', payAmount: g, sold: false, number: n, rank: c.rank, icon: `/image/character/${id}.jpg` }; };
+	const mkItem = (id) => { const d = ITEM_DEFS[id]; if (!d) return null; const unit = (d.price && d.price.gold) || 0; const n = randMult(); const g = unit * n; return { type: 'item', id, name: d.name, desc: d.desc, price: { gold: g }, payCurrency: 'gold', payAmount: g, sold: false, number: n, emoji: d.emoji || '📦', icon: d.icon || '' }; };
+	const mkTre = (id) => { const t = Game.Data.getTreasureList()[id]; if (!t) return null; const unit = (t.price && t.price.gold) || 0; const n = randMult(); const g = unit * n; return { type: 'treasure', id, name: t.name, desc: t.desc, price: { gold: g }, payCurrency: 'gold', payAmount: g, sold: false, number: n, icon: t.icon || `/image/skill/${id}.png` }; };
 	const buildOne = (k, id) => k === 'char' ? mkChar(id) : (k === 'item' ? mkItem(id) : mkTre(id));
 	const pickN = (arr, n) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const tmp = a[i]; a[i] = a[j]; a[j] = tmp; } return a.slice(0, n); };
 
