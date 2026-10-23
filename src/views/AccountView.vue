@@ -72,7 +72,7 @@
       <div class="card">
         <h3>昵称</h3>
         <p class="hint">任意填写，1-20 个字符。</p>
-        <input v-model="nick" class="txt" maxlength="20" placeholder="输入昵称" @keyup.enter="saveNickname" />
+        <input v-model="nick" class="txt" maxlength="12" placeholder="昵称（≤6汉字或≤12字母，无空格标点）" @keyup.enter="saveNickname" />
         <button class="btn primary" :disabled="!canSaveNick" @click="saveNickname">保存昵称</button>
       </div>
 
@@ -136,7 +136,7 @@ const currentAvatar = computed(() => auth.user?.avatar || null);
 const displayNick = computed(() => auth.user?.nickname || '未设置');
 const canSaveNick = computed(() => {
   const v = nick.value.trim();
-  return !!v && v !== (auth.user?.nickname || '');
+  return validNick(v) && v !== (auth.user?.nickname || '');
 });
 
 const filteredCharOptions = computed(() => {
@@ -206,12 +206,34 @@ async function chooseAvatar(item) {
   }
 }
 
+// 昵称校验：仅汉字/字母/数字，不含空格与标点；至多 6 个汉字或 12 个字母
+function validNick(n) {
+  if (!n) return false;
+  if (!/^[\u4e00-\u9fa5a-zA-Z0-9]+$/.test(n)) return false;
+  const han = (n.match(/[\u4e00-\u9fa5]/g) || []).length;
+  const lat = (n.match(/[a-zA-Z0-9]/g) || []).length;
+  return han <= 6 && lat <= 12;
+}
+// 昵称改动后：把主角实例的名字同步为新昵称，刷新主页左上角昵称与游戏内显示/存档
+function syncMainName(name) {
+  try {
+    Object.values(window.charBagData || {}).forEach(inst => { if (inst && inst.charId === 'zhujue') inst.name = name; });
+    // 主页左上角昵称（若主页 DOM 已渲染，即使在后态也一并更新，返回游戏即生效）
+    const homeNick = document.getElementById('home-account-nick');
+    if (homeNick) homeNick.textContent = name.length > 6 ? name.slice(0, 6) + '…' : name;
+    if (typeof window.refreshAllTeamSlots === 'function') window.refreshAllTeamSlots();
+    if (typeof window.refreshTeamViewDisplay === 'function') window.refreshTeamViewDisplay();
+    if (window.SaveManager && window.SaveManager.autoSave) window.SaveManager.autoSave();
+  } catch (e) { /* ignore */ }
+}
+
 async function saveNickname() {
   const v = nick.value.trim();
   if (!v) return toast('昵称不能为空', true);
-  if (v.length > 20) return toast('昵称不超过 20 字', true);
+  if (!validNick(v)) return toast('昵称仅限汉字/字母/数字，至多 6 个汉字或 12 个字母，不能含空格或标点', true);
   try {
     await auth.setNickname(v);
+    syncMainName(v); // 主角名字变为所改昵称
     toast('昵称已更新');
   } catch (e) {
     toast(e.message || '保存失败', true);

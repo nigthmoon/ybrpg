@@ -187,10 +187,51 @@ export const ITEM_DEFS = {
 		emoji: '💰',
 		icon: '/image/header/dj_20265.png',
 		kind: 'goldbag',
-		reward: { gold: 10000 },
+		reward: { gold: 1000 },
 		selectable: false,
-		desc: '开启后获得 10000 金币',
+		desc: '开启后获得 1000 金币',
 	},
+	item_diamondbag_small: {
+		id: 'item_diamondbag_small',
+		name: '小钻石袋',
+		price: { gold: 0 },
+		emoji: '💠',
+		icon: '/image/header/dj_10100.png',
+		kind: 'diamondbag',
+		reward: { diamond: 10 },
+		selectable: false,
+		desc: '开启后获得 10 钻石',
+	},
+	item_box_luxury: {
+		id: 'item_box_luxury',
+		name: '豪华宝箱',
+		price: { gold: 0 },
+		emoji: '🎁',
+		icon: '/image/header/dj_10025.png',
+		kind: 'luxury',
+		reward: { diamond: 20, gold: 5000 },
+		selectable: false,
+		desc: '开启后获得 20 钻石 + 5000 金币',
+	},
+
+	// ===== 扩充袋/箱（奇遇福袋奖池）：id=贴图号，调数值只改 reward，不用动 id =====
+	// 钻石袋（dj_10001 较大 → dj_10006 较小）
+	dj_10001: { id: 'dj_10001', name: '钻石袋(500钻)', price: { gold: 0 }, emoji: '💎', icon: '/image/header/dj_10001.png', kind: 'diamondbag', reward: { diamond: 500 }, selectable: false, desc: '开启后获得 500 钻石' },
+	dj_10002: { id: 'dj_10002', name: '钻石袋(200钻)', price: { gold: 0 }, emoji: '💎', icon: '/image/header/dj_10002.png', kind: 'diamondbag', reward: { diamond: 200 }, selectable: false, desc: '开启后获得 200 钻石' },
+	dj_10003: { id: 'dj_10003', name: '钻石袋(100钻)', price: { gold: 0 }, emoji: '💎', icon: '/image/header/dj_10003.png', kind: 'diamondbag', reward: { diamond: 100 }, selectable: false, desc: '开启后获得 100 钻石' },
+	dj_10004: { id: 'dj_10004', name: '钻石袋(50钻)',  price: { gold: 0 }, emoji: '💎', icon: '/image/header/dj_10004.png', kind: 'diamondbag', reward: { diamond: 50 },  selectable: false, desc: '开启后获得 50 钻石' },
+	dj_10005: { id: 'dj_10005', name: '钻石袋(20钻)',  price: { gold: 0 }, emoji: '💎', icon: '/image/header/dj_10005.png', kind: 'diamondbag', reward: { diamond: 20 },  selectable: false, desc: '开启后获得 20 钻石' },
+	dj_10006: { id: 'dj_10006', name: '钻石袋(10钻)',  price: { gold: 0 }, emoji: '💎', icon: '/image/header/dj_10006.png', kind: 'diamondbag', reward: { diamond: 10 },  selectable: false, desc: '开启后获得 10 钻石' },
+	// 金币袋（dj_10007 较大 → dj_10011 较小；按 1 钻=100 金 折算，较原值 ÷10）
+	dj_10007: { id: 'dj_10007', name: '金币袋(1万)',  price: { gold: 0 }, emoji: '💰', icon: '/image/header/dj_10007.png', kind: 'goldbag', reward: { gold: 10000 }, selectable: false, desc: '开启后获得 10000 金币' },
+	dj_10008: { id: 'dj_10008', name: '金币袋(5000)', price: { gold: 0 }, emoji: '💰', icon: '/image/header/dj_10008.png', kind: 'goldbag', reward: { gold: 5000 },  selectable: false, desc: '开启后获得 5000 金币' },
+	dj_10009: { id: 'dj_10009', name: '金币袋(2000)', price: { gold: 0 }, emoji: '💰', icon: '/image/header/dj_10009.png', kind: 'goldbag', reward: { gold: 2000 },  selectable: false, desc: '开启后获得 2000 金币' },
+	dj_10010: { id: 'dj_10010', name: '金币袋(1000)', price: { gold: 0 }, emoji: '💰', icon: '/image/header/dj_10010.png', kind: 'goldbag', reward: { gold: 1000 },  selectable: false, desc: '开启后获得 1000 金币' },
+	dj_10011: { id: 'dj_10011', name: '金币袋(500)',  price: { gold: 0 }, emoji: '💰', icon: '/image/header/dj_10011.png', kind: 'goldbag', reward: { gold: 500 },   selectable: false, desc: '开启后获得 500 金币' },
+	// 奢华宝箱（dj_10026，收益高于豪华宝箱）
+	item_box_deluxe: { id: 'item_box_deluxe', name: '奢华宝箱', price: { gold: 0 }, emoji: '🎆', icon: '/image/header/dj_10026.png', kind: 'luxury', reward: { diamond: 50, gold: 10000 }, selectable: false, desc: '开启后获得 50 钻石 + 10000 金币' },
+	// 刷新令（重置一个关卡今日挑战次数；在关卡产出预览里使用）
+	item_refresh_token: { id: 'item_refresh_token', name: '刷新令', price: { gold: 0 }, emoji: '🎟️', icon: '/image/header/dj_50030.png', kind: 'refresh', selectable: false, desc: '重置一个关卡今日的挑战次数（在副本关卡产出预览里使用）' },
 
 	// ===================== 宝物箱（按品质分类，硬编码可选宝物） =====================
 	// rank1
@@ -559,6 +600,18 @@ export function useItem(itemId) {
 		buildGoldBagDialog(def, owned);
 		return;
 	}
+	if (def.kind === 'diamondbag') {
+		buildDiamondBagDialog(def, owned);
+		return;
+	}
+	if (def.kind === 'luxury') {
+		buildLuxuryBoxDialog(def, owned);
+		return;
+	}
+	if (def.kind === 'refresh') {
+		Game.toast('请在副本关卡的“产出预览”里使用刷新令重置今日次数', 'warning');
+		return;
+	}
 
 	// 按道具类型分派开启逻辑
 	if (def.kind === 'stamina') {
@@ -649,8 +702,8 @@ function buildStaminaDialog(def, owned) {
 		Game.toast(`使用 ${quantity} 个${def.name}，恢复 ${quantity * recover} 点体力`, 'success');
 		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
 		// 刷新背包页
-		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
-			renderBagItemContent(window._lastBagContainer);
+		if (typeof renderBagItemContent === 'function' && (window.__bagBody || window._lastBagContainer)) {
+			renderBagItemContent(window.__bagBody || window._lastBagContainer);
 		}
 		// 刷新底部预览栏（数量为 0 则清空）
 		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
@@ -727,8 +780,8 @@ function buildGoldBagDialog(def, owned) {
 		if (Game.SaveManager && Game.SaveManager.autoSave) Game.SaveManager.autoSave();
 		Game.toast(`开启 ${quantity} 个${def.name}，获得 ${quantity * gold} 金币`, 'success');
 		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
-			renderBagItemContent(window._lastBagContainer);
+		if (typeof renderBagItemContent === 'function' && (window.__bagBody || window._lastBagContainer)) {
+			renderBagItemContent(window.__bagBody || window._lastBagContainer);
 		}
 		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
 	};
@@ -741,6 +794,138 @@ function buildGoldBagDialog(def, owned) {
 	btnRow.appendChild(confirmBtn); btnRow.appendChild(cancelBtn);
 	dialog.appendChild(btnRow);
 
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
+}
+
+// ===================== 小钻石袋：数量选择后获得钻石 =====================
+function buildDiamondBagDialog(def, owned) {
+	const diamond = (def.reward && def.reward.diamond) || 100;
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30000';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:8px;text-align:center;';
+	title.textContent = `开启【${def.name}】`;
+	dialog.appendChild(title);
+	let quantity = 1;
+	const stepper = document.createElement('div');
+	stepper.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:3px;margin:8px 0;flex-wrap:nowrap;';
+	const mkBtn = (txt, step) => {
+		const b = document.createElement('button');
+		b.className = 'ybrpg-confirm-btn';
+		b.textContent = txt;
+		b.style.cssText = 'padding:0 6px;height:26px;font-size:13px;border:1px solid #555;white-space:nowrap;';
+		b.onclick = () => syncQty((txt === '全选') ? owned : quantity + step);
+		return b;
+	};
+	const qtyEl = document.createElement('div');
+	qtyEl.style.cssText = 'font-size:20px;font-weight:bold;color:#fff;min-width:30px;text-align:center;';
+	qtyEl.textContent = '1';
+	const syncQty = (v) => {
+		quantity = Math.max(1, Math.min(owned, v));
+		qtyEl.textContent = String(quantity);
+		tip.textContent = `每个获得 ${diamond} 钻石（本次 +${quantity * diamond}）`;
+	};
+	stepper.appendChild(mkBtn('−10', -10)); stepper.appendChild(mkBtn('−1', -1)); stepper.appendChild(qtyEl); stepper.appendChild(mkBtn('+1', 1)); stepper.appendChild(mkBtn('+10', 10)); stepper.appendChild(mkBtn('全选', 0));
+	dialog.appendChild(stepper);
+	const tip = document.createElement('div');
+	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;';
+	tip.textContent = `每个获得 ${diamond} 钻石（本次 +${quantity * diamond}）`;
+	dialog.appendChild(tip);
+	const confirmBtn = document.createElement('button');
+	confirmBtn.className = 'ybrpg-confirm-btn';
+	confirmBtn.textContent = '确定';
+	confirmBtn.style.cssText = 'background:#d32f2f;';
+	confirmBtn.onclick = () => {
+		if (quantity > owned) { Game.toast('数量超过拥有数', 'warning'); return; }
+		window.diamond = (window.diamond || 0) + quantity * diamond;
+		if (Game.Data && Game.Data.removeItem) Game.Data.removeItem(def.id, quantity);
+		if (typeof ensureResourceHUD === 'function') ensureResourceHUD();
+		if (typeof updateResourceHUD === 'function') updateResourceHUD();
+		if (Game.SaveManager && Game.SaveManager.autoSave) Game.SaveManager.autoSave();
+		Game.toast(`开启 ${quantity} 个${def.name}，获得 ${quantity * diamond} 钻石`, 'success');
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		if (typeof renderBagItemContent === 'function' && (window.__bagBody || window._lastBagContainer)) renderBagItemContent(window.__bagBody || window._lastBagContainer);
+		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
+	};
+	const cancelBtn = document.createElement('button');
+	cancelBtn.className = 'ybrpg-confirm-btn';
+	cancelBtn.textContent = '取消';
+	cancelBtn.onclick = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:10px;';
+	btnRow.appendChild(confirmBtn); btnRow.appendChild(cancelBtn);
+	dialog.appendChild(btnRow);
+	overlay.appendChild(dialog);
+	document.body.appendChild(overlay);
+}
+
+// ===================== 豪华宝箱：数量选择后获得钻石 + 金币 =====================
+function buildLuxuryBoxDialog(def, owned) {
+	const diamond = (def.reward && def.reward.diamond) || 100;
+	const gold = (def.reward && def.reward.gold) || 10000;
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30000';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;margin-bottom:8px;text-align:center;';
+	title.textContent = `开启【${def.name}】`;
+	dialog.appendChild(title);
+	let quantity = 1;
+	const stepper = document.createElement('div');
+	stepper.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:3px;margin:8px 0;flex-wrap:nowrap;';
+	const mkBtn = (txt, step) => {
+		const b = document.createElement('button');
+		b.className = 'ybrpg-confirm-btn';
+		b.textContent = txt;
+		b.style.cssText = 'padding:0 6px;height:26px;font-size:13px;border:1px solid #555;white-space:nowrap;';
+		b.onclick = () => syncQty((txt === '全选') ? owned : quantity + step);
+		return b;
+	};
+	const qtyEl = document.createElement('div');
+	qtyEl.style.cssText = 'font-size:20px;font-weight:bold;color:#fff;min-width:30px;text-align:center;';
+	qtyEl.textContent = '1';
+	const syncQty = (v) => {
+		quantity = Math.max(1, Math.min(owned, v));
+		qtyEl.textContent = String(quantity);
+		tip.textContent = `每个获得 ${diamond} 钻石 + ${gold} 金币（本次 +${quantity * diamond}💎 / +${quantity * gold}💰）`;
+	};
+	stepper.appendChild(mkBtn('−10', -10)); stepper.appendChild(mkBtn('−1', -1)); stepper.appendChild(qtyEl); stepper.appendChild(mkBtn('+1', 1)); stepper.appendChild(mkBtn('+10', 10)); stepper.appendChild(mkBtn('全选', 0));
+	dialog.appendChild(stepper);
+	const tip = document.createElement('div');
+	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:6px;';
+	tip.textContent = `每个获得 ${diamond} 钻石 + ${gold} 金币（本次 +${quantity * diamond}💎 / +${quantity * gold}💰）`;
+	dialog.appendChild(tip);
+	const confirmBtn = document.createElement('button');
+	confirmBtn.className = 'ybrpg-confirm-btn';
+	confirmBtn.textContent = '确定';
+	confirmBtn.style.cssText = 'background:#d32f2f;';
+	confirmBtn.onclick = () => {
+		if (quantity > owned) { Game.toast('数量超过拥有数', 'warning'); return; }
+		window.diamond = (window.diamond || 0) + quantity * diamond;
+		window.gameGold = (window.gameGold || 0) + quantity * gold;
+		if (Game.Data && Game.Data.removeItem) Game.Data.removeItem(def.id, quantity);
+		if (typeof ensureResourceHUD === 'function') ensureResourceHUD();
+		if (typeof updateResourceHUD === 'function') updateResourceHUD();
+		if (Game.SaveManager && Game.SaveManager.autoSave) Game.SaveManager.autoSave();
+		Game.toast(`开启 ${quantity} 个${def.name}，获得 ${quantity * diamond} 钻石 + ${quantity * gold} 金币`, 'success');
+		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+		if (typeof renderBagItemContent === 'function' && (window.__bagBody || window._lastBagContainer)) renderBagItemContent(window.__bagBody || window._lastBagContainer);
+		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
+	};
+	const cancelBtn = document.createElement('button');
+	cancelBtn.className = 'ybrpg-confirm-btn';
+	cancelBtn.textContent = '取消';
+	cancelBtn.onclick = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	const btnRow = document.createElement('div');
+	btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:10px;';
+	btnRow.appendChild(confirmBtn); btnRow.appendChild(cancelBtn);
+	dialog.appendChild(btnRow);
 	overlay.appendChild(dialog);
 	document.body.appendChild(overlay);
 }
@@ -806,8 +991,8 @@ function buildRandomBoxDialog(def, owned) {
 		const names = got.map(id => (Game.Bag.defs()[id] && Game.Bag.defs()[id].name) || id).join('、');
 		Game.toast(`开启 ${quantity} 个，获得：${names}`, 'success');
 		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
-			renderBagItemContent(window._lastBagContainer);
+		if (typeof renderBagItemContent === 'function' && (window.__bagBody || window._lastBagContainer)) {
+			renderBagItemContent(window.__bagBody || window._lastBagContainer);
 		}
 		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
 	};
@@ -949,8 +1134,8 @@ function buildPickBoxDialog(def, owned, candidates) {
 		const t = defs[selectedTreasureId];
 		Game.toast(`开启 ${quantity} 个，获得【${(t && t.name) || selectedTreasureId}】×${quantity}`, 'success');
 		if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-		if (typeof renderBagItemContent === 'function' && window._lastBagContainer) {
-			renderBagItemContent(window._lastBagContainer);
+		if (typeof renderBagItemContent === 'function' && (window.__bagBody || window._lastBagContainer)) {
+			renderBagItemContent(window.__bagBody || window._lastBagContainer);
 		}
 		if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);
 	};
@@ -1138,10 +1323,9 @@ function doOpen(def, quantity, charId) {
 	}
 	Game.toast(`开启成功！获得【${baseName}】×${quantity}`, 'success');
 
-	// 刷新背包视图
-	const bagView = document.getElementById('bag-view');
-	if (bagView && window.renderBagView) {
-		window.renderBagView(bagView);
+	// 刷新当前打开中的背包浮窗（道具网格）；不再重渲废弃的 #bag-view（会生成重复 #bag-detail-bar 且不刷新可见浮窗）
+	if (typeof renderBagItemContent === 'function' && (window.__bagBody || window._lastBagContainer)) {
+		renderBagItemContent(window.__bagBody || window._lastBagContainer);
 	}
 	// 同步底部预览栏（数量为 0 自动清空）
 	if (typeof refreshBagItemDetailAfterUse === 'function') refreshBagItemDetailAfterUse(def.id);

@@ -1024,9 +1024,9 @@ function absorbTreasureIntoSlot(instanceId, slotIndex, treasureInstanceId, popup
 		// 持久化 + 刷新
 		if (window.SaveManager) SaveManager.autoSave();
 		refreshBreakthroughPopupContent(popup, instanceId);
-		if (typeof renderBagView === 'function') {
-			const bagView = document.getElementById('bag-view');
-			if (bagView && bagView.style.display !== 'none') renderBagView(bagView);
+		if (typeof renderBagView === 'function' && window.__bagBody && window.__bagBody.isConnected) {
+			const bagContainer = window.__bagBody.parentElement;
+			if (bagContainer) renderBagView(bagContainer);
 		}
 	};
 	// 若目标槽已有「非吸收的突破效果」，吸收会覆盖它，先确认
@@ -1068,9 +1068,9 @@ function removeAbsorbedTreasureFromSlot(instanceId, slotIndex, popup) {
 	instData.tupoList[slotIndex] = {};
 	if (window.SaveManager) SaveManager.autoSave();
 	refreshBreakthroughPopupContent(popup, instanceId);
-	if (typeof renderBagView === 'function') {
-		const bagView = document.getElementById('bag-view');
-		if (bagView && bagView.style.display !== 'none') renderBagView(bagView);
+	if (typeof renderBagView === 'function' && window.__bagBody && window.__bagBody.isConnected) {
+		const bagContainer = window.__bagBody.parentElement;
+		if (bagContainer) renderBagView(bagContainer);
 	}
 }
 

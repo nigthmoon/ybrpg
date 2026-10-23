@@ -1929,6 +1929,23 @@ body {
 	margin-bottom: 14px;
 }
 
+/* 关卡简介（event.text） */
+.reward-text {
+	text-align: left;
+	color: #c8cfdd;
+	font-size: 13px;
+	line-height: 1.6;
+	margin: 0 0 12px;
+	white-space: pre-wrap;
+}
+.reward-text-label {
+	display: inline-block;
+	color: #ffd700;
+	font-size: 12px;
+	font-weight: bold;
+	margin-right: 6px;
+}
+
 .reward-gold {
 	text-align: center;
 	font-size: 30px;
@@ -2225,7 +2242,6 @@ body {
 	padding: 10px;
 	box-sizing: border-box;
 	justify-content: center;
-	margin-top: 50px;
 }
 
 .shop-item {
@@ -2308,7 +2324,7 @@ body {
 .home-float-back { background: transparent; border: none; color: #e8ecf6; font-size: 15px; cursor: pointer; padding: 0 8px; flex-shrink: 0; }
 .home-float-back:hover { color: #ffd700; }
 .home-float-title { flex: 1; text-align: center; }
-.home-float-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.home-float-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
 .home-charlist-cats { display: flex; gap: 8px; padding: 10px 12px 0; flex-shrink: 0; }
 .home-charlist-cat { padding: 6px 14px; font-size: 13px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; color: #cfd6e6; cursor: pointer; }
 .home-charlist-cat.active { background: #3f6fe0; color: #fff; border-color: #5b8cff; }

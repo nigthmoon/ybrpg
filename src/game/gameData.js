@@ -13,6 +13,15 @@ class GameData {
 		
 		// 初始化各模块数据
 		this.data = this.getDefaultData();
+		this._bindItems();
+	}
+
+	// 统一物品存储：把全局 window.gameItems 指向背包 bag.items（同一对象），
+	// 修复“副本掉落写 window.gameItems、背包读 bag.items”两套不同步导致道具看不到/丢失
+	_bindItems() {
+		if (!this.data.bag) this.data.bag = { items: {}, gold: 0, gems: 0 };
+		if (!this.data.bag.items) this.data.bag.items = {};
+		window.gameItems = this.data.bag.items;
 	}
 
 	// 存储键名（带身份命名空间前缀，实现账号/游客存档隔离）
@@ -148,6 +157,7 @@ class GameData {
 		const savedData = localStorage.getItem(key);
 		if (savedData) {
 			this.data = JSON.parse(savedData);
+			this._bindItems();
 
 			// 恢复玩家偏好设置
 			if (this.data.playerPreferences) {
@@ -217,6 +227,7 @@ class GameData {
 	 */
 	reset() {
 		this.data = this.getDefaultData();
+		this._bindItems();
 		console.log('[GameData] 数据已重置');
 	}
 
@@ -663,6 +674,7 @@ class GameData {
 	importSave(encodedData) {
 		try {
 			this.data = JSON.parse(atob(encodedData));
+			this._bindItems();
 			console.log('[GameData] 存档已导入');
 			return true;
 		} catch (e) {

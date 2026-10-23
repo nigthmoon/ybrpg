@@ -27,6 +27,34 @@ onMounted(() => {
       if (router.currentRoute.value.path !== '/') router.push('/');
     });
   });
+
+  // ===== 版本更新检测：前端/后端有新版本时，弹窗提示刷新 =====
+  let prompted = false;
+  const promptUpdate = () => {
+    if (prompted) return;
+    prompted = true;
+    confirmDialog({
+      title: '发现新版本',
+      message: '检测到游戏已更新，刷新即可加载最新内容。',
+      confirmText: '立即刷新',
+    }).then(() => location.reload()).catch(() => {});
+  };
+  const checkUpdate = async () => {
+    try {
+      // 后端版本（/api/health）
+      const h = await fetch('/api/health', { cache: 'no-store' }).then(r => r.json()).catch(() => null);
+      if (h && h.version) {
+        if (window.__beVer && h.version !== window.__beVer) return promptUpdate();
+        window.__beVer = h.version;
+      }
+      // 前端版本（线上 index.html 的 GAME_VERSION）
+      const html = await fetch('/', { cache: 'no-store' }).then(r => r.text()).catch(() => '');
+      const m = html.match(/GAME_VERSION\s*=\s*['"]([^'"]+)['"]/);
+      if (m && m[1] && m[1] !== GAME_VERSION) return promptUpdate();
+    } catch (e) { /* ignore */ }
+  };
+  checkUpdate();
+  setInterval(checkUpdate, 60000); // 每 60 秒检测一次
 });
 
 // 同步账号信息到全局（供游戏 DOM 层主页顶栏读取）
@@ -40,8 +68,8 @@ watch(() => [auth.user, auth.token, auth.guest], () => {
 
 // 游戏态底部导航（秘境/竞技暂不规划，占位）
 const navs = [
-  { id: 'team-view', label: '队伍' },
   { id: 'home-view', label: '主页' },
+  { id: 'team-view', label: '队伍' },
   { id: 'dungeon-view', label: '副本' },
   { id: '__jingmi', label: '秘境', disabled: true },
   { id: '__jingji', label: '竞技', disabled: true },

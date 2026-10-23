@@ -13,7 +13,7 @@ import { breakthroughMainCharacter, buildFodderArrays, compileCharacterStats, ge
 import { createCharacter } from './charFactory';
 import { renderBagView } from './bag';
 import { getRankColor } from './shop';
-import { SaveManager, consumeLevelTry, getStaminaCost, hideOtherViews, levelTriesLeft, recordDailyClear, showOutputPreview, trySpendStamina } from './other';
+import { SaveManager, consumeLevelTry, getStaminaCost, hideOtherViews, levelTriesLeft, recordDailyClear, refundLevelTry, showOutputPreview, trySpendStamina, updateResourceHUD } from './other';
 import { rollEncounterDrops, applyEncounterDrops } from './encounterDrop';
 
 function getCharSaveData(charId) {
@@ -328,9 +328,8 @@ function defaultLevelDiamond(eventId) {
 }
 // 计算单次通关/扫荡获得的钻石（主线按进度梯度×难度倍率；秘境不发放钻石，返回0）
 function computeLevelDiamond(event, diffKey, chapterKey) {
-	if (/^sp/i.test(chapterKey || '')) return 0;
-	const goldScale = DIFFICULTY_SCALE[diffKey]?.gold || 1.0;
-	return Math.max(1, Math.round(defaultLevelDiamond(event && event.id) * goldScale));
+	// 改革：主线/秘境关卡不再直接掉落钻石（钻石来源=奇遇日历福袋 / 商店 / 签到·任务）
+	return 0;
 }
 // 根据难度获取事件数据（支持噩梦和地狱难度）
 function getEventForDifficulty(chapterKey, eventId, difficulty) {
@@ -628,7 +627,8 @@ function renderChapterEventList(container, chapterKey) {
 			levelBtn.appendChild(viewZone);
 
 			// 3. 点击事件
-			levelBtn.onclick = () => {
+			// 点击关卡统一走「查看」：原直接战斗逻辑收进 enterLevel，由预览界面“挑战”回调触发
+			const enterLevel = () => {
 				if (isLocked) {
 					Game.toast(lockReason, 'warning');
 					return;
@@ -723,7 +723,7 @@ function renderChapterEventList(container, chapterKey) {
 						}
 						// 奇遇掉落（预留接口：目前为空；以后节日按 time 返回，和一般掉落一起显示）
 						let encGain = '';
-						const encDrops = rollEncounterDrops(chapterKey, Date.now());
+						const encDrops = []; // 秘境不触发日历奇遇；原 options 未定义会致胜利回调报错，故置空
 						if (encDrops.length) {
 							const granted = applyEncounterDrops(encDrops);
 							if (granted.length) encGain = '、奇遇:' + granted.map(d => `${d.name}×${d.count}`).join('、');
@@ -740,7 +740,11 @@ function renderChapterEventList(container, chapterKey) {
 						}
 					},
 					onLose: () => {
-						Game.toast(`挑战失败: ${event.name}`, 'warning');
+						// 战败返还：体力 + 每日次数
+						refundLevelTry(checkEventId);
+						window.stamina = (window.stamina || 0) + getStaminaCost(event);
+						updateResourceHUD();
+						Game.toast(`挑战失败: ${event.name}（已返还体力与次数）`, 'warning');
 						const dungeonView = document.getElementById('dungeon-view');
 						if (dungeonView) {
 							hideOtherViews('dungeon-view');
@@ -748,6 +752,16 @@ function renderChapterEventList(container, chapterKey) {
 							renderDungeonView(dungeonView, chapterKey);
 						}
 					}
+				});
+			};
+
+			// 点击关卡：不再直接战斗，统一弹「查看」界面（看掉落+次数后再决定挑战）
+			levelBtn.onclick = (e) => {
+				e.stopPropagation();
+				showOutputPreview(eventData, currentDifficulty, index, eventId, chapterKey, {
+					canChallenge: !isLocked,
+					canSweep: passed.includes(eventId),
+					onChallenge: () => enterLevel(),
 				});
 			};
 
@@ -878,6 +892,14 @@ function renderChapterEventList(container, chapterKey) {
 			nameSpan.textContent = event.name;
 			if (isSmallBoss) nameSpan.className = 'lv-boss-small';
 			else if (isBigBoss) nameSpan.className = 'lv-boss-big';
+			// 今日次数已用尽：加“已薅干净”角标（拔地三尺也没资源了，可用刷新令重置）
+			if (levelTriesLeft(checkEventId) <= 0) {
+				const drained = document.createElement('span');
+				drained.textContent = '已薅干净';
+				drained.title = '今日挑战次数已用完，本关卡已薅干净，拔地三尺也没资源了（可用刷新令重置）';
+				drained.style.cssText = 'display:inline-block;margin-left:6px;font-size:11px;color:#9aa4bd;background:rgba(0,0,0,.35);border:1px solid #555;border-radius:4px;padding:0 5px;vertical-align:middle;';
+				nameSpan.appendChild(drained);
+			}
 			levelBtn.appendChild(nameSpan);
 
 			// 右侧「查看」热区：点击仅弹产出预览，不进入关卡
@@ -955,6 +977,9 @@ function renderChapterEventList(container, chapterKey) {
 						}
 					}
 
+					// 预生成奖励计划（含奇遇福袋）：结算展示与胜利发放共用同一份，避免重 roll 不一致
+					const _rp = event.reward ? buildRewardPlan(event, currentDifficulty, index) : null;
+
 					// 启动战斗
 					// 体力预扣（上云接口）
 					if (!trySpendStamina(getStaminaCost(event))) {
@@ -970,7 +995,7 @@ function renderChapterEventList(container, chapterKey) {
 						goldReward: event.gold || 0,
 						goldScale: DIFFICULTY_SCALE[currentDifficulty]?.gold || 1.0,
 						// 预生成奖励计划，供旧版战斗结算面板展示（仅固定配置事件）
-						rewardPlan: event.reward ? buildRewardPlan(event, currentDifficulty, index) : null,
+						rewardPlan: _rp,
 						onWin: () => {
 							if (!window.playerProgress) window.playerProgress = {};
 							if (!window.playerProgress[checkEventId]) {
@@ -996,11 +1021,23 @@ function renderChapterEventList(container, chapterKey) {
 					if (rewardCfg) {
 						grantFixedReward(rewardCfg, dropMult, dropStat); // 内部不再发武将，仅宝物/道具
 					}
-							// 刷新背包视图（若处于开启状态）
-							if (window.renderBagView) {
-								const bagView = document.getElementById('bag-view');
-								if (bagView) window.renderBagView(bagView);
-							}
+					// 关卡基础掉落（event.drops：突破石/觉醒石等，写入统一背包 bag.items）
+					const baseDrops = Array.isArray(event.drops) ? event.drops : [];
+					if (baseDrops.length) {
+						window.gameItems = window.gameItems || {};
+						baseDrops.forEach(d => {
+							if (d && d.item && d.count > 0) window.gameItems[d.item] = (window.gameItems[d.item] || 0) + d.count;
+						});
+					}
+					// 奇遇掉落（福袋日历）：发放预生成的同一份（与结算展示一致，不再重 roll）
+					const encDrops = (_rp && _rp.encounter) || [];
+					if (encDrops.length) applyEncounterDrops(encDrops);
+						// 刷新当前打开中的背包浮窗（若正开着）；不再重渲废弃的全屏 #bag-view
+						// （重渲 #bag-view 会生成重复的 #bag-detail-bar，被 getElementById 抢先，导致浮窗背包点道具无预览/使用无反应）
+						if (window.renderBagView && window.__bagBody && window.__bagBody.isConnected) {
+							const bagContainer = window.__bagBody.parentElement;
+							if (bagContainer) window.renderBagView(bagContainer);
+						}
 							// 事件完成后自动存档
 							SaveManager.autoSave();
 						// 【已停用】新版奖励面板暂不调用，函数保留备用
@@ -1022,7 +1059,11 @@ function renderChapterEventList(container, chapterKey) {
 							}
 						},
 						onLose: () => {
-							Game.toast(`挑战失败: ${event.name}`, 'warning');
+							// 战败返还：体力 + 每日次数
+							refundLevelTry(checkEventId);
+							window.stamina = (window.stamina || 0) + getStaminaCost(event);
+							updateResourceHUD();
+							Game.toast(`挑战失败: ${event.name}（已返还体力与次数）`, 'warning');
 							const dungeonView = document.getElementById('dungeon-view');
 							if (dungeonView) {
 								hideOtherViews('dungeon-view');
@@ -1033,12 +1074,14 @@ function renderChapterEventList(container, chapterKey) {
 					});
 				};
 
-			levelBtn.onclick = () => {
-				if (!isUnlocked) {
-					Game.toast('该关卡尚未解锁', 'warning');
-					return;
-				}
-				enterLevel();
+			// 点击关卡：不再直接战斗，统一弹「查看」界面（看掉落+次数后再决定挑战）
+			levelBtn.onclick = (e) => {
+				e.stopPropagation();
+				showOutputPreview(event, currentDifficulty, index, checkEventId, chapterKey, {
+					canChallenge: isUnlocked,
+					canSweep: currentEventCompleted,
+					onChallenge: () => enterLevel(),
+				});
 			};
 			listContainer.appendChild(levelBtn);
 
@@ -1199,8 +1242,14 @@ function buildRewardPlan(event, diffKey, index) {
 			})
 			.flatMap(o => Array(dropMult).fill(o)));
 	}
-	const diamond = Math.max(1, Math.round(defaultLevelDiamond(event.id) * goldScale));
-	return { gold, diamond, chars: [], treasures, items };
+	const diamond = 0; // 改革：关卡不再直接掉钻石（钻石来自奇遇日历福袋/商店）
+	// 关卡基础掉落物（event.drops：突破石/觉醒石等任意材料）
+	const drops = (Array.isArray(event.drops) ? event.drops : [])
+		.filter(d => d && d.item && d.count > 0)
+		.map(d => ({ name: (ITEM_DEFS[d.item] && ITEM_DEFS[d.item].name) || d.item, count: d.count, icon: (ITEM_DEFS[d.item] && ITEM_DEFS[d.item].icon) || null }));
+	// 奇遇掉落（按星期日历，仅主线关卡触发；开战时 roll 一次，结算展示与发放共用）
+	const encounter = rollEncounterDrops(event.id, Date.now());
+	return { gold, diamond, chars: [], treasures, items, drops, encounter };
 }
 
 /**
@@ -1237,6 +1286,9 @@ function doSweep(event, diffKey, index, eventId, chapterKey, onClose, count) {
 	let stoppedReason = ''; // '' | 'stamina' | 'tries'
 
 	const finalize = () => {
+		// 重绘副本列表：刷新“已薅干净”等角标（扫荡已改变今日剩余次数）
+		const dungeonView = document.getElementById('dungeon-view');
+		if (dungeonView) renderDungeonView(dungeonView, chapterKey);
 		showSweepResultPanel({
 			title: count > 1 ? `扫荡成功（${count}次${interrupted ? (stoppedReason === 'tries' ? '，次数不足中断' : '，体力不足中断') : ''}）` : '扫荡成功',
 			sub: `${diffName}难度 · ${event.name || eventId}`,
@@ -1297,10 +1349,10 @@ function doSweep(event, diffKey, index, eventId, chapterKey, onClose, count) {
 		// 计入每日任务进度（战斗/扫荡各算一次通关）
 		recordDailyClear(chapterKey, diffKey);
 
-		// 刷新背包视图（若处于开启状态）
-		if (window.renderBagView) {
-			const bagView = document.getElementById('bag-view');
-			if (bagView) window.renderBagView(bagView);
+		// 刷新当前打开中的背包浮窗（若正开着）；不再重渲废弃的全屏 #bag-view（避免重复 #bag-detail-bar）
+		if (window.renderBagView && window.__bagBody && window.__bagBody.isConnected) {
+			const bagContainer = window.__bagBody.parentElement;
+			if (bagContainer) window.renderBagView(bagContainer);
 		}
 		SaveManager.autoSave();
 

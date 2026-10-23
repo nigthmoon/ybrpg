@@ -10,7 +10,7 @@ import { Game } from './core';
 import { useItem, renderBagItemContent } from './item';
 import { showBagCharDetail, showBagCharDetailPopup } from './team';
 import { formatPrice, getRankColor, getSellPrice } from './shop';
-import { SaveManager } from './other';
+import { SaveManager, updateResourceHUD } from './other';
 
 let _bagResetScroll = true;
 
@@ -60,6 +60,7 @@ function renderBagView(container) {
 	// 中间：背包主体
 	const bodyDiv = document.createElement('div');
 	bodyDiv.className = 'bag-body';
+	window.__bagBody = bodyDiv; // 记录当前背包主体，供开道具后刷新到最新节点
 
 	if (window.bagTab === 'char') {
 		renderBagCharContent(bodyDiv);
@@ -233,6 +234,7 @@ function renderBagView(container) {
 
 				// 增加金币
 				window.gameGold = (window.gameGold || 0) + sellPrice;
+				updateResourceHUD(); // 刷新顶部金币/钻石/体力条
 
 				Game.toast(`出售【${tDef.name}】，获得 ${sellPrice} 金币`, 'success');
 

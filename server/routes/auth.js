@@ -38,15 +38,15 @@ function issueToken(u) {
 }
 // 单登录：建会话并签发带 jti 的 token（先顶掉该用户旧的未吊销会话）
 function startSession(userId, username, req) {
-	db.prepare("UPDATE sessions SET revoked_at = datetime('now') WHERE user_id = ? AND revoked_at IS NULL").run(userId);
+	db.prepare("UPDATE sessions SET revoked_at = datetime('now', '+8 hours') WHERE user_id = ? AND revoked_at IS NULL").run(userId);
 	const jti = randomUUID();
 	const device = (req && req.headers && req.headers['user-agent']) ? String(req.headers['user-agent']).slice(0, 200) : null;
-	db.prepare('INSERT INTO sessions (user_id, jti, device) VALUES (?, ?, ?)').run(userId, jti, device);
+	db.prepare("INSERT INTO sessions (user_id, jti, device, last_seen, last_save) VALUES (?, ?, ?, datetime('now', '+8 hours'), datetime('now', '+8 hours'))").run(userId, jti, device);
 	return jwt.sign({ sub: userId, username, jti }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 }
 // 该用户是否有“在线”会话（最近 SESSION_ONLINE_WINDOW_SEC 秒内有过心跳）
 function hasOnlineSession(userId) {
-	const row = db.prepare("SELECT id FROM sessions WHERE user_id = ? AND revoked_at IS NULL AND last_seen > datetime('now', ?)").get(userId, `-${SESSION_ONLINE_WINDOW_SEC} seconds`);
+	const row = db.prepare("SELECT id FROM sessions WHERE user_id = ? AND revoked_at IS NULL AND last_seen > datetime('now', '+8 hours', ?)").get(userId, `-${SESSION_ONLINE_WINDOW_SEC} seconds`);
 	return !!row;
 }
 
@@ -64,7 +64,7 @@ router.post('/register', (req, res) => {
     return res.status(409).json({ error: 'USERNAME_TAKEN', message: '用户名已被注册' });
   }
   const hash = bcrypt.hashSync(password, 10);
-  const info = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)').run(username, hash);
+  const info = db.prepare("INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, datetime('now', '+8 hours'))").run(username, hash);
   const u = db.prepare('SELECT * FROM users WHERE id = ?').get(Number(info.lastInsertRowid));
   const token = startSession(u.id, u.username, req);
   return res.json({ token, user: publicUser(u) });
@@ -80,7 +80,7 @@ router.post('/login', (req, res) => {
   if (!u || !bcrypt.compareSync(password, u.password_hash)) {
     return res.status(401).json({ error: 'INVALID_CREDENTIALS', message: '用户名或密码错误' });
   }
-  db.prepare("UPDATE users SET last_login = datetime('now') WHERE id = ?").run(u.id);
+  db.prepare("UPDATE users SET last_login = datetime('now', '+8 hours') WHERE id = ?").run(u.id);
   // 单登录：该账号已在线则拒绝新登录
   if (hasOnlineSession(u.id)) {
   	return res.status(409).json({ error: 'SESSION_ACTIVE', message: '该账号正在其他设备游玩，请稍后再试' });

@@ -532,7 +532,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '风雪中，白衣少女雪琅拦住去路，称你是「教会等待之人」。击败她后，她冷笑消失：「真正的考验在礼拜堂。」',
 				prev: null,
-				reward: { gold: 150, characters: ['ybsl_019shengyan'] },
+				reward: { diamond: 5, gold: 150, characters: ['ybsl_019shengyan'] },
 				enemy: [
 					{}, {}, {}, {},
 					{ name: '雪琅', id: 'ybsl_123xuelang', level: 1, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
@@ -545,7 +545,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '雪琅退走后，教会的眼线很快盯上你——信徒、修女、持烛者组成小队阻截。你意识到：这个教会，不想让任何人离开。',
 				prev: 'c1-1',
-				reward: { gold: 170, characters: ['ybsl_019shengyan'] },
+				reward: { diamond: 6, gold: 170, characters: ['ybsl_019shengyan'] },
 				enemy: [
 					{ name: '教会信徒', id: 'ybsl_019shengyan', level: 1, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
 					{},
@@ -561,7 +561,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '退路被切断，只能杀出重围。从一名狂信者口中得知：「教会用圣言控制信徒，违抗者将被投入地下。」',
 				prev: 'c1-2',
-				reward: { gold: 200, characters: ['ybsl_045gaocong'] },
+				reward: { diamond: 7, gold: 200, characters: ['ybsl_045gaocong'] },
 				enemy: [
 					{ name: '守门人', id: 'ybsl_053qiuer', level: 2, tupolevel: 0, rank: 'rare', template: 'defense', buff: [] },
 					{},
@@ -577,7 +577,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '礼拜堂近在咫尺，外围守卫森严。苦修士与圣殿侍卫组成最后一道防线。',
 				prev: 'c1-3',
-				reward: { gold: 230, characters: ['ybsl_024yuetong'] },
+				reward: { diamond: 8, gold: 230, characters: ['ybsl_024yuetong'] },
 				enemy: [
 					{ name: '苦修士', id: 'ybsl_012zhengjiayi', level: 3, tupolevel: 0, rank: 'rare', template: 'defense', buff: [] },
 					{},
@@ -595,7 +595,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '执刑者张玉洁坐镇礼拜堂。她承认教会利用圣言奴役信众，却坚信这是「救赎」。战败后她沉默退去：「你若能走到尽头，或许……能见到真相。」',
 				prev: 'c1-4',
-				reward: { gold: 260, characters: ['ybsl_004zhangyujie'] },
+				reward: { diamond: 9, gold: 260, characters: ['ybsl_004zhangyujie'] },
 				enemy: [
 					{ name: '祭坛护卫', id: 'ybsl_121tujing', level: 3, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
 					{},
@@ -611,7 +611,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '击败张玉洁后，你从密道进入地下。忏悔者与香炉侍者拦路——他们的眼神空洞，仿佛被抽走了灵魂。',
 				prev: 'c1-5',
-				reward: { gold: 290, characters: ['ybsl_053qiuer'] },
+				reward: { diamond: 10, gold: 290, characters: ['ybsl_053qiuer'] },
 				enemy: [
 					{ name: '忏悔者', id: 'ybsl_024yuetong', level: 4, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
 					{},
@@ -629,7 +629,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '教会的死士早已设伏。你忽然明白：教会高层在害怕什么——或者说，在怕你。',
 				prev: 'c1-6',
-				reward: { gold: 320, characters: ['ybsl_054yueer'] },
+				reward: { diamond: 12, gold: 320, characters: ['ybsl_054yueer'] },
 				enemy: [
 					{ name: '守夜人', id: 'ybsl_054yueer', level: 5, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
 					{},
@@ -645,7 +645,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '逼近圣堂核心，守卫越来越强。远处传来低沉的吟唱声——那是吴爽的声音。',
 				prev: 'c1-7',
-				reward: { gold: 350, characters: ['ybsl_055zhengyan'] },
+				reward: { diamond: 13, gold: 350, characters: ['ybsl_055zhengyan'] },
 				enemy: [
 					{ name: '圣咏者', id: 'ybsl_012zhengjiayi', level: 6, tupolevel: 0, rank: 'rare', template: 'balanced', buff: [] },
 					{},
@@ -661,7 +661,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '最后一道防线倾巢而出。一名黑纱修女临死前低语：「圣堂之上……她不是人。」',
 				prev: 'c1-8',
-				reward: { gold: 380, characters: ['ybsl_012zhengjiayi'] },
+				reward: { diamond: 14, gold: 380, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
 					{ name: '黑纱修女', id: 'ybsl_045gaocong', level: 7, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
 					{},
@@ -679,7 +679,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '圣堂之巅，雪琅、张玉洁与传说中的吴爽同时现身。吴爽站在最高处，目光悲悯：「教会是一场骗局——但骗局也有它的意义。你准备好承受真相了吗？」战后她透露：「去雪国学院吧。那里有人能告诉你，你到底是谁。」',
 				prev: 'c1-9',
-				reward: { gold: 420, characters: ['ybsl_048wushuang'] },
+				reward: { diamond: 16, gold: 420, characters: ['ybsl_048wushuang'] },
 				enemy: [
 					// 雪琅（1号位，索引0）
 					{ name: '雪琅', id: 'ybsl_123xuelang', level: 8, tupolevel: 0, rank: 'rare', template: 'damger', buff: [] },
@@ -715,7 +715,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '踏入雪国学院，迎面便是学员阻截。高宇航张扬、闫爽沉稳、郑佳怡冷静——三人组成第一道门槛。',
 				prev: null,
-				reward: { gold: 450, characters: ['ybsl_037diamondqueen'] },
+				reward: { diamond: 17, gold: 450, characters: ['ybsl_037diamondqueen'] },
 				enemy: [
 					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 3, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
 					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 3, tupolevel: 2, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -731,7 +731,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '学生会长周玥亲自出手：「从教会一路杀来的人？有意思。不过学院的规矩——实力说话。」战后她露出赏识之色：「有资格参与学院祭。」',
 				prev: 'c2-1',
-				reward: { gold: 490, characters: ['ybsl_121tujing', 'ybsl_025shiqingyu', 'ybsl_015wanghairu'] },
+				reward: { diamond: 19, gold: 490, characters: ['ybsl_121tujing', 'ybsl_025shiqingyu', 'ybsl_015wanghairu'] },
 				enemy: [
 					{ name: '周玥', id: 'ybsl_010zhouyue', level: 5, tupolevel: 2, rank: 'epic', template: 'balanced', buff: [] },
 					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 5, tupolevel: 2, rank: 'epicfake', template: 'defense', buff: [] },
@@ -747,7 +747,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '后山试炼场，李玉珊的部下在此历练。你察觉学院内部暗流涌动——有人在追查「教会」与「堕魂深渊」的关系。',
 				prev: 'c2-2',
-				reward: { gold: 530, characters: ['ybsl_122wangbingyu'] },
+				reward: { diamond: 21, gold: 530, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
 					{ name: '李玉珊', id: 'ybsl_009liyushan', level: 6, tupolevel: 2, rank: 'epic', template: 'defense', buff: [] },
 					{ name: '学院医师', id: 'ybsl_037diamondqueen', level: 6, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
@@ -763,7 +763,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '风纪队高宇航带队围堵，对教会出身的你格外警惕：「学院不是避难所。」',
 				prev: 'c2-3',
-				reward: { gold: 570, characters: ['ybsl_123xuelang'] },
+				reward: { diamond: 22, gold: 570, characters: ['ybsl_123xuelang'] },
 				enemy: [
 					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 7, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
 					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 7, tupolevel: 2, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -779,7 +779,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '剑道导师李玉珊横剑拦路，剑术精湛。战后她露出温柔神色：「你剑中有迷茫——迷茫不是坏事，说明你在寻找。」她送你一枚剑穗：「去找吴雨欣吧。」',
 				prev: 'c2-4',
-				reward: { gold: 610, characters: ['ybsl_019shengyan', 'ybsl_020jiayutong', 'ybsl_016manchengqi'] },
+				reward: { diamond: 24, gold: 610, characters: ['ybsl_019shengyan', 'ybsl_020jiayutong', 'ybsl_016manchengqi'] },
 				enemy: [
 					{ name: '李玉珊', id: 'ybsl_009liyushan', level: 9, tupolevel: 2, rank: 'epic', template: 'defense', buff: [] },
 					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 9, tupolevel: 2, rank: 'epicfake', template: 'defense', buff: [] },
@@ -795,7 +795,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '图书馆深处传来异响，有人试图销毁关于「堕魂深渊」的文献。郑佳怡在场，神色紧张。',
 				prev: 'c2-5',
-				reward: { gold: 650, characters: ['ybsl_045gaocong'] },
+				reward: { diamond: 26, gold: 650, characters: ['ybsl_045gaocong'] },
 				enemy: [
 					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', level: 10, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '学院医师', id: 'ybsl_037diamondqueen', level: 10, tupolevel: 2, rank: 'rare', template: 'balanced', buff: [] },
@@ -811,7 +811,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '王若冰与吴格格联手封锁回廊。冰系学员的力量与学院的「雪国结界」有关——这结界，似乎在压制着什么。',
 				prev: 'c2-6',
-				reward: { gold: 690, characters: ['ybsl_024yuetong'] },
+				reward: { diamond: 28, gold: 690, characters: ['ybsl_024yuetong'] },
 				enemy: [
 					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 11, tupolevel: 2, rank: 'epicfake', template: 'defense', buff: [] },
 					{ name: '吴格格', id: 'ybsl_007wugege', level: 11, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
@@ -827,7 +827,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '两大学生社团爆发冲突，你被卷入。混乱中得知：学院祭当晚，「封印之门」会短暂打开。',
 				prev: 'c2-7',
-				reward: { gold: 730, characters: ['ybsl_053qiuer'] },
+				reward: { diamond: 30, gold: 730, characters: ['ybsl_053qiuer'] },
 				enemy: [
 					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 12, tupolevel: 2, rank: 'epicfake', template: 'balanced', buff: [] },
 					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 12, tupolevel: 2, rank: 'epicfake', template: 'damger', buff: [] },
@@ -843,7 +843,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '群聚的学员将你围住，有人散播谣言说你是「教会派来的间谍」。你必须用实力证明自己。',
 				prev: 'c2-8',
-				reward: { gold: 780, characters: ['ybsl_054yueer'] },
+				reward: { diamond: 32, gold: 780, characters: ['ybsl_054yueer'] },
 				enemy: [
 					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', level: 13, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '高年级生', id: 'ybsl_123xuelang', level: 13, tupolevel: 2, rank: 'rare', template: 'damger', buff: [] },
@@ -861,7 +861,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '学院首席吴雨欣立于高台：「能通过此战，方算真正的雪国学院之人。」战后她低声对你说：「学院之下封印着通往堕魂深渊的通道。教会也好，学院也罢——都是在看守那扇门。」',
 				prev: 'c2-9',
-				reward: { gold: 820, characters: ['ybsl_055zhengyan', 'ybsl_017xiaohong'] },
+				reward: { diamond: 34, gold: 820, characters: ['ybsl_055zhengyan', 'ybsl_017xiaohong'] },
 				enemy: [
 					{ name: '吴雨欣', id: 'ybsl_008wuyuxin', level: 16, tupolevel: 2, rank: 'legend', template: 'balanced', buff: [] },
 					{ name: '周玥', id: 'ybsl_010zhouyue', level: 16, tupolevel: 2, rank: 'epic', template: 'balanced', buff: [] },
@@ -894,7 +894,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '学院下篇开启，所有人实力飞跃——因为学院祭临近，「封印」的力量减弱，学员们反而变得更强。',
 				prev: null,
-				reward: { gold: 870, characters: ['ybsl_012zhengjiayi'] },
+				reward: { diamond: 36, gold: 870, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
 					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 8, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
 					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 8, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -910,7 +910,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '再战周玥。她不再留手：「上次只是试探，这次才是真正的学生会长。」战后她坦言：封印松动，有人在搞鬼。',
 				prev: 'c3-1',
-				reward: { gold: 920, characters: ['ybsl_037diamondqueen', 'ybsl_025wanghe', 'ybsl_018zhangqing'] },
+				reward: { diamond: 38, gold: 920, characters: ['ybsl_037diamondqueen', 'ybsl_025wanghe', 'ybsl_018zhangqing'] },
 				enemy: [
 					{ name: '周玥', id: 'ybsl_010zhouyue', level: 10, tupolevel: 4, rank: 'epic', template: 'balanced', buff: [] },
 					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 10, tupolevel: 4, rank: 'epicfake', template: 'defense', buff: [] },
@@ -926,7 +926,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '夜幕降临，学院后山杀机暗藏。夜间出没的敌人，身上带着深渊的气息。',
 				prev: 'c3-2',
-				reward: { gold: 960, characters: ['ybsl_121tujing'] },
+				reward: { diamond: 41, gold: 960, characters: ['ybsl_121tujing'] },
 				enemy: [
 					{ name: '李玉珊', id: 'ybsl_009liyushan', level: 12, tupolevel: 4, rank: 'epic', template: 'defense', buff: [] },
 					{ name: '学院医师', id: 'ybsl_037diamondqueen', level: 12, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
@@ -942,7 +942,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '夜间风纪队战力再升，配合愈发默契，对你这个教会来客毫不留情。',
 				prev: 'c3-3',
-				reward: { gold: 1010, characters: ['ybsl_122wangbingyu'] },
+				reward: { diamond: 43, gold: 1010, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
 					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 13, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
 					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 13, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -958,7 +958,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '李玉珊剑势全开，似在做最后的告别：「你要去深渊了吧？这一剑——送你一程。」战罢她将一枚冰晶交给你：「见到陈爱琳时，替我问声好。」',
 				prev: 'c3-4',
-				reward: { gold: 1060, characters: ['ybsl_123xuelang', 'ybsl_042pingzi', 'ybsl_059starsFall3'] },
+				reward: { diamond: 45, gold: 1060, characters: ['ybsl_123xuelang', 'ybsl_042pingzi', 'ybsl_059starsFall3'] },
 				enemy: [
 					{ name: '李玉珊', id: 'ybsl_009liyushan', level: 15, tupolevel: 4, rank: 'epic', template: 'defense', buff: [] },
 					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 15, tupolevel: 4, rank: 'epicfake', template: 'defense', buff: [] },
@@ -974,7 +974,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '深夜的图书馆，伏击者比白日更凶悍。关于深渊的文献，正被人急于抹去。',
 				prev: 'c3-5',
-				reward: { gold: 1110, characters: ['ybsl_019shengyan'] },
+				reward: { diamond: 48, gold: 1110, characters: ['ybsl_019shengyan'] },
 				enemy: [
 					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', level: 16, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '学院医师', id: 'ybsl_037diamondqueen', level: 16, tupolevel: 4, rank: 'rare', template: 'balanced', buff: [] },
@@ -990,7 +990,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '极寒回廊中，冰系精锐结阵以待。雪国结界的寒意，几乎冻结呼吸。',
 				prev: 'c3-6',
-				reward: { gold: 1160, characters: ['ybsl_045gaocong'] },
+				reward: { diamond: 50, gold: 1160, characters: ['ybsl_045gaocong'] },
 				enemy: [
 					{ name: '王若冰', id: 'ybsl_005wangruobing', level: 18, tupolevel: 4, rank: 'epicfake', template: 'defense', buff: [] },
 					{ name: '吴格格', id: 'ybsl_007wugege', level: 18, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
@@ -1006,7 +1006,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '社团总决战打响，双方精锐悉数上阵。学院内部的裂痕，在战火中无所遁形。',
 				prev: 'c3-7',
-				reward: { gold: 1220, characters: ['ybsl_024yuetong'] },
+				reward: { diamond: 53, gold: 1220, characters: ['ybsl_024yuetong'] },
 				enemy: [
 					{ name: '闫爽', id: 'ybsl_003yanshuang', level: 19, tupolevel: 4, rank: 'epicfake', template: 'balanced', buff: [] },
 					{ name: '高宇航', id: 'ybsl_011gaoyuhang', level: 19, tupolevel: 4, rank: 'epicfake', template: 'damger', buff: [] },
@@ -1022,7 +1022,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '学院祭前夜的最后围堵，学员们倾尽所学。封印，已在崩裂的边缘。',
 				prev: 'c3-8',
-				reward: { gold: 1270, characters: ['ybsl_053qiuer'] },
+				reward: { diamond: 55, gold: 1270, characters: ['ybsl_053qiuer'] },
 				enemy: [
 					{ name: '郑佳怡', id: 'ybsl_012zhengjiayi', level: 20, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '高年级生', id: 'ybsl_123xuelang', level: 20, tupolevel: 4, rank: 'rare', template: 'damger', buff: [] },
@@ -1040,7 +1040,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '吴雨欣全力出手，学院全员精英尽出。战后她将一枚钥匙交给你：「这是通往深渊的门钥。记住——陈爱琳曾是这所学院的学生会长。」封印彻底崩溃，深渊裂隙在学院中央裂开。你握着钥匙，跳了进去。',
 				prev: 'c3-9',
-				reward: { gold: 1320, characters: ['ybsl_054yueer', 'ybsl_059starsFall1'] },
+				reward: { diamond: 58, gold: 1320, characters: ['ybsl_054yueer', 'ybsl_059starsFall1'] },
 				enemy: [
 					{ name: '吴雨欣', id: 'ybsl_008wuyuxin', level: 25, tupolevel: 4, rank: 'legend', template: 'balanced', buff: [] },
 					{ name: '周玥', id: 'ybsl_010zhouyue', level: 25, tupolevel: 4, rank: 'epic', template: 'balanced', buff: [] },
@@ -1069,7 +1069,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '深渊入口，怨灵在黑暗中涌动——这些都是被教会和学院「牺牲」的灵魂。',
 				prev: null,
-				reward: { gold: 1380, characters: ['ybsl_055zhengyan'] },
+				reward: { diamond: 61, gold: 1380, characters: ['ybsl_055zhengyan'] },
 				enemy: [
 					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 25, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '深渊爪牙', id: 'ybsl_024yuetong', level: 25, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1086,7 +1086,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '越往深处，你听到回响——那是陈爱琳的喃喃自语：「为什么……为什么要献祭我们……」',
 				prev: 'c4-1',
-				reward: { gold: 1430, characters: ['ybsl_012zhengjiayi'] },
+				reward: { diamond: 63, gold: 1430, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
 					{ name: '深渊游魂', id: 'ybsl_037diamondqueen', level: 27, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
 					{ name: '裂魂傀儡', id: 'ybsl_121tujing', level: 27, tupolevel: 6, rank: 'rare', template: 'balanced', buff: [] },
@@ -1103,7 +1103,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '深渊守将尹超跃拦路：「她叫陈爱琳，曾是学院最优秀的学生会长。然后……她被献祭了。」',
 				prev: 'c4-2',
-				reward: { gold: 1490, characters: ['ybsl_037diamondqueen', 'ybsl_046jiangxuewu', 'ybsl_059starsFall4'] },
+				reward: { diamond: 66, gold: 1490, characters: ['ybsl_037diamondqueen', 'ybsl_046jiangxuewu', 'ybsl_059starsFall4'] },
 				enemy: [
 					{ name: '尹超跃', id: 'ybsl_013yinji', level: 29, tupolevel: 6, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '深渊爪牙', id: 'ybsl_024yuetong', level: 29, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1120,7 +1120,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '浓雾中杀机四伏。你逐渐拼凑出真相：教会与学院联手，将「异端」投入深渊献祭，以维持雪国结界。',
 				prev: 'c4-3',
-				reward: { gold: 1550, characters: ['ybsl_121tujing'] },
+				reward: { diamond: 69, gold: 1550, characters: ['ybsl_121tujing'] },
 				enemy: [
 					{ name: '深渊游魂', id: 'ybsl_037diamondqueen', level: 31, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
 					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 31, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1137,7 +1137,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '深渊之心传来搏动，魂潮如洪流卷来，裹挟着无数未竟的悲鸣。',
 				prev: 'c4-4',
-				reward: { gold: 1610, characters: ['ybsl_122wangbingyu'] },
+				reward: { diamond: 72, gold: 1610, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
 					{ name: '深渊爪牙', id: 'ybsl_024yuetong', level: 33, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '寒霜怨灵', id: 'ybsl_122wangbingyu', level: 33, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1154,7 +1154,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '孙丽松现身，指尖蓝焰幽冷：「陈爱琳是我的老师。你们这些活人，永远不会理解被抛弃的滋味。」',
 				prev: 'c4-5',
-				reward: { gold: 1660, characters: ['ybsl_123xuelang', 'ybsl_059starsFall2', 'ybsl_068qingyue'] },
+				reward: { diamond: 75, gold: 1660, characters: ['ybsl_123xuelang', 'ybsl_059starsFall2', 'ybsl_068qingyue'] },
 				enemy: [
 					{ name: '孙丽松', id: 'ybsl_001sunlisong', level: 36, tupolevel: 6, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 36, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1171,7 +1171,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '残魂被炼作兵器，无数学院制服在魂火中燃烧。这片深渊，吞没了多少青春。',
 				prev: 'c4-6',
-				reward: { gold: 1720, characters: ['ybsl_019shengyan'] },
+				reward: { diamond: 78, gold: 1720, characters: ['ybsl_019shengyan'] },
 				enemy: [
 					{ name: '深渊游魂', id: 'ybsl_037diamondqueen', level: 38, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
 					{ name: '深渊爪牙', id: 'ybsl_024yuetong', level: 38, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1188,7 +1188,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '逼近深渊核心，守卫的嘶吼震得魂屑簌簌而落。尽头，王座已隐约可见。',
 				prev: 'c4-7',
-				reward: { gold: 1780, characters: ['ybsl_045gaocong'] },
+				reward: { diamond: 81, gold: 1780, characters: ['ybsl_045gaocong'] },
 				enemy: [
 					{ name: '堕魂哨兵', id: 'ybsl_019shengyan', level: 40, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '噬魂者', id: 'ybsl_054yueer', level: 40, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1205,7 +1205,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '王汉桢剑光如霜：「陈爱琳没有堕落——她只是选择了复仇。而我们，选择了追随她。」',
 				prev: 'c4-8',
-				reward: { gold: 1850, characters: ['ybsl_024yuetong', 'ybsl_060liutianhang', 'ybsl_070lvyanqiu'] },
+				reward: { diamond: 84, gold: 1850, characters: ['ybsl_024yuetong', 'ybsl_060liutianhang', 'ybsl_070lvyanqiu'] },
 				enemy: [
 					{ name: '王汉桢', id: 'ybsl_006wanghanzhen', level: 43, tupolevel: 6, rank: 'epic', template: 'balanced', buff: [] },
 					{ name: '深渊爪牙', id: 'ybsl_024yuetong', level: 43, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1222,7 +1222,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '深渊尽头，陈爱琳自王座起身，异常平静：「你来了。我等你很久了——从你踏入教会的那一刻起，我就知道了。」她伸出手：「加入我，或者……消灭我。选择吧。」战后她露出解脱的笑容：「替我告诉学院……我不恨了。」她化作星尘消散，深渊随之崩塌。',
 				prev: 'c4-9',
-				reward: { gold: 1910, characters: ['ybsl_053qiuer', 'ybsl_047shan'] },
+				reward: { diamond: 87, gold: 1910, characters: ['ybsl_053qiuer', 'ybsl_047shan'] },
 				enemy: [
 					{ name: '陈爱琳', id: 'ybsl_002chenailin', level: 46, tupolevel: 6, rank: 'legend', template: 'balanced', buff: [] },
 					{ name: '孙丽松', id: 'ybsl_001sunlisong', level: 46, tupolevel: 6, rank: 'epic', template: 'damger', buff: [] },
@@ -1251,7 +1251,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '从深渊归来，你收到一封邀请函——书道峰会请柬，落款是涂山小红。你意识到，这不止是一场书法比赛。',
 				prev: null,
-				reward: { gold: 1970, characters: ['ybsl_054yueer'] },
+				reward: { diamond: 91, gold: 1970, characters: ['ybsl_054yueer'] },
 				enemy: [
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 47, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 47, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1268,7 +1268,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '张晴坐镇临帖台：「听说你去了深渊？有意思。来，先与我比一比这横平竖直。」',
 				prev: 'c5-1',
-				reward: { gold: 2030, characters: ['ybsl_055zhengyan', 'ybsl_079xiaoxin', 'ybsl_033xiaohui'] },
+				reward: { diamond: 94, gold: 2030, characters: ['ybsl_055zhengyan', 'ybsl_079xiaoxin', 'ybsl_033xiaohui'] },
 				enemy: [
 					{ name: '张晴', id: 'ybsl_018zhangqing', level: 48, tupolevel: 6, rank: 'epic', template: 'balanced', buff: [] },
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 48, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1285,7 +1285,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '峰会氛围渐浓，参会者中竟有许多熟悉面孔——教会的、学院的、深渊的……各方势力以笔为剑，暗中交锋。',
 				prev: 'c5-2',
-				reward: { gold: 2100, characters: ['ybsl_012zhengjiayi'] },
+				reward: { diamond: 97, gold: 2100, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 49, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '临帖学子', id: 'ybsl_045gaocong', level: 49, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1302,7 +1302,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '宣纸之上云气流转，参赛者们在行云流水中寻找手感，笔锋暗藏机锋。',
 				prev: 'c5-3',
-				reward: { gold: 2160, characters: ['ybsl_037diamondqueen'] },
+				reward: { diamond: 101, gold: 2160, characters: ['ybsl_037diamondqueen'] },
 				enemy: [
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 50, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '临帖学子', id: 'ybsl_045gaocong', level: 50, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1319,7 +1319,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '小慧挽袖研墨：「书道峰会表面是雅集，实际上是各方势力争夺星月之笔的战场。那支笔，能改写现实。」',
 				prev: 'c5-4',
-				reward: { gold: 2230, characters: ['ybsl_121tujing', 'ybsl_003yanshuang', 'ybsl_038bianqiuwen'] },
+				reward: { diamond: 104, gold: 2230, characters: ['ybsl_121tujing', 'ybsl_003yanshuang', 'ybsl_038bianqiuwen'] },
 				enemy: [
 					{ name: '小慧', id: 'ybsl_033xiaohui', level: 51, tupolevel: 6, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 51, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1336,7 +1336,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '赛场上笔走龙蛇，满堂喝彩。优雅的较量之下，是看不见的刀光。',
 				prev: 'c5-5',
-				reward: { gold: 2290, characters: ['ybsl_122wangbingyu'] },
+				reward: { diamond: 108, gold: 2290, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 52, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '临帖学子', id: 'ybsl_045gaocong', level: 52, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1353,7 +1353,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '墨香盈袖，大家在交流中渐入佳境。星月之笔的传说，也悄然流传。',
 				prev: 'c5-6',
-				reward: { gold: 2360, characters: ['ybsl_123xuelang'] },
+				reward: { diamond: 111, gold: 2360, characters: ['ybsl_123xuelang'] },
 				enemy: [
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 53, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '临帖学子', id: 'ybsl_045gaocong', level: 53, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1370,7 +1370,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '飞白的枯笔韵味十足，围观者连连称妙。笔意之间，似有星河倒影。',
 				prev: 'c5-7',
-				reward: { gold: 2430, characters: ['ybsl_019shengyan'] },
+				reward: { diamond: 115, gold: 2430, characters: ['ybsl_019shengyan'] },
 				enemy: [
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 54, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '临帖学子', id: 'ybsl_045gaocong', level: 54, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1387,7 +1387,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '决赛前的最后热身。你隐约感到，真正的高手尚未登场。',
 				prev: 'c5-8',
-				reward: { gold: 2500, characters: ['ybsl_045gaocong'] },
+				reward: { diamond: 118, gold: 2500, characters: ['ybsl_045gaocong'] },
 				enemy: [
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 55, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 55, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1404,7 +1404,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '秋儿与悦儿并肩立于终审台前，异口同声：「这一局，可要好好请教啦。」她们是星月之笔的守护者。',
 				prev: 'c5-9',
-				reward: { gold: 2570, characters: ['ybsl_024yuetong', 'ybsl_041mmuqin'] },
+				reward: { diamond: 122, gold: 2570, characters: ['ybsl_024yuetong', 'ybsl_041mmuqin'] },
 				enemy: [
 					{ name: '秋儿', id: 'ybsl_053qiuer', level: 56, tupolevel: 6, rank: 'rare', template: 'defense', buff: [] },
 					{ name: '悦儿', id: 'ybsl_054yueer', level: 56, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1433,7 +1433,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '峰会进入高潮，四方书友齐聚，气氛由文雅转为炽烈——所有人都知道，星月之笔即将现世。',
 				prev: null,
-				reward: { gold: 2640, characters: ['ybsl_053qiuer'] },
+				reward: { diamond: 126, gold: 2640, characters: ['ybsl_053qiuer'] },
 				enemy: [
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 58, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 58, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1450,7 +1450,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '江雪舞执笔而立，霜雪字迹飘落：「深渊的事我听说了。你选择了宽恕——但接下来的路，宽恕可能不够。」',
 				prev: 'c6-1',
-				reward: { gold: 2710, characters: ['ybsl_054yueer', 'ybsl_004zhangyujie', 'db_ybsl_067snake'] },
+				reward: { diamond: 130, gold: 2710, characters: ['ybsl_054yueer', 'ybsl_004zhangyujie', 'db_ybsl_067snake'] },
 				enemy: [
 					{ name: '江雪舞', id: 'ybsl_046jiangxuewu', level: 59, tupolevel: 6, rank: 'epic', template: 'defense', buff: [] },
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 59, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1467,7 +1467,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '梅香入墨，有人在红梅图上题下小诗。墨香里，藏着各自的执念。',
 				prev: 'c6-2',
-				reward: { gold: 2780, characters: ['ybsl_055zhengyan'] },
+				reward: { diamond: 133, gold: 2780, characters: ['ybsl_055zhengyan'] },
 				enemy: [
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 60, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '临帖学子', id: 'ybsl_045gaocong', level: 60, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1484,7 +1484,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '参赛者衣袂随挥毫的节奏轻轻扬起，笔锋如风，写意淋漓。',
 				prev: 'c6-3',
-				reward: { gold: 2850, characters: ['ybsl_012zhengjiayi'] },
+				reward: { diamond: 137, gold: 2850, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 61, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '临帖学子', id: 'ybsl_045gaocong', level: 61, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1501,7 +1501,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '涂山小红笑举朱笔，她是峰会的真正发起者：「深渊只是序章。星月之笔能改写一切——包括你的过去。你不想知道自己是谁吗？」',
 				prev: 'c6-4',
-				reward: { gold: 2920, characters: ['ybsl_037diamondqueen', 'ybsl_005wangruobing', 'ybsl_069xiangzi'] },
+				reward: { diamond: 141, gold: 2920, characters: ['ybsl_037diamondqueen', 'ybsl_005wangruobing', 'ybsl_069xiangzi'] },
 				enemy: [
 					{ name: '涂山小红', id: 'ybsl_017xiaohong', level: 62, tupolevel: 6, rank: 'legend', template: 'damger', buff: [] },
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 62, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1518,7 +1518,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '雨声与笔声相和，别有一番雅趣。梦里星河的传说，在雨幕中若隐若现。',
 				prev: 'c6-5',
-				reward: { gold: 3000, characters: ['ybsl_121tujing'] },
+				reward: { diamond: 145, gold: 3000, characters: ['ybsl_121tujing'] },
 				enemy: [
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 63, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 63, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1535,7 +1535,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '汉韵晋风，大家在古帖临摹中各抒己见。星月之笔的源头，指向更古老的领域。',
 				prev: 'c6-6',
-				reward: { gold: 3070, characters: ['ybsl_122wangbingyu'] },
+				reward: { diamond: 149, gold: 3070, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 64, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '临帖学子', id: 'ybsl_045gaocong', level: 64, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1552,7 +1552,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '山水意境在笔端缓缓晕开。云上之城、往昔回廊、星月神话的使者，陆续现身。',
 				prev: 'c6-7',
-				reward: { gold: 3150, characters: ['ybsl_123xuelang'] },
+				reward: { diamond: 153, gold: 3150, characters: ['ybsl_123xuelang'] },
 				enemy: [
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 65, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '临帖学子', id: 'ybsl_045gaocong', level: 65, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1569,7 +1569,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '佳作纷呈，盛会渐入高潮。所有人都为那支笔而来。',
 				prev: 'c6-8',
-				reward: { gold: 3220, characters: ['ybsl_019shengyan'] },
+				reward: { diamond: 158, gold: 3220, characters: ['ybsl_019shengyan'] },
 				enemy: [
 					{ name: '执笔童子', id: 'ybsl_019shengyan', level: 66, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '研墨侍女', id: 'ybsl_024yuetong', level: 66, tupolevel: 6, rank: 'rare', template: 'damger', buff: [] },
@@ -1586,7 +1586,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '王海茹与满城柒同展长卷：「最后一笔，与你共题。」战罢，她们将星月之笔交到你手中：「去梦里星河吧。那里有你想要的答案。」',
 				prev: 'c6-9',
-				reward: { gold: 3300, characters: ['ybsl_045gaocong', 'ybsl_049waner'] },
+				reward: { diamond: 162, gold: 3300, characters: ['ybsl_045gaocong', 'ybsl_049waner'] },
 				enemy: [
 					{ name: '王海茹', id: 'ybsl_015wanghairu', level: 67, tupolevel: 6, rank: 'epic', template: 'balanced', buff: [] },
 					{ name: '满城柒', id: 'ybsl_016manchengqi', level: 67, tupolevel: 6, rank: 'epic', template: 'damger', buff: [] },
@@ -1618,7 +1618,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '手持星月之笔，你踏入「往昔回廊」——一个由记忆构成的空间。蘋姉第一个出现：「欢迎回来——回到你最不愿面对的记忆里。」',
 				prev: null,
-				reward: { gold: 3370, characters: ['ybsl_024yuetong'] },
+				reward: { diamond: 166, gold: 3370, characters: ['ybsl_024yuetong'] },
 				enemy: [
 					{ name: '蘋姉', id: 'ybsl_042pingzi', level: 70, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '回廊游魂', id: 'ybsl_024yuetong', level: 70, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
@@ -1635,7 +1635,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '高聪与史庆宇并肩：「这里的一切都是你记忆的投影。打败我们——或者被记忆吞噬。」',
 				prev: 'c7-1',
-				reward: { gold: 3450, characters: ['ybsl_053qiuer'] },
+				reward: { diamond: 170, gold: 3450, characters: ['ybsl_053qiuer'] },
 				enemy: [
 					{ name: '高聪', id: 'ybsl_045gaocong', level: 73, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
 					{ name: '史庆宇', id: 'ybsl_025shiqingyu', level: 73, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
@@ -1652,7 +1652,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '王贺与贾雨桐封死退路。回廊中浮现的，是你最愧疚的场景——那些没来得及救的人。',
 				prev: 'c7-2',
-				reward: { gold: 3530, characters: ['ybsl_054yueer'] },
+				reward: { diamond: 175, gold: 3530, characters: ['ybsl_054yueer'] },
 				enemy: [
 					{ name: '王贺', id: 'ybsl_025wanghe', level: 76, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '贾雨桐', id: 'ybsl_020jiayutong', level: 76, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
@@ -1669,7 +1669,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '蛇妃从廊柱后探身，代表你内心的恐惧：「你在害怕什么？深渊？真相？还是……你自己？」',
 				prev: 'c7-3',
-				reward: { gold: 3610, characters: ['ybsl_055zhengyan'] },
+				reward: { diamond: 179, gold: 3610, characters: ['ybsl_055zhengyan'] },
 				enemy: [
 					{ name: '蛇妃', id: 'db_ybsl_067snake', level: 79, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '回廊游魂', id: 'ybsl_024yuetong', level: 79, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
@@ -1686,7 +1686,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '蘋姉与高聪再度拦路，往昔的记忆如潮水涌来，层层堆叠成墙。',
 				prev: 'c7-4',
-				reward: { gold: 3690, characters: ['ybsl_012zhengjiayi'] },
+				reward: { diamond: 183, gold: 3690, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
 					{ name: '蘋姉', id: 'ybsl_042pingzi', level: 82, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '高聪', id: 'ybsl_045gaocong', level: 82, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -1703,7 +1703,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '史庆宇与王贺的配合愈发默契，攻守之间滴水不漏，似要将你永远留在此处。',
 				prev: 'c7-5',
-				reward: { gold: 3770, characters: ['ybsl_037diamondqueen'] },
+				reward: { diamond: 188, gold: 3770, characters: ['ybsl_037diamondqueen'] },
 				enemy: [
 					{ name: '史庆宇', id: 'ybsl_025shiqingyu', level: 85, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
 					{ name: '王贺', id: 'ybsl_025wanghe', level: 85, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
@@ -1720,7 +1720,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '贾雨桐撑起屏障，蛇妃于其后吐信而笑。恐惧与愧疚，交织成网。',
 				prev: 'c7-6',
-				reward: { gold: 3850, characters: ['ybsl_121tujing'] },
+				reward: { diamond: 193, gold: 3850, characters: ['ybsl_121tujing'] },
 				enemy: [
 					{ name: '贾雨桐', id: 'ybsl_020jiayutong', level: 88, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
 					{ name: '蛇妃', id: 'db_ybsl_067snake', level: 88, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
@@ -1737,7 +1737,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '蘋姉与王贺同时出剑，快慢交织。每一剑，都戳在你未愈的心结上。',
 				prev: 'c7-7',
-				reward: { gold: 3930, characters: ['ybsl_122wangbingyu'] },
+				reward: { diamond: 197, gold: 3930, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
 					{ name: '蘋姉', id: 'ybsl_042pingzi', level: 91, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '王贺', id: 'ybsl_025wanghe', level: 91, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
@@ -1754,7 +1754,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '高聪、贾雨桐、史庆宇三人集结，似在等待某人号令。回廊深处，王座渐近。',
 				prev: 'c7-8',
-				reward: { gold: 4010, characters: ['ybsl_123xuelang'] },
+				reward: { diamond: 202, gold: 4010, characters: ['ybsl_123xuelang'] },
 				enemy: [
 					{ name: '高聪', id: 'ybsl_045gaocong', level: 94, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
 					{ name: '贾雨桐', id: 'ybsl_020jiayutong', level: 94, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
@@ -1771,7 +1771,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '房佳谕自王座起身——她是主角最深的记忆之一，一个曾经承诺保护却最终失去的人：「终于来了。你准备好面对最后的真相了吗？」战后她消散前轻声道：「去云上之城吧。那里有通往星月神话的路。」',
 				prev: 'c7-9',
-				reward: { gold: 4100, characters: ['ybsl_019shengyan', 'ybsl_048wushuang'] },
+				reward: { diamond: 206, gold: 4100, characters: ['ybsl_019shengyan', 'ybsl_048wushuang'] },
 				enemy: [
 					{ name: '房佳谕', id: 'ybsl_043fangjiayu', level: 97, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
 					{ name: '蛇妃', id: 'db_ybsl_067snake', level: 97, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
@@ -1803,7 +1803,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '云上之城的大门在脚下铺展。刘天杭与慕琴并肩：「这座城，是通往星月神话的最后一站。」',
 				prev: null,
-				reward: { gold: 4180, characters: ['ybsl_045gaocong'] },
+				reward: { diamond: 211, gold: 4180, characters: ['ybsl_045gaocong'] },
 				enemy: [
 					{ name: '刘天杭', id: 'ybsl_060liutianhang', level: 70, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
 					{ name: '慕琴', id: 'ybsl_041mmuqin', level: 70, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
@@ -1820,7 +1820,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '宋橤撑起护盾，周靈在侧蓄势：「再往上，可就没这么温柔了。」',
 				prev: 'c8-1',
-				reward: { gold: 4260, characters: ['ybsl_024yuetong'] },
+				reward: { diamond: 216, gold: 4260, characters: ['ybsl_024yuetong'] },
 				enemy: [
 					{ name: '宋橤', id: 'ybsl_059starsFall2', level: 73, tupolevel: 8, rank: 'epicfake', template: 'defense', buff: [] },
 					{ name: '周靈', id: 'ybsl_059starsFall3', level: 73, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
@@ -1837,7 +1837,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '李曉剑光如星，刘天杭回身再战：「又见面了，这次可不会留手。」',
 				prev: 'c8-2',
-				reward: { gold: 4350, characters: ['ybsl_053qiuer'] },
+				reward: { diamond: 221, gold: 4350, characters: ['ybsl_053qiuer'] },
 				enemy: [
 					{ name: '李曉', id: 'ybsl_059starsFall4', level: 76, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '刘天杭', id: 'ybsl_060liutianhang', level: 76, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -1854,7 +1854,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '慕琴与宋橤的配合行云流水，攻守如一，云阶之上难分难解。',
 				prev: 'c8-3',
-				reward: { gold: 4430, characters: ['ybsl_054yueer'] },
+				reward: { diamond: 226, gold: 4430, characters: ['ybsl_054yueer'] },
 				enemy: [
 					{ name: '慕琴', id: 'ybsl_041mmuqin', level: 79, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
 					{ name: '宋橤', id: 'ybsl_059starsFall2', level: 79, tupolevel: 8, rank: 'epicfake', template: 'defense', buff: [] },
@@ -1871,7 +1871,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '周靈与李曉双星辉映，星光如雨倾泻，照亮整座云城。',
 				prev: 'c8-4',
-				reward: { gold: 4520, characters: ['ybsl_055zhengyan'] },
+				reward: { diamond: 231, gold: 4520, characters: ['ybsl_055zhengyan'] },
 				enemy: [
 					{ name: '周靈', id: 'ybsl_059starsFall3', level: 82, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
 					{ name: '李曉', id: 'ybsl_059starsFall4', level: 82, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
@@ -1888,7 +1888,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '刘天杭与慕琴再度联手，攻势愈发凌厉。云城的力量，源于比深渊更古老的星轨。',
 				prev: 'c8-5',
-				reward: { gold: 4600, characters: ['ybsl_012zhengjiayi'] },
+				reward: { diamond: 235, gold: 4600, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
 					{ name: '刘天杭', id: 'ybsl_060liutianhang', level: 85, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
 					{ name: '慕琴', id: 'ybsl_041mmuqin', level: 85, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
@@ -1905,7 +1905,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '宋橤与周靈轮转攻防，云影在脚下不断变幻，令人难辨虚实。',
 				prev: 'c8-6',
-				reward: { gold: 4690, characters: ['ybsl_037diamondqueen'] },
+				reward: { diamond: 240, gold: 4690, characters: ['ybsl_037diamondqueen'] },
 				enemy: [
 					{ name: '宋橤', id: 'ybsl_059starsFall2', level: 88, tupolevel: 8, rank: 'epicfake', template: 'defense', buff: [] },
 					{ name: '周靈', id: 'ybsl_059starsFall3', level: 88, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
@@ -1922,7 +1922,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '李曉星剑破云，刘天杭乘势突进。云城守卫，一个接一个倒下。',
 				prev: 'c8-7',
-				reward: { gold: 4780, characters: ['ybsl_121tujing'] },
+				reward: { diamond: 246, gold: 4780, characters: ['ybsl_121tujing'] },
 				enemy: [
 					{ name: '李曉', id: 'ybsl_059starsFall4', level: 91, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '刘天杭', id: 'ybsl_060liutianhang', level: 91, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -1939,7 +1939,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '慕琴、宋橤、周靈三人集结于城心，似在等待城主现身。',
 				prev: 'c8-8',
-				reward: { gold: 4870, characters: ['ybsl_122wangbingyu'] },
+				reward: { diamond: 251, gold: 4870, characters: ['ybsl_122wangbingyu'] },
 				enemy: [
 					{ name: '慕琴', id: 'ybsl_041mmuqin', level: 94, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
 					{ name: '宋橤', id: 'ybsl_059starsFall2', level: 94, tupolevel: 8, rank: 'epicfake', template: 'defense', buff: [] },
@@ -1956,7 +1956,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '云城之巅，鞠熒于星轨环绕中现身：「能走到这里，你确实不简单。但星月神话不是你该涉足的领域。」战败后她让开道路：「去吧。彡在等你。」',
 				prev: 'c8-9',
-				reward: { gold: 4960, characters: ['ybsl_123xuelang', 'ybsl_076zhujun'] },
+				reward: { diamond: 256, gold: 4960, characters: ['ybsl_123xuelang', 'ybsl_076zhujun'] },
 				enemy: [
 					{ name: '鞠熒', id: 'ybsl_059starsFall1', level: 97, tupolevel: 8, rank: 'legend', template: 'damger', buff: [] },
 					{ name: '刘天杭', id: 'ybsl_060liutianhang', level: 97, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -1988,7 +1988,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '星月交辉的夜空下，岳瞳与盛妍拦路：「这片星空，容不得外人踏足。」',
 				prev: null,
-				reward: { gold: 5050, characters: ['ybsl_019shengyan'] },
+				reward: { diamond: 261, gold: 5050, characters: ['ybsl_019shengyan'] },
 				enemy: [
 					{ name: '岳瞳', id: 'ybsl_024yuetong', level: 70, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '盛妍', id: 'ybsl_019shengyan', level: 70, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
@@ -2005,7 +2005,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '卞秋雯稳守如山，小新巧笑倩兮：「想过去？先过我们这关。」',
 				prev: 'c9-1',
-				reward: { gold: 5140, characters: ['ybsl_045gaocong'] },
+				reward: { diamond: 266, gold: 5140, characters: ['ybsl_045gaocong'] },
 				enemy: [
 					{ name: '卞秋雯', id: 'ybsl_038bianqiuwen', level: 73, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
 					{ name: '小新', id: 'ybsl_079xiaoxin', level: 73, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -2022,7 +2022,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '王婉儿立于星辉之中，与岳瞳一同拦路：「神话的篇章，由我们守护。」',
 				prev: 'c9-2',
-				reward: { gold: 5230, characters: ['ybsl_024yuetong'] },
+				reward: { diamond: 272, gold: 5230, characters: ['ybsl_024yuetong'] },
 				enemy: [
 					{ name: '王婉儿', id: 'ybsl_049waner', level: 76, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
 					{ name: '岳瞳', id: 'ybsl_024yuetong', level: 76, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
@@ -2039,7 +2039,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '盛妍与卞秋雯的攻势交织，神话的余音在夜空回荡，仿佛亘古的钟鸣。',
 				prev: 'c9-3',
-				reward: { gold: 5320, characters: ['ybsl_053qiuer'] },
+				reward: { diamond: 277, gold: 5320, characters: ['ybsl_053qiuer'] },
 				enemy: [
 					{ name: '盛妍', id: 'ybsl_019shengyan', level: 79, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '卞秋雯', id: 'ybsl_038bianqiuwen', level: 79, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
@@ -2056,7 +2056,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '小新与王婉儿相视一笑，星河仿佛也轻声呢喃。她们在「修正」你的存在。',
 				prev: 'c9-4',
-				reward: { gold: 5410, characters: ['ybsl_054yueer'] },
+				reward: { diamond: 282, gold: 5410, characters: ['ybsl_054yueer'] },
 				enemy: [
 					{ name: '小新', id: 'ybsl_079xiaoxin', level: 82, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
 					{ name: '王婉儿', id: 'ybsl_049waner', level: 82, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
@@ -2073,7 +2073,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '岳瞳与盛妍双星并耀，星月光华令人无法直视。神话的秩序，冷而坚定。',
 				prev: 'c9-5',
-				reward: { gold: 5500, characters: ['ybsl_055zhengyan'] },
+				reward: { diamond: 288, gold: 5500, characters: ['ybsl_055zhengyan'] },
 				enemy: [
 					{ name: '岳瞳', id: 'ybsl_024yuetong', level: 85, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '盛妍', id: 'ybsl_019shengyan', level: 85, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
@@ -2090,7 +2090,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '卞秋雯与小新再度拦路，月影流光间暗藏杀机。修正之力，愈发凌厉。',
 				prev: 'c9-6',
-				reward: { gold: 5590, characters: ['ybsl_012zhengjiayi'] },
+				reward: { diamond: 293, gold: 5590, characters: ['ybsl_012zhengjiayi'] },
 				enemy: [
 					{ name: '卞秋雯', id: 'ybsl_038bianqiuwen', level: 88, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
 					{ name: '小新', id: 'ybsl_079xiaoxin', level: 88, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -2107,7 +2107,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '王婉儿与岳瞳的力量交汇，星与月的光轨在脚下缠绕，织成牢不可破的网。',
 				prev: 'c9-7',
-				reward: { gold: 5690, characters: ['ybsl_037diamondqueen'] },
+				reward: { diamond: 299, gold: 5690, characters: ['ybsl_037diamondqueen'] },
 				enemy: [
 					{ name: '王婉儿', id: 'ybsl_049waner', level: 91, tupolevel: 8, rank: 'legend', template: 'balanced', buff: [] },
 					{ name: '岳瞳', id: 'ybsl_024yuetong', level: 91, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
@@ -2124,7 +2124,7 @@ const eventList = {//事件列表
 				type: 'battle',
 				text: '盛妍、卞秋雯、小新三人汇聚，星月彼端似有巨影苏醒。神话，已全数降临。',
 				prev: 'c9-8',
-				reward: { gold: 5780, characters: ['ybsl_121tujing'] },
+				reward: { diamond: 304, gold: 5780, characters: ['ybsl_121tujing'] },
 				enemy: [
 					{ name: '盛妍', id: 'ybsl_019shengyan', level: 94, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
 					{ name: '卞秋雯', id: 'ybsl_038bianqiuwen', level: 94, tupolevel: 8, rank: 'epic', template: 'defense', buff: [] },
@@ -2141,7 +2141,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '彡踏光而来，她是星月神话的化身：「这场神话已经延续了千年。你的到来，既在预料之中，也在预料之外。」战后她微笑：「果然……你能走到这里，是因为你本就不属于任何一段历史。你真正的归宿，在梦里星河。」',
 				prev: 'c9-9',
-				reward: { gold: 5880, characters: ['ybsl_122wangbingyu', 'ybsl_107tushanshuili'] },
+				reward: { diamond: 310, gold: 5880, characters: ['ybsl_122wangbingyu', 'ybsl_107tushanshuili'] },
 				enemy: [
 					{ name: '彡', id: 'ybsl_047shan', level: 97, tupolevel: 8, rank: 'legend', template: 'damger', buff: [] },
 					{ name: '岳瞳', id: 'ybsl_024yuetong', level: 97, tupolevel: 8, rank: 'rare', template: 'damger', buff: [] },
@@ -2173,7 +2173,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '梦里星河荡漾，蚕自茧中探身：「这里的梦，由不得你醒。」——这是梦境的最外层。',
 				prev: null,
-				reward: { gold: 5970, characters: ['ybsl_123xuelang', 'ybsl_007wugege', 'ybsl_001sunlisong'] },
+				reward: { diamond: 315, gold: 5970, characters: ['ybsl_123xuelang', 'ybsl_007wugege', 'ybsl_001sunlisong'] },
 				enemy: [
 					{ name: '蚕', id: 'ybsl_026can', level: 92, tupolevel: 8, rank: 'epicfake', template: 'damger', buff: [] },
 					{ name: '雨', id: 'ybsl_027rain', level: 92, tupolevel: 8, rank: 'epicfake', template: 'defense', buff: [] },
@@ -2190,7 +2190,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '张汨与清月、香紫临水而立。她们负责筛选「清醒者」与「沉溺者」。',
 				prev: 'c10-1',
-				reward: { gold: 6070, characters: ['ybsl_019shengyan', 'ybsl_011gaoyuhang', 'ybsl_006wanghanzhen'] },
+				reward: { diamond: 321, gold: 6070, characters: ['ybsl_019shengyan', 'ybsl_011gaoyuhang', 'ybsl_006wanghanzhen'] },
 				enemy: [
 					{ name: '张汨', id: 'ybsl_047zhangmi', level: 94, tupolevel: 8, rank: 'epicfake', template: 'damger', buff: [] },
 					{ name: '清月', id: 'ybsl_068qingyue', level: 94, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
@@ -2207,7 +2207,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '星河核心，涂山水璃与朱焌并肩：「你终于来了——我们等你，等了许多个纪元。」全员以真名登场。',
 				prev: 'c10-2',
-				reward: { gold: 6160, characters: ['ybsl_045gaocong', 'ybsl_047zhangmi', 'ybsl_009liyushan'] },
+				reward: { diamond: 327, gold: 6160, characters: ['ybsl_045gaocong', 'ybsl_047zhangmi', 'ybsl_009liyushan'] },
 				enemy: [
 					{ name: '涂山水璃', id: 'ybsl_107tushanshuili', level: 96, tupolevel: 8, rank: 'legend', template: 'damger', buff: [] },
 					{ name: '朱焌', id: 'ybsl_076zhujun', level: 96, tupolevel: 8, rank: 'legend', template: 'defense', buff: [] },
@@ -2224,7 +2224,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '熙剑光夺目，张汨与清月封锁去路。梦境的考验，正式开始。',
 				prev: 'c10-3',
-				reward: { gold: 6260, characters: ['ybsl_024yuetong', 'ybsl_026can', 'ybsl_010zhouyue'] },
+				reward: { diamond: 333, gold: 6260, characters: ['ybsl_024yuetong', 'ybsl_026can', 'ybsl_010zhouyue'] },
 				enemy: [
 					{ name: '熙', id: 'ybsl_036bright', level: 98, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
 					{ name: '张汨', id: 'ybsl_047zhangmi', level: 98, tupolevel: 8, rank: 'epicfake', template: 'damger', buff: [] },
@@ -2241,7 +2241,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '香紫低语缠绕，黎与雨织成梦的牢笼。她们不是敌人，而是梦境对你的叩问。',
 				prev: 'c10-4',
-				reward: { gold: 6360, characters: ['ybsl_053qiuer', 'ybsl_027rain', 'ybsl_013yinji'] },
+				reward: { diamond: 339, gold: 6360, characters: ['ybsl_053qiuer', 'ybsl_027rain', 'ybsl_013yinji'] },
 				enemy: [
 					{ name: '香紫', id: 'ybsl_069xiangzi', level: 100, tupolevel: 8, rank: 'epic', template: 'balanced', buff: [] },
 					{ name: '黎', id: 'ybsl_029dawn', level: 100, tupolevel: 8, rank: 'epicfake', template: 'balanced', buff: [] },
@@ -2258,7 +2258,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '朱焌撑起梦之壁垒，六位真名齐至，再无杂音。梦的洪流，向你涌来。',
 				prev: 'c10-5',
-				reward: { gold: 6460, characters: ['ybsl_054yueer', 'ybsl_029dawn', 'ybsl_018huanqing'] },
+				reward: { diamond: 344, gold: 6460, characters: ['ybsl_054yueer', 'ybsl_029dawn', 'ybsl_018huanqing'] },
 				enemy: [
 					{ name: '朱焌', id: 'ybsl_076zhujun', level: 102, tupolevel: 8, rank: 'legend', template: 'defense', buff: [] },
 					{ name: '涂山水璃', id: 'ybsl_107tushanshuili', level: 102, tupolevel: 8, rank: 'legend', template: 'damger', buff: [] },
@@ -2275,7 +2275,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '蚕吐梦丝成网，张汨与香紫于网中伏击。每一根丝，都系着一段往事。',
 				prev: 'c10-6',
-				reward: { gold: 6560, characters: ['ybsl_055zhengyan', 'ybsl_025shiqingyu', 'ybsl_036bright'] },
+				reward: { diamond: 350, gold: 6560, characters: ['ybsl_055zhengyan', 'ybsl_025shiqingyu', 'ybsl_036bright'] },
 				enemy: [
 					{ name: '蚕', id: 'ybsl_026can', level: 104, tupolevel: 8, rank: 'epicfake', template: 'damger', buff: [] },
 					{ name: '张汨', id: 'ybsl_047zhangmi', level: 104, tupolevel: 8, rank: 'epicfake', template: 'damger', buff: [] },
@@ -2292,7 +2292,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '雨幕倾盆，熙与清月藏于雨中突袭。梦中的雨，淋湿了记忆。',
 				prev: 'c10-7',
-				reward: { gold: 6650, characters: ['ybsl_012zhengjiayi', 'ybsl_020jiayutong', 'ybsl_092handan'] },
+				reward: { diamond: 356, gold: 6650, characters: ['ybsl_012zhengjiayi', 'ybsl_020jiayutong', 'ybsl_092handan'] },
 				enemy: [
 					{ name: '雨', id: 'ybsl_027rain', level: 106, tupolevel: 8, rank: 'epicfake', template: 'defense', buff: [] },
 					{ name: '熙', id: 'ybsl_036bright', level: 106, tupolevel: 8, rank: 'epic', template: 'damger', buff: [] },
@@ -2309,7 +2309,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '涂山水璃、朱焌、彡率往昔篇章的BOSS们齐聚——教会、学院、深渊、峰会、回廊、云城、星月……万念交汇于星河。',
 				prev: 'c10-8',
-				reward: { gold: 6750, characters: ['ybsl_037diamondqueen', 'ybsl_025wanghe', 'ybsl_083xiaozhu'] },
+				reward: { diamond: 362, gold: 6750, characters: ['ybsl_037diamondqueen', 'ybsl_025wanghe', 'ybsl_083xiaozhu'] },
 				enemy: [
 					{ name: '涂山水璃', id: 'ybsl_107tushanshuili', level: 108, tupolevel: 8, rank: 'legend', template: 'damger', buff: [] },
 					{ name: '朱焌', id: 'ybsl_076zhujun', level: 108, tupolevel: 8, rank: 'legend', template: 'defense', buff: [] },
@@ -2326,7 +2326,7 @@ const eventList = {//事件列表
 				type: 'boss',
 				text: '星河尽头，涂山水璃、朱焌、彡立于梦的彼岸。涂山水璃道出最终真相：「梦里星河——是你的内心世界。你一直在寻找的答案，就在这里。你曾是不属于任何历史的存在——一个纯粹的观察者。但你在旅途中选择了介入、选择了连接、选择了宽恕。所以现在的你——已经真实地活着了。」',
 				prev: 'c10-9',
-				reward: { gold: 6850, characters: ['ybsl_121tujing', 'ybsl_008wuyuxin'] },
+				reward: { diamond: 368, gold: 6850, characters: ['ybsl_121tujing', 'ybsl_008wuyuxin'] },
 				enemy: [
 					{ name: '涂山水璃', id: 'ybsl_107tushanshuili', level: 110, tupolevel: 8, rank: 'legend', template: 'damger', buff: [] },
 					{ name: '朱焌', id: 'ybsl_076zhujun', level: 110, tupolevel: 8, rank: 'legend', template: 'defense', buff: [] },

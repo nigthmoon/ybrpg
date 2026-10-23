@@ -1566,6 +1566,8 @@ Battle.showBattleIntro = function showBattleIntro() {
  * 
  */
 Battle.end = function endBattle(winner) {
+	// 战斗结束：恢复底部导航与顶部资源条
+	toggleGameChrome(false);
 	const bs = battleState;
 	bs.phase = 'ended';
 	addBattleLog(winner === 'player' ? '战斗胜利！' : '战斗失败...');
@@ -1573,6 +1575,14 @@ Battle.end = function endBattle(winner) {
 	setTimeout(() => {
 		showBattleResult(winner);
 	}, 800);
+}
+
+// 战斗时隐藏底部导航(.game-nav-bar)与顶部资源条(#ybrpg-res-hud)，退出恢复
+function toggleGameChrome(hide) {
+	const nav = document.querySelector('.game-nav-bar');
+	const hud = document.getElementById('ybrpg-res-hud');
+	if (nav) nav.style.display = hide ? 'none' : '';
+	if (hud) hud.style.display = hide ? 'none' : '';
 }
 
 // ====== 6. 玩家操作面板 ======
@@ -2095,11 +2105,12 @@ Battle.showBattleResult = function showBattleResult(winner) {
 		// 奖励计划：优先用开战时预生成的（金币算准、战利品名字确定），否则退回旧 expectedGold
 		const plan = bs.rewardPlan || null;
 		const goldReward = (plan && plan.gold) || bs.expectedGold || 0;
+		const diamondReward = (plan && plan.diamond) || 0;
 		const rewardDiv = document.createElement('div');
 		rewardDiv.className = 'battle-result-stats battle-result-reward';
 		rewardDiv.style.color = '#ffd700';
 		rewardDiv.style.marginTop = '8px';
-		rewardDiv.innerHTML = `💰 金币奖励: +${goldReward}`;
+		rewardDiv.innerHTML = `💰 金币奖励: +${goldReward}` + (diamondReward > 0 ? `<br>💎 钻石奖励: +${diamondReward}` : '');
 		dialog.appendChild(rewardDiv);
 
 		// 战利品展示（武将 / 宝物 / 道具）：图标在上，名字在下
@@ -2156,6 +2167,8 @@ Battle.showBattleResult = function showBattleResult(winner) {
 			lootSection('获得武将', plan.chars);
 			lootSection('获得宝物', plan.treasures);
 			lootSection('获得道具', plan.items);
+			lootSection('获得材料', plan.drops);
+			lootSection('✨ 奇遇掉落', plan.encounter);
 		}
 	}
 
@@ -2285,6 +2298,8 @@ Battle.adaptTreasureEffects = function adaptTreasureEffects(treasureDef) {
  * @param {*} options 
  */
 Battle.start = function startBattle(playerTeam, enemyTeam, options = {}) {
+	// 进入战斗：隐藏底部导航与顶部资源条（沉浸式）
+	toggleGameChrome(true);
 	// ===== 【新增】刷新全队编译属性 =====
 	const teamBonuses = Stat.teamBonuses();
 	(window.currentTeam || []).forEach(instId => {

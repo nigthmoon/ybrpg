@@ -12,7 +12,7 @@ import { Game } from './core';
 import { ITEM_DEFS } from './item';
 import { buildFodderArrays, buildSkillSection, compileCharacterStats, getRankLabel, mergeNoOverwrite, refreshAllTeamSlots, renderTeamView, showTeamCharInfo, syncTreasureEquipData } from './team';
 import { DIFFICULTY_SCALE, buildRewardPlan, computeLevelGold, doSweep } from './dungeon';
-import { formatPrice, getRankColor, normalizePrice, refreshShopItems } from './shop';
+import { formatPrice, getRankColor, normalizePrice, refreshShopItems, renderShopView } from './shop';
 import { getSaveNamespace } from './saveNs';
 import { createCharacter } from './charFactory';
 import { api, getToken } from '../api/client';
@@ -37,7 +37,7 @@ function openFloatPanel(title, renderFn, opts) {
 	const x = document.createElement('button');
 	x.className = 'home-float-close';
 	x.textContent = '✕';
-	const close = () => { if (window.__homeFloatClose === close) window.__homeFloatClose = null; if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
+	const close = () => { if (window.__homeFloatClose === close) window.__homeFloatClose = null; if (overlay.parentNode) overlay.parentNode.removeChild(overlay); refreshHomeRedDot(); };
 	window.__homeFloatClose = close;
 	x.onclick = (e) => { e.stopPropagation(); close(); };
 	// 常驻返回键（可选）：置于标题左侧，点击直接关浮窗回主页
@@ -106,6 +106,7 @@ function renderHomeView(container) {
 	infoCol.className = 'home-account-info';
 	const nm = document.createElement('span');
 	nm.className = 'home-account-nick';
+	nm.id = 'home-account-nick';
 	nm.textContent = nick;
 	const lv = document.createElement('span');
 	lv.className = 'home-account-level';
@@ -113,12 +114,19 @@ function renderHomeView(container) {
 	lv.textContent = `Lv.${lvl}`;
 	infoCol.appendChild(nm); infoCol.appendChild(lv);
 	accBar.appendChild(av); accBar.appendChild(infoCol);
-	container.appendChild(accBar);
+	// 顶部行：账号 UI(左) + 商店入口(右上角)
+	const topRow = document.createElement('div');
+	topRow.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;width:100%;margin-top:35px;flex-shrink:0;';
+	accBar.style.marginTop = '0';
+	const shopBtn = mkHomeBtn('🛒 商店', () => openFloatPanel('商店', (body) => renderShopView(body)));
+	topRow.appendChild(accBar); topRow.appendChild(shopBtn);
+	container.appendChild(topRow);
 
 	// ===== 靠上：活动 =====
 	const topArea = document.createElement('div');
 	topArea.className = 'home-top-area';
 	const actBtn = mkHomeBtn('活动', () => openFloatPanel('活动', (body) => renderActivityView(body)));
+	actBtn.id = 'home-activity-btn';
 	if (hasSignReward() || hasTaskReward()) addRedDot(actBtn); // 有可领时“活动”亮红点
 	topArea.appendChild(actBtn);
 	container.appendChild(topArea);
@@ -208,6 +216,15 @@ function addRedDot(btn) {
 	const dot = document.createElement('span');
 	dot.className = 'settings-red-dot';
 	btn.appendChild(dot);
+}
+// 按当前状态刷新主页“活动”按钮红点（领取/签到后调用，移除或补上）
+function refreshHomeRedDot() {
+	const btn = document.getElementById('home-activity-btn');
+	if (!btn) return;
+	const dot = btn.querySelector('.settings-red-dot');
+	const show = hasSignReward() || hasTaskReward();
+	if (show && !dot) addRedDot(btn);
+	else if (!show && dot) dot.remove();
 }
 
 // 渲染：图鉴目录（进入后选择 角色图鉴 / 宝物图鉴）
@@ -827,7 +844,7 @@ const DAILY_TASK_DEFS = [
 	{ id: 'buy', name: '在商店购买 1 次', target: 1, reward: 150, hook: 'buy' },
 	{ id: 'recruit', name: '招募 1 次（单抽/十连皆可）', target: 1, reward: 150, hook: 'recruit' },
 	{ id: 'clear_normal_5', name: '主线普通打 5 次', target: 5, reward: 120, hook: 'clear_normal' },
-	{ id: 'clear_normal_30', name: '主线普通打 30 次', target: 30, reward: 400, hook: 'clear_normal' },
+	{ id: 'clear_normal_30', name: '主线普通打 30 次', target: 30, reward: 400, hook: 'clear_normal', itemReward: { id: 'item_refresh_token', count: 1 } },
 	{ id: 'clear_nightmare_1', name: '主线噩梦打 1 次', target: 1, reward: 150, hook: 'clear_nightmare' },
 	{ id: 'clear_nightmare_5', name: '主线噩梦打 5 次', target: 5, reward: 400, hook: 'clear_nightmare' },
 	{ id: 'clear_nightmare_30', name: '主线噩梦打 30 次', target: 30, reward: 1200, hook: 'clear_nightmare' },
@@ -835,7 +852,8 @@ const DAILY_TASK_DEFS = [
 	{ id: 'clear_hell_5', name: '主线地狱打 5 次', target: 5, reward: 800, hook: 'clear_hell' },
 	{ id: 'clear_hell_30', name: '主线地狱打 30 次', target: 30, reward: 2400, hook: 'clear_hell' },
 	{ id: 'clear_secret_1', name: '秘境打 1 次', target: 1, reward: 150, hook: 'clear_secret' },
-	{ id: 'clear_secret_3', name: '秘境打 3 次', target: 3, reward: 400, hook: 'clear_secret' },
+	{ id: 'clear_secret_3', name: '秘境打 3 次', target: 3, reward: 400, hook: 'clear_secret', itemReward: { id: 'item_refresh_token', count: 1 } },
+	{ id: 'use_refresh', name: '使用 1 次刷新令重置次数', target: 1, reward: 100, hook: 'use_refresh' },
 ];
 
 // 根据章节与难度，记录对应难度的主线/秘境通关进度
@@ -861,7 +879,7 @@ function ensureDailyData() {
 		window.dailyTasks = {
 			date: today,
 			tasks: DAILY_TASK_DEFS.map(d => ({
-				id: d.id, name: d.name, target: d.target, reward: d.reward,
+				id: d.id, name: d.name, target: d.target, reward: d.reward, itemReward: d.itemReward || null,
 				progress: 0, claimed: false,
 			})),
 		};
@@ -872,7 +890,7 @@ function ensureDailyData() {
 		window.dailyTasks.tasks = DAILY_TASK_DEFS.map(d => {
 			const old = window.dailyTasks.tasks.find(x => x.id === d.id);
 			return {
-				id: d.id, name: d.name, target: d.target, reward: d.reward,
+				id: d.id, name: d.name, target: d.target, reward: d.reward, itemReward: d.itemReward || null,
 				progress: old ? old.progress : 0,
 				claimed: old ? old.claimed : false,
 			};
@@ -901,10 +919,15 @@ function claimDailyTask(taskId) {
 	const goldReward = t.reward * 10;
 	window.diamond = (window.diamond || 0) + t.reward;
 	window.gameGold = (window.gameGold || 0) + goldReward;
+	let itemTip = '';
+	if (t.itemReward && t.itemReward.id && t.itemReward.count > 0 && Game.Data && Game.Data.addItem) {
+		Game.Data.addItem(t.itemReward.id, t.itemReward.count);
+		itemTip = ` + ${(ITEM_DEFS[t.itemReward.id] && ITEM_DEFS[t.itemReward.id].name) || t.itemReward.id}×${t.itemReward.count}`;
+	}
 	t.claimed = true;
 	updateResourceHUD();
 	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
-	Game.toast(`任务完成！获得 ${t.reward} 💎 + ${goldReward} 💰`, 'success');
+	Game.toast(`任务完成！获得 ${t.reward} 💎 + ${goldReward} 💰${itemTip}`, 'success');
 	return true;
 }
 
@@ -929,10 +952,12 @@ function doDailySign() {
 	const goldReward = reward * 10;
 	window.diamond = (window.diamond || 0) + reward;
 	window.gameGold = (window.gameGold || 0) + goldReward;
+	// 签到附赠刷新令×1（用于重置关卡今日挑战次数）
+	if (Game.Data && Game.Data.addItem) Game.Data.addItem('item_refresh_token', 1);
 	window.dailySign.lastSignDate = today;
 	updateResourceHUD();
 	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
-	Game.toast(`签到成功！获得 ${reward} 💎 + ${goldReward} 💰`, 'success');
+	Game.toast(`签到成功！获得 ${reward} 💎 + ${goldReward} 💰 + 刷新令×1`, 'success');
 	return true;
 }
 
@@ -960,12 +985,14 @@ function renderDailySignView(container) {
 	DAILY_SIGN_REWARDS.forEach((rw, i) => {
 		const day = i + 1;
 		const cell = document.createElement('div');
-		// 三态：今天已签的那格(金) / 今天待签到的那格(蓝绿高亮+光晕) / 其它未签(暗)
+		// 四态：今天已签(金) / 往已签(淡金高亮+✓) / 今天待签到(蓝绿+光晕) / 未签(暗)
 		const signedTodayCell = signed && ((window.dailySign.streak - 1) % DAILY_SIGN_REWARDS.length) === i;
 		const todayTargetCell = !signed && (window.dailySign.streak % DAILY_SIGN_REWARDS.length) === i;
+		const pastSigned = i < (signed ? ((window.dailySign.streak - 1) % DAILY_SIGN_REWARDS.length) : (window.dailySign.streak % DAILY_SIGN_REWARDS.length));
 		let bg = '#222', border = '1px solid #555', extra = '';
 		if (signedTodayCell) { bg = 'rgba(255,215,0,0.2)'; border = '1px solid #ffd700'; }
 		else if (todayTargetCell) { bg = 'rgba(64,196,255,0.22)'; border = '1px solid #40c4ff'; extra = 'box-shadow:0 0 10px rgba(64,196,255,.55);'; }
+		else if (pastSigned) { bg = 'rgba(255,215,0,0.10)'; border = '1px solid rgba(255,215,0,0.55)'; }
 		cell.style.cssText = `
 			border:${border};border-radius:8px;padding:12px 6px;text-align:center;
 			background:${bg};${extra}
@@ -973,6 +1000,7 @@ function renderDailySignView(container) {
 		let todayTag = '';
 		if (todayTargetCell) todayTag = `<div style="color:#40c4ff;font-size:11px;font-weight:bold;margin-top:3px;">● 待签到</div>`;
 		else if (signedTodayCell) todayTag = `<div style="color:#ffd700;font-size:11px;font-weight:bold;margin-top:3px;">✓ 已签到</div>`;
+		else if (pastSigned) todayTag = `<div style="color:rgba(255,215,0,0.8);font-size:11px;font-weight:bold;margin-top:3px;">✓ 已签</div>`;
 		cell.innerHTML = `<div style="color:#aaa;font-size:12px;">第${day}天</div>
 			<div style="font-size:18px;margin:6px 0;">💎</div>
 			<div style="color:#ffd700;font-weight:bold;">${rw}</div>
@@ -2042,10 +2070,27 @@ function levelTriesLeft(eventId) {
 }
 // 消耗一次（挑战或扫荡各算一次）
 function consumeLevelTry(eventId) {
-  const obj = getDailyTries();
-  if (!obj.counts) obj.counts = {};
-  obj.counts[eventId] = (obj.counts[eventId] || 0) + 1;
-  try { localStorage.setItem(dailyTriesKey(), JSON.stringify(obj)); } catch (e) { /* ignore */ }
+	const obj = getDailyTries();
+	if (!obj.counts) obj.counts = {};
+	obj.counts[eventId] = (obj.counts[eventId] || 0) + 1;
+	try { localStorage.setItem(dailyTriesKey(), JSON.stringify(obj)); } catch (e) { /* ignore */ }
+}
+// 刷新令：重置某关卡今日次数（恢复到满）
+function resetLevelTries(eventId) {
+	const obj = getDailyTries();
+	if (obj.counts) {
+		obj.counts[eventId] = 0;
+		try { localStorage.setItem(dailyTriesKey(), JSON.stringify(obj)); } catch (e) { /* ignore */ }
+	}
+}
+// 返还一次（战败退还每日次数）
+function refundLevelTry(eventId) {
+	const obj = getDailyTries();
+	if (obj.counts && obj.counts[eventId] > 0) {
+		obj.counts[eventId] -= 1;
+		if (obj.counts[eventId] <= 0) delete obj.counts[eventId];
+		try { localStorage.setItem(dailyTriesKey(), JSON.stringify(obj)); } catch (e) { /* ignore */ }
+	}
 }
 
 // ---------- 钻石 ----------
@@ -2218,6 +2263,7 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 	panel.innerHTML =
 		`<div class="reward-title">📦 产出预览</div>` +
 		`<div class="reward-sub">${diffName}难度 · ${event.name || eventId}</div>` +
+		(event.text ? `<div class="reward-text"><span class="reward-text-label">关卡简介</span>${event.text}</div>` : '') +
 		`<div class="reward-gold">💰 ${plan.gold || 0} <small>金币</small></div>` +
 		(!isSP && plan.diamond ? `<div class="reward-gold">💎 ${plan.diamond} <small>钻石</small></div>` : '') +
 		`<div class="reward-stamina${staminaOk ? '' : ' insufficient'}">⚡ 消耗 ${cost} 体力（当前 ${window.stamina || 0}/${window.maxStamina || STAMINA_MAX}）</div>` +
@@ -2225,8 +2271,7 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 		(isSP && secretText ? `<div class="preview-secret-note">★ ${secretText}</div>` : '') +
 		(isSP
 			? `<div class="reward-empty" style="margin-top:10px;">（秘境仅产出金币）</div>`
-			: section('获得宝物', plan.treasures) + section('获得道具', plan.items) +
-			  `<div class="reward-empty" style="margin-top:6px;">（关卡奖励已改革为钻石，不再掉落武将）</div>`);
+			: section('获得宝物', plan.treasures) + section('获得道具', plan.items));
 
 	const close = () => { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); };
 	overlay.onclick = (e) => { if (e.target === overlay) close(); };
@@ -2253,7 +2298,7 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 
 	const sweepBtn = document.createElement('button');
 	sweepBtn.className = 'reward-ok-btn preview-btn-sweep';
-	sweepBtn.textContent = '扫荡';
+	sweepBtn.textContent = '扫荡剩余次';
 	if (!opts.canSweep || !staminaOk || !triesOk) {
 		sweepBtn.disabled = true;
 		sweepBtn.style.opacity = '0.5';
@@ -2263,34 +2308,44 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 		sweepBtn.onclick = (e) => {
 			e.stopPropagation();
 			close();
+			// 一次扫完剩余次数：受“今日剩余次数 + 体力可支持次数”双重上限约束
+			const sweepCount = Math.max(1, Math.min(triesLeft, Math.floor((window.stamina || 0) / cost)));
 			doSweep(event, diffKey, index, eventId, chapterKey, () => {
 				showOutputPreview(event, diffKey, index, eventId, chapterKey, opts);
-			});
+			}, sweepCount);
 		};
 	}
 
-	const sweep5Btn = document.createElement('button');
-	sweep5Btn.className = 'reward-ok-btn preview-btn-sweep';
-	const sweep5Count = Math.max(1, Math.min(5, triesLeft)); // 不足5次时扫剩余次数
-	sweep5Btn.textContent = `扫荡${sweep5Count}次`;
-	if (!opts.canSweep || !staminaOk || !triesOk) {
-		sweep5Btn.disabled = true;
-		sweep5Btn.style.opacity = '0.5';
-		sweep5Btn.style.cursor = 'not-allowed';
-		sweep5Btn.title = !opts.canSweep ? '仅已通关关卡可扫荡' : (!triesOk ? '今日次数已用完' : '体力不足');
-	} else {
-		sweep5Btn.onclick = (e) => {
-			e.stopPropagation();
-			close();
-			doSweep(event, diffKey, index, eventId, chapterKey, () => {
-				showOutputPreview(event, diffKey, index, eventId, chapterKey, opts);
-			}, sweep5Count);
-		};
-	}
 
 	btnRow.appendChild(challengeBtn);
 	btnRow.appendChild(sweepBtn);
-	btnRow.appendChild(sweep5Btn);
+	// 刷新令：已用掉次数时可重置该关今日次数（消耗 1 刷新令）
+	if (triesLeft < DAILY_LEVEL_TRIES_MAX) {
+		const tokenHave = (Game.Data && Game.Data.getItemCount) ? Game.Data.getItemCount('item_refresh_token') : 0;
+		const refreshBtn = document.createElement('button');
+		refreshBtn.className = 'reward-ok-btn preview-btn-refresh';
+		refreshBtn.textContent = '🎟️ 刷新令重置';
+		if (tokenHave <= 0) {
+			refreshBtn.disabled = true;
+			refreshBtn.style.opacity = '0.5';
+			refreshBtn.style.cursor = 'not-allowed';
+			refreshBtn.title = '没有刷新令（完成每日任务可获得）';
+		} else {
+			refreshBtn.onclick = (e) => {
+				e.stopPropagation();
+				Game.confirmDialog(`消耗 1 个刷新令，重置【${event.name || eventId}】今日次数（剩余 ${triesLeft} → ${DAILY_LEVEL_TRIES_MAX}）？`, () => {
+					if (Game.Data && Game.Data.getItemCount && Game.Data.getItemCount('item_refresh_token') <= 0) { Game.toast('刷新令不足', 'warning'); return; }
+					Game.Data.removeItem('item_refresh_token', 1);
+					resetLevelTries(eventId);
+					addDailyTaskProgress('use_refresh', 1);
+					Game.toast('已重置今日次数', 'success');
+					close();
+					showOutputPreview(event, diffKey, index, eventId, chapterKey, opts);
+				});
+			};
+		}
+		btnRow.appendChild(refreshBtn);
+	}
 	panel.appendChild(btnRow);
 	overlay.appendChild(panel);
 	document.body.appendChild(overlay);
@@ -2391,7 +2446,7 @@ function showRewardPanel(opt) {
 // 新增: 封装隐藏其他视图的函数
 // 修改hideOtherViews函数，加入save-view
 function hideOtherViews(currentViewId) {
-	const views = ['main-view', 'team-view', 'bag-view', 'dungeon-view', 'shop-view', 'settings-view', 'save-view', 'battle-view'];
+	const views = ['main-view', 'team-view', 'bag-view', 'dungeon-view', 'shop-view', 'settings-view', 'save-view', 'battle-view', 'home-view'];
 	views.forEach(viewId => {
 		if (viewId !== currentViewId) {
 			const view = document.getElementById(viewId);
@@ -2639,10 +2694,10 @@ function initNewGame() {
 			window.currentTeam[0] = tmain;
 		}
 		refreshAllTeamSlots();
-		refreshShopItems('normal');
-		refreshShopItems('advanced');
-
 	}
+	// 初始化商店数据（新开局与读档都就绪，避免首次进入商店为空）
+	refreshShopItems('normal');
+	refreshShopItems('advanced');
 	// ... 保存存档等后续操作 ...
 	// SaveManager.autoSave();
 }
@@ -3720,7 +3775,7 @@ function renderSaveView(container, fromGame = true) {
  */
 
 // 导出本模块定义的函数（供其他模块 import）
-export { renderHomeView, renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, levelTriesLeft, consumeLevelTry, DAILY_LEVEL_TRIES_MAX, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView, collectCurrentSaveData, exportCurrentSave, importSaveData, showSaveSlotPicker, writeImportedSave };
+export { renderHomeView, renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, levelTriesLeft, consumeLevelTry, refundLevelTry, resetLevelTries, DAILY_LEVEL_TRIES_MAX, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView, collectCurrentSaveData, exportCurrentSave, importSaveData, showSaveSlotPicker, writeImportedSave };
 
 // 暴露给外部模块（shared 注册表 / window / Game）
 shared.hideOtherViews = hideOtherViews;

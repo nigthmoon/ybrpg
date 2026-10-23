@@ -298,7 +298,13 @@ export const useGameStore = defineStore('game', {
     backFromAccount() {
       const rt = this.accountReturnToGame;
       this.accountReturnToGame = false;
-      if (rt) { this.inGame = true; this.startHeartbeat(); }
+      if (rt) {
+        this.inGame = true;
+        this.startHeartbeat();
+        // 返回游戏：重渲染当前视图，确保昵称/主角名等改动即时生效
+        const el = this.activeView && document.getElementById(this.activeView);
+        if (el) { el.innerHTML = ''; this._renderView(this.activeView, el); el.style.display = 'flex'; }
+      }
       if (router.currentRoute.value.path !== '/') router.push('/');
     },
 

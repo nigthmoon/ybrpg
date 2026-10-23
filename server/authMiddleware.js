@@ -25,9 +25,9 @@ export function authRequired(req, res, next) {
     return res.status(401).json({ error: 'SESSION_REVOKED', message: '你已被踢下线（其他设备登录或长时间挂机）' });
   }
   // 挂机踢：超过 SESSION_IDLE_KICK_SEC 未产生存档同步则吊销
-  const idle = db.prepare("SELECT id FROM sessions WHERE id = ? AND last_save < datetime('now', ?)").get(s.id, `-${SESSION_IDLE_KICK_SEC} seconds`);
+  const idle = db.prepare("SELECT id FROM sessions WHERE id = ? AND last_save < datetime('now', '+8 hours', ?)").get(s.id, `-${SESSION_IDLE_KICK_SEC} seconds`);
   if (idle) {
-    db.prepare("UPDATE sessions SET revoked_at = datetime('now') WHERE id = ?").run(s.id);
+    db.prepare("UPDATE sessions SET revoked_at = datetime('now', '+8 hours') WHERE id = ?").run(s.id);
     return res.status(401).json({ error: 'SESSION_IDLE', message: '长时间未产生存档，已自动退出，请重新登录' });
   }
   req.user = { id: payload.sub, username: payload.username, jti: payload.jti };

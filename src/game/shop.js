@@ -329,7 +329,7 @@ function showItemDetail(item) {
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		z-index: 1000;
+		z-index: 10001;
 	`;
 
 	// 创建详情卡片
@@ -535,7 +535,7 @@ function renderShopLegacyView(container) {
 	// if (!window.shopData || !window.shopData.items || window.shopData.items.length === 0) {
 	//	 refreshShopItems(window.shopMode);
 	// }
-	if ((!window.shopData || (window.shopMode === 'normal' && !window.shopData.items) || (window.shopMode === 'advanced' && !window.shopData.items))) {
+	if ((!window.shopData || (window.shopMode === 'normal' && !window.shopData.items) || (window.shopMode === 'advanced' && !window.shopData.spitems))) {
 		refreshShopItems(window.shopMode, ['gold', 'diamond']);
 	}
 

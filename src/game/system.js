@@ -1257,20 +1257,20 @@ class UI {
 			}
 
 			try {
-				const bagView = document.getElementById('bag-view');
-				if (bagView && bagView.style.display !== 'none') {
-					const selectedCharCard = bagView.querySelector('.charbag-char-card.selected');
-					const selectedEquipCard = bagView.querySelector('.equipbag-treasure-card.selected');
+				const bagContainer = (window.__bagBody && window.__bagBody.isConnected) ? window.__bagBody.parentElement : null;
+				if (bagContainer) {
+					const selectedCharCard = bagContainer.querySelector('.charbag-char-card.selected');
+					const selectedEquipCard = bagContainer.querySelector('.equipbag-treasure-card.selected');
 
 					const selectedCharInstanceId = selectedCharCard ? selectedCharCard.dataset.instanceId : null;
 					const selectedCharId = selectedCharCard ? selectedCharCard.dataset.charId : null;
 					const selectedTreasureInstanceId = selectedEquipCard ? selectedEquipCard.dataset.treasureInstanceId : null;
 
-					shared.renderBagView(bagView);
+					shared.renderBagView(bagContainer);
 
 					setTimeout(() => {
 						if (selectedCharInstanceId) {
-							const newCharCard = bagView.querySelector(`.charbag-char-card[data-instance-id="${selectedCharInstanceId}"]`);
+							const newCharCard = bagContainer.querySelector(`.charbag-char-card[data-instance-id="${selectedCharInstanceId}"]`);
 							if (newCharCard) {
 								newCharCard.classList.add('selected');
 								const instData = window.charBagData && window.charBagData[selectedCharInstanceId];
@@ -1285,7 +1285,7 @@ class UI {
 						}
 
 						if (selectedTreasureInstanceId) {
-							const newEquipCard = bagView.querySelector(`.equipbag-treasure-card[data-treasure-instance-id="${selectedTreasureInstanceId}"]`);
+							const newEquipCard = bagContainer.querySelector(`.equipbag-treasure-card[data-treasure-instance-id="${selectedTreasureInstanceId}"]`);
 							if (newEquipCard) {
 								newEquipCard.classList.add('selected');
 								newEquipCard.click();

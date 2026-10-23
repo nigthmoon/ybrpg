@@ -37,8 +37,8 @@ router.put('/:slot', (req, res) => {
   const json = typeof data === 'string' ? data : JSON.stringify(data);
   db.prepare(`
     INSERT INTO saves (user_id, slot, data, updated_at)
-    VALUES (?, ?, ?, datetime('now'))
-    ON CONFLICT(user_id, slot) DO UPDATE SET data = excluded.data, updated_at = datetime('now')
+    VALUES (?, ?, ?, datetime('now', '+8 hours'))
+    ON CONFLICT(user_id, slot) DO UPDATE SET data = excluded.data, updated_at = datetime('now', '+8 hours')
   `).run(req.user.id, slot, json);
   return res.json({ ok: true, slot });
 });
