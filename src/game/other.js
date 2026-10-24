@@ -143,8 +143,350 @@ function renderHomeView(container) {
 	bottomArea.appendChild(mkHomeBtn('背包', () => openFloatPanel('背包', (body) => { if (window.renderBagView) window.renderBagView(body); })));
 	bottomArea.appendChild(mkHomeBtn('图鉴', () => openFloatPanel('图鉴', (body) => renderGalleryMenuView(body))));
 	bottomArea.appendChild(mkHomeBtn('设置', () => openFloatPanel('设置', (body) => renderSettingsView(body))));
+	bottomArea.appendChild(mkHomeBtn('炼化', () => openFloatPanel('炼化', (body) => renderRefineView(body))));
 	bottomArea.appendChild(mkHomeBtn('每日任务', () => openFloatPanel('每日任务', (body) => renderDailyTaskView(body))));
 	container.appendChild(bottomArea);
+}
+
+// ==================== 炼化（分解武将/宝物 → 将魂 / 碎屑） ====================
+// 收益表：武将→将魂（按品质；神品 kami 不可炼化）；宝物→碎屑（按 1~6 档）
+const REFINE_CHAR_SOUL = { junk: 50, common: 150, rare: 600, epicfake: 1200, epic: 2500, legend: 4000 };
+const REFINE_TREASURE_SHARD = { 1: 50, 2: 150, 3: 600, 4: 1200, 5: 2500, 6: 4000 };
+const REFINE_TREASURE_COLOR = { 1: '#88cc88', 2: '#44aaff', 3: '#a335ee', 4: '#ff8800', 5: '#ff8d8d', 6: '#ffff00' };
+// 折算用常量（与 team.js 的培养成本表保持一致）
+const REFINE_RANK_ORDER = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
+const REFINE_AWAKEN_COST = { junk: 1, common: 2, rare: 4, epicfake: 8, epic: 16, legend: 32 };
+const REFINE_STONE_COST = [10, 100, 280, 800, 1400, 2200, 3200, 4800, 6800, 9000, 13000, 16500, 21000, 27000, 36000, 48000, 60000, 75000, 92000, 113000];
+
+function charHasAbsorbed(inst) { return (inst.tupoList || []).some(s => s && s._absorbedTreasure); }
+function charBaseRank(inst) { const b = characterList[inst.charId]; return (b && b.rank) || inst.rank || 'junk'; }
+function isCharTrained(inst) {
+	return (inst.level || 1) > 1 || (inst.tupolevel || 0) > 0 || (inst.rank || 'junk') !== charBaseRank(inst) || charHasAbsorbed(inst);
+}
+function isTreasureTrained(inst) { return (inst.level || 1) > 1; }
+function isCharInTeam(instId) { return (window.currentTeam || []).includes(instId); }
+function isTreasureEquipped(instId) {
+	const inv = window.treasureInventory && window.treasureInventory[instId];
+	if (inv && inv.equippedBy) return true;
+	for (const slots of Object.values(window.charTreasureSlots || {})) { if (slots && slots.includes(instId)) return true; }
+	return false;
+}
+// 宝物炼化收益：基础(档位) + 升级消耗的同名宝物折算（升到 L 消耗 1+2+…+(L-1) 个同名 Lv.1，每个折基础碎屑）
+function calcTreasureShard(inst) {
+	const def = (Game.Bag && Game.Bag.defs) ? Game.Bag.defs()[inst.baseId] : null;
+	const rank = (def && def.rank) || 1;
+	const base = REFINE_TREASURE_SHARD[rank] || 0;
+	const lv = inst.level || 1;
+	const fodder = lv > 1 ? (lv * (lv - 1) / 2) : 0;
+	return base * (1 + fodder);
+}
+// 武将炼化收益：基础(当前品质) + 培养消耗折算；神品返回 -1（不可炼化）
+//   折算：突破石×1 + 同名本体/替身卡×100 + 觉醒石×2 + 接引武将×100 + 升级金币/100
+function calcCharSoul(inst) {
+	const rank = inst.rank || 'junk';
+	if (rank === 'kami') return -1;
+	const base = REFINE_CHAR_SOUL[rank] || 0;
+	if (!isCharTrained(inst)) return base;
+	let extra = 0;
+	const tupo = inst.tupolevel || 0;
+	for (let i = 0; i < tupo; i++) extra += (REFINE_STONE_COST[i] || 0) + (Math.floor(i / 4) + 1) * 100;
+	const i0 = REFINE_RANK_ORDER.indexOf(charBaseRank(inst));
+	const i1 = REFINE_RANK_ORDER.indexOf(rank);
+	for (let i = i0; i < i1 && i >= 0; i++) extra += (REFINE_AWAKEN_COST[REFINE_RANK_ORDER[i]] || 0) * 2 + 100;
+	const lv = inst.level || 1;
+	let goldSpent = 0;
+	for (let l = 2; l <= lv; l++) goldSpent += Math.floor(10 * l + 0.6 * l * l);
+	extra += Math.floor(goldSpent / 100);
+	return base + extra;
+}
+// 可炼化列表（排除：已上阵、神品、吸收了宝物的武将；onlyUntrained 时再排除已培养）
+function getRefineableChars(onlyUntrained) {
+	return Object.keys(window.charBagData || {}).filter(instId => {
+		const inst = window.charBagData[instId];
+		if (!inst) return false;
+		if (isCharInTeam(instId)) return false;
+		if ((window.charTreasureSlots && window.charTreasureSlots[instId] || []).some(Boolean)) return false; // 装备着宝物的不列入
+		if ((inst.rank || 'junk') === 'kami') return false;
+		if (onlyUntrained && isCharTrained(inst)) return false; // isCharTrained 含“吸收了宝物”，故快捷炼化自动排除
+		return true;
+	}).map(instId => ({ instId, inst: window.charBagData[instId] }));
+}
+function getRefineableTreasures(onlyUntrained) {
+	return Object.keys(window.treasureInventory || {}).filter(instId => {
+		const inst = window.treasureInventory[instId];
+		if (!inst) return false;
+		if (isTreasureEquipped(instId)) return false;
+		if (onlyUntrained && isTreasureTrained(inst)) return false;
+		return true;
+	}).map(instId => ({ instId, inst: window.treasureInventory[instId] }));
+}
+function removeCharInstance(instId) {
+	delete window.charBagData[instId];
+	if (window.currentTeam) { const i = window.currentTeam.indexOf(instId); if (i !== -1) window.currentTeam[i] = null; }
+	if (window.treasureEquipData) delete window.treasureEquipData[instId];
+	if (window.charTreasureSlots) delete window.charTreasureSlots[instId];
+}
+function refineCharsByIds(instIds) {
+	let soul = 0;
+	instIds.forEach(instId => { const inst = window.charBagData[instId]; if (!inst) return; const s = calcCharSoul(inst); if (s < 0) return; soul += s; removeCharInstance(instId); });
+	window.charSoul = (window.charSoul || 0) + soul;
+	return soul;
+}
+function refineTreasuresByIds(instIds) {
+	let shard = 0;
+	instIds.forEach(instId => { const inst = window.treasureInventory[instId]; if (!inst) return; shard += calcTreasureShard(inst); if (Game.Bag && Game.Bag.remove) Game.Bag.remove(instId); });
+	window.soulShard = (window.soulShard || 0) + shard;
+	return shard;
+}
+function refineFinishRefresh() {
+	if (typeof updateResourceHUD === 'function') updateResourceHUD();
+	if (typeof refreshAllTeamSlots === 'function') refreshAllTeamSlots();
+	if (window.__refineRefresh) window.__refineRefresh();
+	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
+}
+// 暂存区小标签（带 ✕ 移除）
+function mkRefineChip(html, color, onRemove) {
+	const chip = document.createElement('span');
+	chip.style.cssText = `display:inline-flex;align-items:center;gap:4px;margin:3px;padding:3px 8px;border:1px solid ${color};border-radius:6px;background:rgba(255,255,255,.05);font-size:12px;color:#ddd;`;
+	chip.innerHTML = html;
+	const x = document.createElement('span');
+	x.textContent = '✕'; x.style.cssText = 'cursor:pointer;color:#f66;font-weight:bold;margin-left:2px;';
+	x.onclick = (e) => { e.stopPropagation(); onRemove(); };
+	chip.appendChild(x);
+	return chip;
+}
+// 选择浮窗里的可点卡片
+function mkRefineSelectCard(o) {
+	const card = document.createElement('div');
+	card.className = 'gallery-char-card' + (o.selected ? ' selected' : '');
+	card.style.cssText = 'cursor:pointer;position:relative;text-align:center;';
+	const iconDiv = document.createElement('div');
+	iconDiv.className = 'gallery-char-icon';
+	iconDiv.style.borderColor = o.color || '#888';
+	if (o.img) {
+		const img = document.createElement('img');
+		img.className = 'gallery-char-img'; img.src = o.img;
+		img.onerror = function () { this.style.display = 'none'; iconDiv.textContent = o.emoji || '?'; iconDiv.style.fontSize = '26px'; };
+		iconDiv.appendChild(img);
+	} else { iconDiv.textContent = o.emoji || '?'; iconDiv.style.fontSize = '26px'; }
+	card.appendChild(iconDiv);
+	const nameDiv = document.createElement('div');
+	nameDiv.className = 'gallery-char-name'; nameDiv.textContent = o.name; nameDiv.style.color = o.color || '#eee';
+	card.appendChild(nameDiv);
+	if (o.sub) { const sub = document.createElement('div'); sub.style.cssText = 'font-size:10px;color:#aaa;'; sub.textContent = o.sub; card.appendChild(sub); }
+	if (o.selected) { const chk = document.createElement('div'); chk.style.cssText = 'position:absolute;top:2px;right:4px;color:#0f0;font-weight:bold;'; chk.textContent = '✓'; card.appendChild(chk); }
+	card.onclick = o.onToggle;
+	return card;
+}
+// 炼化主界面
+function renderRefineView(container) {
+	container.innerHTML = '';
+	const selChars = new Set();
+	const selTres = new Set();
+
+	// 标题行 + 右上角两个快捷炼化
+	const head = document.createElement('div');
+	head.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0;';
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffd700;';
+	title.textContent = '🔥 炼化';
+	const quickBox = document.createElement('div');
+	quickBox.style.cssText = 'display:flex;gap:6px;';
+	const qTres = document.createElement('button'); qTres.className = 'ybrpg-confirm-btn'; qTres.textContent = '快捷炼化宝物'; qTres.style.cssText = 'padding:4px 8px;font-size:12px;background:#5d4037;'; qTres.onclick = () => openQuickRefinePicker('treasure');
+	const qChar = document.createElement('button'); qChar.className = 'ybrpg-confirm-btn'; qChar.textContent = '快捷炼化武将'; qChar.style.cssText = 'padding:4px 8px;font-size:12px;background:#5d4037;'; qChar.onclick = () => openQuickRefinePicker('char');
+	quickBox.appendChild(qTres); quickBox.appendChild(qChar);
+	head.appendChild(title); head.appendChild(quickBox);
+	container.appendChild(head);
+
+	// 当前将魂/碎屑
+	const res = document.createElement('div');
+	res.style.cssText = 'display:flex;gap:18px;justify-content:center;color:#ddd;font-size:13px;margin-bottom:10px;flex-shrink:0;';
+	container.appendChild(res);
+
+	// 中部选择按钮
+	const pickBtn = document.createElement('button');
+	pickBtn.className = 'ybrpg-confirm-btn';
+	pickBtn.textContent = '＋ 选择要炼化的武将 / 宝物';
+	pickBtn.style.cssText = 'width:100%;padding:14px;font-size:14px;background:#2e5e3a;margin-bottom:10px;flex-shrink:0;';
+	pickBtn.onclick = () => openRefinePicker(selChars, selTres, refreshAll);
+	container.appendChild(pickBtn);
+
+	// 暂存区
+	const stage = document.createElement('div');
+	stage.style.cssText = 'min-height:90px;max-height:34vh;overflow-y:auto;border:1px dashed #555;border-radius:8px;padding:8px;margin-bottom:10px;flex-shrink:0;';
+	container.appendChild(stage);
+
+	// 预计收益 + 炼化按钮
+	const preview = document.createElement('div');
+	preview.style.cssText = 'text-align:center;color:#ccc;font-size:13px;margin-bottom:8px;flex-shrink:0;';
+	container.appendChild(preview);
+	const refineBtn = document.createElement('button');
+	refineBtn.className = 'ybrpg-confirm-btn';
+	refineBtn.textContent = '炼化';
+	refineBtn.style.cssText = 'width:100%;padding:12px;font-size:15px;background:#b71c1c;flex-shrink:0;';
+	refineBtn.onclick = () => {
+		const cIds = [...selChars], tIds = [...selTres];
+		if (!cIds.length && !tIds.length) { Game.toast('请先选择要炼化的武将或宝物', 'warning'); return; }
+		let soul = 0, shard = 0;
+		cIds.forEach(id => { const s = calcCharSoul(window.charBagData[id]); if (s >= 0) soul += s; });
+		tIds.forEach(id => { shard += calcTreasureShard(window.treasureInventory[id]); });
+		Game.confirmDialog(`确定炼化所选？\n武将 ${cIds.length} 个 → 将魂 +${soul}\n宝物 ${tIds.length} 个 → 碎屑 +${shard}`, () => {
+			refineCharsByIds(cIds);
+			refineTreasuresByIds(tIds);
+			selChars.clear(); selTres.clear();
+			refineFinishRefresh();
+			Game.toast(`炼化完成：将魂 +${soul}，碎屑 +${shard}`, 'success');
+		});
+	};
+	container.appendChild(refineBtn);
+
+	function refreshAll() {
+		res.innerHTML =
+			`<span><img src="/image/header/zs_12307.png" style="width:15px;height:15px;vertical-align:-2px;"> 将魂 <b style="color:#ffd700;">${window.charSoul || 0}</b></span>` +
+			`<span><img src="/image/header/zs_12308.png" style="width:15px;height:15px;vertical-align:-2px;"> 碎屑 <b style="color:#ffd700;">${window.soulShard || 0}</b></span>`;
+		stage.innerHTML = '';
+		if (selChars.size + selTres.size === 0) {
+			stage.innerHTML = '<div style="color:#666;font-size:13px;text-align:center;padding:20px;">尚未选择（点上方按钮加入）</div>';
+		} else {
+			[...selChars].forEach(id => {
+				const inst = window.charBagData[id]; if (!inst) { selChars.delete(id); return; }
+				stage.appendChild(mkRefineChip(`<img src="/image/character/${inst.charId}.jpg" style="width:20px;height:20px;border-radius:4px;vertical-align:-5px;object-fit:cover;" onerror="this.style.display='none'"> ${inst.name || inst.charId}（${getRankLabel(inst.rank)}）`, getRankColor(inst.rank), () => { selChars.delete(id); refreshAll(); }));
+			});
+			[...selTres].forEach(id => {
+				const inst = window.treasureInventory[id]; if (!inst) { selTres.delete(id); return; }
+				const def = (Game.Bag && Game.Bag.defs) ? Game.Bag.defs()[inst.baseId] : null;
+				const rank = (def && def.rank) || 1;
+				stage.appendChild(mkRefineChip(`${(def && def.name) || inst.baseId}（${rank}档${inst.level > 1 ? ' +' + inst.level : ''}）`, REFINE_TREASURE_COLOR[rank] || '#888', () => { selTres.delete(id); refreshAll(); }));
+			});
+		}
+		let soul = 0, shard = 0;
+		[...selChars].forEach(id => { const s = calcCharSoul(window.charBagData[id]); if (s >= 0) soul += s; });
+		[...selTres].forEach(id => { shard += calcTreasureShard(window.treasureInventory[id]); });
+		preview.innerHTML = `预计获得：<b style="color:#ffd700;">将魂 +${soul}</b> · <b style="color:#ffd700;">碎屑 +${shard}</b>`;
+		const empty = (selChars.size + selTres.size) === 0;
+		refineBtn.disabled = empty; refineBtn.style.opacity = empty ? '0.5' : '1';
+	}
+	window.__refineRefresh = refreshAll;
+	refreshAll();
+}
+// 选择浮窗（类型 tab：武将 / 宝物 / 其他[预留]）
+function openRefinePicker(selChars, selTres, onDone) {
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30001';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+	dialog.style.cssText = 'width:min(470px,92vw);max-height:86vh;display:flex;flex-direction:column;overflow:hidden;';
+	let curType = 'char';
+	const tabs = document.createElement('div');
+	tabs.style.cssText = 'display:flex;gap:6px;margin-bottom:8px;flex-shrink:0;';
+	const tabChar = document.createElement('button'); tabChar.className = 'ybrpg-confirm-btn'; tabChar.textContent = '武将';
+	const tabTres = document.createElement('button'); tabTres.className = 'ybrpg-confirm-btn'; tabTres.textContent = '宝物';
+	const tabOther = document.createElement('button'); tabOther.className = 'ybrpg-confirm-btn'; tabOther.textContent = '其他';
+	tabChar.style.cssText = 'flex:1;padding:6px;font-size:13px;';
+	tabTres.style.cssText = 'flex:1;padding:6px;font-size:13px;';
+	tabOther.style.cssText = 'flex:1;padding:6px;font-size:13px;opacity:.4;';
+	tabChar.onclick = () => { curType = 'char'; syncTabs(); renderGrid(); };
+	tabTres.onclick = () => { curType = 'treasure'; syncTabs(); renderGrid(); };
+	tabOther.onclick = () => Game.toast('其他类型暂未开放', 'warning');
+	tabs.appendChild(tabChar); tabs.appendChild(tabTres); tabs.appendChild(tabOther);
+	dialog.appendChild(tabs);
+	function syncTabs() { tabChar.style.background = curType === 'char' ? '#2e5e3a' : ''; tabTres.style.background = curType === 'treasure' ? '#2e5e3a' : ''; }
+	const grid = document.createElement('div');
+	grid.className = 'gallery-grid';
+	grid.style.cssText = 'grid-template-columns:repeat(4,1fr);gap:6px;flex:1;min-height:0;overflow-y:auto;padding-right:4px;';
+	dialog.appendChild(grid);
+	const okBtn = document.createElement('button'); okBtn.className = 'ybrpg-confirm-btn';
+	const cancelBtn = document.createElement('button'); cancelBtn.className = 'ybrpg-confirm-btn cancel'; cancelBtn.textContent = '取消';
+	okBtn.textContent = '确认';
+	okBtn.onclick = () => { overlay.remove(); if (onDone) onDone(); };
+	cancelBtn.onclick = () => overlay.remove();
+	const btnRow = document.createElement('div'); btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;margin-top:8px;flex-shrink:0;';
+	btnRow.appendChild(okBtn); btnRow.appendChild(cancelBtn); dialog.appendChild(btnRow);
+	function renderGrid() {
+		grid.innerHTML = '';
+		okBtn.textContent = `确认（${selChars.size + selTres.size}）`;
+		if (curType === 'char') {
+			const list = getRefineableChars(false);
+			if (!list.length) { grid.innerHTML = '<div style="color:#777;font-size:13px;padding:20px;grid-column:1/-1;text-align:center;">没有可炼化的武将<br>（已上阵 / 神品 / 装备着宝物的不列入）</div>'; return; }
+			list.forEach(({ instId, inst }) => {
+				const absorbed = charHasAbsorbed(inst);
+				grid.appendChild(mkRefineSelectCard({
+					img: `/image/character/${inst.charId}.jpg`, name: inst.name || inst.charId,
+					sub: getRankLabel(inst.rank) + (absorbed ? '·含吸收宝物' : (isCharTrained(inst) ? '·已培养' : '')), color: getRankColor(inst.rank),
+					selected: selChars.has(instId),
+					onToggle: () => {
+						if (absorbed) { Game.toast('该武将吸收了宝物，请先在突破界面卸下再炼化', 'warning'); return; }
+						selChars.has(instId) ? selChars.delete(instId) : selChars.add(instId); renderGrid();
+					},
+				}));
+			});
+		} else {
+			const list = getRefineableTreasures(false);
+			if (!list.length) { grid.innerHTML = '<div style="color:#777;font-size:13px;padding:20px;grid-column:1/-1;text-align:center;">没有可炼化的宝物<br>（已装备的不列入）</div>'; return; }
+			list.forEach(({ instId, inst }) => {
+				const def = (Game.Bag && Game.Bag.defs) ? Game.Bag.defs()[inst.baseId] : null;
+				const rank = (def && def.rank) || 1;
+				grid.appendChild(mkRefineSelectCard({
+					img: (def && def.icon) || '', emoji: (def && def.emoji) || '💠', name: (def && def.name) || inst.baseId,
+					sub: `${rank}档` + (inst.level > 1 ? '·+' + inst.level : ''), color: REFINE_TREASURE_COLOR[rank] || '#888',
+					selected: selTres.has(instId), onToggle: () => { selTres.has(instId) ? selTres.delete(instId) : selTres.add(instId); renderGrid(); },
+				}));
+			});
+		}
+	}
+	syncTabs(); renderGrid();
+	overlay.appendChild(dialog);
+	overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+	document.body.appendChild(overlay);
+}
+// 快捷炼化：选品质阈值，把该品质及以下的「未培养」且「未上阵/未装备」的全部炼化
+function openQuickRefinePicker(type) {
+	const isChar = type === 'char';
+	const tiers = isChar ? ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend'] : [1, 2, 3, 4, 5, 6];
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30001';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+	dialog.style.cssText = 'width:min(400px,92vw);';
+	const title = document.createElement('div');
+	title.style.cssText = 'font-size:15px;font-weight:bold;color:#ffd700;margin-bottom:6px;text-align:center;';
+	title.textContent = isChar ? '快捷炼化武将' : '快捷炼化宝物';
+	dialog.appendChild(title);
+	const tip = document.createElement('div');
+	tip.style.cssText = 'font-size:12px;color:#aaa;text-align:center;margin-bottom:10px;';
+	tip.textContent = '仅炼化「未培养」且「未上阵/未装备」的；点某品质将其及以下全部炼化';
+	dialog.appendChild(tip);
+	tiers.forEach(t => {
+		const list = isChar
+			? getRefineableChars(true).filter(({ inst }) => REFINE_RANK_ORDER.indexOf(inst.rank || 'junk') <= REFINE_RANK_ORDER.indexOf(t))
+			: getRefineableTreasures(true).filter(({ inst }) => { const def = (Game.Bag && Game.Bag.defs) ? Game.Bag.defs()[inst.baseId] : null; return ((def && def.rank) || 1) <= t; });
+		let gain = 0;
+		list.forEach(({ inst }) => { gain += isChar ? Math.max(0, calcCharSoul(inst)) : calcTreasureShard(inst); });
+		const label = isChar ? getRankLabel(t) : `${t}档`;
+		const b = document.createElement('button');
+		b.className = 'ybrpg-confirm-btn';
+		b.textContent = list.length ? `≤ ${label}：${list.length} 个 → ${isChar ? '将魂' : '碎屑'} +${gain}` : `≤ ${label}：（无可炼化）`;
+		b.style.cssText = 'width:100%;margin-bottom:6px;padding:8px;font-size:13px;text-align:left;' + (list.length ? '' : 'opacity:.5;');
+		if (list.length) {
+			b.onclick = () => Game.confirmDialog(`确定炼化 ${list.length} 个${isChar ? '武将' : '宝物'}（≤${label}·未培养）？\n获得 ${isChar ? '将魂' : '碎屑'} +${gain}`, () => {
+				const ids = list.map(x => x.instId);
+				if (isChar) refineCharsByIds(ids); else refineTreasuresByIds(ids);
+				refineFinishRefresh();
+				overlay.remove();
+				Game.toast(`已炼化 ${list.length} 个，${isChar ? '将魂' : '碎屑'} +${gain}`, 'success');
+			});
+		} else { b.disabled = true; }
+		dialog.appendChild(b);
+	});
+	const closeBtn = document.createElement('button');
+	closeBtn.className = 'ybrpg-confirm-btn cancel'; closeBtn.textContent = '关闭'; closeBtn.style.cssText = 'width:100%;margin-top:4px;';
+	closeBtn.onclick = () => overlay.remove();
+	dialog.appendChild(closeBtn);
+	overlay.appendChild(dialog);
+	overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+	document.body.appendChild(overlay);
 }
 
 // 角色浮窗：复用背包架构（tab 栏 + 主体 + 底部详情横框）。
@@ -404,6 +746,8 @@ function collectCurrentSaveData() {
 		maxStamina: window.maxStamina,
 		staminaTs: window.staminaTs,
 		diamond: window.diamond,
+		charSoul: window.charSoul || 0,
+		soulShard: window.soulShard || 0,
 		dailySign: window.dailySign || { lastSignDate: '', streak: 0 },
 		dailyTasks: window.dailyTasks || null,
 		redeemedCodes: window.redeemedCodes || [],
@@ -2125,7 +2469,9 @@ function ensureResourceHUD() {
     (isDeveloperRedeemed() ? `<span class="res-item ybrpg-dev-badge">开发者</span>` : '') +
     `<span class="res-item">💰 <span id="ybrpg-res-gold">0</span> 金币</span>` +
     `<span class="res-item">⚡ <span id="ybrpg-res-stamina">0/0</span> 体力</span>` +
-    `<span class="res-item">💎 <span id="ybrpg-res-diamond">0</span> 钻石</span>`;
+    `<span class="res-item">💎 <span id="ybrpg-res-diamond">0</span> 钻石</span>` +
+    `<span class="res-item"><img src="/image/header/zs_12307.png" style="width:15px;height:15px;vertical-align:-2px;" onerror="this.style.display='none'"> <span id="ybrpg-res-soul">0</span> 将魂</span>` +
+    `<span class="res-item"><img src="/image/header/zs_12308.png" style="width:15px;height:15px;vertical-align:-2px;" onerror="this.style.display='none'"> <span id="ybrpg-res-shard">0</span> 碎屑</span>`;
   document.body.appendChild(bar);
   if (!window._staminaTimerStarted) {
     window._staminaTimerStarted = true;
@@ -2173,6 +2519,10 @@ function updateResourceHUD() {
   if (goldEl) goldEl.textContent = fmtBigNum(window.gameGold || 0);
   if (stamEl) stamEl.textContent = `${window.stamina || 0}/${window.maxStamina || STAMINA_MAX}`;
   if (diaEl) diaEl.textContent = fmtBigNum(window.diamond || 0);
+  const soulEl = document.getElementById('ybrpg-res-soul');
+  const shardEl = document.getElementById('ybrpg-res-shard');
+  if (soulEl) soulEl.textContent = fmtBigNum(window.charSoul || 0);
+  if (shardEl) shardEl.textContent = fmtBigNum(window.soulShard || 0);
 }
 
 // 钻石兑换弹窗
@@ -2634,6 +2984,8 @@ function initNewGame() {
 	window.maxStamina = STAMINA_MAX;
 	window.staminaTs = Date.now();
 	window.diamond = 0;
+	window.charSoul = 0;   // 将魂（炼化武将获得）
+	window.soulShard = 0;  // 碎屑（炼化宝物获得）
 	ensureResourceHUD();
 
 	// 初始化宝物背包
@@ -2825,6 +3177,8 @@ const SaveManager = {
 		maxStamina: window.maxStamina,
 		staminaTs: window.staminaTs,
 		diamond: window.diamond,
+		charSoul: window.charSoul || 0,
+		soulShard: window.soulShard || 0,
 		dailySign: window.dailySign || { lastSignDate: '', streak: 0 },
 		dailyTasks: window.dailyTasks || null,
 		redeemedCodes: window.redeemedCodes || [],
@@ -2966,6 +3320,8 @@ const SaveManager = {
 			window.maxStamina = parsed.maxStamina != null ? parsed.maxStamina : STAMINA_MAX;
 			window.staminaTs = parsed.staminaTs || Date.now();
 			window.diamond = parsed.diamond || 0;
+		window.charSoul = parsed.charSoul || 0;
+		window.soulShard = parsed.soulShard || 0;
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
 			window.redeemedCodes = parsed.redeemedCodes || [];
@@ -3154,6 +3510,8 @@ const SaveManager = {
 		maxStamina: window.maxStamina,
 		staminaTs: window.staminaTs,
 		diamond: window.diamond,
+		charSoul: window.charSoul || 0,
+		soulShard: window.soulShard || 0,
 			charTreasureSlots: window.charTreasureSlots || {},
 			dailySign: window.dailySign || { lastSignDate: '', streak: 0 },
 			dailyTasks: window.dailyTasks || null,
@@ -3322,6 +3680,8 @@ const SaveManager = {
 			window.maxStamina = parsed.maxStamina != null ? parsed.maxStamina : STAMINA_MAX;
 			window.staminaTs = parsed.staminaTs || Date.now();
 			window.diamond = parsed.diamond || 0;
+		window.charSoul = parsed.charSoul || 0;
+		window.soulShard = parsed.soulShard || 0;
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
 			window.redeemedCodes = parsed.redeemedCodes || [];
@@ -3400,6 +3760,8 @@ const SaveManager = {
 			window.maxStamina = parsed.maxStamina != null ? parsed.maxStamina : STAMINA_MAX;
 			window.staminaTs = parsed.staminaTs || Date.now();
 			window.diamond = parsed.diamond || 0;
+		window.charSoul = parsed.charSoul || 0;
+		window.soulShard = parsed.soulShard || 0;
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
 			window.redeemedCodes = parsed.redeemedCodes || [];
