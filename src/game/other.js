@@ -70,6 +70,34 @@ function getMainInstInfo() {
 	return Object.values(window.charBagData || {}).find(i => i && i.charId === 'zhujue') || null;
 }
 
+// 更新主页左上角账号栏（头像/昵称/等级=主角等级/品质色）；主角升级等场景调用（主页未渲染则跳过）
+function updateHomeAccountBar() {
+	const accBar = document.querySelector('.home-account-bar');
+	if (!accBar) return;
+	const acc = window.__ybrpgAccount || {};
+	const isGuest = acc.isGuest !== false;
+	const mainInst = getMainInstInfo();
+	const av = accBar.querySelector('.home-account-avatar');
+	if (av) {
+		let src = '/image/character/default.jpg', pos = 'center top';
+		if (!isGuest && acc.avatar) { src = acc.avatar.icon || `/image/character/${acc.avatar.id}.jpg`; pos = acc.avatar.type === 'treasure' ? 'center' : 'center top'; }
+		else if (mainInst) { src = '/image/character/zhujue.jpg'; }
+		av.src = src; av.style.objectPosition = pos;
+	}
+	const nm = accBar.querySelector('.home-account-nick');
+	if (nm) {
+		const nickRaw = isGuest ? '游客' : (acc.nickname || '未设置');
+		nm.textContent = nickRaw.length > 6 ? nickRaw.slice(0, 6) + '…' : nickRaw;
+	}
+	const lv = accBar.querySelector('.home-account-level');
+	if (lv) {
+		const lvl = (mainInst && mainInst.level) || 1;
+		const rank = (mainInst && mainInst.rank) || 'common';
+		lv.textContent = `Lv.${lvl}`;
+		lv.style.color = getRankColor(rank);
+	}
+}
+
 function mkHomeBtn(label, onclick) {
 	const b = document.createElement('button');
 	b.className = 'home-entry-btn';
@@ -118,7 +146,7 @@ function renderHomeView(container) {
 	const topRow = document.createElement('div');
 	topRow.style.cssText = 'display:flex;align-items:flex-start;justify-content:space-between;width:100%;margin-top:35px;flex-shrink:0;';
 	accBar.style.marginTop = '0';
-	const shopBtn = mkHomeBtn('🛒 商店', () => openFloatPanel('商店', (body) => renderShopView(body)));
+	const shopBtn = mkHomeBtn('🛒 商店', () => { window.shopPage = 'home'; openFloatPanel('商店', (body) => renderShopView(body)); });
 	topRow.appendChild(accBar); topRow.appendChild(shopBtn);
 	container.appendChild(topRow);
 
@@ -153,6 +181,7 @@ function renderHomeView(container) {
 const REFINE_CHAR_SOUL = { junk: 50, common: 150, rare: 600, epicfake: 1200, epic: 2500, legend: 4000 };
 const REFINE_TREASURE_SHARD = { 1: 50, 2: 150, 3: 600, 4: 1200, 5: 2500, 6: 4000 };
 const REFINE_TREASURE_COLOR = { 1: '#88cc88', 2: '#44aaff', 3: '#a335ee', 4: '#ff8800', 5: '#ff8d8d', 6: '#ffff00' };
+const REFINE_TREASURE_RANK_NAME = { 1: '平凡', 2: '精品', 3: '稀有', 4: '伪史诗', 5: '史诗', 6: '传说' };
 // 折算用常量（与 team.js 的培养成本表保持一致）
 const REFINE_RANK_ORDER = ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend', 'kami'];
 const REFINE_AWAKEN_COST = { junk: 1, common: 2, rare: 4, epicfake: 8, epic: 16, legend: 32 };
@@ -209,16 +238,37 @@ function getRefineableChars(onlyUntrained) {
 		if ((inst.rank || 'junk') === 'kami') return false;
 		if (onlyUntrained && isCharTrained(inst)) return false; // isCharTrained 含“吸收了宝物”，故快捷炼化自动排除
 		return true;
-	}).map(instId => ({ instId, inst: window.charBagData[instId] }));
+	}).map(instId => ({ instId, inst: window.charBagData[instId] }))
+	.sort((a, b) => {
+		// 与角色仓库排序一致：突破阶降序 → 等级降序 → 品质(高阶在前) → 名称
+		const RANK_PRIORITY = { kami: 1, legend: 2, epic: 3, epicfake: 4, rare: 5, common: 6, junk: 7 };
+		const tDiff = (b.inst.tupolevel || 0) - (a.inst.tupolevel || 0);
+		if (tDiff !== 0) return tDiff;
+		const lDiff = (b.inst.level || 1) - (a.inst.level || 1);
+		if (lDiff !== 0) return lDiff;
+		const rDiff = (RANK_PRIORITY[a.inst.rank] || 99) - (RANK_PRIORITY[b.inst.rank] || 99);
+		if (rDiff !== 0) return rDiff;
+		return (a.inst.name || a.inst.charId || '').localeCompare(b.inst.name || b.inst.charId || '');
+	});
 }
 function getRefineableTreasures(onlyUntrained) {
+	const defs = (Game.Bag && Game.Bag.defs) ? Game.Bag.defs() : {};
 	return Object.keys(window.treasureInventory || {}).filter(instId => {
 		const inst = window.treasureInventory[instId];
 		if (!inst) return false;
 		if (isTreasureEquipped(instId)) return false;
 		if (onlyUntrained && isTreasureTrained(inst)) return false;
 		return true;
-	}).map(instId => ({ instId, inst: window.treasureInventory[instId] }));
+	}).map(instId => ({ instId, inst: window.treasureInventory[instId] }))
+	.sort((a, b) => {
+		// 与宝物背包排序一致：等级降序 → 品质(rank)降序 → baseId
+		const aLv = a.inst.level || 1, bLv = b.inst.level || 1;
+		if (bLv !== aLv) return bLv - aLv;
+		const aRank = (defs[a.inst.baseId] && defs[a.inst.baseId].rank) || 0;
+		const bRank = (defs[b.inst.baseId] && defs[b.inst.baseId].rank) || 0;
+		if (bRank !== aRank) return bRank - aRank;
+		return (a.inst.baseId || '').localeCompare(b.inst.baseId || '');
+	});
 }
 function removeCharInstance(instId) {
 	delete window.charBagData[instId];
@@ -229,13 +279,13 @@ function removeCharInstance(instId) {
 function refineCharsByIds(instIds) {
 	let soul = 0;
 	instIds.forEach(instId => { const inst = window.charBagData[instId]; if (!inst) return; const s = calcCharSoul(inst); if (s < 0) return; soul += s; removeCharInstance(instId); });
-	window.charSoul = (window.charSoul || 0) + soul;
+	if (Game.Data && Game.Data.addItem) Game.Data.addItem('item_char_soul', soul);
 	return soul;
 }
 function refineTreasuresByIds(instIds) {
 	let shard = 0;
 	instIds.forEach(instId => { const inst = window.treasureInventory[instId]; if (!inst) return; shard += calcTreasureShard(inst); if (Game.Bag && Game.Bag.remove) Game.Bag.remove(instId); });
-	window.soulShard = (window.soulShard || 0) + shard;
+	if (Game.Data && Game.Data.addItem) Game.Data.addItem('item_soul_shard', shard);
 	return shard;
 }
 function refineFinishRefresh() {
@@ -297,33 +347,37 @@ function renderRefineView(container) {
 	quickBox.appendChild(qTres); quickBox.appendChild(qChar);
 	head.appendChild(title); head.appendChild(quickBox);
 	container.appendChild(head);
+	// 中部可滚动区（“炼化”按钮固定底部，不随内容滚动）
+	container.style.overflowY = 'hidden';
+	const scroll = document.createElement('div');
+	scroll.style.cssText = 'flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;';
 
 	// 当前将魂/碎屑
 	const res = document.createElement('div');
 	res.style.cssText = 'display:flex;gap:18px;justify-content:center;color:#ddd;font-size:13px;margin-bottom:10px;flex-shrink:0;';
-	container.appendChild(res);
+	scroll.appendChild(res);
 
 	// 中部选择按钮
 	const pickBtn = document.createElement('button');
 	pickBtn.className = 'ybrpg-confirm-btn';
 	pickBtn.textContent = '＋ 选择要炼化的武将 / 宝物';
-	pickBtn.style.cssText = 'width:100%;padding:14px;font-size:14px;background:#2e5e3a;margin-bottom:10px;flex-shrink:0;';
+	pickBtn.style.cssText = 'width:100%;padding:15px;font-size:15px;font-weight:bold;color:#fff;background:linear-gradient(180deg,#43a047,#2e7d32);border:1px solid #7bd88a;border-radius:8px;box-shadow:0 3px 10px rgba(0,0,0,.4);margin-bottom:10px;flex-shrink:0;cursor:pointer;';
 	pickBtn.onclick = () => openRefinePicker(selChars, selTres, refreshAll);
-	container.appendChild(pickBtn);
+	scroll.appendChild(pickBtn);
 
 	// 暂存区
 	const stage = document.createElement('div');
 	stage.style.cssText = 'min-height:90px;max-height:34vh;overflow-y:auto;border:1px dashed #555;border-radius:8px;padding:8px;margin-bottom:10px;flex-shrink:0;';
-	container.appendChild(stage);
+	scroll.appendChild(stage);
 
 	// 预计收益 + 炼化按钮
 	const preview = document.createElement('div');
 	preview.style.cssText = 'text-align:center;color:#ccc;font-size:13px;margin-bottom:8px;flex-shrink:0;';
-	container.appendChild(preview);
+	scroll.appendChild(preview);
 	const refineBtn = document.createElement('button');
 	refineBtn.className = 'ybrpg-confirm-btn';
 	refineBtn.textContent = '炼化';
-	refineBtn.style.cssText = 'width:100%;padding:12px;font-size:15px;background:#b71c1c;flex-shrink:0;';
+	refineBtn.style.cssText = 'width:100%;padding:13px;font-size:15px;font-weight:bold;color:#fff;background:linear-gradient(180deg,#e53935,#b71c1c);border:none;border-top:1px solid rgba(255,255,255,.15);flex-shrink:0;cursor:pointer;';
 	refineBtn.onclick = () => {
 		const cIds = [...selChars], tIds = [...selTres];
 		if (!cIds.length && !tIds.length) { Game.toast('请先选择要炼化的武将或宝物', 'warning'); return; }
@@ -338,12 +392,13 @@ function renderRefineView(container) {
 			Game.toast(`炼化完成：将魂 +${soul}，碎屑 +${shard}`, 'success');
 		});
 	};
+	container.appendChild(scroll);
 	container.appendChild(refineBtn);
 
 	function refreshAll() {
 		res.innerHTML =
-			`<span><img src="/image/header/zs_12307.png" style="width:15px;height:15px;vertical-align:-2px;"> 将魂 <b style="color:#ffd700;">${window.charSoul || 0}</b></span>` +
-			`<span><img src="/image/header/zs_12308.png" style="width:15px;height:15px;vertical-align:-2px;"> 碎屑 <b style="color:#ffd700;">${window.soulShard || 0}</b></span>`;
+			`<span><img src="/image/header/zs_12307.png" style="width:15px;height:15px;vertical-align:-2px;"> 将魂 <b style="color:#ffd700;">${(Game.Data && Game.Data.getItemCount) ? Game.Data.getItemCount('item_char_soul') : 0}</b></span>` +
+			`<span><img src="/image/header/zs_12308.png" style="width:15px;height:15px;vertical-align:-2px;"> 碎屑 <b style="color:#ffd700;">${(Game.Data && Game.Data.getItemCount) ? Game.Data.getItemCount('item_soul_shard') : 0}</b></span>`;
 		stage.innerHTML = '';
 		if (selChars.size + selTres.size === 0) {
 			stage.innerHTML = '<div style="color:#666;font-size:13px;text-align:center;padding:20px;">尚未选择（点上方按钮加入）</div>';
@@ -356,7 +411,7 @@ function renderRefineView(container) {
 				const inst = window.treasureInventory[id]; if (!inst) { selTres.delete(id); return; }
 				const def = (Game.Bag && Game.Bag.defs) ? Game.Bag.defs()[inst.baseId] : null;
 				const rank = (def && def.rank) || 1;
-				stage.appendChild(mkRefineChip(`${(def && def.name) || inst.baseId}（${rank}档${inst.level > 1 ? ' +' + inst.level : ''}）`, REFINE_TREASURE_COLOR[rank] || '#888', () => { selTres.delete(id); refreshAll(); }));
+				stage.appendChild(mkRefineChip(`${(def && def.name) || inst.baseId}（${REFINE_TREASURE_RANK_NAME[rank] || (rank + '档')}${inst.level > 1 ? ' +' + inst.level : ''}）`, REFINE_TREASURE_COLOR[rank] || '#888', () => { selTres.delete(id); refreshAll(); }));
 			});
 		}
 		let soul = 0, shard = 0;
@@ -373,10 +428,10 @@ function renderRefineView(container) {
 function openRefinePicker(selChars, selTres, onDone) {
 	const overlay = document.createElement('div');
 	overlay.className = 'ybrpg-confirm-overlay';
-	overlay.style.zIndex = '30001';
+	overlay.style.zIndex = '20000';
 	const dialog = document.createElement('div');
 	dialog.className = 'ybrpg-confirm-dialog';
-	dialog.style.cssText = 'width:min(470px,92vw);max-height:86vh;display:flex;flex-direction:column;overflow:hidden;';
+	dialog.style.cssText = 'width:min(470px,92vw);height:min(600px,86vh);display:flex;flex-direction:column;overflow:hidden;';
 	let curType = 'char';
 	const tabs = document.createElement('div');
 	tabs.style.cssText = 'display:flex;gap:6px;margin-bottom:8px;flex-shrink:0;';
@@ -429,7 +484,7 @@ function openRefinePicker(selChars, selTres, onDone) {
 				const rank = (def && def.rank) || 1;
 				grid.appendChild(mkRefineSelectCard({
 					img: (def && def.icon) || '', emoji: (def && def.emoji) || '💠', name: (def && def.name) || inst.baseId,
-					sub: `${rank}档` + (inst.level > 1 ? '·+' + inst.level : ''), color: REFINE_TREASURE_COLOR[rank] || '#888',
+					sub: `${REFINE_TREASURE_RANK_NAME[rank] || (rank + '档')}` + (inst.level > 1 ? '·+' + inst.level : ''), color: REFINE_TREASURE_COLOR[rank] || '#888',
 					selected: selTres.has(instId), onToggle: () => { selTres.has(instId) ? selTres.delete(instId) : selTres.add(instId); renderGrid(); },
 				}));
 			});
@@ -446,10 +501,10 @@ function openQuickRefinePicker(type) {
 	const tiers = isChar ? ['junk', 'common', 'rare', 'epicfake', 'epic', 'legend'] : [1, 2, 3, 4, 5, 6];
 	const overlay = document.createElement('div');
 	overlay.className = 'ybrpg-confirm-overlay';
-	overlay.style.zIndex = '30001';
+	overlay.style.zIndex = '20000';
 	const dialog = document.createElement('div');
 	dialog.className = 'ybrpg-confirm-dialog';
-	dialog.style.cssText = 'width:min(400px,92vw);';
+	dialog.style.cssText = 'width:min(400px,92vw);min-height:440px;display:flex;flex-direction:column;';
 	const title = document.createElement('div');
 	title.style.cssText = 'font-size:15px;font-weight:bold;color:#ffd700;margin-bottom:6px;text-align:center;';
 	title.textContent = isChar ? '快捷炼化武将' : '快捷炼化宝物';
@@ -464,7 +519,7 @@ function openQuickRefinePicker(type) {
 			: getRefineableTreasures(true).filter(({ inst }) => { const def = (Game.Bag && Game.Bag.defs) ? Game.Bag.defs()[inst.baseId] : null; return ((def && def.rank) || 1) <= t; });
 		let gain = 0;
 		list.forEach(({ inst }) => { gain += isChar ? Math.max(0, calcCharSoul(inst)) : calcTreasureShard(inst); });
-		const label = isChar ? getRankLabel(t) : `${t}档`;
+		const label = isChar ? getRankLabel(t) : (REFINE_TREASURE_RANK_NAME[t] || (t + '档'));
 		const b = document.createElement('button');
 		b.className = 'ybrpg-confirm-btn';
 		b.textContent = list.length ? `≤ ${label}：${list.length} 个 → ${isChar ? '将魂' : '碎屑'} +${gain}` : `≤ ${label}：（无可炼化）`;
@@ -732,6 +787,7 @@ function collectCurrentSaveData() {
 		shopMode: window.shopMode || 'normal',
 		shopData: window.shopData || { items: [], refreshCost: 50 },
 		gameGold: window.gameGold || 1000,
+		bag: Game.Data.data ? Game.Data.data.bag : { items: window.gameItems || {}, gold: window.gameGold || 1000 }, // 背包道具（突破/觉醒石、刷新令、礼包等），确保手动档也存/取
 		charTreasureSlots: window.charTreasureSlots || {},
 		charBagData: window.charBagData || {},
 		showFormulaDetail: window.showFormulaDetail || false,
@@ -1217,8 +1273,29 @@ function recordDailyClear(chapterKey, diffKey) {
 const DAILY_SIGN_REWARDS = [100, 100, 150, 150, 200, 200, 500];
 
 // 确保每日数据已按"今天"初始化/刷新
+// 每日签到/任务进度为「账号级」（与存档槽无关）：独立 key 存储。
+// 修复：从手动槽(如槽1)续档进游戏时，签到只 autoSave 到自动档(槽0)，手动槽里的连签/任务进度不更新，
+// 下次再读手动槽拿到陈旧值，导致连签被重置。改为全局存储后，跨槽、跨自动/手动档都正确延续。
+function dailyStateKey() { return getSaveNamespace() + ':ybrpg_daily_state'; }
+function loadDailyState() {
+	try { const o = JSON.parse(localStorage.getItem(dailyStateKey()) || 'null'); return (o && typeof o === 'object') ? o : null; } catch (e) { return null; }
+}
+function saveDailyState() {
+	try { localStorage.setItem(dailyStateKey(), JSON.stringify({ sign: window.dailySign || { lastSignDate: '', streak: 0 }, tasks: window.dailyTasks || null })); } catch (e) { /* ignore */ }
+}
+
 function ensureDailyData() {
 	const today = getTodayStr();
+	const gs = loadDailyState();
+	// 签到连签状态：以全局为准（跨存档槽延续）
+	if (gs && gs.sign) window.dailySign = gs.sign;
+	if (!window.dailySign) {
+		window.dailySign = { lastSignDate: '', streak: 0 };
+	}
+	// 每日任务：全局延续当天进度；跨天则重置
+	if (gs && gs.tasks && gs.tasks.date === today) {
+		window.dailyTasks = gs.tasks;
+	}
 	if (!window.dailyTasks || window.dailyTasks.date !== today) {
 		window.dailyTasks = {
 			date: today,
@@ -1240,9 +1317,7 @@ function ensureDailyData() {
 			};
 		});
 	}
-	if (!window.dailySign) {
-		window.dailySign = { lastSignDate: '', streak: 0 };
-	}
+	saveDailyState();
 }
 
 // 任务进度累加（游戏行为钩子）：同一 hook 可能对应多个任务(如 打5次/打30次)，需全部累加
@@ -1254,6 +1329,7 @@ function addDailyTaskProgress(hook, n = 1) {
 			x.progress = Math.min(x.target, x.progress + n);
 		}
 	});
+	saveDailyState();
 }
 
 // 领取任务奖励
@@ -1269,6 +1345,7 @@ function claimDailyTask(taskId) {
 		itemTip = ` + ${(ITEM_DEFS[t.itemReward.id] && ITEM_DEFS[t.itemReward.id].name) || t.itemReward.id}×${t.itemReward.count}`;
 	}
 	t.claimed = true;
+	saveDailyState();
 	updateResourceHUD();
 	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
 	Game.toast(`任务完成！获得 ${t.reward} 💎 + ${goldReward} 💰${itemTip}`, 'success');
@@ -1299,6 +1376,7 @@ function doDailySign() {
 	// 签到附赠刷新令×1（用于重置关卡今日挑战次数）
 	if (Game.Data && Game.Data.addItem) Game.Data.addItem('item_refresh_token', 1);
 	window.dailySign.lastSignDate = today;
+	saveDailyState();
 	updateResourceHUD();
 	if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave();
 	Game.toast(`签到成功！获得 ${reward} 💎 + ${goldReward} 💰 + 刷新令×1`, 'success');
@@ -1348,7 +1426,8 @@ function renderDailySignView(container) {
 		cell.innerHTML = `<div style="color:#aaa;font-size:12px;">第${day}天</div>
 			<div style="font-size:18px;margin:6px 0;">💎</div>
 			<div style="color:#ffd700;font-weight:bold;">${rw}</div>
-			<div style="color:#ffcf66;font-size:12px;margin-top:2px;">+${rw * 10}💰</div>${todayTag}`;
+			<div style="color:#ffcf66;font-size:12px;margin-top:2px;">+${rw * 10}💰</div>
+			<div style="color:#8fb7ff;font-size:12px;margin-top:2px;">+🎟️ 刷新令×1</div>${todayTag}`;
 		grid.appendChild(cell);
 	});
 	container.appendChild(grid);
@@ -1430,8 +1509,11 @@ function renderDailyTaskView(container, opts) {
 
 		const info = document.createElement('div');
 		info.style.cssText = 'flex:1;';
+		const irw = (t.itemReward && t.itemReward.id && t.itemReward.count > 0)
+			? ` + ${(ITEM_DEFS[t.itemReward.id] && ITEM_DEFS[t.itemReward.id].emoji) || '🎁'} ${(ITEM_DEFS[t.itemReward.id] && ITEM_DEFS[t.itemReward.id].name) || t.itemReward.id}×${t.itemReward.count}`
+			: '';
 		info.innerHTML = `<div style="font-size:14px;color:#eee;">${t.name}</div>
-			<div style="font-size:12px;color:#aaa;">进度 ${Math.min(t.progress, t.target)}/${t.target}　奖励 💎 ${t.reward} + 💰${t.reward * 10}</div>`;
+			<div style="font-size:12px;color:#aaa;">进度 ${Math.min(t.progress, t.target)}/${t.target}　奖励 💎 ${t.reward} + 💰${t.reward * 10}${irw}</div>`;
 		row.appendChild(info);
 
 		const btn = document.createElement('button');
@@ -2521,8 +2603,8 @@ function updateResourceHUD() {
   if (diaEl) diaEl.textContent = fmtBigNum(window.diamond || 0);
   const soulEl = document.getElementById('ybrpg-res-soul');
   const shardEl = document.getElementById('ybrpg-res-shard');
-  if (soulEl) soulEl.textContent = fmtBigNum(window.charSoul || 0);
-  if (shardEl) shardEl.textContent = fmtBigNum(window.soulShard || 0);
+  if (soulEl) soulEl.textContent = fmtBigNum((Game.Data && Game.Data.getItemCount) ? Game.Data.getItemCount('item_char_soul') : 0);
+  if (shardEl) shardEl.textContent = fmtBigNum((Game.Data && Game.Data.getItemCount) ? Game.Data.getItemCount('item_soul_shard') : 0);
 }
 
 // 钻石兑换弹窗
@@ -2667,20 +2749,22 @@ function showOutputPreview(event, diffKey, index, eventId, chapterKey, opts) {
 	}
 
 
+	// 挑战常驻（无次数时置灰并提示“今日次数已用完”）；扫荡仅在还有次数时显示
 	btnRow.appendChild(challengeBtn);
-	btnRow.appendChild(sweepBtn);
-	// 刷新令：已用掉次数时可重置该关今日次数（消耗 1 刷新令）
-	if (triesLeft < DAILY_LEVEL_TRIES_MAX) {
+	if (triesLeft > 0) btnRow.appendChild(sweepBtn);
+	// 刷新令：今日次数用尽时才可重置（消耗 1 刷新令；无令则拒绝点击）
+	if (triesLeft <= 0) {
 		const tokenHave = (Game.Data && Game.Data.getItemCount) ? Game.Data.getItemCount('item_refresh_token') : 0;
 		const refreshBtn = document.createElement('button');
 		refreshBtn.className = 'reward-ok-btn preview-btn-refresh';
-		refreshBtn.textContent = '🎟️ 刷新令重置';
+		refreshBtn.textContent = `🎟️ 刷新令重置(${tokenHave})`;
 		if (tokenHave <= 0) {
 			refreshBtn.disabled = true;
 			refreshBtn.style.opacity = '0.5';
 			refreshBtn.style.cursor = 'not-allowed';
-			refreshBtn.title = '没有刷新令（完成每日任务可获得）';
+			refreshBtn.title = '没有刷新令（每日签到/任务可获得）';
 		} else {
+			refreshBtn.title = `消耗 1 个刷新令重置今日次数（当前拥有 ${tokenHave} 个）`;
 			refreshBtn.onclick = (e) => {
 				e.stopPropagation();
 				Game.confirmDialog(`消耗 1 个刷新令，重置【${event.name || eventId}】今日次数（剩余 ${triesLeft} → ${DAILY_LEVEL_TRIES_MAX}）？`, () => {
@@ -3322,6 +3406,11 @@ const SaveManager = {
 			window.diamond = parsed.diamond || 0;
 		window.charSoul = parsed.charSoul || 0;
 		window.soulShard = parsed.soulShard || 0;
+		// 迁移：将魂/碎屑旧版存于 window 变量，现改为背包容物；读取时灌入（已存在则跳过，避免重复）
+		if (Game.Data && Game.Data.addItem) {
+			if ((parsed.charSoul || 0) > 0 && !Game.Data.getItemCount('item_char_soul')) Game.Data.addItem('item_char_soul', parsed.charSoul);
+			if ((parsed.soulShard || 0) > 0 && !Game.Data.getItemCount('item_soul_shard')) Game.Data.addItem('item_soul_shard', parsed.soulShard);
+		}
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
 			window.redeemedCodes = parsed.redeemedCodes || [];
@@ -3407,9 +3496,10 @@ const SaveManager = {
 			// 【修复图鉴丢失】存档缺 handbook 时回退到默认空图鉴（restoredHandbook 已优先抢救）
 			const handbook = restoredHandbook || data.handbook || defaults.handbook;
 			Game.Data.data = { ...defaults, ...data, handbook, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
-		}
+			Game.Data._bindItems(); // 重新把 window.gameItems 指向新恢复的 bag.items（否则秘境掉落写进陈旧对象、不随存档保存）
+			}
 
-		// ========== 新增：同步宝物数据到 window ==========
+			// ========== 新增：同步宝物数据到 window ==========
 		syncTreasureEquipData();
 		regenStamina();
 		ensureResourceHUD();
@@ -3682,6 +3772,11 @@ const SaveManager = {
 			window.diamond = parsed.diamond || 0;
 		window.charSoul = parsed.charSoul || 0;
 		window.soulShard = parsed.soulShard || 0;
+		// 迁移：将魂/碎屑旧版存于 window 变量，现改为背包容物；读取时灌入（已存在则跳过，避免重复）
+		if (Game.Data && Game.Data.addItem) {
+			if ((parsed.charSoul || 0) > 0 && !Game.Data.getItemCount('item_char_soul')) Game.Data.addItem('item_char_soul', parsed.charSoul);
+			if ((parsed.soulShard || 0) > 0 && !Game.Data.getItemCount('item_soul_shard')) Game.Data.addItem('item_soul_shard', parsed.soulShard);
+		}
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
 			window.redeemedCodes = parsed.redeemedCodes || [];
@@ -3762,6 +3857,11 @@ const SaveManager = {
 			window.diamond = parsed.diamond || 0;
 		window.charSoul = parsed.charSoul || 0;
 		window.soulShard = parsed.soulShard || 0;
+		// 迁移：将魂/碎屑旧版存于 window 变量，现改为背包容物；读取时灌入（已存在则跳过，避免重复）
+		if (Game.Data && Game.Data.addItem) {
+			if ((parsed.charSoul || 0) > 0 && !Game.Data.getItemCount('item_char_soul')) Game.Data.addItem('item_char_soul', parsed.charSoul);
+			if ((parsed.soulShard || 0) > 0 && !Game.Data.getItemCount('item_soul_shard')) Game.Data.addItem('item_soul_shard', parsed.soulShard);
+		}
 			window.dailySign = parsed.dailySign || { lastSignDate: '', streak: 0 };
 			window.dailyTasks = parsed.dailyTasks || null;
 			window.redeemedCodes = parsed.redeemedCodes || [];
@@ -3782,6 +3882,7 @@ const SaveManager = {
 			// 【修复图鉴丢失】存档缺 handbook 时回退到默认空图鉴（restoredHandbook 已优先抢救）
 			const handbook = restoredHandbook || data.handbook || defaults.handbook;
 			Game.Data.data = { ...defaults, ...data, handbook, team: { ...defaults.team, ...data.team }, bag: { ...defaults.bag, ...data.bag }, baseInfo: { ...defaults.baseInfo, ...data.baseInfo } };
+			Game.Data._bindItems(); // 重新把 window.gameItems 指向新恢复的 bag.items（否则秘境掉落写进陈旧对象、不随存档保存）
 
 			// ========== 新增：同步宝物数据 ==========
 			syncTreasureEquipData();
@@ -4137,7 +4238,7 @@ function renderSaveView(container, fromGame = true) {
  */
 
 // 导出本模块定义的函数（供其他模块 import）
-export { renderHomeView, renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, levelTriesLeft, consumeLevelTry, refundLevelTry, resetLevelTries, DAILY_LEVEL_TRIES_MAX, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView, collectCurrentSaveData, exportCurrentSave, importSaveData, showSaveSlotPicker, writeImportedSave };
+export { renderHomeView, updateHomeAccountBar, renderSettingsView, renderMiscSettingsView, REDEEM_CODES, applyRedeemRewards, redeemRewardNames, renderRedeemHistory, doRedeem, renderRedeemView, getTodayStr, levelTriesLeft, consumeLevelTry, refundLevelTry, resetLevelTries, DAILY_LEVEL_TRIES_MAX, DAILY_TASK_DEFS, recordDailyClear, DAILY_SIGN_REWARDS, ensureDailyData, addDailyTaskProgress, claimDailyTask, doDailySign, renderDailySignView, renderDailyTaskView, renderGalleryView, showCharDetail, showBreakthroughPreviewPopupForGallery, showFullImage, TREASURE_TYPE_LABELS, getTreasureRankInfo, renderTreasureGalleryView, showTreasureGalleryDetail, STAMINA_MAX, STAMINA_REGEN_PER_MIN, STAMINA_COST_DEFAULT, DIAMOND_TO_GOLD, regenStamina, getStaminaCost, trySpendStamina, exchangeDiamondToGold, isDeveloperRedeemed, ensureResourceHUD, fmtGroup4, fmtBigNum, updateResourceHUD, openDiamondExchange, showOutputPreview, showRewardPanel, hideOtherViews, syncResourceHUDViewMode, showMainView, initNewGame, showSaveView, SaveManager, migrateTreasuresToInstanceId, renderSaveView, collectCurrentSaveData, exportCurrentSave, importSaveData, showSaveSlotPicker, writeImportedSave };
 
 // 暴露给外部模块（shared 注册表 / window / Game）
 shared.hideOtherViews = hideOtherViews;

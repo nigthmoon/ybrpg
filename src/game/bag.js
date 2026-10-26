@@ -7,7 +7,7 @@ import { shared, lazyImageSrc, chunkAppend } from './shared';
 import { characterList } from './data/characterList';
 import { TREASURE_DEFS } from './data/equip';
 import { Game } from './core';
-import { useItem, renderBagItemContent } from './item';
+import { useItem, renderBagItemContent, renderBagMaterialContent } from './item';
 import { showBagCharDetail, showBagCharDetailPopup } from './team';
 import { formatPrice, getRankColor, getSellPrice } from './shop';
 import { SaveManager, updateResourceHUD } from './other';
@@ -28,7 +28,7 @@ function renderBagView(container) {
 		savedTab = window.bagTab || 'char';
 	} else {
 		// 背包模式仅有 道具/装备/其他；过滤掉旧存档可能残留的 'char'
-		const ok = ['item', 'equip', 'other'];
+		const ok = ['item', 'equip', 'material', 'other'];
 		savedTab = ok.includes(window.bagTab) ? window.bagTab : (ok.includes(window.playerProgress && window.playerProgress.bagTab) ? window.playerProgress.bagTab : 'item');
 	}
 	window.bagTab = savedTab;
@@ -42,7 +42,7 @@ function renderBagView(container) {
 
 	const tabConfigs = roleMode
 		? [{ key: 'char', label: '武将' }, { key: 'frag', label: '碎片' }, { key: 'skin', label: '皮肤' }]
-		: [{ key: 'item', label: '道具' }, { key: 'equip', label: '装备' }, { key: 'other', label: '其他' }];
+		: [{ key: 'item', label: '道具' }, { key: 'equip', label: '装备' }, { key: 'material', label: '材料' }, { key: 'other', label: '其他' }];
 
 	tabConfigs.forEach(cfg => {
 		const btn = document.createElement('button');
@@ -66,6 +66,8 @@ function renderBagView(container) {
 		renderBagCharContent(bodyDiv);
 	} else if (window.bagTab === 'item') {
 		renderBagItemContent(bodyDiv);
+	} else if (window.bagTab === 'material') {
+		renderBagMaterialContent(bodyDiv);
 	} else if (window.bagTab === 'equip') {
 		renderBagEquipContent(bodyDiv);
 	} else {

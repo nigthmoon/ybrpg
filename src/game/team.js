@@ -12,7 +12,7 @@ import { Game } from './core';
 import { renderBagView, sortTreasuresByBagOrder, updateBagCharDetailBar } from './bag';
 import { grantCharacter, renderDungeonView } from './dungeon';
 import { renderShopView } from './shop';
-import { SaveManager, ensureResourceHUD, hideOtherViews, showFullImage, updateResourceHUD } from './other';
+import { SaveManager, ensureResourceHUD, hideOtherViews, showFullImage, updateResourceHUD, updateHomeAccountBar } from './other';
 
 function showteam() {
 	const teamView = document.getElementById('team-view');
@@ -1248,7 +1248,7 @@ function openTreasureAbsorbPicker(slotIndex, instanceId, popup) {
  * @param {Object} baseChar - 角色基础数据
  * @param {number} currentTupoLevel - 当前突破等级
  */
-function renderBreakthroughList(container, baseChar, currentTupoLevel, instData, instanceId, popup) {
+function renderBreakthroughList(container, baseChar, currentTupoLevel, instData, instanceId, popup, readOnly = false) {
 	// 优先用实例自身的突破列表（含已吸收的宝物槽），回退到角色库模板
 	const tupoList = (instData && Array.isArray(instData.tupoList) && instData.tupoList.length)
 		? instData.tupoList
@@ -1345,13 +1345,17 @@ function renderBreakthroughList(container, baseChar, currentTupoLevel, instData,
 				rightGroup.appendChild(unequipBtn);
 			}
 		} else if (isNoEffect) {
-			// 空突破槽（突破1阶除外）：点击吸收宝物（锁定槽吸收后需突破到该阶才生效）
-			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#ffd700;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;cursor:pointer;`;
-			descDiv.textContent = isUnlocked ? '➕ 空突破槽 · 点击吸收宝物' : '➕ 空突破槽 · 点击吸收宝物（需突破到该阶生效）';
-			item.style.cursor = 'pointer';
-			item.onclick = () => { if (index === 0) return; openTreasureAbsorbPicker(index, instanceId, popup); };
-			item.onmouseover = () => { item.style.background = '#33334a'; };
-			item.onmouseout = () => { item.style.background = '#1a1a1a'; };
+			// 空突破槽（突破1阶除外）：点击吸收宝物（锁定槽吸收后需突破到该阶才生效）；readOnly 时仅展示
+			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:#ffd700;border-top:1px dashed #3a3a3a;padding-top:5px;margin-top:3px;${readOnly ? '' : 'cursor:pointer;'}`;
+			descDiv.textContent = readOnly
+				? (isUnlocked ? '➕ 空突破槽' : '➕ 空突破槽（需突破到该阶生效）')
+				: (isUnlocked ? '➕ 空突破槽 · 点击吸收宝物' : '➕ 空突破槽 · 点击吸收宝物（需突破到该阶生效）');
+			if (!readOnly) {
+				item.style.cursor = 'pointer';
+				item.onclick = () => { if (index === 0) return; openTreasureAbsorbPicker(index, instanceId, popup); };
+				item.onmouseover = () => { item.style.background = '#33334a'; };
+				item.onmouseout = () => { item.style.background = '#1a1a1a'; };
+			}
 		} else {
 			// 普通突破槽：显示自身效果，不作吸收提示、不可点击吸收
 			descDiv.style.cssText = `font-size:13px;line-height:1.4;color:${isUnlocked ? '#ddd' : '#c9a86a'};`;
@@ -1416,20 +1420,25 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 	let breakInfo = getBreakthroughInfo(baseChar, currentTupoLevel);
 	let needPromotion = needUpgrade(instData);
 
-	// 计算可用材料数量
+	// 计算可用材料数量（主角用“主角替身卡”，其他人用同名本体）
+	const isMainAction = charIdForAction === 'zhujue';
 	const availableFodderIds = Object.keys(window.charBagData || {}).filter(id => {
 		if (id === instanceId) return false;
 		const inst = window.charBagData[id];
 		return inst && (inst.charId === charIdForAction || id === charIdForAction);
 	});
-	const availableCount = availableFodderIds.length;
+	const materialName = isMainAction ? '主角替身卡' : '同名角色';
+	const availableCount = isMainAction
+		? ((window.gameItems && window.gameItems['item_zhujue_sub']) || 0)
+		: availableFodderIds.length;
+	const stoneCostForAction = breakInfo.stoneCost || 0;
 
 	// 突破按钮
 	if (!breakInfo.maxed && !needPromotion) {
-		// 突破等级门槛：突破到 currentTupoLevel+1 阶需先达到指定等级
+		// 突破等级门槛：突破到 currentTupoLevel+1 阶需先达到指定等级（主角豁免）
 		const reqLevel = getBreakthroughRequiredLevel(currentTupoLevel + 1);
 		const curLevel = instData.level || 1;
-		const levelOk = curLevel >= reqLevel;
+		const levelOk = isMainAction ? true : (curLevel >= reqLevel);
 
 		// 用垂直包裹层，让警告（如有）显示在突破键上方，按钮保持原样
 		const breakWrap = document.createElement('div');
@@ -1467,7 +1476,9 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 			transition: all 0.2s;
 		`;
 		// 按钮文字保持：突破（可用/需要），不受等级影响
-		doBreakBtn.textContent = `突破（${availableCount}/${breakInfo.cost}）`;
+		doBreakBtn.textContent = stoneCostForAction > 0
+			? `突破（${materialName} ${availableCount}/${breakInfo.cost} · 突破石 ${stoneCostForAction}）`
+			: `突破（${materialName} ${availableCount}/${breakInfo.cost}）`;
 
 		if (!levelOk) {
 			// 等级不足：直接锁定按钮（不可点击）
@@ -1484,10 +1495,20 @@ function renderBreakthroughActions(container, instanceId, instData, baseChar, cu
 			doBreakBtn.onmouseout = () => { doBreakBtn.style.background = '#44aaff'; };
 			doBreakBtn.onclick = (e) => {
 				e.stopPropagation();
+				const avail = isMainAction
+					? ((window.gameItems && window.gameItems['item_zhujue_sub']) || 0)
+					: Object.keys(window.charBagData || {}).filter(id => {
+						if (id === instanceId) return false;
+						const inst = window.charBagData[id];
+						return inst && (inst.charId === charIdForAction || id === charIdForAction);
+					}).length;
+				if (avail < breakInfo.cost) {
+					Game.toast(`突破材料不足！需要 ${breakInfo.cost} 个${materialName}，当前可用: ${avail}`, 'error');
+					return;
+				}
 				Game.confirmDialog(
-					`确定要突破【${baseChar.name}】吗？\n当前突破等级: ${currentTupoLevel}阶 → 目标: ${currentTupoLevel + 1}阶\n消耗: ${breakInfo.cost}个同名角色`,
+					`确定要突破【${baseChar.name}】吗？\n当前突破等级: ${currentTupoLevel}阶 → 目标: ${currentTupoLevel + 1}阶\n消耗: ${breakInfo.cost}个${materialName}${stoneCostForAction > 0 ? ` + ${stoneCostForAction}个突破石` : ''}`,
 					() => {
-						console.log('突破走这里了')
 						const result = breakthroughCharacterInstance(instanceId);
 						if (result.success) {
 							Game.toast(result.message, 'success');
@@ -2197,6 +2218,14 @@ function refreshCharDetailPopupContent(instanceId, dialog) {
 			attrRows[2].textContent = finalStats.totalDef;
 			attrRows[3].textContent = finalStats.totalSpe;
 		}
+
+		// 刷新接引武将区（升品接引后，新吃掉的武将要显示出来；原先没有接引区的也要补上）
+		const skillsDivEl = dialog.querySelector('.gallery-detail-skills');
+		if (skillsDivEl) {
+			const oldFodder = skillsDivEl.querySelector('[data-fodder-block="1"]');
+			if (oldFodder) oldFodder.remove();
+			renderFodderBlock(skillsDivEl, instData);
+		}
 	}
 
 	// 刷新阵容界面
@@ -2342,34 +2371,180 @@ function collectFodder(inst) {
 	});
 	return out;
 }
+// 控制台转化：把旧版“快照”接引补齐/规范为“完整实例”（按当前 characterList 补缺字段，幂等安全，不改已有值）
+// 用法：浏览器控制台执行  convertFodderSnapshots()
+window.convertFodderSnapshots = function convertFodderSnapshots() {
+	const keys = ['fodder_epicfake', 'fodder_epic', 'fodder_legend', 'fodder_kami'];
+	let total = 0, fixed = 0;
+	Object.keys(window.charBagData || {}).forEach(instId => {
+		const inst = window.charBagData[instId];
+		if (!inst) return;
+		keys.forEach(k => {
+			if (!Array.isArray(inst[k])) return;
+			inst[k].forEach(f => {
+				if (!f || !f.charId) return;
+				total++;
+				const base = characterList[f.charId];
+				if (base) {
+					if (!f.name) { f.name = base.name; fixed++; }
+					if (!f.rank) { f.rank = base.rank; fixed++; }
+					if (f.template == null && base.template != null) { f.template = base.template; fixed++; }
+				}
+				if (f.level == null) { f.level = 1; fixed++; }
+				if (f.tupolevel == null) { f.tupolevel = 0; fixed++; }
+			});
+		});
+	});
+	try { if (typeof SaveManager !== 'undefined' && SaveManager.autoSave) SaveManager.autoSave(); } catch (e) { /* ignore */ }
+	console.log(`%c[convertFodderSnapshots] 接引武将共 ${total} 个，补齐/规范 ${fixed} 处，已自动存档`, 'color:#ffd700;font-weight:bold');
+	return { total, fixed };
+};
 function renderFodderBlock(container, inst) {
 	const fodder = collectFodder(inst);
 	if (!fodder.length) return;
+	const RANK_COLOR = { kami:'#ffff00', legend:'#ff4444', epic:'#ff8d8d', epicfake:'#ff8800', rare:'#a335ee', common:'#44aaff', junk:'#88cc88' };
 	const block = document.createElement('div');
+	block.dataset.fodderBlock = '1'; // 标记：便于升品后定位并重渲
 	block.style.cssText = 'background:#1a1a2e;border:1px solid rgba(255,215,0,.35);border-radius:6px;padding:8px 10px;margin:8px 0;';
 	const title = document.createElement('div');
-	title.style.cssText = 'display:flex;justify-content:space-between;align-items:center;font-size:13px;';
-	title.innerHTML = `<span style="color:#ffd700;font-weight:bold;">接引武将</span><span style="color:#9aa4bd;font-size:11px;">共 ${fodder.length} 名（点击查看）</span>`;
+	title.style.cssText = 'font-size:13px;';
+	title.innerHTML = `<span style="color:#ffd700;font-weight:bold;">接引武将</span>`;
 	block.appendChild(title);
 	const row = document.createElement('div');
 	row.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;';
-	fodder.forEach(f => {
+	fodder.forEach((f) => {
 		const cell = document.createElement('div');
 		cell.style.cssText = 'width:54px;text-align:center;cursor:pointer;';
-		cell.title = `${f.name || f.charId}（点击查看）`;
+		cell.title = `${f.name || f.charId}（点击查看介绍）`;
 		const img = document.createElement('img');
 		img.src = `/image/character/${f.charId}.jpg`;
 		img.style.cssText = 'width:46px;height:46px;object-fit:cover;object-position:center top;border-radius:6px;border:1px solid rgba(255,255,255,.2);display:block;margin:0 auto;';
 		img.onerror = function () { this.src = '/image/character/default.jpg'; };
 		const nm = document.createElement('div');
-		nm.style.cssText = 'font-size:11px;color:#cfd6e6;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+		nm.style.cssText = 'font-size:11px;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+		nm.style.color = RANK_COLOR[f.rank] || '#cfd6e6';
 		nm.textContent = f.name || f.charId;
 		cell.appendChild(img); cell.appendChild(nm);
-		cell.onclick = () => openFodderDetail(f);
+		cell.onclick = () => openFodderIntro(f);
 		row.appendChild(cell);
 	});
 	block.appendChild(row);
 	container.appendChild(block);
+}
+// 接引武将介绍浮窗（点击接引头像弹出）
+function openFodderIntro(f) {
+	if (!f) return;
+	const RANK_COLOR = { kami:'#ffff00', legend:'#ff4444', epic:'#ff8d8d', epicfake:'#ff8800', rare:'#a335ee', common:'#44aaff', junk:'#88cc88' };
+	const RANK_LABEL = { kami:'神品', legend:'传说', epic:'史诗', epicfake:'伪史诗', rare:'稀有', common:'精品', junk:'平凡' };
+	const base = characterList[f.charId] || {};
+	const overlay = document.createElement('div');
+	overlay.className = 'ybrpg-confirm-overlay';
+	overlay.style.zIndex = '30001';
+	const dialog = document.createElement('div');
+	dialog.className = 'ybrpg-confirm-dialog';
+	dialog.style.cssText = 'width:min(360px,92vw);max-height:86vh;display:flex;flex-direction:column;overflow:hidden;text-align:center;';
+	// 可滚动内容区（关闭按钮固定底部，不随内容滚动）
+	const scroll = document.createElement('div');
+	scroll.style.cssText = 'flex:1;min-height:0;overflow-y:auto;';
+	const av = document.createElement('img');
+	av.src = `/image/character/${f.charId}.jpg`;
+	av.style.cssText = `width:96px;height:120px;object-fit:cover;object-position:center top;border-radius:8px;border:2px solid ${RANK_COLOR[f.rank] || '#888'};margin:0 auto 10px;display:block;`;
+	av.onerror = function () { this.src = '/image/character/default.jpg'; };
+	scroll.appendChild(av);
+	const nm = document.createElement('div');
+	nm.style.cssText = `font-size:17px;font-weight:bold;color:${RANK_COLOR[f.rank] || '#fff'};`;
+	nm.textContent = f.name || f.charId;
+	scroll.appendChild(nm);
+	const meta = document.createElement('div');
+	meta.style.cssText = 'font-size:12px;color:#9aa4bd;margin:4px 0 12px;';
+	meta.textContent = `${RANK_LABEL[f.rank] || ''} · Lv.${f.level || 1}${f.tupolevel ? ' +' + f.tupolevel : ''}`;
+	scroll.appendChild(meta);
+	// 简介（仅显示含中文的真正简介；过滤 damage/recover/damger 等原始占位值）
+	const tipRaw = (typeof base.tip === 'string') ? base.tip.trim() : '';
+	if (tipRaw && /[\u4e00-\u9fa5]/.test(tipRaw)) {
+		const tipEl = document.createElement('div');
+		tipEl.style.cssText = 'font-size:13px;color:#cfd6e6;line-height:1.6;text-align:left;white-space:pre-wrap;margin-bottom:10px;';
+		tipEl.textContent = tipRaw;
+		scroll.appendChild(tipEl);
+	}
+	// ===== 技能：普攻 / 技能 / 必杀 =====
+	const skillIds = base.skills || [];
+	const skillsBox = document.createElement('div');
+	skillsBox.style.cssText = 'text-align:left;';
+	let hasSkill = false;
+	const pugongId = skillIds[0];
+	if (pugongId && contentList.pugong && contentList.pugong[pugongId]) {
+		skillsBox.appendChild(buildSkillSection('普攻', contentList.pugong[pugongId], '#5ba8ff'));
+		hasSkill = true;
+	}
+	const spSkillId = skillIds[2];
+	const spData = spSkillId && contentList.spskill && contentList.spskill[spSkillId];
+	if (spData) {
+		const skillId = skillIds[1];
+		if (skillId && contentList.skill && contentList.skill[skillId]) {
+			skillsBox.appendChild(buildSkillSection('技能', contentList.skill[skillId], '#ff8c00'));
+			hasSkill = true;
+		}
+		if (f.openSpskill === true) {
+			skillsBox.appendChild(buildSkillSection('必杀', spData, '#ffd700'));
+		} else {
+			const sec = document.createElement('div');
+			sec.className = 'gallery-skill-section';
+			sec.style.opacity = '0.6';
+			sec.style.filter = 'grayscale(0.8)';
+			const t = document.createElement('div');
+			t.className = 'gallery-skill-title spskill';
+			t.textContent = '必杀（未解锁）';
+			t.style.color = '#888';
+			sec.appendChild(t);
+			const intro = document.createElement('div');
+			intro.className = 'gallery-skill-intro';
+			intro.textContent = spData.intro || '';
+			intro.style.color = '#666';
+			sec.appendChild(intro);
+			const lock = document.createElement('div');
+			lock.className = 'gallery-skill-ai';
+			lock.style.color = '#ffd700';
+			lock.style.fontSize = '11px';
+			lock.textContent = '🔒 突破19阶解锁必杀';
+			sec.appendChild(lock);
+			skillsBox.appendChild(sec);
+		}
+		hasSkill = true;
+	} else {
+		const skillId = skillIds[1];
+		if (skillId && contentList.skill && contentList.skill[skillId]) {
+			skillsBox.appendChild(buildSkillSection('技能', contentList.skill[skillId], '#ff8c00'));
+			hasSkill = true;
+		}
+	}
+	if (hasSkill) {
+		const skTitle = document.createElement('div');
+		skTitle.style.cssText = 'font-size:13px;color:#ffd700;font-weight:bold;margin:8px 2px 6px;text-align:left;';
+		skTitle.textContent = '技能';
+		scroll.appendChild(skTitle);
+		scroll.appendChild(skillsBox);
+	}
+	// ===== 突破详情（只读预览：接引武将必未培养，突破槽全部未解锁）=====
+	const breakTitle = document.createElement('div');
+	breakTitle.style.cssText = 'font-size:13px;color:#ffd700;font-weight:bold;margin:14px 2px 6px;text-align:left;';
+	breakTitle.textContent = '突破详情';
+	scroll.appendChild(breakTitle);
+	const breakBox = document.createElement('div');
+	breakBox.style.cssText = 'text-align:left;';
+	scroll.appendChild(breakBox);
+	renderBreakthroughList(breakBox, base, f.tupolevel || 0, f, null, dialog, true);
+	dialog.appendChild(scroll);
+	// 关闭按钮（固定底部）
+	const ok = document.createElement('button');
+	ok.className = 'ybrpg-confirm-btn';
+	ok.textContent = '关闭';
+	ok.style.cssText = 'margin-top:10px;flex-shrink:0;';
+	ok.onclick = () => overlay.remove();
+	dialog.appendChild(ok);
+	overlay.appendChild(dialog);
+	overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+	document.body.appendChild(overlay);
 }
 // 接引武将快照详情（被消耗的接引实例，读取记录于此的数据）
 function openFodderDetail(f) {
@@ -2776,8 +2951,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 		}
 	}
 
-	// 接引武将展示（技能模块下，若实例带接引键值对）
-	renderFodderBlock(attrDiv, char);
+	// 接引武将展示已移至左列“宝物区”下方独立区域（见 treasureGrid 之后）
 
 	// 将 attrDiv 放入 rightScroll
 	rightScroll.appendChild(attrDiv);
@@ -3916,6 +4090,9 @@ function showBagCharDetailPopup(instanceId, charId) {
 	const char = characterList[charId];
 	if (!char) return;
 	const charT = instData;
+	// 接引选材模式：一次性读取确认回调（由接引选择浮窗“点击查看”设置），详情内加“确认接引”按钮
+	const fodderConfirm = window._ascendFodderConfirm || null;
+	window._ascendFodderConfirm = null;
 	// 遮罩层
 	// const overlay = document.createElement('div');
 	// overlay.className = 'ybrpg-confirm-overlay'; // 保持原有类名
@@ -4257,7 +4434,18 @@ function showBagCharDetailPopup(instanceId, charId) {
 			// updateCharacterSP(saveData)
 		});
 	};
-	btnRow.appendChild(upgradeBtn);
+	// 接引选材预览（耗材查看）不暴露“选择升级”等培养入口，仅保留“确认接引/关闭”
+	if (!fodderConfirm) btnRow.appendChild(upgradeBtn);
+
+	// 接引选材模式：详情内“确认接引”按钮（点击查看接引武将时出现）
+	if (fodderConfirm) {
+		const fodderBtn = document.createElement('button');
+		fodderBtn.className = 'ybrpg-btn';
+		fodderBtn.style.cssText = 'width:auto;padding:6px 16px;font-size:13px;flex:1;background:#2e7d32;color:#fff;';
+		fodderBtn.textContent = '确认接引';
+		fodderBtn.onclick = () => { overlay.remove(); if (typeof fodderConfirm === 'function') fodderConfirm(instanceId); };
+		btnRow.appendChild(fodderBtn);
+	}
 
 	const closeBtn = document.createElement('button');
 	closeBtn.className = 'ybrpg-btn';
@@ -4454,7 +4642,7 @@ function showBagCharDetailPopup(instanceId, charId) {
 		// showBreakthroughPreviewPopup();
 		showBreakthroughPreviewPopupWithCallback(instanceId, dialog);
 	};
-	btnRow.appendChild(detailBreakBtn);
+	if (!fodderConfirm) btnRow.appendChild(detailBreakBtn); // 接引预览(耗材)不显示“突破详情”入口
 	// --- 👆 结束 ---
 	// --- 👆 突破/升阶按钮逻辑结束 👆 ---
 	// --- 👆 插入结束 👆 ---
@@ -4715,6 +4903,27 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 	overlay.className = 'ybrpg-confirm-overlay';
 	overlay.style.zIndex = '10001';
 
+	// ===== 将魂递进器：用将魂代替材料升级（每 +1 级 = 1 个同品质 Lv.1 材料的将魂价值；突破/升品不受影响）=====
+	const perLevelSoul = ({ junk: 50, common: 150, rare: 600, epicfake: 1200, epic: 2500, legend: 4000 })[targetRank] || 0;
+	let soulUnits = 0;
+	const getSoulHave = () => (Game.Data && Game.Data.getItemCount) ? Game.Data.getItemCount('item_char_soul') : 0;
+	function clampSoul() {
+		const selLevels = consumables.filter(c => c.selected).reduce((s, c) => s + c.level, 0);
+		let capByLevel = Infinity;
+		if (targetCharId !== 'zhujue') {
+			const _mainInst = getMainCharacterInstance();
+			const _mainLevel = _mainInst ? (_mainInst.level || 1) : 1;
+			capByLevel = Math.max(0, _mainLevel - currentLevel - selLevels);
+		}
+		const capBySoul = perLevelSoul > 0 ? Math.floor(getSoulHave() / perLevelSoul) : 0;
+		soulUnits = Math.max(0, Math.min(soulUnits, capByLevel, capBySoul));
+	}
+	function renderSoul() {
+		const el = document.getElementById('upgrade-soul-val');
+		if (el) el.textContent = `${soulUnits}级 / ${soulUnits * perLevelSoul}魂`;
+		const hv = document.getElementById('upgrade-soul-have');
+		if (hv) hv.textContent = `持有将魂: ${getSoulHave()}`;
+	}
 
 	const popup = document.createElement('div');
 	popup.className = 'char-select-popup';
@@ -4734,6 +4943,40 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 	scrollDiv.appendChild(listContainer);
 	popup.appendChild(scrollDiv);
 
+	// ===== 将魂递进器区块（该品质可用将魂升级时才显示）=====
+	if (perLevelSoul > 0) {
+		const soulBar = document.createElement('div');
+		soulBar.style.cssText = 'display:flex;align-items:center;gap:6px;padding:8px;border-top:1px solid #444;flex-wrap:wrap;';
+		const soulLabel = document.createElement('div');
+		soulLabel.style.cssText = 'color:#ffd700;font-size:12px;flex:1;min-width:130px;line-height:1.4;';
+		soulLabel.innerHTML = `👻 将魂升级<br><span style="color:#aaa;font-size:11px;">每 +1 级 = ${perLevelSoul} 将魂（=1个${getRankLabel(targetRank)}材料）</span>`;
+		soulBar.appendChild(soulLabel);
+		const soulStep = document.createElement('div');
+		soulStep.style.cssText = 'display:flex;align-items:center;gap:4px;';
+		const mkSoulBtn = (txt, step) => {
+			const b = document.createElement('button');
+			b.className = 'ybrpg-btn';
+			b.textContent = txt;
+			b.style.cssText = 'width:auto;padding:3px 9px;font-size:12px;';
+			b.onclick = () => { soulUnits = Math.max(0, soulUnits + step); clampSoul(); updateInfoBar(); };
+			return b;
+		};
+		soulStep.appendChild(mkSoulBtn('−10', -10));
+		soulStep.appendChild(mkSoulBtn('−1', -1));
+		const soulVal = document.createElement('div');
+		soulVal.id = 'upgrade-soul-val';
+		soulVal.style.cssText = 'min-width:72px;text-align:center;color:#fff;font-size:13px;';
+		soulStep.appendChild(soulVal);
+		soulStep.appendChild(mkSoulBtn('+1', 1));
+		soulStep.appendChild(mkSoulBtn('+10', 10));
+		soulBar.appendChild(soulStep);
+		const soulHaveEl = document.createElement('div');
+		soulHaveEl.id = 'upgrade-soul-have';
+		soulHaveEl.style.cssText = 'color:#aaa;font-size:11px;width:100%;text-align:right;';
+		soulBar.appendChild(soulHaveEl);
+		popup.appendChild(soulBar);
+	}
+
 	// 底部信息栏
 	const infoBar = document.createElement('div');
 	infoBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px;border-top:1px solid #444;';
@@ -4752,7 +4995,7 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 	confirmBtn.id = 'upgrade-confirm-btn';
 	confirmBtn.onclick = () => {
 		const selected = consumables.filter(c => c.selected);
-		const totalLevel = selected.reduce((s, c) => s + c.level, 0);
+		const totalLevel = selected.reduce((s, c) => s + c.level, 0) + soulUnits;
 		let newLevel = currentLevel + totalLevel;
 
 		// 非主角角色：等级不得超过主角
@@ -4771,6 +5014,12 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 			Game.toast(`金币不足！升至 Lv.${newLevel} 需 ${totalGoldCost} 金币（当前 ${window.gameGold || 0}）`, 'error');
 			return;
 		}
+		// 将魂校验（递进器份数 × 每级将魂）
+		const soulCost = soulUnits * perLevelSoul;
+		if (soulCost > 0 && getSoulHave() < soulCost) {
+			Game.toast(`将魂不足！需 ${soulCost} 将魂（当前 ${getSoulHave()}）`, 'error');
+			return;
+		}
 
 		// 消耗选中的角色
 		selected.forEach(c => {
@@ -4785,6 +5034,8 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 
 		// 扣除金币
 		window.gameGold = (window.gameGold || 0) - totalGoldCost;
+		// 扣除将魂
+		if (soulCost > 0 && Game.Data && Game.Data.removeItem) Game.Data.removeItem('item_char_soul', soulCost);
 		updateResourceHUD();
 
 		// 升级目标角色
@@ -4804,13 +5055,14 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 		}
 
 		overlay.remove();
-		Game.toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！（消耗 ${totalGoldCost} 金币）`, 'success');
+		Game.toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！（消耗 ${totalGoldCost} 金币${soulCost > 0 ? ` + ${soulCost} 将魂` : ''}）`, 'success');
 
 		// 【修改】统一使用 refreshAllViews
 		Game.UI.refresh({
 			instanceId: targetInstId,
 			forceTeamRebuild: false
 		});
+		updateHomeAccountBar(); // 主角升级后刷新主页左上角账号等级（=主角等级）
 	};
 
 	infoBar.appendChild(confirmBtn);
@@ -4878,13 +5130,14 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 				if (!c.selected && targetCharId !== 'zhujue') {
 					const _mainInst = getMainCharacterInstance();
 					const _mainLevel = _mainInst ? (_mainInst.level || 1) : 1;
-					const _curTotal = consumables.filter(x => x.selected).reduce((s, x) => s + x.level, 0);
+					const _curTotal = consumables.filter(x => x.selected).reduce((s, x) => s + x.level, 0) + soulUnits;
 					if (currentLevel + _curTotal + c.level > _mainLevel) {
 						Game.toast(`该素材会使等级超过主角（Lv.${_mainLevel}），无法选择`, 'warning');
 						return;
 					}
 				}
 				c.selected = !c.selected;
+				clampSoul();
 				renderConsumableList();
 				updateInfoBar();
 			};
@@ -4904,10 +5157,11 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 
 	function updateInfoBar() {
 		const selected = consumables.filter(c => c.selected);
-		const totalLevel = selected.reduce((s, c) => s + c.level, 0);
+		const totalLevel = selected.reduce((s, c) => s + c.level, 0) + soulUnits;
 		const countLabel = document.getElementById('upgrade-count-label');
 		const confirmBtn = document.getElementById('upgrade-confirm-btn');
 		const newLevel = currentLevel + totalLevel;
+		const soulCost = soulUnits * perLevelSoul;
 		// 非主角角色：提示不得超过主角等级
 		let overHint = '';
 		let overColor = '';
@@ -4923,18 +5177,22 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 			if (totalLevel > 0) {
 				const goldCost = calcUpgradeGoldCost(currentLevel, newLevel);
 				const enough = (window.gameGold || 0) >= goldCost;
+				const soulEnough = soulCost <= getSoulHave();
 				countLabel.textContent = `已选: ${totalLevel} 将升至 ${newLevel}级 · 金币: ${goldCost}` +
-					(enough ? '' : `（不足，差 ${goldCost - (window.gameGold || 0)}）`) + overHint;
-				countLabel.style.color = overColor || (enough ? '' : '#ff6b6b');
+					(enough ? '' : `（不足，差 ${goldCost - (window.gameGold || 0)}）`) +
+					(soulCost > 0 ? ` · 将魂: ${soulCost}${soulEnough ? '' : '（不足）'}` : '') + overHint;
+				countLabel.style.color = overColor || (!enough || !soulEnough ? '#ff6b6b' : '');
 			} else {
 				countLabel.textContent = '已选: 0 将升至' + currentLevel + '级' + overHint;
 				countLabel.style.color = overColor;
 			}
 		}
 		if (confirmBtn) {
-			confirmBtn.disabled = !totalLevel;
-			confirmBtn.style.opacity = !totalLevel ? '0.5' : '1';
+			const soulEnough = soulCost <= getSoulHave();
+			confirmBtn.disabled = !totalLevel || !soulEnough;
+			confirmBtn.style.opacity = confirmBtn.disabled ? '0.5' : '1';
 		}
+		renderSoul();
 	}
 
 	renderConsumableList();
@@ -5265,6 +5523,7 @@ function levelUpMainCharacter() {
 
 	// 4. 刷新界面
 	refreshAllTeamSlots();
+	updateHomeAccountBar(); // 刷新主页左上角账号等级（=主角等级）
 
 	// 5. 自动保存
 	// SaveManager.autoSave();
@@ -5574,9 +5833,9 @@ function promoteCharacterRank(targetInstId, fodderInstId) {
 		if ((fodder.level || 1) !== 1 || (fodder.tupolevel || 0) !== 0) {
 			return { success: false, message: '接引武将必须未培养（1级且无突破）' };
 		}
-		// 吃掉接引武将：完整实例存入目标实例的接引数组，再从背包/队伍移除
+		// 吃掉接引武将：把“完整实例”（原对象本身，非快照拷贝）移入目标实例的对应接引格子，再从背包/队伍移除
 		targetInst[info.fodderKey] = Array.isArray(targetInst[info.fodderKey]) ? targetInst[info.fodderKey] : [];
-		targetInst[info.fodderKey].push(JSON.parse(JSON.stringify(fodder)));
+		targetInst[info.fodderKey].push(fodder);
 		if (window.currentTeam && window.currentTeam.includes(fodderInstId)) {
 			window.currentTeam = window.currentTeam.filter(id => id !== fodderInstId);
 		}
@@ -5646,13 +5905,16 @@ function doAscend(instanceId, name, onDone) {
 	}
 }
 
-/** 接引武将选择弹窗：列出未培养(1级+无突破)且品质=info.targetRank 的武将，选一个即“吃掉”并升品 */
+/** 接引武将选择弹窗：列出未培养(1级+无突破)且品质=info.targetRank 的武将；点击仅查看（打开标准武将详情），详情内“确认接引”才消耗 */
 function openAscendFodderPicker(targetInstId, info, onDone) {
+	const RANK_COLOR = { kami:'#ffff00', legend:'#ff4444', epic:'#ff8d8d', epicfake:'#ff8800', rare:'#a335ee', common:'#44aaff', junk:'#88cc88' };
 	const cands = Object.keys(window.charBagData || {}).filter(id => {
 		if (id === targetInstId) return false;
 		const inst = window.charBagData[id];
 		return inst && (inst.rank || 'junk') === info.targetRank && (inst.level || 1) === 1 && (inst.tupolevel || 0) === 0;
-	});
+	}).map(id => ({ id, inst: window.charBagData[id] }));
+	// 排序：同名将排一起（按名称，和角色背包一致）
+	cands.sort((a, b) => (a.inst.name || a.inst.charId || '').localeCompare(b.inst.name || b.inst.charId || ''));
 	const overlay = document.createElement('div');
 	overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10000;display:flex;align-items:center;justify-content:center;';
 	const panel = document.createElement('div');
@@ -5662,7 +5924,7 @@ function openAscendFodderPicker(targetInstId, info, onDone) {
 	title.textContent = `选择接引武将（${getRankLabel(info.targetRank)}）`;
 	const sub = document.createElement('div');
 	sub.style.cssText = 'font-size:12px;color:#9aa4bd;margin-bottom:12px;line-height:1.6;';
-	sub.innerHTML = `将消耗 1 名<b>未培养</b>的【${getRankLabel(info.targetRank)}】武将作为接引（它会被“吃掉”，实例记录在该武将内），并消耗 <b>${info.awakenCost}</b> 觉醒石。`;
+	sub.innerHTML = `将消耗 1 名<b>未培养</b>的【${getRankLabel(info.targetRank)}】武将作为接引（它会被“吃掉”，完整实例移入该武将的接引格子），并消耗 <b>${info.awakenCost}</b> 觉醒石。<br>点击武将仅<b>查看</b>，在其详情内点“确认接引”才真正消耗。`;
 	panel.appendChild(title); panel.appendChild(sub);
 	const close = () => { if (overlay.parentNode) document.body.removeChild(overlay); };
 	if (cands.length === 0) {
@@ -5672,30 +5934,39 @@ function openAscendFodderPicker(targetInstId, info, onDone) {
 		panel.appendChild(empty);
 	} else {
 		const grid = document.createElement('div');
-		grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;';
-		cands.forEach(id => {
-			const inst = window.charBagData[id];
+		grid.className = 'gallery-grid';
+		grid.style.cssText = 'grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px;';
+		cands.forEach(({ id, inst }) => {
 			const card = document.createElement('div');
-			card.style.cssText = 'background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;transition:all .15s;';
-			card.onmouseover = () => { card.style.borderColor = '#ffd700'; };
-			card.onmouseout = () => { card.style.borderColor = 'rgba(255,255,255,.16)'; };
+			card.className = 'gallery-char-card';
+			card.style.cssText = 'cursor:pointer;text-align:center;';
+			const iconDiv = document.createElement('div');
+			iconDiv.className = 'gallery-char-icon';
+			iconDiv.style.borderColor = RANK_COLOR[inst.rank] || '#888';
 			const img = document.createElement('img');
+			img.className = 'gallery-char-img';
 			img.src = `/image/character/${inst.charId}.jpg`;
-			img.style.cssText = 'width:48px;height:48px;object-fit:cover;object-position:center top;border-radius:6px;display:block;margin:0 auto;';
-			img.onerror = function () { this.style.display = 'none'; };
+			img.onerror = function () { this.style.display = 'none'; iconDiv.textContent = (inst.name || inst.charId || '?').charAt(0); iconDiv.style.fontSize = '26px'; };
+			iconDiv.appendChild(img);
+			card.appendChild(iconDiv);
 			const nm = document.createElement('div');
-			nm.style.cssText = 'font-size:12px;margin-top:5px;color:#e8ecf6;';
+			nm.className = 'gallery-char-name';
+			nm.style.color = RANK_COLOR[inst.rank] || '#e8ecf6';
 			nm.textContent = inst.name || inst.charId;
-			card.appendChild(img); card.appendChild(nm);
+			card.appendChild(nm);
 			card.onclick = () => {
-				const result = promoteCharacterRank(targetInstId, id);
-				if (result.success) {
-					Game.toast(result.message, 'success');
-					close();
-					if (typeof onDone === 'function') { try { onDone(); } catch (e) { /* ignore */ } }
-				} else {
-					Game.toast(result.message, 'error');
-				}
+				// 点击仅查看：打开标准武将详情，详情内“确认接引”才真正消耗
+				window._ascendFodderConfirm = (fodderId) => {
+					const result = promoteCharacterRank(targetInstId, fodderId);
+					if (result.success) {
+						Game.toast(result.message, 'success');
+						close();
+						if (typeof onDone === 'function') { try { onDone(); } catch (e) { /* ignore */ } }
+					} else {
+						Game.toast(result.message, 'error');
+					}
+				};
+				showBagCharDetailPopup(id, inst.charId);
 			};
 			grid.appendChild(card);
 		});
@@ -5704,10 +5975,10 @@ function openAscendFodderPicker(targetInstId, info, onDone) {
 	const closeBtn = document.createElement('button');
 	closeBtn.textContent = '取消';
 	closeBtn.style.cssText = 'margin-top:14px;padding:8px 18px;background:#444;color:#fff;border:none;border-radius:6px;cursor:pointer;';
-	closeBtn.onclick = close;
+	closeBtn.onclick = () => { window._ascendFodderConfirm = null; close(); };
 	panel.appendChild(closeBtn);
 	overlay.appendChild(panel);
-	overlay.onclick = (e) => { if (e.target === overlay) close(); };
+	overlay.onclick = (e) => { if (e.target === overlay) { window._ascendFodderConfirm = null; close(); } };
 	document.body.appendChild(overlay);
 }
 

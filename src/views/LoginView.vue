@@ -8,7 +8,16 @@
       <div v-if="error" class="error">{{ error }}</div>
       <button :disabled="loading" @click="submit">{{ loading ? '登录中…' : '登 录' }}</button>
       <label class="remember-row"><input type="checkbox" v-model="remember" /> 记住我的账号密码</label>
-      <button v-if="savedLogin" class="quick-btn" :disabled="loading" @click="quickLogin">{{ loading ? '登录中…' : '快捷登录（' + savedLogin.u + '）' }}</button>
+      <div v-if="savedLogins.length" class="quick-box">
+        <button class="quick-btn" :disabled="loading" @click="quickLogin(savedLogins[0].u)">{{ loading ? '登录中…' : '⚡ 快捷登录（' + savedLogins[0].u + '）' }}</button>
+        <button type="button" class="quick-toggle" @click="showList = !showList">{{ showList ? '收起账号列表 ▲' : '更多账号 ▾' }}</button>
+        <div v-if="showList" class="quick-list">
+          <div v-for="acc in savedLogins" :key="acc.u" class="quick-item">
+            <span class="qi-name" @click="quickLogin(acc.u)">{{ acc.u }}</span>
+            <span class="qi-del" title="移除该账号" @click="removeAcc(acc.u)">✕</span>
+          </div>
+        </div>
+      </div>
       <div class="links">
         <router-link to="/register">没有账号？去注册</router-link>
         <router-link to="/" class="guest">返回</router-link>
@@ -28,21 +37,26 @@ const username = ref('');
 const password = ref('');
 const error = ref('');
 const loading = ref(false);
-const savedLogin = computed(() => auth.savedLogin);
+const savedLogins = computed(() => auth.savedLogins);
 const remember = ref(true); // 记住我的账号密码
+const showList = ref(false); // 展开已保存账号列表
 
-async function quickLogin() {
+async function quickLogin(u) {
   error.value = '';
-  if (!auth.savedLogin) return;
+  if (!u) return;
   loading.value = true;
   try {
-    await auth.quickLogin();
+    await auth.quickLogin(u);
     router.push('/');
   } catch (e) {
     error.value = e.message || '快捷登录失败';
   } finally {
     loading.value = false;
   }
+}
+
+function removeAcc(u) {
+  auth.removeSavedLogin(u);
 }
 
 async function submit() {
@@ -70,6 +84,15 @@ async function submit() {
 .auth-card button { margin-top: 4px; background: linear-gradient(180deg,#5b8cff,#3f6fe0); border: none; border-radius: 8px; padding: 12px; color: #fff; font-size: 16px; letter-spacing: 4px; cursor: pointer; }
 .auth-card button:disabled { opacity: .6; cursor: default; }
 .auth-card .quick-btn { background: linear-gradient(180deg,#3fae7a,#2e8c60); letter-spacing: 1px; font-size: 15px; }
+.quick-box { display: flex; flex-direction: column; gap: 6px; }
+.quick-toggle { background: transparent; border: none; color: #8fb0ff; font-size: 12px; cursor: pointer; padding: 2px; letter-spacing: 0; }
+.quick-list { border: 1px solid rgba(255,255,255,.12); border-radius: 8px; max-height: 180px; overflow-y: auto; }
+.quick-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; cursor: pointer; }
+.quick-item + .quick-item { border-top: 1px solid rgba(255,255,255,.08); }
+.quick-item:hover { background: rgba(91,140,255,.12); }
+.qi-name { color: #e8ecf6; font-size: 14px; }
+.qi-del { color: #9aa4bd; font-size: 13px; padding: 0 4px; cursor: pointer; }
+.qi-del:hover { color: #ff7b7b; }
 .error { color: #ff7b7b; font-size: 13px; text-align: center; }
 .remember-row { display: flex; align-items: center; gap: 6px; color: #9aa4bd; font-size: 13px; cursor: pointer; margin-top: 2px; }
 .remember-row input { width: 15px; height: 15px; accent-color: #3f6fe0; cursor: pointer; }

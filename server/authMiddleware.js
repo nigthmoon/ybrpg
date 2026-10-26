@@ -1,11 +1,12 @@
 import jwt from 'jsonwebtoken';
 import db from './db.js';
-import { JWT_SECRET, SESSION_IDLE_KICK_SEC } from './config.js';
+import { JWT_SECRET } from './config.js';
 
 /**
  * 必须登录：校验 Bearer token + 会话有效（单登录）。
- *  - token 无 jti 或会话不存在/已吊销 → 401（被顶号/已登出）
- *  - 超过 SESSION_IDLE_KICK_SEC 无存档同步 → 判定挂机，吊销并 401
+ *  - token 无 jti 或会话不存在/已吊销 → 401（被异地顶号 / 已主动登出）
+ *  - 不再有“挂机踢 / 关网页踢”：会话仅在“其他设备登录顶号”或主动登出时失效。
+ *    原设备下次请求（心跳/存档/me）会拿到 401，前端提示“账号已异地登录，请重新登录”。
  */
 export function authRequired(req, res, next) {
   const header = req.headers.authorization || '';
@@ -20,15 +21,9 @@ export function authRequired(req, res, next) {
   if (!payload.jti) {
     return res.status(401).json({ error: 'SESSION_REVOKED', message: '登录状态已失效，请重新登录' });
   }
-  const s = db.prepare('SELECT id, last_save FROM sessions WHERE jti = ? AND revoked_at IS NULL').get(payload.jti);
+  const s = db.prepare('SELECT id FROM sessions WHERE jti = ? AND revoked_at IS NULL').get(payload.jti);
   if (!s) {
-    return res.status(401).json({ error: 'SESSION_REVOKED', message: '你已被踢下线（其他设备登录或长时间挂机）' });
-  }
-  // 挂机踢：超过 SESSION_IDLE_KICK_SEC 未产生存档同步则吊销
-  const idle = db.prepare("SELECT id FROM sessions WHERE id = ? AND last_save < datetime('now', '+8 hours', ?)").get(s.id, `-${SESSION_IDLE_KICK_SEC} seconds`);
-  if (idle) {
-    db.prepare("UPDATE sessions SET revoked_at = datetime('now', '+8 hours') WHERE id = ?").run(s.id);
-    return res.status(401).json({ error: 'SESSION_IDLE', message: '长时间未产生存档，已自动退出，请重新登录' });
+    return res.status(401).json({ error: 'SESSION_REVOKED', message: '你的账号已在其他设备登录，请重新登录' });
   }
   req.user = { id: payload.sub, username: payload.username, jti: payload.jti };
   next();

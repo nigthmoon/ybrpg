@@ -232,6 +232,9 @@ export const ITEM_DEFS = {
 	item_box_deluxe: { id: 'item_box_deluxe', name: '奢华宝箱', price: { gold: 0 }, emoji: '🎆', icon: '/image/header/dj_10026.png', kind: 'luxury', reward: { diamond: 50, gold: 10000 }, selectable: false, desc: '开启后获得 50 钻石 + 10000 金币' },
 	// 刷新令（重置一个关卡今日挑战次数；在关卡产出预览里使用）
 	item_refresh_token: { id: 'item_refresh_token', name: '刷新令', price: { gold: 0 }, emoji: '🎟️', icon: '/image/header/dj_50030.png', kind: 'refresh', selectable: false, desc: '重置一个关卡今日的挑战次数（在副本关卡产出预览里使用）' },
+	// 炼化产物（资源，入背包可查看数量；后续开放兑换/培养，不可主动使用/出售）
+	item_char_soul: { id: 'item_char_soul', name: '将魂', price: { gold: 0 }, emoji: '👻', icon: '/image/header/zs_12307.png', kind: 'material', selectable: false, desc: '炼化武将获得的资源，后续开放武将兑换/培养。' },
+	item_soul_shard: { id: 'item_soul_shard', name: '碎屑', price: { gold: 0 }, emoji: '💠', icon: '/image/header/zs_12308.png', kind: 'material', selectable: false, desc: '炼化宝物获得的资源，后续开放宝物兑换/培养。' },
 
 	// ===================== 宝物箱（按品质分类，硬编码可选宝物） =====================
 	// rank1
@@ -446,6 +449,60 @@ function getCandidateChars(itemDef) {
 	});
 }
 
+// ==================== 背包「材料」标签内容渲染（突破石/觉醒石/将魂/碎屑，常驻显示数量） ====================
+export function renderBagMaterialContent(container) {
+	window._lastBagContainer = container;
+	const _prevScrollTop = container.scrollTop || 0;
+	container.innerHTML = '';
+	const inventory = (Game.Data && Game.Data.getInventory()) || {};
+	const materialIds = Object.keys(ITEM_DEFS).filter(id => ITEM_DEFS[id] && ITEM_DEFS[id].kind === 'material');
+	const scrollDiv = document.createElement('div');
+	scrollDiv.className = 'bag-char-scroll';
+	const grid = document.createElement('div');
+	grid.className = 'gallery-grid';
+	if (materialIds.length === 0) {
+		const emptyTip = document.createElement('div');
+		emptyTip.style.cssText = 'color:#666;font-size:13px;text-align:center;padding:20px;';
+		emptyTip.textContent = '暂无材料';
+		grid.appendChild(emptyTip);
+	} else {
+		materialIds.forEach(itemId => {
+			const def = ITEM_DEFS[itemId];
+			const count = inventory[itemId] || 0;
+			const card = document.createElement('div');
+			card.className = 'gallery-char-card';
+			card.dataset.itemId = itemId;
+			card.style.cursor = 'pointer';
+			const iconDiv = document.createElement('div');
+			iconDiv.className = 'gallery-char-icon';
+			iconDiv.style.position = 'relative';
+			renderItemIcon(iconDiv, def);
+			card.appendChild(iconDiv);
+			const countBadge = document.createElement('div');
+			countBadge.className = 'charbag-level-badge';
+			countBadge.style.cssText = 'position:absolute;top:2px;right:2px;bottom:auto;left:auto;background:rgba(0,0,0,0.7);color:#fff;border-radius:8px;padding:0 5px;font-size:11px;';
+			countBadge.textContent = '×' + count;
+			iconDiv.appendChild(countBadge);
+			const nameDiv = document.createElement('div');
+			nameDiv.className = 'gallery-char-name';
+			nameDiv.textContent = def.name;
+			card.appendChild(nameDiv);
+			card.onclick = () => {
+				updateBagItemDetailBar(def, count);
+				document.querySelectorAll('.gallery-char-card.selected').forEach(c => c.classList.remove('selected'));
+				card.classList.add('selected');
+			};
+			grid.appendChild(card);
+		});
+	}
+	scrollDiv.appendChild(grid);
+	container.appendChild(scrollDiv);
+	if (_prevScrollTop > 0) {
+		container.scrollTop = _prevScrollTop;
+		requestAnimationFrame(() => { container.scrollTop = _prevScrollTop; });
+	}
+}
+
 // ==================== 背包「道具」标签内容渲染 ====================
 export function renderBagItemContent(container) {
 	window._lastBagContainer = container;
@@ -454,7 +511,7 @@ export function renderBagItemContent(container) {
 	container.innerHTML = ''; // 先清空，避免刷新时把新列表追加到旧列表之后造成视觉残留
 	const inventory = (Game.Data && Game.Data.getInventory()) || {};
 	const itemIds = Object.keys(ITEM_DEFS)
-		.filter(id => inventory[id] > 0 && ITEM_DEFS[id])
+		.filter(id => inventory[id] > 0 && ITEM_DEFS[id] && ITEM_DEFS[id].kind !== 'material')
 		.sort((a, b) => Object.keys(ITEM_DEFS).indexOf(a) - Object.keys(ITEM_DEFS).indexOf(b));
 
 	const scrollDiv = document.createElement('div');
@@ -593,7 +650,7 @@ export function useItem(itemId) {
 
 	// 培养材料：只能查看，不可主动使用（在突破/升品界面消耗）
 	if (def.kind === 'material') {
-		Game.toast(`${def.name}是培养材料，请在突破/升品界面使用`, 'warning');
+		Game.toast(`${def.name}是养成材料，暂不可直接使用（用途见说明）`, 'warning');
 		return;
 	}
 	if (def.kind === 'goldbag') {
@@ -610,6 +667,10 @@ export function useItem(itemId) {
 	}
 	if (def.kind === 'refresh') {
 		Game.toast('请在副本关卡的“产出预览”里使用刷新令重置今日次数', 'warning');
+		return;
+	}
+	if (def.kind === 'resource') {
+		Game.toast(`${def.name}是炼化产出的资源，后续开放兑换/培养，暂不可主动使用`, 'warning');
 		return;
 	}
 

@@ -15,7 +15,7 @@ export const useAuthStore = defineStore('auth', {
     user: null,          // { id, username, nickname, created_at, last_login }
     initialized: false,
     guest: false,        // 游客模式（本机会话，不落库）
-    savedLogin: null,    // 本地缓存的账密（快捷登录用）：{ u, p }
+    savedLogins: [],     // 本地缓存的账密列表（快捷登录用，最近登录在前）：[{ u, p }]
   }),
 
   getters: {
@@ -49,7 +49,8 @@ export const useAuthStore = defineStore('auth', {
       this.guest = false;
       this.initialized = true;
       setSaveNamespace('u' + d.user.id);
-      if (remember) this._saveSavedLogin(username, password); else this._clearSavedLogin();
+      if (remember) this._saveSavedLogin(username, password);
+      // 未勾选“记住”：不缓存该账号，但不清空其它已缓存账号
       return d.user;
     },
 
@@ -103,32 +104,43 @@ export const useAuthStore = defineStore('auth', {
       setToken('');
     },
 
-    /** 快捷登录：使用本地缓存的账密 */
-    async quickLogin() {
-      if (!this.savedLogin) throw new Error('没有缓存的登录信息');
-      return this.login(this.savedLogin.u, this.savedLogin.p);
+    /** 快捷登录：用指定账号的缓存账密；不传则用最近登录的第一个 */
+    async quickLogin(u) {
+      const target = u ? this.savedLogins.find(x => x.u === u) : this.savedLogins[0];
+      if (!target) throw new Error('没有缓存的登录信息');
+      return this.login(target.u, target.p);
     },
-    /** 读取本地缓存的账密 */
+    /** 读取本地缓存的账密列表（兼容旧版单值 {u,p}） */
     _loadSavedLogin() {
       try {
         const raw = localStorage.getItem('ybrpg_saved_login');
-        if (raw) {
-          const o = JSON.parse(raw);
-          if (o && o.u) this.savedLogin = { u: o.u, p: this._b64d(o.p) };
+        if (!raw) return;
+        const o = JSON.parse(raw);
+        if (Array.isArray(o)) {
+          this.savedLogins = o.filter(x => x && x.u).map(x => ({ u: x.u, p: this._b64d(x.p) }));
+        } else if (o && o.u) {
+          this.savedLogins = [{ u: o.u, p: this._b64d(o.p) }];
         }
       } catch (e) { /* ignore */ }
     },
-    /** 缓存账密到本地（密码 base64 降可见，非加密） */
+    /** 缓存账密到本地（列表，最近登录在前；同名更新并前置，最多 8 个；密码 base64 降可见，非加密） */
     _saveSavedLogin(u, p) {
       try {
-        localStorage.setItem('ybrpg_saved_login', JSON.stringify({ u: u, p: this._b64e(p) }));
-        this.savedLogin = { u: u, p: p };
+        const list = this.savedLogins.filter(x => x.u !== u);
+        list.unshift({ u: u, p: p });
+        this.savedLogins = list.slice(0, 8);
+        localStorage.setItem('ybrpg_saved_login', JSON.stringify(this.savedLogins.map(x => ({ u: x.u, p: this._b64e(x.p) }))));
       } catch (e) { /* ignore */ }
     },
-    /** 清除缓存的账密 */
+    /** 清除所有缓存的账密 */
     _clearSavedLogin() {
       try { localStorage.removeItem('ybrpg_saved_login'); } catch (e) { /* ignore */ }
-      this.savedLogin = null;
+      this.savedLogins = [];
+    },
+    /** 移除某个缓存的账号 */
+    removeSavedLogin(u) {
+      this.savedLogins = this.savedLogins.filter(x => x.u !== u);
+      try { localStorage.setItem('ybrpg_saved_login', JSON.stringify(this.savedLogins.map(x => ({ u: x.u, p: this._b64e(x.p) })))); } catch (e) { /* ignore */ }
     },
     _b64e(s) { try { return btoa(unescape(encodeURIComponent(String(s)))); } catch (e) { return String(s); } },
     _b64d(s) { try { return decodeURIComponent(escape(atob(s))); } catch (e) { return s; } },

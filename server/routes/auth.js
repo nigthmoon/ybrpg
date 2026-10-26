@@ -81,10 +81,7 @@ router.post('/login', (req, res) => {
     return res.status(401).json({ error: 'INVALID_CREDENTIALS', message: '用户名或密码错误' });
   }
   db.prepare("UPDATE users SET last_login = datetime('now', '+8 hours') WHERE id = ?").run(u.id);
-  // 单登录：该账号已在线则拒绝新登录
-  if (hasOnlineSession(u.id)) {
-  	return res.status(409).json({ error: 'SESSION_ACTIVE', message: '该账号正在其他设备游玩，请稍后再试' });
-  }
+  // 单登录（顶号）：直接走 startSession，它会吊销该账号所有旧会话；旧设备下次请求即失效并提示异地登录
   const fresh = db.prepare('SELECT * FROM users WHERE id = ?').get(u.id);
   const token = startSession(fresh.id, fresh.username, req);
   return res.json({ token, user: publicUser(fresh) });

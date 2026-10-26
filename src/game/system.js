@@ -418,15 +418,27 @@ class Bag {
 		materialCount.setAttribute('data-material-count', 'true');
 		const needCount = currentLevel;
 		materialCount.style.cssText = 'font-size:13px;color:#ddd;';
-		materialCount.innerHTML = `需要: <span style="color:#ffd700;">${needCount}</span> 个 · 可用: <span style="color:${fodderCount >= needCount ? '#44ff88' : '#ff4444'};">${fodderCount}</span> 个`;
 		materialSection.appendChild(materialCount);
 
-		if (fodderCount < needCount) {
-			const shortageTip = document.createElement('div');
-			shortageTip.style.cssText = 'font-size:11px;color:#ff6666;margin-top:4px;';
-			shortageTip.textContent = `材料不足，还需 ${needCount - fodderCount} 个同名宝物`;
-			materialSection.appendChild(shortageTip);
-		}
+		// 材料/碎屑充足性状态行（随勾选刷新）
+		const materialStatus = document.createElement('div');
+		materialStatus.style.cssText = 'font-size:11px;margin-top:4px;';
+		materialSection.appendChild(materialStatus);
+
+		// 勾选：碎屑替代多余本体（仅用 1 个本体，其余按等值碎屑抵扣；碎屑不足也可勾选，但会拦截升级键）
+		const shardPerBody = def.sellPrice || 0; // 1 个同名 Lv.1 本体的碎屑等值（=该宝物售价）
+		let useShardSub = false;
+		const getShardHave = () => (window.Game && Game.Data && Game.Data.getItemCount) ? Game.Data.getItemCount('item_soul_shard') : 0;
+		const subRow = document.createElement('label');
+		subRow.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12px;color:#ffd700;margin-top:8px;cursor:pointer;user-select:none;';
+		const subBox = document.createElement('input');
+		subBox.type = 'checkbox';
+		subBox.style.cssText = 'width:15px;height:15px;accent-color:#ffd700;cursor:pointer;';
+		subBox.onchange = () => { useShardSub = subBox.checked; refreshUpgradeStatus(); };
+		const subLabel = document.createElement('span');
+		subLabel.textContent = `碎屑替代多余本体（仅用 1 个，其余 ${shardPerBody} 碎屑/个）`;
+		subRow.appendChild(subBox); subRow.appendChild(subLabel);
+		materialSection.appendChild(subRow);
 
 		popup.appendChild(materialSection);
 
@@ -463,16 +475,33 @@ class Bag {
 		upgradeBtn.style.cssText = 'width:auto;padding:8px 20px;font-size:14px;flex:1;min-width:80px;';
 		upgradeBtn.textContent = '升级';
 
-		if (fodderCount < needCount || currentLevel >= maxLevel) {
-			upgradeBtn.disabled = true;
-			upgradeBtn.style.opacity = '0.5';
-			upgradeBtn.style.cursor = 'not-allowed';
-			if (currentLevel >= maxLevel) {
-				upgradeBtn.textContent = '已满级';
+		// 依据“是否碎屑替代”刷新材料行 / 状态行 / 升级键
+		function refreshUpgradeStatus() {
+			const lv = currentLevel;
+			const need = lv;
+			const avail = Bag.getAbsorbFodderList(treasureInstanceId).length;
+			const needBody = useShardSub ? 1 : need;
+			const shardCost = useShardSub ? Math.max(0, need - 1) * shardPerBody : 0;
+			const shardHave = getShardHave();
+			if (useShardSub) {
+				materialCount.innerHTML = `需要: <span style="color:#ffd700;">1</span> 本体 + <span style="color:#8fb7ff;">${shardCost}</span> 碎屑 · 本体可用 <span style="color:${avail >= 1 ? '#44ff88' : '#ff4444'};">${avail}</span> · 碎屑 <span style="color:${shardHave >= shardCost ? '#44ff88' : '#ff4444'};">${shardHave}</span>`;
 			} else {
-				upgradeBtn.textContent = `材料不足(${fodderCount}/${needCount})`;
+				materialCount.innerHTML = `需要: <span style="color:#ffd700;">${need}</span> 个 · 可用: <span style="color:${avail >= need ? '#44ff88' : '#ff4444'};">${avail}</span> 个`;
+			}
+			if (lv >= maxLevel) { materialStatus.textContent = ''; }
+			else if (avail < needBody) { materialStatus.style.color = '#ff6666'; materialStatus.textContent = `本体不足，还需 ${needBody - avail} 个同名宝物`; }
+			else if (useShardSub && shardHave < shardCost) { materialStatus.style.color = '#ff6666'; materialStatus.textContent = `碎屑不足，还需 ${shardCost - shardHave} 碎屑（可勾选，但无法升级）`; }
+			else { materialStatus.style.color = '#66ff99'; materialStatus.textContent = useShardSub ? `将消耗 1 本体 + ${shardCost} 碎屑` : '材料充足'; }
+			if (lv >= maxLevel) { upgradeBtn.disabled = true; upgradeBtn.style.opacity = '0.5'; upgradeBtn.style.cursor = 'not-allowed'; upgradeBtn.textContent = '已满级'; }
+			else if (avail < needBody || (useShardSub && shardHave < shardCost)) {
+				upgradeBtn.disabled = true; upgradeBtn.style.opacity = '0.5'; upgradeBtn.style.cursor = 'not-allowed';
+				upgradeBtn.textContent = avail < needBody ? `本体不足(${avail}/${needBody})` : `碎屑不足(${shardHave}/${shardCost})`;
+			} else {
+				upgradeBtn.disabled = false; upgradeBtn.style.opacity = '1'; upgradeBtn.style.cursor = 'pointer';
+				upgradeBtn.textContent = useShardSub ? `升级(1本体+${shardCost}屑)` : '升级';
 			}
 		}
+		refreshUpgradeStatus();
 
 		upgradeBtn.onclick = () => {
 			const latestTreasureData = window.treasureInventory[treasureInstanceId];
@@ -495,14 +524,22 @@ class Bag {
 
 			const freshFodderCount = freshFodderIds.length;
 			const requiredCount = latestLevel;
+			const needBody = useShardSub ? 1 : requiredCount;
+			const shardCost = useShardSub ? Math.max(0, requiredCount - 1) * shardPerBody : 0;
 
-			if (freshFodderCount < requiredCount) {
-				toast(`材料不足！需要 ${requiredCount} 个同名宝物，当前可用: ${freshFodderCount}`, 'error');
+			if (freshFodderCount < needBody) {
+				toast(`本体不足！需要 ${needBody} 个同名宝物，当前可用: ${freshFodderCount}`, 'error');
+				return;
+			}
+			if (useShardSub && getShardHave() < shardCost) {
+				toast(`碎屑不足！需要 ${shardCost} 碎屑，当前持有: ${getShardHave()}`, 'error');
 				return;
 			}
 
 			confirmDialog(
-				`确定消耗 ${requiredCount} 个【${def.name}】升级宝物至 Lv.${latestLevel + 1} 吗？\n可用材料: ${freshFodderCount} 个`,
+				useShardSub
+					? `确定消耗 1 个【${def.name}】+ ${shardCost} 碎屑 升级至 Lv.${latestLevel + 1} 吗？`
+					: `确定消耗 ${requiredCount} 个【${def.name}】升级宝物至 Lv.${latestLevel + 1} 吗？\n可用材料: ${freshFodderCount} 个`,
 				() => {
 					const confirmTreasureData = window.treasureInventory[treasureInstanceId];
 					if (!confirmTreasureData) {
@@ -520,13 +557,19 @@ class Bag {
 
 					const confirmFodderCount = confirmFodderIds.length;
 					const confirmRequiredCount = confirmLevel;
+					const confirmNeedBody = useShardSub ? 1 : confirmRequiredCount;
+					const confirmShardCost = useShardSub ? Math.max(0, confirmRequiredCount - 1) * shardPerBody : 0;
 
-					if (confirmFodderCount < confirmRequiredCount) {
-						toast(`材料不足！需要 ${confirmRequiredCount} 个同名宝物，当前可用: ${confirmFodderCount}`, 'error');
+					if (confirmFodderCount < confirmNeedBody) {
+						toast(`本体不足！需要 ${confirmNeedBody} 个同名宝物，当前可用: ${confirmFodderCount}`, 'error');
+						return;
+					}
+					if (useShardSub && getShardHave() < confirmShardCost) {
+						toast(`碎屑不足！需要 ${confirmShardCost} 碎屑`, 'error');
 						return;
 					}
 
-					for (let i = 0; i < confirmRequiredCount; i++) {
+					for (let i = 0; i < confirmNeedBody; i++) {
 						const fodderId = confirmFodderIds[i];
 
 						for (const [ownerId, slots] of Object.entries(window.charTreasureSlots || {})) {
@@ -539,6 +582,9 @@ class Bag {
 
 						delete window.treasureInventory[fodderId];
 					}
+
+					// 扣除碎屑（替代多余本体）
+					if (confirmShardCost > 0 && Game.Data && Game.Data.removeItem) Game.Data.removeItem('item_soul_shard', confirmShardCost);
 
 					const newLevel = confirmLevel + 1;
 					window.treasureInventory[treasureInstanceId].level = newLevel;
@@ -565,7 +611,8 @@ class Bag {
 					});
 					currentLevel = newLevel;
 
-					toast(`【${def.name}】升级成功！当前 Lv.${newLevel}`, 'success');
+					toast(`【${def.name}】升级成功！当前 Lv.${newLevel}${confirmShardCost > 0 ? `（消耗 ${confirmShardCost} 碎屑）` : ''}`, 'success');
+					refreshUpgradeStatus();
 					shared.SaveManager.autoSave();
 				}
 			);

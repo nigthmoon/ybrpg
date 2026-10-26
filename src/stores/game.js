@@ -139,7 +139,7 @@ export const useGameStore = defineStore('game', {
         if (!ok) return;
       }
       otherApi.initNewGame();
-      await this.enterGame('team-view');
+      await this.enterGame('home-view');
     },
 
     /**
@@ -152,7 +152,7 @@ export const useGameStore = defineStore('game', {
         try { await downloadSlot(slot); } catch (e) { /* 忽略，回退本地 */ }
       }
       window.Game.SaveManager.loadFromSlot(slot);
-      await this.enterGame('team-view');
+      await this.enterGame('home-view');
     },
 
     /**
@@ -167,7 +167,7 @@ export const useGameStore = defineStore('game', {
           try { await downloadSlot(0); } catch (e) { /* 忽略，回退本地 */ }
         }
         window.Game.SaveManager.loadAutoSave();
-        await this.enterGame('team-view');
+        await this.enterGame('home-view');
       } finally {
         // 等待新视图渲染完成后再隐藏
         setTimeout(() => { if (window.ybrpgHideLoading) window.ybrpgHideLoading(); }, 350);
@@ -246,7 +246,7 @@ export const useGameStore = defineStore('game', {
       if (viewId === 'team-view' && r.renderTeamView) r.renderTeamView(el);
       else if (viewId === 'bag-view' && r.renderBagView) r.renderBagView(el);
       else if (viewId === 'dungeon-view' && r.renderDungeonView) r.renderDungeonView(el);
-      else if (viewId === 'shop-view' && r.renderShopView) r.renderShopView(el);
+      else if (viewId === 'shop-view' && r.renderShopView) { window.shopPage = 'home'; r.renderShopView(el); }
       else if (viewId === 'settings-view') m.renderSettingsView(el);
       else if (viewId === 'save-view') m.renderSaveView(el, true);
       else if (viewId === 'home-view' && r.renderHomeView) r.renderHomeView(el);

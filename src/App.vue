@@ -15,11 +15,13 @@ const router = useRouter();
 
 // 被顶号 / 挂机踢 / 登录过期：弹提示并回登录页
 onMounted(() => {
+  // 刷新/首次进入：固定回到主界面（登录页或登录后主页），不停留在读档/账号/设置页
+  if (router.currentRoute.value.path !== '/') router.replace('/');
   setOnAuthError((e) => {
     if (!auth.isLoggedIn) return;
     confirmDialog({
       title: '登录状态',
-      message: e.message || '你已被踢下线，请重新登录',
+      message: e.message || '你的账号已异地登录，请重新登录',
       danger: true,
       confirmText: '知道了',
     }).then(() => {
