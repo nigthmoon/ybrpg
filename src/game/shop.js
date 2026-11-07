@@ -241,7 +241,7 @@ function buildShopProduct(id, beilv, supportedCurrencies) {
 		if (!cData) return null;
 		const price = scalePrice(getCharPrice(cData.rank), beilv);
 		const payCurrency = pickPurchaseCurrency(price, supportedCurrencies);
-		return { type: 'character', id, name: cData.name, desc: `${getRankName(cData.rank)} | HP:${cData.hp} ATK:${cData.atk} DEF:${cData.def}`, price, payCurrency, payAmount: price[payCurrency], sold: false, number: beilv, rank: cData.rank, icon: `/image/character/${id}.jpg` };
+		return { type: 'character', id, name: cData.name, desc: `${getRankName(cData.rank)} | HP:${cData.hp} ATK:${cData.atk} DEF:${cData.def}`, price, payCurrency, payAmount: price[payCurrency], sold: false, number: beilv, rank: cData.rank, icon: `${charImg(id)}` };
 	}
 	if (id in ITEM_DEFS) {
 		const def = ITEM_DEFS[id];
@@ -269,7 +269,7 @@ function buildShopProduct(id, beilv, supportedCurrencies) {
 function buildNormalShop(isSp = false) {
 	// 高级商店：每件商品一次可买多件(数量 2~5 随机,价格按数量计)；普通商店每件 1 个
 	const randMult = () => (isSp ? (2 + Math.floor(Math.random() * 4)) : 1);
-	const mkChar = (id) => { const c = characterList[id]; if (!c) return null; const unit = (getCharPrice(c.rank) || {}).gold || 0; const n = randMult(); const g = unit * n; return { type: 'character', id, name: c.name, desc: `${getRankName(c.rank)} | HP:${c.hp} ATK:${c.atk} DEF:${c.def}`, price: { gold: g }, payCurrency: 'gold', payAmount: g, sold: false, number: n, rank: c.rank, icon: `/image/character/${id}.jpg` }; };
+	const mkChar = (id) => { const c = characterList[id]; if (!c) return null; const unit = (getCharPrice(c.rank) || {}).gold || 0; const n = randMult(); const g = unit * n; return { type: 'character', id, name: c.name, desc: `${getRankName(c.rank)} | HP:${c.hp} ATK:${c.atk} DEF:${c.def}`, price: { gold: g }, payCurrency: 'gold', payAmount: g, sold: false, number: n, rank: c.rank, icon: `${charImg(id)}` }; };
 	const mkItem = (id) => { const d = ITEM_DEFS[id]; if (!d) return null; const unit = (d.price && d.price.gold) || 0; const n = randMult(); const g = unit * n; return { type: 'item', id, name: d.name, desc: d.desc, price: { gold: g }, payCurrency: 'gold', payAmount: g, sold: false, number: n, emoji: d.emoji || '📦', icon: d.icon || '' }; };
 	const mkTre = (id) => { const t = Game.Data.getTreasureList()[id]; if (!t) return null; const unit = (t.price && t.price.gold) || 0; const n = randMult(); const g = unit * n; return { type: 'treasure', id, name: t.name, desc: t.desc, price: { gold: g }, payCurrency: 'gold', payAmount: g, sold: false, number: n, icon: t.icon || `/image/skill/${id}.png` }; };
 	const buildOne = (k, id) => k === 'char' ? mkChar(id) : (k === 'item' ? mkItem(id) : mkTre(id));
@@ -1158,6 +1158,189 @@ const RECRUIT_POOLS = {
 	],
 };
 
+// 招募日历：周一~周五按「上午/下午」轮换 UP 红将（均为传说池角色）；周六、周日为自选 UP
+const RECRUIT_CALENDAR = {
+	1: { am: 'ybsl_017xiaohong', pm: 'ybsl_048wushuang' }, // 周一：涂山小红 / 吴爽
+	2: { am: 'ybsl_059starsFall1', pm: 'ybsl_076zhujun' }, // 周二：鞠熒 / 朱焌
+	3: { am: 'ybsl_041mmuqin', pm: 'ybsl_008wuyuxin' },    // 周三：慕琴 / 吴雨欣
+	4: { am: 'ybsl_047shan', pm: 'ybsl_107tushanshuili' }, // 周四：彡 / 涂山水璃
+	5: { am: 'ybsl_049waner', pm: 'ybsl_002chenailin' },   // 周五：王婉儿 / 陈爱琳
+};
+
+// 当前应生效的 UP 武将 id：周一~周五按招募日历（上午/下午）锁定；周六周日返回玩家自选（可能为 null=随机红）
+function getCurrentUpCharId() {
+	const now = new Date();
+	const wd = now.getDay(); // 0=周日,1=周一,...,6=周六
+	if (wd === 0 || wd === 6) return window.recruitUpCharId || null; // 周末自选
+	const half = now.getHours() < 12 ? 'am' : 'pm';
+	const e = RECRUIT_CALENDAR[wd];
+	return (e && e[half] && characterList[e[half]]) ? e[half] : null;
+}
+
+// 下一次 UP 轮换时间：上午→12:00，下午→次日 00:00
+function getNextRotationDate() {
+	const now = new Date();
+	if (now.getHours() < 12) return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0);
+	const t = new Date(now); t.setDate(t.getDate() + 1); t.setHours(0, 0, 0, 0); return t;
+}
+
+// 毫秒 → HH:MM:SS
+function formatCountdown(ms) {
+	if (ms < 0) ms = 0;
+	const s = Math.floor(ms / 1000);
+	const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+	const p = (n) => String(n).padStart(2, '0');
+	return `${p(h)}:${p(m)}:${p(ss)}`;
+}
+
+// 表头单元格
+function calTh(text, extraStyle) {
+	const th = document.createElement('th');
+	th.style.cssText = `font-size:12px;color:#ccc;padding:2px 0;border-bottom:1px solid #3a3a3a;${extraStyle || ''}`;
+	th.textContent = text;
+	return th;
+}
+
+// 头像 + 名字（方形，居中裁切）
+function calAvatarHTML(id, name) {
+	return `<img src="${charImg(id)}" style="width:42px;height:42px;border-radius:6px;border:1px solid #555;object-fit:cover;" onerror="this.onerror=null;this.src='/image/character/default.jpg';"><div style="font-size:10px;color:#ddd;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>`;
+}
+
+// 头像·头部特写（正方形 + object-position:top，取原画偏上部分，突出头部）
+// 优先使用角色 head 字段（约定 /image/character/head/<id>.jpg），缺失时回退到原画
+function calHeadHTML(id, name) {
+	const c = characterList[id];
+	const headSrc = (c && c.head) ? c.head : `${charImg(id)}`;
+	return `<img class="char-head" src="${headSrc}" style="width:42px;height:42px;border-radius:6px;border:1px solid #555;display:block;margin:0 auto;" onerror="this.onerror=null;this.src='${charImg(id)}';"><div style="font-size:10px;color:#ddd;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>`;
+}
+
+// UP 角标
+function calUpBadge() {
+	const b = document.createElement('div');
+	b.style.cssText = 'position:absolute;top:1px;right:1px;background:#ffd700;color:#000;font-size:9px;font-weight:bold;padding:0 3px;border-radius:0 0 0 4px;';
+	b.textContent = 'UP';
+	return b;
+}
+
+// 招募日历：头像表格（仅周一~周五 × 上午/下午，周末UP点选格子）+ 当前UP + 轮换倒计时
+function renderRecruitCalendarEl(container) {
+	const wrap = document.createElement('div');
+	wrap.style.cssText = 'margin:8px auto;max-width:480px;font-size:12px;color:#bbb;';
+	const now = new Date();
+	const curWd = now.getDay();
+	const curHalf = now.getHours() < 12 ? 'am' : 'pm';
+	const wdNames = ['周一', '周二', '周三', '周四', '周五'];
+	const isWeekendNow = (curWd === 0 || curWd === 6);
+
+	// ---- 头像表格（仅周一~周五）----
+	const table = document.createElement('table');
+	table.style.cssText = 'width:100%;border-collapse:collapse;table-layout:fixed;';
+	const thead = document.createElement('tr');
+	thead.appendChild(calTh('', ''));
+	for (let wd = 1; wd <= 5; wd++) {
+		thead.appendChild(calTh(wdNames[wd - 1], wd === curWd ? 'color:#ffd700;font-weight:bold;' : ''));
+	}
+	table.appendChild(thead);
+
+	const buildRow = (halfLabel, half) => {
+		const tr = document.createElement('tr');
+		tr.appendChild(calTh(halfLabel, ''));
+		for (let wd = 1; wd <= 5; wd++) {
+			const e = RECRUIT_CALENDAR[wd];
+			const id = e && e[half];
+			const td = document.createElement('td');
+			td.dataset.id = id || '';
+			td.style.cssText = 'text-align:center;padding:4px 2px;vertical-align:top;border:1px solid #2a2a2a;position:relative;cursor:pointer;';
+			let inner = '';
+			if (id && characterList[id]) {
+				const isSelfUp = (window.recruitUpCharId === id);
+				inner = calHeadHTML(id, characterList[id].name);
+				if (isSelfUp) {
+					// 自选 UP：蓝色内描边（box-shadow 不占尺寸，避免选中后表格错位）+ 头像左上角「自选」标识
+					td.style.cssText += 'box-shadow:inset 0 0 0 2px #7fd1ff;';
+					inner += `<div class="selfup-badge" style="position:absolute;top:1px;left:1px;background:#7fd1ff;color:#04263a;font-size:9px;font-weight:bold;padding:0 3px;border-radius:0 0 4px 0;">自选</div>`;
+				}
+				if (wd === curWd && half === curHalf) {
+					// 当前日子+时段：黄色高亮 + UP 角标
+					td.style.cssText += 'background:rgba(255,215,0,0.15);';
+					td.appendChild(calUpBadge());
+				}
+			} else {
+				inner = `<div style="font-size:10px;color:#666;">?</div>`;
+			}
+			td.innerHTML = inner;
+			tr.appendChild(td);
+		}
+		return tr;
+	};
+	table.appendChild(buildRow('上午', 'am'));
+	table.appendChild(buildRow('下午', 'pm'));
+	wrap.appendChild(table);
+
+	// 点选格子：设为周末自选 UP；再点已选中的格子则取消（原地更新，避免整表重建闪烁）
+	table.addEventListener('click', (e) => {
+		const td = e.target.closest('td[data-id]');
+		if (!td) return;
+		const id = td.dataset.id;
+		if (!id) return;
+		const prev = window.recruitUpCharId;
+		window.recruitUpCharId = (prev === id) ? null : id;
+		SaveManager.autoSave();
+		// 仅刷新受影响的格子与 UP 文案，不重建日历（<img> 不动 → 不闪烁）
+		const selfId = window.recruitUpCharId;
+		table.querySelectorAll('td[data-id]').forEach((cell) => {
+			const tid = cell.dataset.id;
+			if (!tid) return;
+			const isSelf = (tid === selfId);
+			const badge = cell.querySelector('.selfup-badge');
+			if (isSelf && !badge) {
+				cell.style.boxShadow = 'inset 0 0 0 2px #7fd1ff';
+				const b = document.createElement('div');
+				b.className = 'selfup-badge';
+				b.style.cssText = 'position:absolute;top:1px;left:1px;background:#7fd1ff;color:#04263a;font-size:9px;font-weight:bold;padding:0 3px;border-radius:0 0 4px 0;';
+				b.textContent = '自选';
+				cell.appendChild(b);
+			} else if (!isSelf && badge) {
+				cell.style.boxShadow = '';
+				badge.remove();
+			}
+		});
+		const upId = getCurrentUpCharId();
+		const upName = (upId && characterList[upId]) ? characterList[upId].name : null;
+		if (isWeekendNow) upLine.textContent = upName ? `当前自选UP：${upName}！` : '当前自选UP：自选（不选随机）';
+		else upLine.textContent = upName ? `当前UP：${upName}！` : '当前UP：随机红将';
+	});
+
+	// ---- 当前 UP / 自选UP ----
+	const upLine = document.createElement('div');
+	upLine.style.cssText = 'text-align:center;font-size:14px;color:#ffd700;font-weight:bold;margin:8px 0 2px;';
+	const upId = getCurrentUpCharId();
+	const upName = (upId && characterList[upId]) ? characterList[upId].name : null;
+	if (isWeekendNow) upLine.textContent = upName ? `当前自选UP：${upName}！` : '当前自选UP：自选（不选随机）';
+	else upLine.textContent = upName ? `当前UP：${upName}！` : '当前UP：随机红将';
+	wrap.appendChild(upLine);
+
+	// ---- 轮换倒计时 ----
+	const cdLine = document.createElement('div');
+	cdLine.style.cssText = 'text-align:center;font-size:12px;color:#aaa;';
+	cdLine.appendChild(document.createTextNode('距轮换：'));
+	const cdEl = document.createElement('span');
+	cdEl.id = 'recruit-countdown';
+	cdLine.appendChild(cdEl);
+	wrap.appendChild(cdLine);
+
+	const tick = () => {
+		const el = document.getElementById('recruit-countdown');
+		if (!el || !el.isConnected) { if (window.__recruitCalTimer) clearInterval(window.__recruitCalTimer); return; }
+		el.textContent = formatCountdown(getNextRotationDate().getTime() - Date.now());
+	};
+	if (window.__recruitCalTimer) clearInterval(window.__recruitCalTimer);
+	tick();
+	window.__recruitCalTimer = setInterval(tick, 1000);
+
+	return wrap;
+}
+
 // 当前幸运值下的传说概率（五段分段函数）：
 //   0~40：从 0.02% 线性增长至 2%
 //   40~60：从 2% 线性增长至 5%
@@ -1306,26 +1489,8 @@ function renderRecruitView(container) {
 	container.appendChild(pityWrap);
 	updateRecruitPityBar();
 
-	// UP 将选择
-	const upWrap = document.createElement('div');
-	upWrap.style.cssText = 'margin:8px auto;max-width:420px;';
-	const upLabel = document.createElement('div');
-	upLabel.style.cssText = 'font-size:12px;color:#eee;margin-bottom:4px;';
-	upLabel.textContent = '自选 UP 红将（命中红时优先出该将，留空则随机红）：';
-	upWrap.appendChild(upLabel);
-	const upSel = document.createElement('select');
-	upSel.style.cssText = 'width:100%;padding:4px;background:#222;color:#fff;border:1px solid #444;border-radius:4px;';
-	const optNull = document.createElement('option'); optNull.value = ''; optNull.textContent = '（随机红将）'; upSel.appendChild(optNull);
-	Object.keys(characterList || {}).filter(id => {
-		const c = characterList[id];
-		return c && !c.isFixed && c.rank === 'legend' && hasRealBreakthrough(c.tupoList);
-	}).forEach(id => {
-		const o = document.createElement('option'); o.value = id; o.textContent = characterList[id].name; upSel.appendChild(o);
-	});
-	upSel.value = window.recruitUpCharId || '';
-	upSel.onchange = () => { window.recruitUpCharId = upSel.value || null; SaveManager.autoSave(); };
-	upWrap.appendChild(upSel);
-	container.appendChild(upWrap);
+	// ===== 招募日历 / UP 将（头像表格 + 当前UP + 轮换倒计时）=====
+	container.appendChild(renderRecruitCalendarEl(container));
 
 	// 抽卡按钮
 	const btnRow = document.createElement('div');
@@ -1388,9 +1553,10 @@ function doRecruit(count, container) {
 			res = { charId: pickCharFromPool('epicfake'), rank: 'epicfake', isKami: false };
 		}
 
-		// 命中红且设置了 UP 将：优先替换为 UP 将
-		if (res.rank === 'legend' && window.recruitUpCharId && characterList[window.recruitUpCharId]) {
-			res = { charId: window.recruitUpCharId, rank: 'legend', isKami: false };
+		// 命中红且当前有 UP 将（周一~周五按招募日历锁定，周末为玩家自选）：优先替换为 UP 将
+		const _upId = getCurrentUpCharId();
+		if (res.rank === 'legend' && _upId && characterList[_upId]) {
+			res = { charId: _upId, rank: 'legend', isKami: false };
 		}
 		// 独立概率：在抽取判定后才单独判定 1% 拔升为神品（不占出货率、不影响保底）
 		if (!res.isKami && Math.random() < RECRUIT_KAMI_UPGRADE_RATE) {
@@ -1446,7 +1612,7 @@ function showRecruitResult(results) {
 		img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:top;display:block;';
 		img.alt = r.name;
 		if (r.charId) {
-			img.src = `/image/character/${r.charId}.jpg`;
+			img.src = `${charImg(r.charId)}`;
 			img.onerror = function () {
 				this.onerror = null;
 				this.src = `/image/character/${r.charId}.webp`;

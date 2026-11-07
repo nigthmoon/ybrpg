@@ -1384,7 +1384,7 @@ function showSweepResultPanel(opt) {
 			if (!m[name]) {
 				const cid = charNameToId[name];
 				const c = cid ? characterList[cid] : null;
-				m[name] = { name, count: 0, icon: cid ? `/image/character/${cid}.jpg` : null, rank: c ? c.rank : null };
+				m[name] = { name, count: 0, icon: cid ? `${charImg(cid)}` : null, rank: c ? c.rank : null };
 			}
 			m[name].count++;
 		});

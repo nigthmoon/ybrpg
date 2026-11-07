@@ -1305,7 +1305,7 @@ function buildOpenDialog(def, owned, candidates) {
 		iconDiv.style.borderColor = RANK_COLORS[c.rank] || '#888';
 		const img = document.createElement('img');
 		img.className = 'gallery-char-img';
-		img.src = `/image/character/${charId}.jpg`;
+		img.src = `${charImg(charId)}`;
 		img.alt = c.name;
 		img.onerror = function () {
 			this.onerror = function () {

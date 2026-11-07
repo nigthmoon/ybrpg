@@ -762,7 +762,7 @@ function renderBagCharContent(container) {
 			this.src = `/image/character/${charInst.charId}.webp`;
 		};
 		// 懒加载：进入视口才发起图片请求
-		lazyImageSrc(img, `/image/character/${charInst.charId}.jpg`);
+		lazyImageSrc(img, `${charImg(charInst.charId)}`);
 		iconDiv.appendChild(img);
 
 		// 【新增】等级徽章 (左下角)
@@ -846,7 +846,7 @@ function updateBagCharDetailBar(charInst) {
 	if (iconDiv) {
 		iconDiv.textContent = '';
 		const img = document.createElement('img');
-		img.src = `/image/character/${charInst.charId}.jpg`;
+		img.src = `${charImg(charInst.charId)}`;
 		img.alt = charInst.name;
 		img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:4px;object-position: center top;display: block;';
 		//	 width: 100%;

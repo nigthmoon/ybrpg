@@ -487,7 +487,7 @@ function showBreakthroughPreviewPopup(targetInstanceId = null) {
 	header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #333;';
 
 	const charImg = document.createElement('img');
-	charImg.src = `/image/character/${charId}.jpg`;
+	charImg.src = `${charImg(charId)}`;
 	charImg.style.cssText = 'width:48px;height:48px;border-radius:6px;border:2px solid #ffd700;object-fit:cover;object-position: center top;';
 	charImg.onerror = function () { this.src = '/image/character/default.jpg'; };
 	header.appendChild(charImg);
@@ -1660,7 +1660,7 @@ function showBreakthroughPreviewPopupByCharId(charId) {
 	header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #333;';
 
 	const charImg = document.createElement('img');
-	charImg.src = `/image/character/${charId}.jpg`;
+	charImg.src = `${charImg(charId)}`;
 	charImg.style.cssText = 'width:48px;height:48px;border-radius:6px;border:2px solid #ffd700;object-fit:cover;';
 	charImg.onerror = function () { this.src = '/image/character/default.jpg'; };
 	header.appendChild(charImg);
@@ -1949,7 +1949,7 @@ function renderBreakthroughContent() {
 	if (!baseChar) return;
 
 	// 2. 更新顶部概览
-	charImg.src = `/image/character/${charId}.jpg`;
+	charImg.src = `${charImg(charId)}`;
 	charImg.onerror = function () { this.src = '/image/character/default.jpg'; };
 	charName.textContent = baseChar.name;
 
@@ -2087,7 +2087,7 @@ function renderTeamSlot(slotEl, index) {
 		const borderColor = RANK_BORDER_COLORS[rank] || '#888';
 
 		const img = document.createElement('img');
-		img.src = `/image/character/${charId}.jpg`;
+		img.src = `${charImg(charId)}`;
 		img.alt = char.name;
 		img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:6px;pointer-events:none;';
 
@@ -2417,7 +2417,7 @@ function renderFodderBlock(container, inst) {
 		cell.style.cssText = 'width:54px;text-align:center;cursor:pointer;';
 		cell.title = `${f.name || f.charId}（点击查看介绍）`;
 		const img = document.createElement('img');
-		img.src = `/image/character/${f.charId}.jpg`;
+		img.src = `${charImg(f.charId)}`;
 		img.style.cssText = 'width:46px;height:46px;object-fit:cover;object-position:center top;border-radius:6px;border:1px solid rgba(255,255,255,.2);display:block;margin:0 auto;';
 		img.onerror = function () { this.src = '/image/character/default.jpg'; };
 		const nm = document.createElement('div');
@@ -2447,7 +2447,7 @@ function openFodderIntro(f) {
 	const scroll = document.createElement('div');
 	scroll.style.cssText = 'flex:1;min-height:0;overflow-y:auto;';
 	const av = document.createElement('img');
-	av.src = `/image/character/${f.charId}.jpg`;
+	av.src = `${charImg(f.charId)}`;
 	av.style.cssText = `width:96px;height:120px;object-fit:cover;object-position:center top;border-radius:8px;border:2px solid ${RANK_COLOR[f.rank] || '#888'};margin:0 auto 10px;display:block;`;
 	av.onerror = function () { this.src = '/image/character/default.jpg'; };
 	scroll.appendChild(av);
@@ -2555,7 +2555,7 @@ function openFodderDetail(f) {
 	const panel = document.createElement('div');
 	panel.style.cssText = 'background:#1a1e2e;border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:18px;max-width:360px;width:90%;color:#e8ecf6;text-align:center;max-height:86%;overflow:auto;';
 	const img = document.createElement('img');
-	img.src = `/image/character/${f.charId}.jpg`;
+	img.src = `${charImg(f.charId)}`;
 	img.style.cssText = 'width:96px;height:96px;object-fit:cover;object-position:center top;border-radius:8px;border:1px solid rgba(255,255,255,.2);';
 	img.onerror = function () { this.src = '/image/character/default.jpg'; };
 	const nm = document.createElement('div');
@@ -2622,7 +2622,7 @@ function showTeamCharInfo(slotIndex, instanceId, charId) {
 	imgDiv.className = 'team-info-img-container';
 	const img = document.createElement('img');
 	img.className = 'team-info-img';
-	img.src = `/image/character/${charId}.jpg`;
+	img.src = `${charImg(charId)}`;
 	img.alt = char.name;
 	img.onerror = function () {
 		this.onerror = function () {
@@ -3922,7 +3922,7 @@ function showCharSelectPopup(slotIndex) {
 		iconDiv.style.borderColor = borderColor;
 		iconDiv.style.cursor = 'pointer';
 		const img = document.createElement('img');
-		img.src = `/image/character/${charInst.charId}.jpg`;
+		img.src = `${charImg(charInst.charId)}`;
 		img.alt = charInst.name;
 		img.className = 'gallery-char-img';
 		img.onerror = function () {
@@ -4128,7 +4128,7 @@ function showBagCharDetailPopup(instanceId, charId) {
 	imgDiv.style.height = '150px';
 	const img = document.createElement('img');
 	img.className = 'gallery-detail-img';
-	img.src = `/image/character/${charId}.jpg`;
+	img.src = `${charImg(charId)}`;
 	img.alt = charT.name;
 	img.onerror = function () {
 		this.onerror = function () {
@@ -5095,7 +5095,7 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 			iconDiv.style.height = '40px';
 			const img = document.createElement('img');
 			img.className = 'gallery-char-img';
-			img.src = `/image/character/${c.charId}.jpg`;
+			img.src = `${charImg(c.charId)}`;
 			img.alt = c.name;
 			img.onerror = function () {
 				this.style.display = 'none';
@@ -5946,7 +5946,7 @@ function openAscendFodderPicker(targetInstId, info, onDone) {
 			iconDiv.style.borderColor = RANK_COLOR[inst.rank] || '#888';
 			const img = document.createElement('img');
 			img.className = 'gallery-char-img';
-			img.src = `/image/character/${inst.charId}.jpg`;
+			img.src = `${charImg(inst.charId)}`;
 			img.onerror = function () { this.style.display = 'none'; iconDiv.textContent = (inst.name || inst.charId || '?').charAt(0); iconDiv.style.fontSize = '26px'; };
 			iconDiv.appendChild(img);
 			card.appendChild(iconDiv);

@@ -3049,7 +3049,7 @@ Battle.createUnitSlot = function createUnitSlot(unit, side, slotIndex) {
 
 	const img = document.createElement('img');
 	img.className = 'battle-unit-img';
-	img.src = `/image/character/${unit.id}.jpg`;
+	img.src = `${charImg(unit.id)}`;
 	img.alt = unit.name;
 	img.onerror = function () {
 		this.onerror = function () { this.style.display = 'none'; slot.classList.add('battle-unit-noimg'); };

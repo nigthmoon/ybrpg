@@ -80,7 +80,7 @@ function updateHomeAccountBar() {
 	const av = accBar.querySelector('.home-account-avatar');
 	if (av) {
 		let src = '/image/character/default.jpg', pos = 'center top';
-		if (!isGuest && acc.avatar) { src = acc.avatar.icon || `/image/character/${acc.avatar.id}.jpg`; pos = acc.avatar.type === 'treasure' ? 'center' : 'center top'; }
+		if (!isGuest && acc.avatar) { src = acc.avatar.icon || `${charImg(acc.avatar.id)}`; pos = acc.avatar.type === 'treasure' ? 'center' : 'center top'; }
 		else if (mainInst) { src = '/image/character/zhujue.jpg'; }
 		av.src = src; av.style.objectPosition = pos;
 	}
@@ -116,7 +116,7 @@ function renderHomeView(container) {
 	const isGuest = acc.isGuest !== false;
 	const mainInst = getMainInstInfo();
 	let avatarSrc = '/image/character/default.jpg', avatarPos = 'center top';
-	if (!isGuest && acc.avatar) { avatarSrc = acc.avatar.icon || `/image/character/${acc.avatar.id}.jpg`; avatarPos = acc.avatar.type === 'treasure' ? 'center' : 'center top'; }
+	if (!isGuest && acc.avatar) { avatarSrc = acc.avatar.icon || `${charImg(acc.avatar.id)}`; avatarPos = acc.avatar.type === 'treasure' ? 'center' : 'center top'; }
 	else if (mainInst) { avatarSrc = '/image/character/zhujue.jpg'; }
 	const nickRaw = isGuest ? '游客' : (acc.nickname || '未设置');
 	const nick = nickRaw.length > 6 ? nickRaw.slice(0, 6) + '…' : nickRaw; // 昵称限 6 字
@@ -409,7 +409,7 @@ function renderRefineView(container) {
 		} else {
 			[...selChars].forEach(id => {
 				const inst = window.charBagData[id]; if (!inst) { selChars.delete(id); return; }
-				stage.appendChild(mkRefineChip(`<img src="/image/character/${inst.charId}.jpg" style="width:20px;height:20px;border-radius:4px;vertical-align:-5px;object-fit:cover;" onerror="this.style.display='none'"> ${inst.name || inst.charId}（${getRankLabel(inst.rank)}）`, getRankColor(inst.rank), () => { selChars.delete(id); refreshAll(); }));
+				stage.appendChild(mkRefineChip(`<img src="${charImg(inst.charId)}" style="width:20px;height:20px;border-radius:4px;vertical-align:-5px;object-fit:cover;" onerror="this.style.display='none'"> ${inst.name || inst.charId}（${getRankLabel(inst.rank)}）`, getRankColor(inst.rank), () => { selChars.delete(id); refreshAll(); }));
 			});
 			[...selTres].forEach(id => {
 				const inst = window.treasureInventory[id]; if (!inst) { selTres.delete(id); return; }
@@ -471,7 +471,7 @@ function openRefinePicker(selChars, selTres, onDone) {
 			list.forEach(({ instId, inst }) => {
 				const absorbed = charHasAbsorbed(inst);
 				grid.appendChild(mkRefineSelectCard({
-					img: `/image/character/${inst.charId}.jpg`, name: inst.name || inst.charId,
+					img: `${charImg(inst.charId)}`, name: inst.name || inst.charId,
 					sub: getRankLabel(inst.rank) + (absorbed ? '·含吸收宝物' : (isCharTrained(inst) ? '·已培养' : '')), color: getRankColor(inst.rank),
 					selected: selChars.has(instId),
 					onToggle: () => {
@@ -1606,7 +1606,7 @@ function renderDailyTaskView(container, opts) {
 	list.style.cssText = 'flex:1;min-height:0;overflow-y:auto;padding-right:4px;';
 	wrap.appendChild(list);
 
-	// 按 DAILY_TASK_DEFS 定义顺序排布（实现每日任务的引导顺序），同序内已领取置后
+	// 按状态分组排序：已完成待领取(0) → 未完成(1) → 已领取(2)；同组内保持定义顺序
 	const order = {};
 	DAILY_TASK_DEFS.forEach((d, i) => { order[d.id] = i; });
 	const statusRank = (t) => {
@@ -1615,10 +1615,11 @@ function renderDailyTaskView(container, opts) {
 		return 1;
 	};
 	const sortedTasks = window.dailyTasks.tasks.slice().sort((a, b) => {
+		const sa = statusRank(a), sb = statusRank(b);
+		if (sa !== sb) return sa - sb;
 		const oa = order[a.id] != null ? order[a.id] : 999;
 		const ob = order[b.id] != null ? order[b.id] : 999;
-		if (oa !== ob) return oa - ob;
-		return statusRank(a) - statusRank(b);
+		return oa - ob;
 	});
 
 	sortedTasks.forEach(t => {
@@ -1778,7 +1779,7 @@ function renderGalleryView(container) {
 				// 尝试加载角色图片
 				const img = document.createElement('img');
 				img.className = 'gallery-char-img';
-				img.src = `/image/character/${char.id}.jpg`;
+				img.src = `${charImg(char.id)}`;
 				img.alt = char.name;
 				img.onerror = function () {
 					// 图片加载失败，尝试 .webp
@@ -1876,7 +1877,7 @@ function showCharDetail(_parentContainer, charData) {
 	imgDiv.className = 'gallery-detail-img-container';
 	const img = document.createElement('img');
 	img.className = 'gallery-detail-img';
-	img.src = `/image/character/${charData.id}.jpg`;
+	img.src = `${charImg(charData.id)}`;
 	img.alt = charData.name;
 
 	// 图片加载失败处理：尝试加载webp格式，若仍失败则显示首字母占位符
@@ -2103,7 +2104,7 @@ function showBreakthroughPreviewPopupForGallery(charData) {
 	header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid #333;';
 
 	const charImg = document.createElement('img');
-	charImg.src = `/image/character/${charData.id}.jpg`;
+	charImg.src = `${charImg(charData.id)}`;
 	charImg.style.cssText = 'width:48px;height:48px;border-radius:6px;border:2px solid #ffd700;object-fit:cover;';
 	charImg.onerror = function () { this.src = '/image/character/default.jpg'; };
 	header.appendChild(charImg);
@@ -2232,7 +2233,7 @@ function showFullImage(charId, charName) {
 	overlay.className = 'gallery-fullimg-overlay';
 
 	const img = document.createElement('img');
-	img.src = `/image/character/${charId}.jpg`;
+	img.src = `${charImg(charId)}`;
 	img.alt = charName;
 	img.onerror = function () {
 		this.onerror = function () {
@@ -2999,7 +3000,7 @@ function showRewardPanel(opt) {
 			if (!m[name]) {
 				const cid = charNameToId[name];
 				const c = cid ? characterList[cid] : null;
-				m[name] = { name, count: 0, icon: cid ? `/image/character/${cid}.jpg` : null, rank: c ? c.rank : null };
+				m[name] = { name, count: 0, icon: cid ? `${charImg(cid)}` : null, rank: c ? c.rank : null };
 			}
 			m[name].count++;
 		});

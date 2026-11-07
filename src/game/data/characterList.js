@@ -4871,6 +4871,23 @@ const characterList = {
 		]),
 	},
 };
+
+// 为每个角色生成 head / image 字段（规整路径，便于后续美术替换/定制）
+//   head：头部特写，约定 /image/character/head/<id>.jpg
+//   image：角色原画（主图），约定 /image/character/<id>.jpg
+Object.keys(characterList).forEach((id) => {
+	const c = characterList[id];
+	if (c && c.head === undefined) c.head = `/image/character/head/${id}.jpg`;
+	if (c && c.image === undefined) c.image = `/image/character/${id}.jpg`;
+});
+
+// 取角色原画：优先 character.image，缺失时按 id 兜底；供各渲染处统一调用（避免散落拼路径）
+function charImg(id) {
+	const c = characterList[id];
+	return (c && c.image) ? c.image : `/image/character/${id}.jpg`;
+}
+window.charImg = charImg;
+
 const characterTemplate = {
 	damger: {
 		kami: { hp: 896, atk: 200, def: 42, spe: 160 },
