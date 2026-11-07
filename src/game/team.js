@@ -12,7 +12,7 @@ import { Game } from './core';
 import { renderBagView, sortTreasuresByBagOrder, updateBagCharDetailBar } from './bag';
 import { grantCharacter, renderDungeonView } from './dungeon';
 import { renderShopView } from './shop';
-import { SaveManager, ensureResourceHUD, hideOtherViews, showFullImage, updateResourceHUD, updateHomeAccountBar } from './other';
+import { SaveManager, ensureResourceHUD, hideOtherViews, showFullImage, updateResourceHUD, updateHomeAccountBar, addDailyTaskProgress } from './other';
 
 function showteam() {
 	const teamView = document.getElementById('team-view');
@@ -5056,6 +5056,7 @@ function showUpgradePanel(targetInstId, targetCharId, currentLevel, onUpgrade) {
 
 		overlay.remove();
 		Game.toast(`${characterList[targetCharId]?.name} 已升至 ${newLevel} 级！（消耗 ${totalGoldCost} 金币${soulCost > 0 ? ` + ${soulCost} 将魂` : ''}）`, 'success');
+		if (typeof addDailyTaskProgress === 'function') addDailyTaskProgress('levelup', 1);
 
 		// 【修改】统一使用 refreshAllViews
 		Game.UI.refresh({

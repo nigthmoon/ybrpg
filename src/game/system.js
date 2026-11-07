@@ -613,6 +613,7 @@ class Bag {
 
 					toast(`【${def.name}】升级成功！当前 Lv.${newLevel}${confirmShardCost > 0 ? `（消耗 ${confirmShardCost} 碎屑）` : ''}`, 'success');
 					refreshUpgradeStatus();
+					if (typeof shared.addDailyTaskProgress === 'function') shared.addDailyTaskProgress('equipup', 1);
 					shared.SaveManager.autoSave();
 				}
 			);

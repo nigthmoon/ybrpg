@@ -950,6 +950,9 @@ function openTreasureShopBuyDialog(def, payCur, unitPrice, refreshCb) {
 			Game.toast(`购买了【${def.name}】×${qty}`, 'success');
 		}
 		addDailyTaskProgress('buy', 1);
+		if (def.id === 'item_stamina' || def.id === 'item_stamina_small') {
+			addDailyTaskProgress('buy_stamina', 1);
+		}
 		updateResourceHUD();
 		refreshShopCurrencyBar();
 		SaveManager.autoSave();
